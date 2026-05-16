@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest *)",
+      "Bash(npm install *)",
+      "Bash(npx prisma *)",
+      "Bash(npx shadcn@latest init --defaults --no-tailwind)",
+      "Bash(npx shadcn@latest init --defaults)",
+      "Bash(npx shadcn@latest add sidebar --yes)",
+      "Bash(npx shadcn@latest add card --yes)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\PC-DELL\\\\OneDrive\\\\Bureau\\\\ProjectTUR\\\\src\\\\app\\\\sign-in\\\\[[...sign-in]]\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\PC-DELL\\\\OneDrive\\\\Bureau\\\\ProjectTUR\\\\src\\\\app\\\\sign-up\\\\[[...sign-up]]\")",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}

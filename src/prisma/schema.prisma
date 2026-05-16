@@ -1,0 +1,391 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ==================== CORE MODELS ====================
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  logo        String?
+  email       String?
+  phone       String?
+  address     String?
+  city        String?
+  country     String?
+  plan        String   @default("starter") // starter, professional, enterprise
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users       UserOrganization[]
+  clients     Client[]
+  events      Event[]
+  menus       Menu[]
+  commandes   Commande[]
+  invoices    Invoice[]
+  payments    Payment[]
+  stockItems  StockItem[]
+  teamMembers TeamMember[]
+
+  @@map("organizations")
+}
+
+model User {
+  id              String   @id @default(cuid())
+  clerkId         String   @unique
+  email           String   @unique
+  firstName       String?
+  lastName        String?
+  imageUrl        String?
+  role            UserRole @default(MEMBER)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  organizations   UserOrganization[]
+
+  @@map("users")
+}
+
+model UserOrganization {
+  id             String   @id @default(cuid())
+  userId         String
+  organizationId String
+  role           OrgRole  @default(MEMBER)
+  createdAt      DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@map("user_organizations")
+}
+
+// ==================== CLIENT MODEL ====================
+
+model Client {
+  id              String        @id @default(cuid())
+  organizationId  String
+  name            String
+  email           String?
+  phone           String?
+  address         String?
+  city            String?
+  postalCode      String?
+  company         String?
+  siret           String?
+  notes           String?
+  totalSpent      Decimal      @default(0)
+  lastOrderAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  commandes       Commande[]
+  events          Event[]
+
+  @@index([organizationId])
+  @@map("clients")
+}
+
+// ==================== EVENT MODEL ====================
+
+model Event {
+  id              String      @id @default(cuid())
+  organizationId  String
+  clientId        String?
+  name            String
+  type            EventType
+  status          EventStatus @default(DRAFT)
+  startDate       DateTime
+  endDate         DateTime?
+  location        String?
+  guestCount      Int?
+  budget          Decimal?
+  notes           String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  // Relations
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client          Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  commandes       Commande[]
+
+  @@index([organizationId])
+  @@map("events")
+}
+
+// ==================== MENU MODEL ====================
+
+model Menu {
+  id              String     @id @default(cuid())
+  organizationId  String
+  name            String
+  description     String?
+  category        MenuCategory
+  pricePerPerson  Decimal
+  minPersons      Int        @default(1)
+  maxPersons      Int?
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  // Relations
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  commandeItems   CommandeItem[]
+
+  @@index([organizationId])
+  @@map("menus")
+}
+
+// ==================== COMMANDE (ORDER) MODEL ====================
+
+model Commande {
+  id              String        @id @default(cuid())
+  organizationId  String
+  clientId        String
+  eventId         String?
+  number          String        @unique // e.g., CMD-2024-001
+  status          CommandeStatus @default(DRAFT)
+  eventType       EventType?
+  eventDate       DateTime?
+  guestCount      Int?
+  location        String?
+  menuId          String?
+  menuName        String?
+  pricePerPerson  Decimal?
+  totalAmount     Decimal      @default(0)
+  acomptePercent  Int          @default(30)
+  acompteAmount   Decimal      @default(0)
+  paidAmount      Decimal      @default(0)
+  remainingAmount Decimal      @default(0)
+  notes           String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client          Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  event           Event?       @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  menu            Menu?        @relation(fields: [menuId], references: [id], onDelete: SetNull)
+  items           CommandeItem[]
+  invoices        Invoice[]
+
+  @@index([organizationId])
+  @@index([clientId])
+  @@map("commandes")
+}
+
+model CommandeItem {
+  id          String   @id @default(cuid())
+  commandeId  String
+  menuId      String?
+  name        String
+  quantity    Int
+  unitPrice   Decimal
+  totalPrice  Decimal
+
+  // Relations
+  commande    Commande @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+  menu        Menu?    @relation(fields: [menuId], references: [id], onDelete: SetNull)
+
+  @@index([commandeId])
+  @@map("commande_items")
+}
+
+// ==================== INVOICE MODEL ====================
+
+model Invoice {
+  id            String        @id @default(cuid())
+  organizationId String
+  commandeId    String?
+  number        String        @unique // e.g., INV-2024-001
+  type          InvoiceType   @default(DEVIS)
+  status        InvoiceStatus @default(DRAFT)
+  issueDate     DateTime      @default(now())
+  dueDate       DateTime?
+  totalAmount   Decimal
+  paidAmount    Decimal      @default(0)
+  notes         String?
+  pdfUrl        String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  commande      Commande?    @relation(fields: [commandeId], references: [id], onDelete: SetNull)
+  payments      Payment[]
+
+  @@index([organizationId])
+  @@map("invoices")
+}
+
+// ==================== PAYMENT MODEL ====================
+
+model Payment {
+  id            String        @id @default(cuid())
+  organizationId String
+  invoiceId     String?
+  amount        Decimal
+  method        PaymentMethod
+  status        PaymentStatus @default(COMPLETED)
+  reference     String?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoice       Invoice?     @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@map("payments")
+}
+
+// ==================== STOCK MODEL ====================
+
+model StockItem {
+  id              String       @id @default(cuid())
+  organizationId  String
+  name            String
+  category        StockCategory
+  quantity        Int          @default(0)
+  unit            String       // kg, L, pcs, etc.
+  minQuantity     Int          @default(0)
+  unitPrice       Decimal?
+  supplier        String?
+  notes           String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("stock_items")
+}
+
+// ==================== TEAM MEMBER MODEL ====================
+
+model TeamMember {
+  id              String       @id @default(cuid())
+  organizationId  String
+  name            String
+  role            String
+  email           String?
+  phone           String?
+  avatar          String?
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("team_members")
+}
+
+// ==================== ENUMS ====================
+
+enum UserRole {
+  ADMIN
+  MEMBER
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum EventType {
+  WEDDING
+  CORPORATE
+  BIRTHDAY
+  ANNIVERSARY
+  HOLIDAY
+  OTHER
+}
+
+enum EventStatus {
+  DRAFT
+  PLANNED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum MenuCategory {
+  WEDDING
+  CORPORATE
+  BUFFET
+  COCKTAIL
+  BRUNCH
+  DESSERT
+  CUSTOM
+}
+
+enum CommandeStatus {
+  DRAFT
+  QUOTED
+  CONFIRMED
+  IN_PROGRESS
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+enum InvoiceType {
+  DEVIS
+  FACTURE
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  VIEWED
+  ACCEPTED
+  REJECTED
+  PAID
+  OVERDUE
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  CHECK
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum StockCategory {
+  INGREDIENT
+  BEVERAGE
+  DESSERT
+  EQUIPMENT
+  DECORATION
+  OTHER
+}
+
+// ==================== DECIMAL SUPPORT ====================
+
+// Need to add Decimal type support via Prisma
+// Add `npm install @prisma/client` and `prisma generate`
