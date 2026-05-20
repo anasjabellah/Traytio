@@ -13,7 +13,21 @@
       "Bash(git init *)",
       "Bash(git remote *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git branch *)",
+      "Bash(git push *)",
+      "Bash(npm run *)",
+      "Bash(curl *)",
+      "Bash(npx getdesign@latest *)",
+      "Bash(npm list *)",
+      "Bash(npx shadcn@latest *)",
+      "Bash(npx tsc *)",
+      "Bash(npm i *)",
+      "PowerShell(npm dedupe *)",
+      "PowerShell(npm install *)",
+      "PowerShell(npx tsc --noEmit)",
+      "Bash(Select-String -Pattern \"error TS\")",
+      "PowerShell(taskkill *)"
     ]
   }
 }

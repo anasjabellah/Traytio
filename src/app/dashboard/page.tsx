@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/card";
 import { Users, ShoppingCart, Euro, TrendingUp } from "lucide-react";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Header */}

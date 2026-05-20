@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+"use client";
+
 import {
   SidebarProvider,
   Sidebar,
@@ -13,6 +14,7 @@ import {
   SidebarGroupContent,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import MagneticButton from "@/components/ui/magnetic-button";
 import {
   LayoutDashboard,
   Users,
@@ -26,11 +28,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
-
-export const metadata: Metadata = {
-  title: "Dashboard | TUR",
-  description: "Luxury catering management dashboard",
-};
 
 const sidebarNavItems = [
   {
@@ -115,14 +112,14 @@ export default function DashboardLayout({
                   {sidebarNavItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
-                        asChild
                         tooltip={item.title}
-                      >
-                        <Link href={item.href}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
+                        render={
+                          <MagneticButton strength={0.15} as={Link} href={item.href} className="flex items-center gap-2 w-full">
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.title}</span>
+                          </MagneticButton>
+                        }
+                      />
                     </SidebarMenuItem>
                   ))}
                 </SidebarMenu>
@@ -145,7 +142,6 @@ export default function DashboardLayout({
           <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border/40 bg-background/80 px-6 backdrop-blur-xl">
             <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
             <div className="flex-1" />
-            {/* Add user menu, notifications, etc. here */}
           </header>
           <main className="flex-1 overflow-auto p-6">
             {children}

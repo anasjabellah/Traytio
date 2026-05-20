@@ -1,20 +1,27 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Inter, Playfair_Display, Finlandica, Cormorant_Garamond, DM_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
+import CustomCursor from "@/components/ui/custom-cursor";
 
-const inter = Inter({
+
+const finlandica = Finlandica({
   subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-finlandica",
 });
 
-const playfair = Playfair_Display({
+const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
   variable: "--font-heading",
-  weight: ["400", "500", "600", "700", "800", "900"],
-  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-sans",
 });
 
 export const metadata: Metadata = {
@@ -41,9 +48,10 @@ export default function RootLayout({
       <TooltipProvider>
         <html
           lang="fr"
-          className={`${inter.variable} ${playfair.variable} h-full antialiased`}
+          className={` ${cormorant.variable} ${dmSans.variable} ${finlandica.variable} h-full antialiased`}
         >
-          <body className="min-h-full flex flex-col bg-background text-foreground">
+          <body className={`min-h-full flex flex-col bg-background text-foreground `}>
+            <CustomCursor />
             {children}
           </body>
         </html>
