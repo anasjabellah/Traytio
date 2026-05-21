@@ -47,18 +47,18 @@ export default function ClientsPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold">Clients</h1>
+      <header className="mb-8">
+        <h1 className="font-heading text-2xl font-medium">Clients</h1>
       </header>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="p-4 bg-muted rounded-lg shadow">
-          <p className="text-sm text-muted-foreground">Total clients</p>
-          <p className="text-xl font-semibold">{totalClients}</p>
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="border-l-2 border-[#C9A96E] p-6 bg-[#f8f8f8] border border-[#e2e2e2] rounded-xl">
+          <p className="text-sm text-[#888888] mb-1">Total clients</p>
+          <p className="text-2xl font-medium text-[#1a1a1a]">{totalClients}</p>
         </div>
-        <div className="p-4 bg-muted rounded-lg shadow">
-          <p className="text-sm text-muted-foreground">Total revenue</p>
-          <p className="text-xl font-semibold">${totalRevenue.toLocaleString()}</p>
+        <div className="border-l-2 border-[#C9A96E] p-6 bg-[#f8f8f8] border border-[#e2e2e2] rounded-xl">
+          <p className="text-sm text-[#888888] mb-1">Total revenue</p>
+          <p className="text-2xl font-medium text-[#1a1a1a]">${totalRevenue.toLocaleString()}</p>
         </div>
       </div>
 

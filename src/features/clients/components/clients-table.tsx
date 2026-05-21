@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useReactTable, getCoreRowModel, flexRender, Row } from '@tanstack/react-table';
 import { motion } from 'framer-motion';
+import { Users } from 'lucide-react';
 import { clientsColumns } from './clients-columns';
 import { ClientWithStats } from '@/features/clients/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -97,11 +98,13 @@ export function ClientsTable({ data, loading, onView, onEdit, onDelete }: Client
 
   if (rowModel.rows.length === 0 && !loading) {
     return (
-      <div className="text-center py-8">
-        <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-muted-foreground mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m2 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <p className="text-muted-foreground">Aucun client trouvé</p>
+      <div className="py-20 flex flex-col items-center gap-4">
+        <Users className="text-[#e2e2e2]" size={48} />
+        <p className="text-lg font-medium text-[#1a1a1a]">Aucun client trouvé</p>
+        <p className="text-sm text-[#888888] mt-1">Commencez par ajouter votre premier client.</p>
+        <button className="bg-[#C9A96E] text-white rounded-[0.75rem] px-5 py-2 font-medium hover:bg-[#b8975e]">
+          Ajouter un client
+        </button>
       </div>
     );
   }
@@ -110,19 +113,17 @@ export function ClientsTable({ data, loading, onView, onEdit, onDelete }: Client
     <Table className="mt-4">
       <TableHeader>
         {table.getHeaderGroups().map((headerGroup) => (
-          <TableHead key={headerGroup.id}>
+          <TableRow key={headerGroup.id}>
             {headerGroup.headers.map((header) => (
-              <TableCell
+              <TableHead
                 key={header.id}
                 colSpan={header.colSpan}
-                className="text-left font-medium text-muted-foreground"
+                className="text-left text-xs uppercase tracking-wider text-[#888888] font-medium"
               >
-                {header.isPlaceholder
-                  ? null
-                  : flexRender(header.column.columnDef.header, header.getContext())}
-              </TableCell>
+                {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+              </TableHead>
             ))}
-          </TableHead>
+          </TableRow>
         ))}
       </TableHeader>
       <TableBody>
@@ -134,7 +135,7 @@ export function ClientsTable({ data, loading, onView, onEdit, onDelete }: Client
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.03, duration: 0.4 }}
-              className="cursor-pointer hover:bg-card/20"
+              className="cursor-pointer hover:bg-[#f8f8f8] border-b border-[#e2e2e2]"
             >
               {row.getVisibleCells().map((cell) => (
                 <TableCell

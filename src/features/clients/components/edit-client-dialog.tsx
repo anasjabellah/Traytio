@@ -44,10 +44,11 @@ export function EditClientDialog({ client, open, onOpenChange, onSuccess }: Edit
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2 }}
       >
-        <DialogContent className="max-w-2xl w-full mx-auto rounded-lg">
+        <DialogContent className="w-[90vw] max-w-[800px] !max-w-[800px] mx-auto rounded-xl border border-[#e2e2e2] shadow-lg p-6 max-h-[90vh] overflow-y-auto [&]:max-w-[800px]">
           <DialogHeader>
-            <DialogTitle>Modifier le client</DialogTitle>
-            <DialogDescription>Modifiez les informations du client ci‑dessous.</DialogDescription>
+            <DialogTitle className="font-heading text-2xl font-medium text-[#1a1a1a]">Modifier le client</DialogTitle>
+            <div className="w-8 h-0.5 bg-[#C9A96E] mt-2 mb-4" />
+            <DialogDescription className="text-sm text-[#888888] mt-1">Modifiez les informations du client ci‑dessous.</DialogDescription>
           </DialogHeader>
           <ClientForm
             mode="edit"
@@ -65,23 +66,15 @@ export function EditClientDialog({ client, open, onOpenChange, onSuccess }: Edit
             onSubmit={handleUpdate}
             isLoading={isSubmitting}
           />
-          <DialogFooter className="flex justify-end space-x-2 mt-4">
-            <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-              Annuler
-            </Button>
-            <button
-              onClick={() => {/* submit handled by form button inside ClientForm – no extra action */}}
-              className="hidden"
-            />
-            {/* Close icon */}
-            <button
-              onClick={() => onOpenChange(false)}
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-              aria-label="Close"
-            >
-              ✕
-            </button>
-          </DialogFooter>
+<DialogFooter className="hidden" />
+          <button
+            data-cancel-btn
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+            className="hidden"
+          >
+            Annuler
+          </button>
         </DialogContent>
       </motion.div>
     </Dialog>

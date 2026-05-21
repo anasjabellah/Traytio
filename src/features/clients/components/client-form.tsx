@@ -121,7 +121,14 @@ export function ClientForm({ defaultValues = {}, onSubmit, isLoading = false, mo
       </section>
 
       {mode === 'edit' && (
-        <div className="flex justify-end pt-4">
+        <div className="flex justify-end items-center gap-3 pt-4">
+          <button
+            type="button"
+            onClick={() => (document.querySelector('[data-cancel-btn]') as HTMLElement)?.click()}
+            className="px-5 py-2 rounded-[0.75rem] border border-[#e2e2e3] text-[#888888] hover:text-[#1a1a1a] hover:border-[#1a1a1a] transition-colors"
+          >
+            Annuler
+          </button>
           <Button type="submit" disabled={isLoading} className="btn-primary">
             {isLoading ? (
               <span className="flex items-center">

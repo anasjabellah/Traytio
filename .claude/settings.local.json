@@ -27,7 +27,14 @@
       "PowerShell(npm install *)",
       "PowerShell(npx tsc --noEmit)",
       "Bash(Select-String -Pattern \"error TS\")",
-      "PowerShell(taskkill *)"
+      "PowerShell(taskkill *)",
+      "Bash(taskkill /PID 13432 /F)",
+      "PowerShell(Stop-Process *)",
+      "PowerShell(npm run *)",
+      "PowerShell(npx prisma db push)",
+      "PowerShell(npx prisma generate)",
+      "PowerShell(npx prisma --version)",
+      "Bash(move *)"
     ]
   }
 }
