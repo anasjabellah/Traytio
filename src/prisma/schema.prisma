@@ -31,7 +31,8 @@ model Organization {
   invoices    Invoice[]
   payments    Payment[]
   stockItems  StockItem[]
-  teamMembers TeamMember[]
+  teamMembers   TeamMember[]
+  menuItems    MenuItem[]
 
   @@map("organizations")
 }
@@ -271,6 +272,38 @@ model StockItem {
 
   @@index([organizationId])
   @@map("stock_items")
+
+}
+
+
+enum MenuItemCategory {
+  FOOD
+  DRINKS
+  DESSERTS
+  DECORATION
+  STAFF
+  ENTERTAINMENT
+  EXTRAS
+}
+
+model MenuItem {
+  id             String          @id @default(cuid())
+  organizationId String
+  name           String
+  category       MenuItemCategory
+  unitPrice      Decimal
+  unit           String?
+  isActive       Boolean         @default(true)
+  notes          String?
+  imageUrl       String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("menu_items")
+
 }
 
 // ==================== TEAM MEMBER MODEL ====================

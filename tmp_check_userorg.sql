@@ -1,0 +1,1 @@
+SELECT * FROM "UserOrganization" LIMIT 1;

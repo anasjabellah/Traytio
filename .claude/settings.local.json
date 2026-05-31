@@ -34,7 +34,11 @@
       "PowerShell(npx prisma db push)",
       "PowerShell(npx prisma generate)",
       "PowerShell(npx prisma --version)",
-      "Bash(move *)"
+      "Bash(move *)",
+      "Bash(ngrok http *)",
+      "Bash(PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=yes npx prisma *)",
+      "Bash(Select-String -Pattern \"Type error|error\")",
+      "Bash(Select-Object -First 20)"
     ]
   }
 }

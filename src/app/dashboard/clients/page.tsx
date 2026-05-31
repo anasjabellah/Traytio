@@ -62,7 +62,7 @@ export default function ClientsPage() {
         </div>
       </div>
 
-      <ClientsToolbar onSearch={handleSearch} onAddClient={openCreate} totalCount={totalClients} />
+      <div className="mt-6 mb-6"><ClientsToolbar onSearch={handleSearch} onAddClient={openCreate} totalCount={totalClients} /></div>
 
       <ClientsTable
         data={clients}
