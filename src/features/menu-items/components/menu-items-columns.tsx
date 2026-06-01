@@ -3,6 +3,7 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { MenuItem, MenuItemCategory } from '@/features/menu-items/types';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
 
 // Badge color mapping for category (MAD currency)
 const categoryColors: Record<MenuItemCategory, string> = {
@@ -111,19 +112,32 @@ export const menuItemsColumns = (
       const item = row.original;
       return (
         <div className="flex space-x-2">
+          {/* View button */}
           <button
             className="btn-ghost btn-sm hover:btn-primary"
+            title="Voir les détails"
+            onClick={() => {
+              // Navigate to detail page
+              window.location.href = `/dashboard/menu-items/${item.id}`;
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          {/* Edit button */}
+          <button
+            className="btn-ghost btn-sm hover:btn-primary cursor-pointer hover:text-[#C9A96E]"
             title="Modifier"
             onClick={() => onEdit(item)}
           >
-            ✏️
+            <Pencil className="h-4 w-4" />
           </button>
+          {/* Delete button */}
           <button
-            className="btn-ghost btn-sm hover:btn-destructive"
+            className="btn-ghost btn-sm hover:btn-destructive cursor-pointer hover:text-red-600"
             title="Supprimer"
             onClick={() => onDelete(item)}
           >
-            🗑️
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       );

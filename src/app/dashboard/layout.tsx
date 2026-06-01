@@ -115,7 +115,7 @@ export default function DashboardLayout({
                         tooltip={item.title}
                         render={
                           <MagneticButton strength={0.15} as={Link} href={item.href} className="flex items-center gap-2 w-full">
-                            <item.icon className="h-4 w-4" />
+                            <item.icon className="h-4 w-4 text-foreground" />
                             <span>{item.title}</span>
                           </MagneticButton>
                         }

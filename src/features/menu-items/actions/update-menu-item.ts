@@ -23,6 +23,7 @@ export async function updateMenuItem(
         unit: rest.unit,
         isActive: rest.isActive,
         notes: rest.notes,
+        imageUrl: rest.imageUrl,
       },
       select: {
         id: true,
@@ -35,6 +36,7 @@ export async function updateMenuItem(
         notes: true,
         createdAt: true,
         updatedAt: true,
+        imageUrl: true,
       },
     });
 

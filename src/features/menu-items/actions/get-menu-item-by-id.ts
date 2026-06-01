@@ -18,6 +18,7 @@ export async function getMenuItemById(id: string): Promise<ActionResponse<MenuIt
         unit: true,
         isActive: true,
         notes: true,
+            imageUrl: true,
         createdAt: true,
         updatedAt: true,
       },

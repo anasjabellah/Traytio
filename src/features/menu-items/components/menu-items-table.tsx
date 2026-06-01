@@ -14,9 +14,10 @@ interface MenuItemsTableProps {
   loading: boolean;
   onEdit: (item: MenuItem) => void;
   onDelete: (item: MenuItem) => void;
+  onAdd?: () => void;
 }
 
-export function MenuItemsTable({ data, loading, onEdit, onDelete }: MenuItemsTableProps) {
+export function MenuItemsTable({ data, loading, onEdit, onDelete, onAdd }: MenuItemsTableProps) {
   const columns = useMemo(() => menuItemsColumns(onEdit, onDelete), []);
 
   const table = useReactTable({
@@ -50,7 +51,7 @@ export function MenuItemsTable({ data, loading, onEdit, onDelete }: MenuItemsTab
       <div className="py-20 flex flex-col items-center gap-4">
         <p className="text-lg font-medium">Aucun article trouvé</p>
         <p className="text-sm text-[#888888] mt-1">Commencez par créer un article.</p>
-        <button className="bg-[#C9A96E] text-white rounded-[0.75rem] px-5 py-2 font-medium hover:bg-[#b8975e]">
+        <button className="bg-[#C9A96E] text-white rounded-[0.75rem] px-5 py-2 font-medium hover:bg-[#b8975e]" onClick={onAdd}>
           Créer un article
         </button>
       </div>
