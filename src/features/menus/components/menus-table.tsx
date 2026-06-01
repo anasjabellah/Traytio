@@ -12,6 +12,8 @@ interface MenusTableProps {
   loading: boolean;
   onEdit: (menu: Menu) => void;
   onDelete: (menu: Menu) => void;
+  pagination: { page: number; totalPages: number };
+  handlePageChange: (page: number) => void;
 }
 
 export function MenusTable({ data, loading, onEdit, onDelete }: MenusTableProps) {
@@ -56,33 +58,55 @@ export function MenusTable({ data, loading, onEdit, onDelete }: MenusTableProps)
   }
 
   return (
-    <Table className="mt-4">
-      <TableHeader>
-        {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id}>
-            {headerGroup.headers.map((header) => (
-              <TableHead
-                key={header.id}
-                colSpan={header.colSpan}
-                className="text-left text-xs uppercase tracking-wider text-[#888888] font-medium"
-              >
-                {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-              </TableHead>
-            ))}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody>
-        {rowModel.rows.map((row, index) => (
-          <TableRow key={row.id} className="cursor-pointer hover:bg-[#f8f8f8] border-b border-[#e2e2e2]">
-            {row.getVisibleCells().map((cell) => (
-              <TableCell key={cell.id} className="px-4 py-2 text-sm">
-                {cell.getIsPlaceholder() ? null : flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
-            ))}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <>
+      <Table className="mt-4">
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableHead
+                  key={header.id}
+                  colSpan={header.colSpan}
+                  className="text-left text-xs uppercase tracking-wider text-[#888888] font-medium"
+                >
+                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {rowModel.rows.map((row, index) => (
+            <TableRow key={row.id} className="cursor-pointer hover:bg-[#f8f8f8] border-b border-[#e2e2e2]">
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id} className="px-4 py-2 text-sm">
+                  {cell.getIsPlaceholder() ? null : flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      {/* Pagination controls */}
+      <div className="flex items-center justify-center space-x-4 mt-4">
+        <button
+          onClick={() => handlePageChange(pagination.page - 1)}
+          disabled={pagination.page <= 1}
+          className="px-3 py-1 bg-[#C9A96E] text-white rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="text-sm text-[#888888]">
+          Page {pagination.page} of {pagination.totalPages}
+        </span>
+        <button
+          onClick={() => handlePageChange(pagination.page + 1)}
+          disabled={pagination.page >= pagination.totalPages}
+          className="px-3 py-1 bg-[#C9A96E] text-white rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    </>
   );
 }

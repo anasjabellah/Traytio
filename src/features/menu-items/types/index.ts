@@ -36,6 +36,7 @@ export type UpdateMenuItemInput = Partial<CreateMenuItemInput> & { id: string };
 
 export type GetMenuItemsParams = {
   search?: string;
+  category?: string; 
   page?: number;
   limit?: number;
   sortBy?: 'name' | 'createdAt' | 'unitPrice';

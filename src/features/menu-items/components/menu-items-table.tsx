@@ -58,33 +58,35 @@ export function MenuItemsTable({ data, loading, onEdit, onDelete }: MenuItemsTab
   }
 
   return (
-    <Table className="mt-4">
-      <TableHeader>
-        {table.getHeaderGroups().map(headerGroup => (
-          <TableRow key={headerGroup.id}>
-            {headerGroup.headers.map(header => (
-              <TableHead
-                key={header.id}
-                colSpan={header.colSpan}
-                className="text-left text-xs uppercase tracking-wider text-[#888888] font-medium"
-              >
-                {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-              </TableHead>
-            ))}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody>
-        {rowModel.rows.map(row => (
-          <TableRow key={row.id} className="cursor-pointer hover:bg-[#f8f8f8] border-b border-[#e2e2e2]">
-            {row.getVisibleCells().map(cell => (
-              <TableCell key={cell.id} className="px-4 py-2 text-sm">
-                {cell.getIsPlaceholder() ? null : flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
-            ))}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <>
+      <Table className="mt-4">
+        <TableHeader>
+          {table.getHeaderGroups().map(headerGroup => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map(header => (
+                <TableHead
+                  key={header.id}
+                  colSpan={header.colSpan}
+                  className="text-left text-xs uppercase tracking-wider text-[#888888] font-medium"
+                >
+                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {rowModel.rows.map(row => (
+            <TableRow key={row.id} className="cursor-pointer hover:bg-[#f8f8f8] border-b border-[#e2e2e2]">
+              {row.getVisibleCells().map(cell => (
+                <TableCell key={cell.id} className="px-4 py-2 text-sm">
+                  {cell.getIsPlaceholder() ? null : flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </>
   );
 }

@@ -1,4 +1,4 @@
-// src/features/menu-items/components/menu-item-toolbar.tsx
+'use client';
 
 import { useState, useCallback, useEffect } from 'react';
 import { debounce } from 'lodash';
@@ -15,17 +15,14 @@ export function MenuItemToolbar({ onSearch, onAddItem, totalCount }: MenuItemToo
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  const handleSearchChange = useCallback(
-    debounce((value: string) => {
-      setDebouncedSearch(value);
-    }, 300),
+  const debounced = useCallback(
+    debounce((value: string) => setDebouncedSearch(value), 300),
     []
   );
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearch(value);
-    handleSearchChange(value);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    debounced(e.target.value);
   };
 
   useEffect(() => {
@@ -33,27 +30,25 @@ export function MenuItemToolbar({ onSearch, onAddItem, totalCount }: MenuItemToo
   }, [debouncedSearch, onSearch]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-        <div className="flex w-full md:w-auto items-center gap-3">
-          <Input
-            placeholder="Rechercher des articles..."
-            value={search}
-            onChange={handleInputChange}
-            className="border border-[#e2e2e2] rounded-[0.75rem] h-10 w-full max-w-xs md:w-[250px] placeholder:text-[#888888] focus:outline-none focus:ring-2 focus:ring-[#C9A96E]"
-          />
-          <span className="text-sm text-muted-foreground">
-            {totalCount} résultat{totalCount !== 1 ? 's' : ''}
-          </span>
-        </div>
-        <Button
-          variant="default"
-          className="bg-[#C9A96E] text-white rounded-[0.75rem] px-5 py-2 font-medium hover:bg-[#b8975e]"
-          onClick={onAddItem}
-        >
-          Nouvel article
-        </Button>
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div className="flex items-center gap-3">
+        <Input
+          placeholder="Rechercher des articles..."
+          value={search}
+          onChange={handleSearchChange}
+          className="border border-[#e2e2e2] rounded-[0.75rem] h-10 w-full max-w-xs md:w-[250px] placeholder:text-[#888888] focus:outline-none focus:ring-2 focus:ring-[#C9A96E]"
+        />
+        <span className="text-sm text-muted-foreground">
+          {totalCount} résultat{totalCount !== 1 ? 's' : ''}
+        </span>
       </div>
+      <Button
+        variant="default"
+        className="bg-[#C9A96E] text-white rounded-[0.75rem] px-5 py-2 font-medium hover:bg-[#b8975e]"
+        onClick={onAddItem}
+      >
+        Nouvel article
+      </Button>
     </div>
   );
 }

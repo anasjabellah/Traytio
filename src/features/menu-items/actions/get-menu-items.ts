@@ -23,6 +23,9 @@ export async function getMenuItems(
     if (search) {
       where.OR = [{ name: { contains: search, mode: 'insensitive' } }];
     }
+    if (params.category && params.category !== 'ALL') {
+      where.category = params.category;
+    }
 
     const total = await prisma.menuItem.count({ where });
     const items = await prisma.menuItem.findMany({
