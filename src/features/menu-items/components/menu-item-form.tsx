@@ -25,6 +25,7 @@ type MenuItemFormProps = {
 const triggerClass = "min-h-[44px] text-sm px-4 border !border-[#e2e2e2] !bg-white w-full !rounded-[0.75rem] font-normal";
 
 export function MenuItemForm({ defaultValues = {}, onSubmit, isLoading = false, mode }: MenuItemFormProps) {
+  const [isUploading, setIsUploading] = React.useState(false);
   const {
     control,
     handleSubmit,
@@ -160,6 +161,7 @@ export function MenuItemForm({ defaultValues = {}, onSubmit, isLoading = false, 
           if (!file) return;
           const formData = new FormData();
           formData.append('file', file);
+          setIsUploading(true);
           try {
             const res = await fetch('/api/upload', {
               method: 'POST',
@@ -168,18 +170,33 @@ export function MenuItemForm({ defaultValues = {}, onSubmit, isLoading = false, 
             if (!res.ok) throw new Error('Upload failed');
             const json = await res.json();
             setValue('imageUrl', json.url);
-                console.log('Image URL set:', json.url);
+            console.log('Image URL set:', json.url);
             toast.success('Image uploaded');
           } catch (err) {
             toast.error('Image upload error');
             console.error(err);
+          } finally {
+            setIsUploading(false);
           }
         }}
       />
+      {isUploading && (
+        <p className="mt-2 text-sm text-gray-600">Upload en cours...</p>
+      )}
     {imageUrl && (
           <img src={imageUrl} alt="Preview" className="mt-2 w-20 h-20 object-cover rounded" />
         )}
       </section>
+      {/* Submit button */}
+      <div className="flex justify-end mt-6">
+        <button
+          type="submit"
+          disabled={isLoading || isUploading}
+          className="px-5 py-2 rounded-[0.75rem] bg-[#C9A96E] text-white hover:bg-[#b8975e] disabled:opacity-50"
+        >
+          {isUploading ? 'Upload en cours...' : mode === 'edit' ? 'Enregistrer' : 'Créer'}
+        </button>
+      </div>
     </form>
   );
 }

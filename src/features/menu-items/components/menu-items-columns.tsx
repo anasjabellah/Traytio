@@ -114,7 +114,7 @@ export const menuItemsColumns = (
         <div className="flex space-x-2">
           {/* View button */}
           <button
-            className="btn-ghost btn-sm hover:btn-primary"
+            className="btn-ghost btn-sm hover:btn-primary  cursor-pointer hover:text-[#C9A96E]"
             title="Voir les détails"
             onClick={() => {
               // Navigate to detail page
