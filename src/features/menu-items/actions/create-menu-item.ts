@@ -22,10 +22,10 @@ export async function createMenuItem(
         unit: data.unit,
         isActive: data.isActive ?? true,
         notes: data.notes,
-          imageUrl: data.imageUrl,
+        imageUrl: data.imageUrl
       },
       select: {
-          imageUrl: true,
+        imageUrl: true,
         id: true,
         organizationId: true,
         name: true,

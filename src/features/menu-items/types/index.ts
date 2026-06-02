@@ -30,6 +30,7 @@ export type CreateMenuItemInput = {
   unit?: string;
   isActive?: boolean;
   notes?: string;
+  imageUrl?: string;
 };
 
 export type UpdateMenuItemInput = Partial<CreateMenuItemInput> & { id: string };
