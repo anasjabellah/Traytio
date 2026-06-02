@@ -307,6 +307,15 @@
     border: 1px solid rgba(255,255,255,0.5);
   }
 
+  .glass-1 {
+    background: rgb(255, 255, 255);
+
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+
   .glass-dark {
     background: color-mix(in oklab, oklch(0.18 0.012 70) 80%, transparent);
     backdrop-filter: blur(20px);

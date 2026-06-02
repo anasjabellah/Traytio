@@ -6,8 +6,8 @@ import { SectionLabel } from "./ProblemSolution";
 const plans = [
   {
     name: "Starter",
-    price: "49",
-    suffix: "€",
+    price: "399",
+    suffix: "MAD",
     per: "/mois",
     desc: "Fonctionnalités essentielles pour petites structures.",
     features: ["Jusqu'à 30 événements/mois", "CRM clients", "Devis & factures PDF", "Calendrier intelligent", "Support email"],
@@ -15,8 +15,8 @@ const plans = [
   },
   {
     name: "Professionnel",
-    price: "149",
-    suffix: "€",
+    price: "799",
+    suffix: "MAD",
     per: "/mois",
     desc: "Toutes les fonctionnalités + automatisations avancées.",
     features: ["Événements illimités", "Event Builder IA", "WhatsApp intégré", "Analytics avancés", "Paiements automatisés", "Support prioritaire 24/7"],

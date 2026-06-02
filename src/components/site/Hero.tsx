@@ -121,7 +121,7 @@ function DashboardMock() {
                 <TrendingUp className="h-3.5 w-3.5 text-gold" />
               </div>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="font-display text-4xl">€48 290</span>
+                <span className="font-display text-4xl">MAD 482 900</span>
                 <span className="text-xs text-gold">+24%</span>
               </div>
               {/* Chart */}
@@ -150,9 +150,9 @@ function DashboardMock() {
                 <span className="text-[10px] text-muted-foreground">3 actives</span>
               </div>
               {[
-                { name: "Mariage Lambert", date: "12 Oct", price: "€8 400", color: "bg-gold" },
-                { name: "Gala Crédit Suisse", date: "14 Oct", price: "€12 900", color: "bg-foreground" },
-                { name: "Cocktail Hermès", date: "16 Oct", price: "€5 200", color: "bg-gold-deep" },
+                { name: "Mariage Lambert", date: "12 Oct", price: "MAD 84 000", color: "bg-gold" },
+                { name: "Gala Crédit Suisse", date: "14 Oct", price: "MAD 129 000", color: "bg-foreground" },
+                { name: "Cocktail Hermès", date: "16 Oct", price: "MAD 52 000", color: "bg-gold-deep" },
               ].map((o, i) => (
                 <div key={i} className="flex items-center justify-between px-4 py-2.5 border-b border-border/40 last:border-0">
                   <div className="flex items-center gap-3">
@@ -182,7 +182,7 @@ function DashboardMock() {
           </div>
           <div>
             <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Paiement reçu</div>
-            <div className="text-sm font-semibold">€3 200</div>
+            <div className="text-sm font-semibold">MAD 32 000</div>
           </div>
         </div>
       </motion.div>
@@ -190,7 +190,7 @@ function DashboardMock() {
       <motion.div
         animate={{ y: [0, 12, 0] }}
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute -right-4 bottom-10 glass shadow-lift rounded-2xl p-3.5 w-52 hidden md:block"
+        className="absolute -right-4 bottom-10  glass shadow-lift rounded-2xl p-3.5 w-52 hidden md:block"
       >
         <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Devis envoyé</div>
         <div className="text-sm font-semibold mt-0.5">Mariage Dubois · 80 pax</div>

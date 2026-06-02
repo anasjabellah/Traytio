@@ -17,7 +17,7 @@ export function Navbar() {
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="fixed top-4 left-1/2 z-50 -translate-x-1/2 w-[min(1180px,calc(100%-2rem))]"
     >
-      <nav className="glass shadow-soft rounded-full pl-6 pr-2 py-2 flex items-center justify-between">
+      <nav className="glass-1 shadow-soft rounded-full pl-6 pr-2 py-2 flex items-center justify-between">
         <a href="#" className="flex items-center gap-2.5 group">
           <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-full bg-gradient-charcoal text-primary-foreground">
             <span className="font-display text-lg leading-none">T</span>
