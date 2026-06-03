@@ -20,11 +20,12 @@ type MenuItemFormProps = {
   onSubmit: (values: MenuItemFormValues) => Promise<void>;
   isLoading?: boolean;
   mode: 'create' | 'edit';
+  onUploadingChange?: (isUploading: boolean) => void;
 };
 
 const triggerClass = "min-h-[44px] text-sm px-4 border !border-[#e2e2e2] !bg-white w-full !rounded-[0.75rem] font-normal";
 
-export function MenuItemForm({ defaultValues = {}, onSubmit, isLoading = false, mode }: MenuItemFormProps) {
+export function MenuItemForm({ defaultValues = {}, onSubmit, isLoading = false, mode, onUploadingChange }: MenuItemFormProps) {
   const [isUploading, setIsUploading] = React.useState(false);
   const {
     control,
@@ -77,7 +78,7 @@ export function MenuItemForm({ defaultValues = {}, onSubmit, isLoading = false, 
                     <SelectTrigger className={triggerClass} style={{ border: '1px solid #e2e2e2', borderRadius: '0.75rem', backgroundColor: 'white' }}>
                       <span className="truncate">{currentLabel || 'Sélectionner une catégorie'}</span>
                     </SelectTrigger>
-                    <SelectContent side="bottom" position="popper">
+                    <SelectContent side="bottom">
                       <SelectItem value="FOOD">Aliment</SelectItem>
                       <SelectItem value="DRINKS">Boisson</SelectItem>
                       <SelectItem value="DESSERTS">Dessert</SelectItem>
@@ -111,7 +112,7 @@ export function MenuItemForm({ defaultValues = {}, onSubmit, isLoading = false, 
                   <SelectTrigger className={triggerClass} style={{ border: '1px solid #e2e2e2', borderRadius: '0.75rem', backgroundColor: 'white' }}>
                     <SelectValue placeholder="Sélectionner une unité" />
                   </SelectTrigger>
-                  <SelectContent side="bottom" position="popper">
+                  <SelectContent side="bottom">
                     <SelectItem value="pcs">pcs</SelectItem>
                     <SelectItem value="kg">kg</SelectItem>
                     <SelectItem value="g">g</SelectItem>
@@ -162,6 +163,7 @@ export function MenuItemForm({ defaultValues = {}, onSubmit, isLoading = false, 
           const formData = new FormData();
           formData.append('file', file);
           setIsUploading(true);
+          onUploadingChange?.(true);
           try {
             const res = await fetch('/api/upload', {
               method: 'POST',
@@ -187,16 +189,6 @@ export function MenuItemForm({ defaultValues = {}, onSubmit, isLoading = false, 
           <img src={imageUrl} alt="Preview" className="mt-2 w-20 h-20 object-cover rounded" />
         )}
       </section>
-      {/* Submit button */}
-      <div className="flex justify-end mt-6">
-        <button
-          type="submit"
-          disabled={isLoading || isUploading}
-          className="px-5 py-2 rounded-[0.75rem] bg-[#C9A96E] text-white hover:bg-[#b8975e] disabled:opacity-50"
-        >
-          {isUploading ? 'Upload en cours...' : mode === 'edit' ? 'Enregistrer' : 'Créer'}
-        </button>
-      </div>
     </form>
   );
 }

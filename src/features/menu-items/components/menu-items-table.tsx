@@ -15,9 +15,11 @@ interface MenuItemsTableProps {
   onEdit: (item: MenuItem) => void;
   onDelete: (item: MenuItem) => void;
   onAdd?: () => void;
+  pagination: { page: number; totalPages: number };
+  handlePageChange: (page: number) => void;
 }
 
-export function MenuItemsTable({ data, loading, onEdit, onDelete, onAdd }: MenuItemsTableProps) {
+export function MenuItemsTable({ data, loading, onEdit, onDelete, onAdd, pagination, handlePageChange }: MenuItemsTableProps) {
   const columns = useMemo(() => menuItemsColumns(onEdit, onDelete), []);
 
   const table = useReactTable({
@@ -88,6 +90,27 @@ export function MenuItemsTable({ data, loading, onEdit, onDelete, onAdd }: MenuI
           ))}
         </TableBody>
       </Table>
+      {pagination.totalPages > 1 && (
+        <div className="flex items-center justify-center space-x-4 mt-4">
+          <button
+            onClick={() => handlePageChange(pagination.page - 1)}
+            disabled={pagination.page <= 1}
+            className="px-3 py-1 bg-[#C9A96E] text-white rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-[#888888]">
+            Page {pagination.page} of {pagination.totalPages}
+          </span>
+          <button
+            onClick={() => handlePageChange(pagination.page + 1)}
+            disabled={pagination.page >= pagination.totalPages}
+            className="px-3 py-1 bg-[#C9A96E] text-white rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </>
   );
 }

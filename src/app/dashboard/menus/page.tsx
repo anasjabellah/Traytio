@@ -61,7 +61,9 @@ export default function MenusPage() {
         <MenuToolbar onSearch={handleSearch} onAddMenu={openCreate} totalCount={totalMenus} />
       </div>
 
-      <MenusTable data={menus} loading={isLoading} onEdit={handleEdit} onDelete={handleDelete} />
+      {error && <p className="text-red-600 mb-4">{error}</p>}
+
+      <MenusTable data={menus} loading={isLoading} onEdit={handleEdit} onDelete={handleDelete} onAdd={openCreate} pagination={pagination} handlePageChange={handlePageChange} />
 
       {/* Modals */}
       <CreateMenuDialog open={isCreateOpen} onOpenChange={(open) => { if (!open) closeAll(); }} onSuccess={refresh} />

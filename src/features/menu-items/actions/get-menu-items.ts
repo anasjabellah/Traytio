@@ -28,6 +28,7 @@ export async function getMenuItems(
     }
 
     const total = await prisma.menuItem.count({ where });
+    console.log('[getMenuItems] skip:', skip, 'take:', limit, 'total:', total);
     const items = await prisma.menuItem.findMany({
       where,
       select: {

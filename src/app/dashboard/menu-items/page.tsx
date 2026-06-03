@@ -105,28 +105,7 @@ export default function MenuItemsPage() {
 
       {error && <p className="text-red-600 mb-4">{error}</p>}
 
-      <MenuItemsTable data={items} loading={isLoading} onEdit={handleEdit} onDelete={handleDelete} onAdd={openCreate} />
-        {pagination.totalPages > 1 && (
-          <div className="flex items-center justify-center space-x-4 mt-4">
-            <button
-              onClick={() => handlePageChange(pagination.page - 1)}
-              disabled={pagination.page <= 1}
-              className="px-3 py-1 bg-[#C9A96E] text-white rounded disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <span className="text-sm text-[#888888]">
-              Page {pagination.page} of {pagination.totalPages}
-            </span>
-            <button
-              onClick={() => handlePageChange(pagination.page + 1)}
-              disabled={pagination.page >= pagination.totalPages}
-              className="px-3 py-1 bg-[#C9A96E] text-white rounded disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        )}
+      <MenuItemsTable data={items} loading={isLoading} onEdit={handleEdit} onDelete={handleDelete} onAdd={openCreate} pagination={pagination} handlePageChange={handlePageChange} />
 
       {/* Modals */}
       <CreateMenuItemDialog

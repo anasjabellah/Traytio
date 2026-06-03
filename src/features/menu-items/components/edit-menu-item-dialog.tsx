@@ -21,6 +21,7 @@ type Props = {
 
 export function EditMenuItemDialog({ item, open, onClose, onSuccess }: Props) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isUploading, setIsUploading] = React.useState(false);
 
   const handleUpdate = async (values: any) => {
     if (!item) return;
@@ -65,6 +66,7 @@ export function EditMenuItemDialog({ item, open, onClose, onSuccess }: Props) {
               }}
               onSubmit={handleUpdate}
               isLoading={isSubmitting}
+              onUploadingChange={setIsUploading}
             />
           )}
         </div>
@@ -72,15 +74,15 @@ export function EditMenuItemDialog({ item, open, onClose, onSuccess }: Props) {
           <button
             type="button"
             onClick={() => onClose(false)}
-            className="px-5 py-2 rounded-[0.75rem] border border-[#e2e2e2] text-[#888888] hover:text-[#1a1a1a] transition-colors"
+            className="cursor-pointer hover:bg-gray-50 transition-colors px-5 py-2 rounded-[0.75rem] border border-[#e2e2e2] text-[#888888] hover:text-[#1a1a1a] transition-colors"
           >
             Annuler
           </button>
           <button
             type="submit"
             form="menu-item-form"
-            disabled={isSubmitting}
-            className="px-5 py-2 rounded-[0.75rem] bg-[#C9A96E] hover:bg-[#b8975e] text-white text-sm font-medium disabled:opacity-50"
+            disabled={isSubmitting || isUploading}
+            className="cursor-pointer hover:bg-[#b8975e] transition-colors px-5 py-2 rounded-[0.75rem] bg-[#C9A96E] text-white text-sm font-medium disabled:opacity-50"
           >
             {isSubmitting ? 'Enregistrement…' : 'Enregistrer'}
           </button>

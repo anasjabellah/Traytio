@@ -1,21 +1,9 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { auth } from '@clerk/nextjs/server';
 import type { ActionResponse, Menu, PaginatedMenus, GetMenusParams } from '@/features/menus/types';
 import { MENU_DEFAULT_PAGE_SIZE } from '@/features/menus/constants';
-
-async function getOrganizationId(): Promise<string> {
-  const { userId } = await auth();
-  if (!userId) throw new Error('Unauthorized');
-
-  const userOrg = await prisma.userOrganization.findFirst({
-    where: { user: { clerkId: userId } },
-    select: { organizationId: true },
-  });
-  if (!userOrg) throw new Error('Organization not found');
-  return userOrg.organizationId;
-}
+import { getOrganizationId } from '@/features/menus/actions/_helpers';
 
 export async function getMenus(params: GetMenusParams): Promise<ActionResponse<PaginatedMenus>> {
   try {
@@ -35,9 +23,11 @@ export async function getMenus(params: GetMenusParams): Promise<ActionResponse<P
         id: true,
         organizationId: true,
         name: true,
+        description: true,
         category: true,
         pricePerPerson: true,
         minPersons: true,
+        maxPersons: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,
@@ -47,14 +37,14 @@ export async function getMenus(params: GetMenusParams): Promise<ActionResponse<P
       take: limit,
     });
 
-    const result: Menu[] = menus.map((m: any) => ({
+    const data: Menu[] = menus.map((m: any) => ({
       ...m,
       pricePerPerson: Number(m.pricePerPerson),
     }));
 
     const totalPages = Math.ceil(total / limit);
-    return { success: true, data: { data: result, total, page, limit, totalPages } };
-  } catch (error: any) {
-    return { success: false, error: error.message || 'An error occurred' };
+    return { success: true, data: { data, total, page, limit, totalPages } };
+  } catch (e: any) {
+    return { success: false, error: e.message || 'Erreur lors du chargement des menus' };
   }
 }

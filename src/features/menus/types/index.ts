@@ -13,9 +13,11 @@ export type Menu = {
   id: string;
   organizationId: string;
   name: string;
+  description?: string | null;
   category: MenuCategory;
-  pricePerPerson: number; // stored as Decimal in DB
+  pricePerPerson: number;
   minPersons: number;
+  maxPersons?: number | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -23,9 +25,11 @@ export type Menu = {
 
 export type CreateMenuInput = {
   name: string;
+  description?: string;
   category: MenuCategory;
   pricePerPerson: number;
   minPersons?: number;
+  maxPersons?: number;
   isActive?: boolean;
 };
 

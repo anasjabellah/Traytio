@@ -1,8 +1,8 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Menu, MenuCategory } from '@/features/menus/types';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
 
-// Badge color mapping for category
 const categoryColors: Record<MenuCategory, string> = {
   WEDDING: 'bg-pink-200 text-pink-800',
   CORPORATE: 'bg-blue-200 text-blue-800',
@@ -11,6 +11,16 @@ const categoryColors: Record<MenuCategory, string> = {
   BRUNCH: 'bg-orange-200 text-orange-800',
   DESSERT: 'bg-rose-200 text-rose-800',
   CUSTOM: 'bg-gray-200 text-gray-800',
+};
+
+const categoryLabels: Record<MenuCategory, string> = {
+  WEDDING: 'Mariage',
+  CORPORATE: 'Entreprise',
+  BUFFET: 'Buffet',
+  COCKTAIL: 'Cocktail',
+  BRUNCH: 'Brunch',
+  DESSERT: 'Dessert',
+  CUSTOM: 'Custom',
 };
 
 const activeColors: Record<'true' | 'false', string> = {
@@ -24,7 +34,7 @@ export const menusColumns = (
 ): ColumnDef<Menu>[] => [
   {
     accessorKey: 'name',
-    header: "Nom du menu",
+    header: 'Nom du menu',
     size: 200,
     cell: ({ row }) => (
       <a
@@ -41,8 +51,9 @@ export const menusColumns = (
     size: 150,
     cell: ({ row }) => {
       const cat = row.getValue('category') as MenuCategory;
-      const className = categoryColors[cat] || 'bg-gray-200 text-gray-800';
-      return <Badge className={className}>{cat}</Badge>;
+      const className = categoryColors[cat] ?? 'bg-gray-200 text-gray-800';
+      const label = categoryLabels[cat] ?? cat;
+      return <Badge className={className}>{label}</Badge>;
     },
   },
   {
@@ -58,7 +69,11 @@ export const menusColumns = (
     accessorKey: 'minPersons',
     header: 'Nb. min',
     size: 100,
-    cell: ({ row }) => row.getValue('minPersons'),
+  },
+  {
+    accessorKey: 'maxPersons',
+    header: 'Nb. max',
+    size: 100,
   },
   {
     accessorKey: 'isActive',
@@ -66,7 +81,7 @@ export const menusColumns = (
     size: 100,
     cell: ({ row }) => {
       const active = row.getValue('isActive') as boolean;
-      const className = activeColors[active ? 'true' : 'false'] || 'bg-gray-200 text-gray-800';
+      const className = activeColors[active ? 'true' : 'false'];
       return <Badge className={className}>{active ? 'Oui' : 'Non'}</Badge>;
     },
   },
@@ -88,18 +103,27 @@ export const menusColumns = (
       return (
         <div className="flex space-x-2">
           <button
-            className="btn-ghost btn-sm hover:btn-primary"
+            className="btn-ghost btn-sm hover:btn-primary cursor-pointer hover:text-[#C9A96E]"
+            title="Voir les détails"
+            onClick={() => {
+              window.location.href = `/dashboard/menus/${menu.id}`;
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          <button
+            className="btn-ghost btn-sm hover:btn-primary cursor-pointer hover:text-[#C9A96E]"
             title="Modifier"
             onClick={() => onEdit(menu)}
           >
-            ✏️
+            <Pencil className="h-4 w-4" />
           </button>
           <button
-            className="btn-ghost btn-sm hover:btn-destructive"
+            className="btn-ghost btn-sm hover:btn-destructive cursor-pointer hover:text-red-600"
             title="Supprimer"
             onClick={() => onDelete(menu)}
           >
-            🗑️
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       );

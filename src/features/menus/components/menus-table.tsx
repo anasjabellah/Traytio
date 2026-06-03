@@ -12,11 +12,12 @@ interface MenusTableProps {
   loading: boolean;
   onEdit: (menu: Menu) => void;
   onDelete: (menu: Menu) => void;
+  onAdd?: () => void;
   pagination: { page: number; totalPages: number };
   handlePageChange: (page: number) => void;
 }
 
-export function MenusTable({ data, loading, onEdit, onDelete }: MenusTableProps) {
+export function MenusTable({ data, loading, onEdit, onDelete, onAdd, pagination, handlePageChange }: MenusTableProps) {
   const columns = useMemo(() => menusColumns(onEdit, onDelete), []);
 
   const table = useReactTable({
@@ -50,7 +51,7 @@ export function MenusTable({ data, loading, onEdit, onDelete }: MenusTableProps)
       <div className="py-20 flex flex-col items-center gap-4">
         <p className="text-lg font-medium">Aucun menu trouvé</p>
         <p className="text-sm text-[#888888] mt-1">Commencez par créer un menu.</p>
-        <button className="bg-[#C9A96E] text-white rounded-[0.75rem] px-5 py-2 font-medium hover:bg-[#b8975e]">
+        <button className="bg-[#C9A96E] text-white rounded-[0.75rem] px-5 py-2 font-medium hover:bg-[#b8975e]" onClick={onAdd}>
           Créer un menu
         </button>
       </div>
@@ -87,26 +88,27 @@ export function MenusTable({ data, loading, onEdit, onDelete }: MenusTableProps)
           ))}
         </TableBody>
       </Table>
-      {/* Pagination controls */}
-      <div className="flex items-center justify-center space-x-4 mt-4">
-        <button
-          onClick={() => handlePageChange(pagination.page - 1)}
-          disabled={pagination.page <= 1}
-          className="px-3 py-1 bg-[#C9A96E] text-white rounded disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span className="text-sm text-[#888888]">
-          Page {pagination.page} of {pagination.totalPages}
-        </span>
-        <button
-          onClick={() => handlePageChange(pagination.page + 1)}
-          disabled={pagination.page >= pagination.totalPages}
-          className="px-3 py-1 bg-[#C9A96E] text-white rounded disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
+      {pagination.totalPages > 1 && (
+        <div className="flex items-center justify-center space-x-4 mt-4">
+          <button
+            onClick={() => handlePageChange(pagination.page - 1)}
+            disabled={pagination.page <= 1}
+            className="px-3 py-1 bg-[#C9A96E] text-white rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-[#888888]">
+            Page {pagination.page} of {pagination.totalPages}
+          </span>
+          <button
+            onClick={() => handlePageChange(pagination.page + 1)}
+            disabled={pagination.page >= pagination.totalPages}
+            className="px-3 py-1 bg-[#C9A96E] text-white rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </>
   );
 }
