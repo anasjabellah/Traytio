@@ -8,6 +8,7 @@ import { MenuToolbar } from '@/features/menus/components/menu-toolbar';
 import { CreateMenuDialog } from '@/features/menus/components/create-menu-dialog';
 import { EditMenuDialog } from '@/features/menus/components/edit-menu-dialog';
 import { DeleteMenuDialog } from '@/features/menus/components/delete-menu-dialog';
+import { formatCurrency } from '@/lib/utils';
 
 export default function MenusPage() {
   const { menus, isLoading, error, pagination, handleSearch, handlePageChange, refresh } = useMenus();
@@ -25,7 +26,7 @@ export default function MenusPage() {
   const totalMenus = menus.length;
   const totalPrice = menus.reduce((sum, m) => sum + Number(m.pricePerPerson), 0);
   const averagePrice = totalMenus ? totalPrice / totalMenus : 0;
-  const formattedAverage = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(averagePrice);
+  const formattedAverage = formatCurrency(averagePrice);
 
   const handleEdit = (menu: any) => {
     openEdit(menu);

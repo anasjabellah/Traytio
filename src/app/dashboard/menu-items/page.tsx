@@ -12,6 +12,7 @@ import { CreateMenuItemDialog } from '@/features/menu-items/components/create-me
 import { EditMenuItemDialog } from '@/features/menu-items/components/edit-menu-item-dialog';
 import { DeleteMenuItemDialog } from '@/features/menu-items/components/delete-menu-item-dialog';
 import type { MenuItem } from '@/features/menu-items/types';
+import { formatCurrency } from '@/lib/utils';
 
 export default function MenuItemsPage() {
   const [selectedCategory, setSelectedCategory] = useState('ALL');
@@ -31,14 +32,8 @@ export default function MenuItemsPage() {
   const activeCount = items.filter(item => item.isActive).length;
   const totalPrice = items.reduce((sum, i) => sum + Number(i.unitPrice), 0);
   const averagePrice = items.length ? totalPrice / items.length : 0;
-  const formattedAverage = new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'MAD',
-  }).format(averagePrice);
-  const formattedTotalPrice = new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'MAD',
-  }).format(totalPrice);
+  const formattedAverage = formatCurrency(averagePrice);
+  const formattedTotalPrice = formatCurrency(totalPrice);
 
   const handleEdit = (item: MenuItem) => {
     openEdit(item);

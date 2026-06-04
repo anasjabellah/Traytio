@@ -21,6 +21,19 @@ export type Menu = {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  menuItems?: {
+    id: string;
+    menuItemId: string;
+    defaultQty: number;
+    menuItem: {
+      id: string;
+      name: string;
+      category: string;
+      unitPrice: number;
+      unit: string | null;
+      imageUrl: string | null;
+    };
+  }[];
 };
 
 export type CreateMenuInput = {
@@ -31,6 +44,7 @@ export type CreateMenuInput = {
   minPersons?: number;
   maxPersons?: number;
   isActive?: boolean;
+  menuItems?: { menuItemId: string; defaultQty: number }[];
 };
 
 export type UpdateMenuInput = Partial<CreateMenuInput> & { id: string };

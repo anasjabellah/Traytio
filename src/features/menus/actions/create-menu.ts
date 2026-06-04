@@ -36,6 +36,16 @@ export async function createMenu(data: CreateMenuInput): Promise<ActionResponse<
       },
     });
 
+    if (data.menuItems && data.menuItems.length > 0) {
+      await prisma.menuMenuItem.createMany({
+        data: data.menuItems.map(item => ({
+          menuId: menu.id,
+          menuItemId: item.menuItemId,
+          defaultQty: item.defaultQty,
+        })),
+      });
+    }
+
     return {
       success: true,
       data: { ...menu, pricePerPerson: Number(menu.pricePerPerson) },

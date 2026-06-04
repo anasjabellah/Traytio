@@ -30,9 +30,9 @@ model Organization {
   commandes   Commande[]
   invoices    Invoice[]
   payments    Payment[]
-  stockItems  StockItem[]
+  stockItems    StockItem[]
   teamMembers   TeamMember[]
-  menuItems    MenuItem[]
+  menuItems     MenuItem[]
 
   @@map("organizations")
 }
@@ -142,9 +142,25 @@ model Menu {
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   commandeItems   CommandeItem[]
   commandes        Commande[]
+  menuItems       MenuMenuItem[]
 
   @@index([organizationId])
   @@map("menus")
+}
+
+// ==================== MENU-MENUITEM JUNCTION ====================
+
+model MenuMenuItem {
+  id          String   @id @default(cuid())
+  menuId      String
+  menuItemId  String
+  defaultQty  Int      @default(1)
+
+  menu        Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  menuItem    MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@unique([menuId, menuItemId])
+  @@map("menu_menu_items")
 }
 
 // ==================== COMMANDE (ORDER) MODEL ====================
@@ -169,6 +185,20 @@ model Commande {
   paidAmount      Decimal      @default(0)
   remainingAmount Decimal      @default(0)
   notes           String?
+  transportFees   Decimal?      @default(0)
+  deliveryFees    Decimal?      @default(0)
+  equipmentFees   Decimal?      @default(0)
+  discountType    DiscountType?
+  discountValue   Decimal?      @default(0)
+  discountAmount  Decimal?      @default(0)
+  clientBudget    Decimal?
+  contactName     String?
+  contactPhone    String?
+  internalNotes   String?
+  clientNotes     String?
+  pdfUrl          String?
+  sentAt          DateTime?
+  sentVia         String?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
@@ -179,6 +209,9 @@ model Commande {
   menu            Menu?        @relation(fields: [menuId], references: [id], onDelete: SetNull)
   items           CommandeItem[]
   invoices        Invoice[]
+  tasks           CommandeTask[]
+  attachments     CommandeAttachment[]
+  activities      CommandeActivity[]
 
   @@index([organizationId])
   @@index([clientId])
@@ -193,13 +226,64 @@ model CommandeItem {
   quantity    Int
   unitPrice   Decimal
   totalPrice  Decimal
+  notes       String?
+  menuItemId  String?
 
   // Relations
   commande    Commande @relation(fields: [commandeId], references: [id], onDelete: Cascade)
   menu        Menu?    @relation(fields: [menuId], references: [id], onDelete: SetNull)
+  menuItem    MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
 
   @@index([commandeId])
   @@map("commande_items")
+}
+
+// ==================== COMMANDE TASK MODEL ====================
+
+model CommandeTask {
+  id          String    @id @default(cuid())
+  commandeId  String
+  title       String
+  isDone      Boolean   @default(false)
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+
+  commande    Commande  @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+
+  @@index([commandeId])
+  @@map("commande_tasks")
+}
+
+// ==================== COMMANDE ATTACHMENT MODEL ====================
+
+model CommandeAttachment {
+  id          String   @id @default(cuid())
+  commandeId  String
+  name        String
+  url         String
+  type        String?
+  createdAt   DateTime @default(now())
+
+  commande    Commande @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+
+  @@index([commandeId])
+  @@map("commande_attachments")
+}
+
+// ==================== COMMANDE ACTIVITY MODEL ====================
+
+model CommandeActivity {
+  id          String   @id @default(cuid())
+  commandeId  String
+  userId      String?
+  action      String
+  description String
+  createdAt   DateTime @default(now())
+
+  commande    Commande @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+
+  @@index([commandeId])
+  @@map("commande_activities")
 }
 
 // ==================== INVOICE MODEL ====================
@@ -300,6 +384,8 @@ model MenuItem {
   updatedAt      DateTime        @updatedAt
 
   organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  menus          MenuMenuItem[]
+  commandeItems  CommandeItem[]
 
   @@index([organizationId])
   @@map("menu_items")
@@ -415,6 +501,11 @@ enum StockCategory {
   EQUIPMENT
   DECORATION
   OTHER
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
 }
 
 // ==================== DECIMAL SUPPORT ====================

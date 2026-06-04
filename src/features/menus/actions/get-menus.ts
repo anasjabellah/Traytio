@@ -31,6 +31,23 @@ export async function getMenus(params: GetMenusParams): Promise<ActionResponse<P
         isActive: true,
         createdAt: true,
         updatedAt: true,
+        menuItems: {
+          select: {
+            id: true,
+            menuItemId: true,
+            defaultQty: true,
+            menuItem: {
+              select: {
+                id: true,
+                name: true,
+                category: true,
+                unitPrice: true,
+                unit: true,
+                imageUrl: true,
+              },
+            },
+          },
+        },
       },
       orderBy: { [sortBy]: sortOrder },
       skip,
@@ -40,6 +57,13 @@ export async function getMenus(params: GetMenusParams): Promise<ActionResponse<P
     const data: Menu[] = menus.map((m: any) => ({
       ...m,
       pricePerPerson: Number(m.pricePerPerson),
+      menuItems: m.menuItems?.map((mi: any) => ({
+        ...mi,
+        menuItem: {
+          ...mi.menuItem,
+          unitPrice: Number(mi.menuItem.unitPrice),
+        },
+      })),
     }));
 
     const totalPages = Math.ceil(total / limit);

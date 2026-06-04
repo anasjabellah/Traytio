@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Pencil } from "lucide-react";
+import { formatCurrency } from '@/lib/utils';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -56,7 +57,7 @@ export default function ClientDetailView({ client }: { client: any }) {
               Total dépensé
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-xl font-medium">{client.totalSpent?.toLocaleString() ?? 0} €</CardContent>
+          <CardContent className="text-xl font-medium">{formatCurrency(client.totalSpent)}</CardContent>
         </Card>
         <Card className="border border-[#e2e2e2]">
           <CardHeader>
@@ -144,7 +145,7 @@ export default function ClientDetailView({ client }: { client: any }) {
                   <span className={`px-2 py-0.5 rounded text-xs ${statusBadgeClass(c.status)}`}>{c.status}</span>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm">Montant: {c.totalAmount?.toLocaleString()} €</p>
+                  <p className="text-sm">Montant: {formatCurrency(c.totalAmount)}</p>
                   <p className="text-sm text-[#888888]">Date: {new Date(c.createdAt).toLocaleDateString()}</p>
                 </CardContent>
               </Card>

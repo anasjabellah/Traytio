@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import type { Menu } from '@/features/menus/types';
+import { formatCurrency } from '@/lib/utils';
 
 const categoryLabels: Record<string, string> = {
   WEDDING: 'Mariage',
@@ -29,10 +30,7 @@ const categoryColors: Record<string, string> = {
 };
 
 export default function MenuDetailView({ menu }: { menu: Menu }) {
-  const price = new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
-  }).format(menu.pricePerPerson);
+  const price = formatCurrency(menu.pricePerPerson);
 
   const created = new Date(menu.createdAt).toLocaleDateString('fr-FR');
   const [editOpen, setEditOpen] = useState(false);
@@ -119,6 +117,43 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
             <div className="mt-6 border border-[#e2e2e2] rounded-xl p-4 bg-white">
               <h2 className="text-sm text-gray-600 mb-2">Description</h2>
               <p className="text-gray-800 whitespace-pre-line">{menu.description}</p>
+            </div>
+          )}
+
+          {/* Composition du Menu */}
+          {menu.menuItems && menu.menuItems.length > 0 && (
+            <div className="mt-6">
+              <h2 className="text-lg font-semibold mb-4">Composition du Menu</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {menu.menuItems.map((item) => (
+                  <div key={item.id} className="border border-[#e2e2e2] rounded-xl p-4 flex items-center gap-4 bg-white">
+                    {item.menuItem.imageUrl ? (
+                      <img
+                        src={item.menuItem.imageUrl}
+                        alt={item.menuItem.name}
+                        className="w-14 h-14 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center text-xs text-gray-400">
+                        N/A
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{item.menuItem.name}</p>
+                      <p className="text-sm text-gray-500">
+                        {formatCurrency(item.menuItem.unitPrice)}
+                        {item.menuItem.unit ? ` / ${item.menuItem.unit}` : ''}
+                      </p>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                        {item.menuItem.category}
+                      </span>
+                    </div>
+                    <div className="text-sm font-semibold text-right shrink-0">
+                      Qté {item.defaultQty}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

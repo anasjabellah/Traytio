@@ -21,10 +21,40 @@ export async function getMenuById(id: string): Promise<ActionResponse<Menu>> {
         isActive: true,
         createdAt: true,
         updatedAt: true,
+        menuItems: {
+          select: {
+            id: true,
+            menuItemId: true,
+            defaultQty: true,
+            menuItem: {
+              select: {
+                id: true,
+                name: true,
+                category: true,
+                unitPrice: true,
+                unit: true,
+                imageUrl: true,
+              },
+            },
+          },
+        },
       },
     });
     if (!menu) throw new Error('Menu non trouvé');
-    return { success: true, data: { ...menu, pricePerPerson: Number(menu.pricePerPerson) } };
+    return {
+      success: true,
+      data: {
+        ...menu,
+        pricePerPerson: Number(menu.pricePerPerson),
+        menuItems: menu.menuItems?.map((mi: any) => ({
+          ...mi,
+          menuItem: {
+            ...mi.menuItem,
+            unitPrice: Number(mi.menuItem.unitPrice),
+          },
+        })),
+      },
+    };
   } catch (e: any) {
     return { success: false, error: e.message || 'Erreur lors de la récupération du menu' };
   }

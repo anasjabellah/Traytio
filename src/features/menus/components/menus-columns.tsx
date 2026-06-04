@@ -2,6 +2,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Menu, MenuCategory } from '@/features/menus/types';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 const categoryColors: Record<MenuCategory, string> = {
   WEDDING: 'bg-pink-200 text-pink-800',
@@ -58,11 +59,11 @@ export const menusColumns = (
   },
   {
     accessorKey: 'pricePerPerson',
-    header: 'Prix par personne (€)',
+    header: 'Prix par personne (MAD)',
     size: 150,
     cell: ({ row }) => {
       const price = Number(row.getValue('pricePerPerson'));
-      return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(price);
+      return formatCurrency(price);
     },
   },
   {

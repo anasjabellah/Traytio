@@ -2,6 +2,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Eye } from 'lucide-react';
 import { Event } from '@/features/events/types';
 import { Badge } from '@/components/ui/badge';
+import { formatCurrency } from '@/lib/utils';
 
 // Badge color mapping based on status
 const statusColors: Record<string, string> = {
@@ -70,7 +71,7 @@ export const eventsColumns = (
     size: 150,
     cell: ({ row }) => {
       const budget = Number(row.getValue('budget'));
-      return budget ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(budget) : '—';
+      return budget ? formatCurrency(budget) : '—';
     },
   },
   {

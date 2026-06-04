@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import type { MenuItem } from '@/features/menu-items/types';
+import { formatCurrency } from '@/lib/utils';
 
 // Re‑usable colour mapping for the category badge
 const categoryColors: Record<string, string> = {
@@ -53,10 +54,7 @@ export default function MenuItemDetailView({
   item: MenuItem;
 }) {
   // Format helpers – keep the same locale as the original component
-  const price = new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'MAD',
-  }).format(item.unitPrice);
+  const price = formatCurrency(item.unitPrice);
 
   const created = new Date(item.createdAt).toLocaleDateString('fr-FR');
   const [editOpen, setEditOpen] = useState(false);

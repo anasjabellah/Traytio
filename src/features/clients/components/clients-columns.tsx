@@ -1,5 +1,6 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { ClientWithStats } from '@/features/clients/types';
+import { formatCurrency } from '@/lib/utils';
 
 export const clientsColumns: ColumnDef<ClientWithStats>[] = [
   {
@@ -28,10 +29,7 @@ export const clientsColumns: ColumnDef<ClientWithStats>[] = [
     size: 150,
     cell: ({ row }) => {
       const totalSpent = Number(row.getValue('totalSpent'));
-      return new Intl.NumberFormat('fr-FR', {
-        style: 'currency',
-        currency: 'EUR',
-      }).format(totalSpent);
+      return formatCurrency(totalSpent);
     },
   },
   {

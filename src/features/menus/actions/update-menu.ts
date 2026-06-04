@@ -9,7 +9,7 @@ export async function updateMenu(data: UpdateMenuInput): Promise<ActionResponse<
   try {
     updateMenuSchema.parse(data);
     const organizationId = await getOrganizationId();
-    const { id, ...rest } = data;
+    const { id, menuItems, ...rest } = data;
 
     const menu = await prisma.menu.update({
       where: { id, organizationId },
@@ -36,6 +36,17 @@ export async function updateMenu(data: UpdateMenuInput): Promise<ActionResponse<
         updatedAt: true,
       },
     });
+
+    await prisma.menuMenuItem.deleteMany({ where: { menuId: id } });
+    if (menuItems && menuItems.length > 0) {
+      await prisma.menuMenuItem.createMany({
+        data: menuItems.map(item => ({
+          menuId: id,
+          menuItemId: item.menuItemId,
+          defaultQty: item.defaultQty,
+        })),
+      });
+    }
 
     return {
       success: true,

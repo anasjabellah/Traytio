@@ -16,6 +16,10 @@ export const createMenuSchema = z.object({
   minPersons: z.number().int().positive().default(1),
   maxPersons: z.number().int().positive().optional(),
   isActive: z.boolean().default(true),
+  menuItems: z.array(z.object({
+    menuItemId: z.string().min(1),
+    defaultQty: z.number().min(1).default(1),
+  })).optional().default([]),
 });
 
 export type CreateMenuInput = z.infer<typeof createMenuSchema>;

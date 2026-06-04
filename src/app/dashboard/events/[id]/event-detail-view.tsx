@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { formatCurrency } from '@/lib/utils';
 import { EditEventDialog } from "@/features/events/components/edit-event-dialog";
 import { DeleteEventDialog } from "@/features/events/components/delete-event-dialog";
 
@@ -92,7 +93,7 @@ export default function EventDetailView({ event }: { event: any }) {
             <CardHeader>
               <CardTitle className="text-xs text-[#888888] uppercase tracking-wider font-sans font-medium">Budget</CardTitle>
             </CardHeader>
-            <CardContent className="text-xl font-medium">{event.budget?.toLocaleString()} €</CardContent>
+            <CardContent className="text-xl font-medium">{formatCurrency(event.budget)}</CardContent>
           </Card>
         )}
         {event.guestCount != null && (
@@ -133,7 +134,7 @@ export default function EventDetailView({ event }: { event: any }) {
                   <span className={`px-2 py-0.5 rounded text-xs ${statusBadgeClass(c.status)}`}>{c.status}</span>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm">Montant: {c.totalAmount?.toLocaleString()} €</p>
+                  <p className="text-sm">Montant: {formatCurrency(c.totalAmount)}</p>
                   <p className="text-sm text-[#888888]">Date: {new Date(c.createdAt).toLocaleDateString()}</p>
                 </CardContent>
               </Card>

@@ -9,6 +9,7 @@ import { EventToolbar } from '@/features/events/components/event-toolbar';
 import { CreateEventDialog } from '@/features/events/components/create-event-dialog';
 import { EditEventDialog } from '@/features/events/components/edit-event-dialog';
 import { DeleteEventDialog } from '@/features/events/components/delete-event-dialog';
+import { formatCurrency } from '@/lib/utils';
 
 export default function EventsPage() {
   const { events, isLoading, error, pagination, handleSearch, handlePageChange, refresh } = useEvents();
@@ -25,7 +26,7 @@ export default function EventsPage() {
 
   const totalEvents = events.length;
   const totalBudget = events.reduce((sum, e) => sum + Number(e.budget), 0);
-  const formattedBudget = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totalBudget);
+  const formattedBudget = formatCurrency(totalBudget);
 
   const handleView = (event: any) => {
     // Placeholder for view action – could navigate to detail page

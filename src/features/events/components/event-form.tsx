@@ -196,7 +196,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
 
           {/* Budget */}
           <div>
-            <label className="block text-sm font-medium mb-1">Budget (€)</label>
+            <label className="block text-sm font-medium mb-1">Budget (MAD)</label>
             <Input type="number" placeholder="0" className="h-11 text-sm px-4" {...register('budget', { valueAsNumber: true })} />
           </div>
 

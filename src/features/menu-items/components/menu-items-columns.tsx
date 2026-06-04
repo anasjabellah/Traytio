@@ -4,6 +4,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { MenuItem, MenuItemCategory } from '@/features/menu-items/types';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 // Badge color mapping for category (MAD currency)
 const categoryColors: Record<MenuItemCategory, string> = {
@@ -76,7 +77,7 @@ export const menuItemsColumns = (
     size: 150,
     cell: ({ row }) => {
       const price = Number(row.getValue('unitPrice'));
-      return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'MAD' }).format(price);
+      return formatCurrency(price);
     },
   },
   {
