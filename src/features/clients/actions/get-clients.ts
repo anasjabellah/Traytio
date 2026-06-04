@@ -78,6 +78,7 @@ export async function getClients(params: GetClientsParams): Promise<ActionRespon
     // Transform to ClientWithStats
     const clientWithStats: ClientWithStats[] = clients.map((client: any) => ({
       ...client,
+      totalSpent: Number(client.totalSpent || 0),
       commandesCount: client._count.commandes,
       eventsCount: client._count.events
     }));
