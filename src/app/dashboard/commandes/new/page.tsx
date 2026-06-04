@@ -8,11 +8,13 @@ import {
   Paperclip, Lock, ListChecks, FileText, Send, Save,
   Upload, Trash2, StickyNote, ArrowLeft,
 } from "lucide-react";
-import { MENU, PACKS, EVENT_TYPES, CLIENTS, type MenuItem, type Cat, type SelectedItem } from "@/features/commandes/data/mock-data";
+import { MENU, PACKS, EVENT_TYPES, type MenuItem, type Cat, type SelectedItem } from "@/features/commandes/data/mock-data";
+import { getCommandeClients } from "@/features/commandes/actions/get-commande-clients";
+import { useQuery } from "@tanstack/react-query";
 
 // ============================================================================
 
-type Client = (typeof CLIENTS)[number] | null;
+type Client = any;
 
 const CATEGORIES: { id: Cat; label: string; icon: string }[] = [
   { id: "Food", label: "Plats", icon: "\uD83C\uDF7D\uFE0F" },
@@ -21,6 +23,13 @@ const CATEGORIES: { id: Cat; label: string; icon: string }[] = [
   { id: "Decoration", label: "Décoration", icon: "\uD83D\uDC90" },
   { id: "Extras", label: "Extras", icon: "\u2728" },
 ];
+
+function useClients() {
+  return useQuery({
+    queryKey: ["commande-clients"],
+    queryFn: () => getCommandeClients(),
+  });
+}
 
 function NouvelleCommandePage() {
   // ----- state -----
@@ -67,6 +76,8 @@ function NouvelleCommandePage() {
     { id: "t4", label: "Confirmer transport équipement", done: false },
     { id: "t5", label: "Réserver les tables Golden Round", done: false },
   ]);
+
+  const { data: clients, isLoading: clientsLoading } = useClients();
 
   // ----- derived -----
   const selectedList = useMemo(
@@ -120,7 +131,7 @@ function NouvelleCommandePage() {
             {/* LEFT — Workflow */}
             <div className="space-y-6">
               <StepCard step={1} title="Client" subtitle="Sélectionnez ou créez un client">
-                <ClientStep client={client} setClient={setClient} onCreate={() => setShowClientPanel(true)} />
+                <ClientStep client={client} setClient={setClient} onCreate={() => setShowClientPanel(true)} clients={Array.isArray(clients) ? clients : []} isLoading={clientsLoading} />
               </StepCard>
 
               <StepCard step={2} title="Informations de l'événement" subtitle="Tous les détails clés en un coup d'œil">
@@ -305,10 +316,20 @@ function StepCard({
 // Step 1 — Client
 // ============================================================================
 
-function ClientStep({ client, setClient, onCreate }: { client: Client; setClient: (c: Client) => void; onCreate: () => void }) {
+function ClientStep({ client, setClient, onCreate, clients, isLoading }: { client: Client; setClient: (c: Client) => void; onCreate: () => void; clients: any[]; isLoading: boolean; }) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
-  const filtered = CLIENTS.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()));
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface-soft px-4 py-3.5">
+        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gold border-t-transparent" />
+        <span className="text-sm text-muted-foreground">Chargement des clients...</span>
+      </div>
+    );
+  }
+
+  const filtered = clients.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()) || c.phone?.includes(query) || c.email?.toLowerCase().includes(query.toLowerCase()));
   const showResults = focused && !client && (query.length > 0 || true);
 
   if (client) {
@@ -321,7 +342,7 @@ function ClientStep({ client, setClient, onCreate }: { client: Client; setClient
       >
         <div className="flex items-center gap-4">
           <div className="h-12 w-12 rounded-full bg-gradient-charcoal text-primary-foreground flex items-center justify-center font-display text-xl">
-            {client.name.split(" ").map((p) => p[0]).slice(0, 2).join("")}
+            {client.name?.split(" ").map((p: string) => p[0]).slice(0, 2).join("")}
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -333,7 +354,7 @@ function ClientStep({ client, setClient, onCreate }: { client: Client; setClient
               )}
             </div>
             <div className="text-xs text-muted-foreground">{client.email} · {client.phone}</div>
-            <div className="text-[11px] text-muted-foreground mt-0.5">{client.events} événements à ce jour</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">{client._count?.events || 0} événements à ce jour</div>
           </div>
         </div>
         <button onClick={() => setClient(null)} className="h-8 w-8 rounded-full hover:bg-secondary flex items-center justify-center text-muted-foreground">
@@ -383,7 +404,7 @@ function ClientStep({ client, setClient, onCreate }: { client: Client; setClient
                 >
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center text-xs font-medium">
-                      {c.name.split(" ").map((p) => p[0]).slice(0, 2).join("")}
+                      {c.name?.split(" ").map((p: string) => p[0]).slice(0, 2).join("")}
                     </div>
                     <div>
                       <div className="flex items-center gap-2 text-sm font-medium">
@@ -393,7 +414,7 @@ function ClientStep({ client, setClient, onCreate }: { client: Client; setClient
                       <div className="text-[11px] text-muted-foreground">{c.phone}</div>
                     </div>
                   </div>
-                  <span className="text-[11px] text-muted-foreground">{c.events} évts</span>
+                  <span className="text-[11px] text-muted-foreground">{c._count?.events || 0} évts</span>
                 </button>
               ))}
               {filtered.length === 0 && (
