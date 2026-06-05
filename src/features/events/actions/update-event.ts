@@ -6,18 +6,25 @@ import type { ActionResponse, Event, UpdateEventInput } from '@/features/events/
 
 export async function updateEvent(data: UpdateEventInput): Promise<ActionResponse<Event>> {
   try {
+    console.time('updateEvent:total');
+
+    console.time('updateEvent:auth');
     const { userId } = await auth();
+    console.timeEnd('updateEvent:auth');
     if (!userId) throw new Error('Unauthorized');
 
+    console.time('updateEvent:orgLookup');
     const userOrg = await prisma.userOrganization.findFirst({
       where: { user: { clerkId: userId } },
       select: { organizationId: true }
     });
+    console.timeEnd('updateEvent:orgLookup');
     if (!userOrg) throw new Error('Organization not found');
 
     const organizationId = userOrg.organizationId;
     const { id, ...updateData } = data;
 
+    console.time('updateEvent:update');
     const event = await prisma.event.update({
       where: { id, organizationId },
       data: {
@@ -41,6 +48,7 @@ export async function updateEvent(data: UpdateEventInput): Promise<ActionRespons
         updatedAt: true
       }
     });
+    console.timeEnd('updateEvent:update');
 
     const result: Event = {
       id: event.id,
@@ -59,6 +67,7 @@ export async function updateEvent(data: UpdateEventInput): Promise<ActionRespons
       updatedAt: event.updatedAt
     };
 
+    console.timeEnd('updateEvent:total');
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: error.message || 'An error occurred' };

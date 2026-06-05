@@ -23,19 +23,23 @@ export async function checkEventConflicts(
   excludeEventId?: string
 ): Promise<{ success: boolean; data?: ConflictCheckResult; error?: string }> {
   try {
+    console.time('checkEventConflicts:total');
+
+    console.time('checkEventConflicts:auth');
     const { userId } = await auth();
+    console.timeEnd('checkEventConflicts:auth');
     if (!userId) return { success: false, error: 'Unauthorized' };
 
+    console.time('checkEventConflicts:orgLookup');
     const userOrg = await prisma.userOrganization.findFirst({
       where: { user: { clerkId: userId } },
       select: { organizationId: true },
     });
+    console.timeEnd('checkEventConflicts:orgLookup');
 
     if (!userOrg) return { success: false, error: 'Organization not found' };
 
     const orgId = userOrg.organizationId;
-
-    console.log("RECEIVED EVENT ID", excludeEventId);
 
     const dayStart = new Date(startDate);
     dayStart.setHours(0, 0, 0, 0);
@@ -43,6 +47,7 @@ export async function checkEventConflicts(
     const dayEnd = new Date(startDate);
     dayEnd.setHours(23, 59, 59, 999);
 
+    console.time('checkEventConflicts:findMany');
     const eventsOnDay = await prisma.event.findMany({
       where: {
         organizationId: orgId,
@@ -52,8 +57,7 @@ export async function checkEventConflicts(
       },
       select: { id: true, name: true, startDate: true, endDate: true },
     });
-
-    console.log(eventsOnDay.map(e => ({ id: e.id, name: e.name })));
+    console.timeEnd('checkEventConflicts:findMany');
 
     const newStart = new Date(startDate);
     const newEnd = endDate ? new Date(endDate) : null;
@@ -76,6 +80,7 @@ export async function checkEventConflicts(
       }
     }
 
+    console.timeEnd('checkEventConflicts:total');
     return {
       success: true,
       data: {

@@ -1,24 +1,45 @@
 "use client"
 
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { useEffect, useState, memo, useMemo } from "react";
 import {
   Plus, Calendar as CalendarIcon, FileText, TrendingUp, TrendingDown,
   Users, Wallet, CheckCircle2, Clock, AlertTriangle, ArrowUpRight,
-  ChevronRight, MoreHorizontal, Search, Bell, Sparkles, Crown,
+  ChevronRight, Sparkles, Crown,
   UserPlus, Utensils, FileSignature, ArrowRight, CircleDot,
   PartyPopper, Banknote, Receipt, Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 
 
 
 export default function Page() {
   return <Dashboard />;
 }
+
+/* ---------------- Module-level static data ---------------- */
+const PERF_CHARTS = [
+  { label: "Revenue", data: [12, 18, 16, 24, 22, 30, 34, 40], color: "oklch(0.65 0.13 78)" },
+  { label: "Événements", data: [3, 5, 4, 6, 7, 8, 9, 12], color: "oklch(0.45 0.05 240)" },
+  { label: "Clients", data: [40, 50, 60, 72, 84, 96, 110, 142], color: "oklch(0.55 0.12 160)" },
+  { label: "Paiements", data: [8, 10, 14, 18, 22, 28, 32, 38], color: "oklch(0.50 0.10 20)" },
+];
+const QUICK_STATS = [
+  { label: "Taux de conversion devis", value: 68 },
+  { label: "Satisfaction client", value: 96 },
+  { label: "Capacité utilisée (mois)", value: 74 },
+];
+const TODAY_ITEMS = [
+  { time: "10:30", name: "Dégustation — Sophie L.", tag: "Showroom" },
+  { time: "14:00", name: "Livraison Maison Rivière", tag: "Logistique" },
+  { time: "18:30", name: "Cocktail Atelier Noé", tag: "Événement" },
+];
+const CALENDAR_DAYS = Array.from({ length: 35 }, (_, i) => i - 1);
+const CALENDAR_EVENTS: Record<number, "booked" | "busy" | "warning"> = {
+  3: "booked", 7: "booked", 12: "busy", 14: "busy", 18: "booked",
+  22: "warning", 28: "booked",
+};
 
 /* ---------------- Animated counter ---------------- */
 function useCounter(target: number, duration = 1200) {
@@ -48,8 +69,6 @@ function Dashboard() {
       {/* Ambient mesh */}
       <div className="pointer-events-none fixed inset-0 bg-gradient-mesh opacity-60" />
       <div className="pointer-events-none fixed inset-x-0 top-0 h-[420px] bg-radiance" />
-
-      <TopBar />
 
       <div className="relative mx-auto max-w-[1480px] px-6 py-8 lg:px-10">
         <Header />
@@ -95,49 +114,8 @@ function Dashboard() {
   );
 }
 
-/* ---------------- Top bar ---------------- */
-function TopBar() {
-  return (
-    <div className="sticky top-0 z-40 glass border-b border-border/60">
-      <div className="mx-auto max-w-[1480px] flex items-center gap-4 px-6 lg:px-10 h-16">
-        <Link href="/dashboard/commandes/new" className="flex items-center gap-2">
-          <div className="size-8 rounded-lg bg-gradient-charcoal flex items-center justify-center shadow-soft">
-            <span className="text-white font-display text-lg leading-none">T</span>
-          </div>
-          <span className="font-display text-2xl tracking-tight">tur</span>
-        </Link>
-
-        <nav className="hidden md:flex items-center gap-1 ml-6 text-sm">
-          {["Dashboard", "Commandes", "Clients", "Menus", "Calendrier", "Paiements"].map((n, i) => (
-            <a key={n} className={`px-3 py-1.5 rounded-md transition-colors ${i === 0 ? "bg-foreground/[0.06] text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]"}`}>
-              {n}
-            </a>
-          ))}
-        </nav>
-
-        <div className="ml-auto flex items-center gap-2">
-          <div className="hidden md:flex items-center gap-2 px-3 h-9 rounded-md border border-border bg-background/60 text-sm text-muted-foreground w-72">
-            <Search className="size-4" />
-            <span className="truncate whitespace-nowrap">
-              Rechercher commandes, clients...
-            </span>
-            <kbd className="ml-auto text-[10px] font-sans px-1.5 py-0.5 rounded border bg-muted/60">⌘K</kbd>
-          </div>
-          <button className="relative size-9 rounded-md border border-border bg-background/60 hover:bg-background flex items-center justify-center">
-            <Bell className="size-4" />
-            <span className="absolute top-2 right-2 size-1.5 rounded-full bg-[var(--gold-deep)]" />
-          </button>
-          <div className="size-9 rounded-full bg-gradient-charcoal text-white flex items-center justify-center text-xs font-medium shadow-soft">
-            AN
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ---------------- Header ---------------- */
-function Header() {
+const Header = memo(function Header() {
   return (
     <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
       <div>
@@ -168,7 +146,7 @@ function Header() {
       </div>
     </div>
   );
-}
+});
 
 /* ---------------- KPI grid ---------------- */
 const KPIS = [
@@ -180,7 +158,7 @@ const KPIS = [
   { label: "Paiements encaissés", value: 968200, prefix: "MAD", delta: 14.7, trend: "up", spark: [20, 24, 28, 30, 36, 42, 48, 56, 64, 72, 82, 96], icon: Banknote },
 ];
 
-function KpiGrid() {
+const KpiGrid = memo(function KpiGrid() {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
       {KPIS.map((k, i) => (
@@ -188,9 +166,9 @@ function KpiGrid() {
       ))}
     </div>
   );
-}
+});
 
-function KpiCard({ label, value, prefix, delta, trend, spark, icon: Icon, accent, delay }: any) {
+const KpiCard = memo(function KpiCard({ label, value, prefix, delta, trend, spark, icon: Icon, accent, delay }: any) {
   const counted = useCounter(value, 1400);
   const display = prefix ? mad(Math.round(counted)) : Math.round(counted).toLocaleString("fr-FR");
   const up = trend === "up";
@@ -222,19 +200,22 @@ function KpiCard({ label, value, prefix, delta, trend, spark, icon: Icon, accent
       </div>
     </motion.div>
   );
-}
+});
 
-function Sparkline({ data, up }: { data: number[]; up: boolean }) {
+const Sparkline = memo(function Sparkline({ data, up }: { data: number[]; up: boolean }) {
   const w = 96, h = 32, pad = 2;
-  const min = Math.min(...data), max = Math.max(...data);
-  const pts = data.map((d, i) => {
-    const x = pad + (i * (w - pad * 2)) / (data.length - 1);
-    const y = h - pad - ((d - min) / Math.max(1, max - min)) * (h - pad * 2);
-    return [x, y];
-  });
-  const path = pts.map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`)).join(" ");
-  const fill = `${path} L${w - pad},${h} L${pad},${h} Z`;
-  const stroke = up ? "rgb(16 185 129)" : "rgb(244 63 94)";
+  const { path, fill, stroke } = useMemo(() => {
+    const min = Math.min(...data), max = Math.max(...data);
+    const pts = data.map((d, i) => {
+      const x = pad + (i * (w - pad * 2)) / (data.length - 1);
+      const y = h - pad - ((d - min) / Math.max(1, max - min)) * (h - pad * 2);
+      return [x, y];
+    });
+    const p = pts.map((pt, i) => (i === 0 ? `M${pt[0]},${pt[1]}` : `L${pt[0]},${pt[1]}`)).join(" ");
+    const f = `${p} L${w - pad},${h} L${pad},${h} Z`;
+    const s = up ? "rgb(16 185 129)" : "rgb(244 63 94)";
+    return { path: p, fill: f, stroke: s };
+  }, [data, up, w, h, pad]);
   return (
     <svg width={w} height={h} className="overflow-visible">
       <defs>
@@ -247,7 +228,7 @@ function Sparkline({ data, up }: { data: number[]; up: boolean }) {
       <path d={path} fill="none" stroke={stroke} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
-}
+});
 
 /* ---------------- Revenue chart ---------------- */
 const REV_DATA: Record<string, number[]> = {
@@ -261,23 +242,26 @@ const REV_LABELS: Record<string, string[]> = {
   Année: ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"],
 };
 
-function RevenueChart() {
+const RevenueChart = memo(function RevenueChart() {
   const [range, setRange] = useState<"Semaine" | "Mois" | "Année">("Mois");
   const data = REV_DATA[range];
   const labels = REV_LABELS[range];
-  const total = data.reduce((a, b) => a + b, 0);
   const [hover, setHover] = useState<number | null>(null);
+  const [w, h, padX, padY] = [800, 260, 28, 24];
 
-  const w = 800, h = 260, padX = 28, padY = 24;
-  const max = Math.max(...data) * 1.15;
-  const min = 0;
-  const pts = data.map((d, i) => {
-    const x = padX + (i * (w - padX * 2)) / (data.length - 1);
-    const y = h - padY - ((d - min) / (max - min)) * (h - padY * 2);
-    return [x, y];
-  });
-  const path = pts.map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`)).join(" ");
-  const fill = `${path} L${pts[pts.length - 1][0]},${h - padY} L${pts[0][0]},${h - padY} Z`;
+  const { total, pts, path, fill } = useMemo(() => {
+    const tot = data.reduce((a, b) => a + b, 0);
+    const mx = Math.max(...data) * 1.15;
+    const mn = 0;
+    const p = data.map((d, i) => {
+      const x = padX + (i * (w - padX * 2)) / (data.length - 1);
+      const y = h - padY - ((d - mn) / (mx - mn)) * (h - padY * 2);
+      return [x, y];
+    });
+    const pa = p.map((pt, i) => (i === 0 ? `M${pt[0]},${pt[1]}` : `L${pt[0]},${pt[1]}`)).join(" ");
+    const fi = `${pa} L${p[p.length - 1][0]},${h - padY} L${p[0][0]},${h - padY} Z`;
+    return { total: tot, pts: p, path: pa, fill: fi };
+  }, [data, w, h, padX, padY]);
 
   return (
     <motion.div
@@ -357,7 +341,7 @@ function RevenueChart() {
       </div>
     </motion.div>
   );
-}
+});
 
 /* ---------------- Recent commandes ---------------- */
 const COMMANDES = [
@@ -374,7 +358,7 @@ const STATUS_STYLES: Record<string, string> = {
   "En attente": "bg-rose-50 text-rose-700 ring-1 ring-rose-200/50",
 };
 
-function RecentCommandes() {
+const RecentCommandes = memo(function RecentCommandes() {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
       <div className="flex items-center justify-between p-6 pb-4">
@@ -417,10 +401,10 @@ function RecentCommandes() {
       </div>
     </div>
   );
-}
+});
 
 /* ---------------- Payments ---------------- */
-function PaymentsCard() {
+const PaymentsCard = memo(function PaymentsCard() {
   const paid = 968200, pending = 184000, remaining = 246000;
   const total = paid + pending + remaining;
   const pct = (n: number) => Math.round((n / total) * 100);
@@ -467,7 +451,7 @@ function PaymentsCard() {
       </Button>
     </div>
   );
-}
+});
 
 /* ---------------- Upcoming events ---------------- */
 const EVENTS = [
@@ -476,7 +460,7 @@ const EVENTS = [
   { name: "Cocktail Atelier Noé", client: "Atelier Noé", date: "22 juin 2026", guests: 60, status: "En attente", days: 22 },
 ];
 
-function UpcomingEvents() {
+const UpcomingEvents = memo(function UpcomingEvents() {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-6">
       <div className="flex items-center justify-between mb-5">
@@ -515,16 +499,11 @@ function UpcomingEvents() {
       </div>
     </div>
   );
-}
+});
 
 /* ---------------- Mini calendar ---------------- */
-function MiniCalendar() {
+const MiniCalendar = memo(function MiniCalendar() {
   const today = 5;
-  const events: Record<number, "booked" | "busy" | "warning"> = {
-    3: "booked", 7: "booked", 12: "busy", 14: "busy", 18: "booked",
-    22: "warning", 28: "booked",
-  };
-  const days = Array.from({ length: 35 }, (_, i) => i - 1);
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-6">
       <div className="flex items-center justify-between mb-5">
@@ -541,9 +520,9 @@ function MiniCalendar() {
         {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => <div key={i}>{d}</div>)}
       </div>
       <div className="grid grid-cols-7 gap-1">
-        {days.map((d, i) => {
+        {CALENDAR_DAYS.map((d, i) => {
           const valid = d > 0 && d <= 30;
-          const ev = events[d];
+          const ev = CALENDAR_EVENTS[d];
           const isToday = d === today;
           return (
             <div key={i}
@@ -568,7 +547,7 @@ function MiniCalendar() {
       </div>
     </div>
   );
-}
+});
 
 /* ---------------- Business health ---------------- */
 const HEALTH = [
@@ -580,7 +559,7 @@ const HEALTH = [
   { label: "Croissance mensuelle", value: "+14.7%", delta: "vs mai", icon: Activity },
 ];
 
-function BusinessHealth() {
+const BusinessHealth = memo(function BusinessHealth() {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-6">
       <div className="mb-5">
@@ -605,7 +584,7 @@ function BusinessHealth() {
       </div>
     </div>
   );
-}
+});
 
 /* ---------------- Quick actions ---------------- */
 const ACTIONS = [
@@ -615,7 +594,7 @@ const ACTIONS = [
   { label: "Nouveau devis", icon: FileSignature },
   { label: "Ouvrir calendrier", icon: CalendarIcon },
 ];
-function QuickActions() {
+const QuickActions = memo(function QuickActions() {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-6">
       <div className="mb-5">
@@ -640,16 +619,10 @@ function QuickActions() {
       </div>
     </div>
   );
-}
+});
 
 /* ---------------- Performance charts ---------------- */
-function PerformanceCharts() {
-  const charts = [
-    { label: "Revenue", data: [12, 18, 16, 24, 22, 30, 34, 40], color: "oklch(0.65 0.13 78)" },
-    { label: "Événements", data: [3, 5, 4, 6, 7, 8, 9, 12], color: "oklch(0.45 0.05 240)" },
-    { label: "Clients", data: [40, 50, 60, 72, 84, 96, 110, 142], color: "oklch(0.55 0.12 160)" },
-    { label: "Paiements", data: [8, 10, 14, 18, 22, 28, 32, 38], color: "oklch(0.50 0.10 20)" },
-  ];
+const PerformanceCharts = memo(function PerformanceCharts() {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-6">
       <div className="flex items-center justify-between mb-5">
@@ -659,7 +632,7 @@ function PerformanceCharts() {
         </div>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {charts.map((c, ci) => (
+        {PERF_CHARTS.map((c, ci) => (
           <motion.div key={c.label}
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: ci * 0.08 }}
             className="rounded-xl border border-border p-4 bg-[var(--surface-elevated)]">
@@ -684,15 +657,10 @@ function PerformanceCharts() {
       </div>
     </div>
   );
-}
+});
 
 /* ---------------- Right rail: today events ---------------- */
-function TodayEvents() {
-  const items = [
-    { time: "10:30", name: "Dégustation — Sophie L.", tag: "Showroom" },
-    { time: "14:00", name: "Livraison Maison Rivière", tag: "Logistique" },
-    { time: "18:30", name: "Cocktail Atelier Noé", tag: "Événement" },
-  ];
+const TodayEvents = memo(function TodayEvents() {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
       <div className="flex items-center justify-between mb-4">
@@ -700,10 +668,10 @@ function TodayEvents() {
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Aujourd'hui</div>
           <h3 className="font-display text-xl mt-1">Programme du jour</h3>
         </div>
-        <span className="text-xs text-muted-foreground">{items.length}</span>
+        <span className="text-xs text-muted-foreground">{TODAY_ITEMS.length}</span>
       </div>
       <div className="space-y-1">
-        {items.map((it, i) => (
+        {TODAY_ITEMS.map((it, i) => (
           <motion.div key={i}
             initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
             className="flex items-start gap-3 p-2 -mx-2 rounded-lg hover:bg-foreground/[0.03] cursor-pointer">
@@ -717,7 +685,7 @@ function TodayEvents() {
       </div>
     </div>
   );
-}
+});
 
 /* ---------------- Alerts ---------------- */
 const ALERTS = [
@@ -725,7 +693,7 @@ const ALERTS = [
   { type: "info", icon: Clock, title: "Événement dans 3 jours", text: "Gala Maison Rivière", time: "demain" },
   { type: "danger", icon: AlertTriangle, title: "Risque double booking", text: "22 juin — 2 événements", time: "à vérifier" },
 ];
-function AlertsCard() {
+const AlertsCard = memo(function AlertsCard() {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
       <div className="flex items-center justify-between mb-4">
@@ -757,7 +725,7 @@ function AlertsCard() {
       </div>
     </div>
   );
-}
+});
 
 /* ---------------- Activity feed ---------------- */
 const FEED = [
@@ -767,7 +735,7 @@ const FEED = [
   { who: "Système", action: "a envoyé un rappel à", target: "Atelier Noé", time: "il y a 1h" },
   { who: "Anas", action: "a confirmé l'événement", target: "Gala Lumen", time: "il y a 2h" },
 ];
-function ActivityFeed() {
+const ActivityFeed = memo(function ActivityFeed() {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
       <div className="flex items-center justify-between mb-4">
@@ -794,15 +762,10 @@ function ActivityFeed() {
       </div>
     </div>
   );
-}
+});
 
 /* ---------------- Quick stats ---------------- */
-function QuickStats() {
-  const stats = [
-    { label: "Taux de conversion devis", value: 68 },
-    { label: "Satisfaction client", value: 96 },
-    { label: "Capacité utilisée (mois)", value: 74 },
-  ];
+const QuickStats = memo(function QuickStats() {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
       <div className="mb-4">
@@ -810,7 +773,7 @@ function QuickStats() {
         <h3 className="font-display text-xl mt-1">Stats rapides</h3>
       </div>
       <div className="space-y-4">
-        {stats.map((s, i) => (
+        {QUICK_STATS.map((s, i) => (
           <div key={s.label}>
             <div className="flex items-center justify-between text-xs mb-1.5">
               <span className="text-muted-foreground">{s.label}</span>
@@ -832,4 +795,4 @@ function QuickStats() {
       </div>
     </div>
   );
-}
+});

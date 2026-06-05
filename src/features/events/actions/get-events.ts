@@ -6,21 +6,29 @@ import type { ActionResponse, Event, PaginatedEvents, GetEventsParams } from '@/
 import { EVENT_DEFAULT_PAGE_SIZE } from '@/features/events/constants';
 
 async function getOrganizationId(): Promise<string> {
+  console.time('getOrganizationId:auth');
   const { userId } = await auth();
+  console.timeEnd('getOrganizationId:auth');
   if (!userId) throw new Error('Unauthorized');
 
-  const userOrg = await prisma.userOrganization.findFirst({
-    where: { user: { clerkId: userId } },
-    select: { organizationId: true }
-  });
+    console.time('getOrganizationId:orgLookup');
+    const userOrg = await prisma.userOrganization.findFirst({
+      where: { user: { clerkId: userId } },
+      select: { organizationId: true }
+    });
+    console.timeEnd('getOrganizationId:orgLookup');
 
-  if (!userOrg) throw new Error('Organization not found');
+    if (!userOrg) throw new Error('Organization not found');
   return userOrg.organizationId;
 }
 
 export async function getEvents(params: GetEventsParams): Promise<ActionResponse<PaginatedEvents>> {
   try {
+    console.time('getEvents:total');
+    console.time('getEvents:getOrganizationId');
     const organizationId = await getOrganizationId();
+    console.timeEnd('getEvents:getOrganizationId');
+
     const { search, page = 1, limit = EVENT_DEFAULT_PAGE_SIZE, sortBy = 'createdAt', sortOrder = 'desc' } = params;
 
     const skip = (page - 1) * limit;
@@ -34,8 +42,11 @@ export async function getEvents(params: GetEventsParams): Promise<ActionResponse
       ];
     }
 
+    console.time('getEvents:count');
     const total = await prisma.event.count({ where });
+    console.timeEnd('getEvents:count');
 
+    console.time('getEvents:findMany');
     const events = await prisma.event.findMany({
       where,
       select: {
@@ -58,6 +69,7 @@ export async function getEvents(params: GetEventsParams): Promise<ActionResponse
       skip,
       take: limit
     });
+    console.timeEnd('getEvents:findMany');
 
     const result: Event[] = events.map((event: any) => ({
       ...event,
@@ -66,6 +78,7 @@ export async function getEvents(params: GetEventsParams): Promise<ActionResponse
 
     const totalPages = Math.ceil(total / limit);
 
+    console.timeEnd('getEvents:total');
     return { success: true, data: { data: result, total, page, limit, totalPages } };
   } catch (error: any) {
     return { success: false, error: error.message || 'An error occurred' };

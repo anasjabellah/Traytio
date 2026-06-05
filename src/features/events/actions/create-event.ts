@@ -7,13 +7,19 @@ import { createEventSchema } from '@/features/events/validations/create-event-sc
 
 export async function createEvent(data: CreateEventInput): Promise<ActionResponse<Event>> {
   try {
+    console.time('createEvent:total');
+
+    console.time('createEvent:auth');
     const { userId } = await auth();
+    console.timeEnd('createEvent:auth');
     if (!userId) throw new Error('Unauthorized');
 
+    console.time('createEvent:orgLookup');
     const userOrg = await prisma.userOrganization.findFirst({
       where: { user: { clerkId: userId } },
       select: { organizationId: true }
     });
+    console.timeEnd('createEvent:orgLookup');
     if (!userOrg) throw new Error('Organization not found');
 
     const organizationId = userOrg.organizationId;
@@ -24,6 +30,7 @@ export async function createEvent(data: CreateEventInput): Promise<ActionRespons
       budget: data.budget ? data.budget : null
     };
 
+    console.time('createEvent:create');
     const event = await prisma.event.create({
       data: eventData,
       select: {
@@ -43,6 +50,7 @@ export async function createEvent(data: CreateEventInput): Promise<ActionRespons
         updatedAt: true
       }
     });
+    console.timeEnd('createEvent:create');
 
     const result: Event = {
       id: event.id,
@@ -61,6 +69,7 @@ export async function createEvent(data: CreateEventInput): Promise<ActionRespons
       updatedAt: event.updatedAt
     };
 
+    console.timeEnd('createEvent:total');
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: error.message || 'An error occurred' };
