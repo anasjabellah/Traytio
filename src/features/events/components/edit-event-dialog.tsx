@@ -53,9 +53,11 @@ export function EditEventDialog({ event, open, onClose, onSuccess }: EditEventDi
             <div className="w-8 h-0.5 bg-[#C9A96E] mt-2 mb-4" />
             <DialogDescription className="text-sm text-[#888888] mt-1">Modifiez les informations de l'événement ci‑dessous.</DialogDescription>
           </DialogHeader>
+          {event && (console.log("CURRENT EVENT ID", event.id), null)}
           {event && (
             <EventForm
               mode="edit"
+              eventId={event.id}
               defaultValues={{
                 ...event,
                 // Ensure dates are Date objects (EventForm will handle formatting)
