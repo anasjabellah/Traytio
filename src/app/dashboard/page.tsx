@@ -38,8 +38,8 @@ function useCounter(target: number, duration = 1200) {
   return v;
 }
 
-const eur = (n: number) =>
-  new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+const mad = (n: number) =>
+  new Intl.NumberFormat("fr-MA", { style: "currency", currency: "MAD", maximumFractionDigits: 0 }).format(n);
 
 /* ---------------- Page ---------------- */
 function Dashboard() {
@@ -118,7 +118,9 @@ function TopBar() {
         <div className="ml-auto flex items-center gap-2">
           <div className="hidden md:flex items-center gap-2 px-3 h-9 rounded-md border border-border bg-background/60 text-sm text-muted-foreground w-72">
             <Search className="size-4" />
-            <span>Rechercher commandes, clients…</span>
+            <span className="truncate whitespace-nowrap">
+              Rechercher commandes, clients...
+            </span>
             <kbd className="ml-auto text-[10px] font-sans px-1.5 py-0.5 rounded border bg-muted/60">⌘K</kbd>
           </div>
           <button className="relative size-9 rounded-md border border-border bg-background/60 hover:bg-background flex items-center justify-center">
@@ -170,12 +172,12 @@ function Header() {
 
 /* ---------------- KPI grid ---------------- */
 const KPIS = [
-  { label: "Revenue total", value: 184250, prefix: "€", delta: 12.4, trend: "up", spark: [12, 18, 14, 22, 19, 28, 32, 30, 38, 42, 47, 54], icon: Wallet, accent: true },
+  { label: "Chiffre d'affaires", value: 1842500, prefix: "MAD", delta: 12.4, trend: "up", spark: [12, 18, 14, 22, 19, 28, 32, 30, 38, 42, 47, 54], icon: Wallet, accent: true },
   { label: "Commandes actives", value: 28, delta: 6.1, trend: "up", spark: [4, 6, 5, 7, 8, 7, 9, 8, 10, 11, 12, 14], icon: Receipt },
   { label: "Événements à venir", value: 14, delta: 2, trend: "up", spark: [2, 3, 2, 4, 4, 5, 5, 6, 6, 7, 7, 8], icon: PartyPopper },
   { label: "Clients actifs", value: 142, delta: 8.3, trend: "up", spark: [50, 58, 60, 65, 72, 78, 84, 92, 100, 112, 124, 142], icon: Users },
-  { label: "Acomptes en attente", value: 18400, prefix: "€", delta: -3.2, trend: "down", spark: [40, 36, 38, 32, 30, 28, 32, 30, 26, 24, 22, 18], icon: Clock },
-  { label: "Paiements reçus", value: 96820, prefix: "€", delta: 14.7, trend: "up", spark: [20, 24, 28, 30, 36, 42, 48, 56, 64, 72, 82, 96], icon: Banknote },
+  { label: "Acomptes en attente", value: 184000, prefix: "MAD", delta: -3.2, trend: "down", spark: [40, 36, 38, 32, 30, 28, 32, 30, 26, 24, 22, 18], icon: Clock },
+  { label: "Paiements encaissés", value: 968200, prefix: "MAD", delta: 14.7, trend: "up", spark: [20, 24, 28, 30, 36, 42, 48, 56, 64, 72, 82, 96], icon: Banknote },
 ];
 
 function KpiGrid() {
@@ -190,7 +192,7 @@ function KpiGrid() {
 
 function KpiCard({ label, value, prefix, delta, trend, spark, icon: Icon, accent, delay }: any) {
   const counted = useCounter(value, 1400);
-  const display = prefix === "€" ? eur(Math.round(counted)) : Math.round(counted).toLocaleString("fr-FR");
+  const display = prefix ? mad(Math.round(counted)) : Math.round(counted).toLocaleString("fr-FR");
   const up = trend === "up";
   return (
     <motion.div
@@ -250,7 +252,7 @@ function Sparkline({ data, up }: { data: number[]; up: boolean }) {
 /* ---------------- Revenue chart ---------------- */
 const REV_DATA: Record<string, number[]> = {
   Semaine: [3200, 4100, 3800, 5200, 4900, 6800, 7400],
-  Mois: Array.from({ length: 30 }, (_, i) => 3000 + Math.round(Math.sin(i / 3) * 1200 + i * 180 + Math.random() * 600)),
+  Mois: Array.from({ length: 30 }, (_, i) => 3000 + Math.round(Math.sin(i / 3) * 1200 + i * 180 + Math.sin(i * 3.7) * 300 + 300)),
   Année: [12, 14, 18, 17, 22, 26, 24, 30, 34, 40, 46, 52].map((n) => n * 1000),
 };
 const REV_LABELS: Record<string, string[]> = {
@@ -286,7 +288,7 @@ function RevenueChart() {
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Évolution du chiffre d'affaires</div>
           <div className="mt-2 flex items-baseline gap-3">
-            <div className="font-display text-4xl text-gradient-charcoal tabular-nums">{eur(total)}</div>
+            <div className="font-display text-4xl text-gradient-charcoal tabular-nums">{mad(total)}</div>
             <span className="text-emerald-700 bg-emerald-50 text-xs font-medium px-2 py-1 rounded-md inline-flex items-center gap-1">
               <TrendingUp className="size-3" /> +18.4%
             </span>
@@ -342,7 +344,7 @@ function RevenueChart() {
             style={{ left: `${(pts[hover][0] / w) * 100}%`, top: `${(pts[hover][1] / h) * 100}%` }}>
             <div className="mb-3 px-3 py-2 rounded-lg bg-foreground text-background text-xs shadow-lift whitespace-nowrap">
               <div className="opacity-70">{labels[hover]}</div>
-              <div className="font-medium tabular-nums">{eur(data[hover])}</div>
+              <div className="font-medium tabular-nums">{mad(data[hover])}</div>
             </div>
           </div>
         )}
@@ -359,17 +361,17 @@ function RevenueChart() {
 
 /* ---------------- Recent commandes ---------------- */
 const COMMANDES = [
-  { id: "CMD-2841", client: "Sophie Lambert", date: "12 juin", total: 8420, status: "Confirmée", vip: true },
-  { id: "CMD-2840", client: "Maison Rivière", date: "14 juin", total: 12640, status: "En cours", vip: false },
-  { id: "CMD-2839", client: "Élise Moreau", date: "18 juin", total: 4280, status: "Devis", vip: true },
-  { id: "CMD-2838", client: "Atelier Noé", date: "22 juin", total: 2150, status: "Acompte attendu", vip: false },
-  { id: "CMD-2837", client: "Groupe Lumen", date: "28 juin", total: 18900, status: "Confirmée", vip: false },
+  { id: "CMD-2841", client: "Sophie Lambert", date: "12 juin", total: 84200, status: "Confirmée", vip: true },
+  { id: "CMD-2840", client: "Maison Rivière", date: "14 juin", total: 126400, status: "En cours", vip: false },
+  { id: "CMD-2839", client: "Élise Moreau", date: "18 juin", total: 42800, status: "Devis", vip: true },
+  { id: "CMD-2838", client: "Atelier Noé", date: "22 juin", total: 21500, status: "En attente", vip: false },
+  { id: "CMD-2837", client: "Groupe Lumen", date: "28 juin", total: 189000, status: "Confirmée", vip: false },
 ];
 const STATUS_STYLES: Record<string, string> = {
   "Confirmée": "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50",
   "En cours": "bg-blue-50 text-blue-700 ring-1 ring-blue-200/50",
   "Devis": "bg-amber-50 text-amber-700 ring-1 ring-amber-200/50",
-  "Acompte attendu": "bg-rose-50 text-rose-700 ring-1 ring-rose-200/50",
+  "En attente": "bg-rose-50 text-rose-700 ring-1 ring-rose-200/50",
 };
 
 function RecentCommandes() {
@@ -405,9 +407,9 @@ function RecentCommandes() {
               {c.vip && <Crown className="size-3 text-[var(--gold-deep)]" />}
             </div>
             <div className="col-span-2 text-sm text-muted-foreground">{c.date}</div>
-            <div className="col-span-2 text-sm font-medium text-right tabular-nums">{eur(c.total)}</div>
+            <div className="col-span-2 text-sm font-medium text-right tabular-nums">{mad(c.total)}</div>
             <div className="col-span-2 flex items-center justify-end gap-2">
-              <span className={`text-[10px] px-2 py-0.5 rounded-full ${STATUS_STYLES[c.status]}`}>{c.status}</span>
+              <span className={`whitespace-nowrap text-[10px] px-2 py-0.5 rounded-full ${STATUS_STYLES[c.status]}`}>{c.status}</span>
               <ChevronRight className="size-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           </motion.div>
@@ -419,7 +421,7 @@ function RecentCommandes() {
 
 /* ---------------- Payments ---------------- */
 function PaymentsCard() {
-  const paid = 96820, pending = 18400, remaining = 24600;
+  const paid = 968200, pending = 184000, remaining = 246000;
   const total = paid + pending + remaining;
   const pct = (n: number) => Math.round((n / total) * 100);
   return (
@@ -441,7 +443,7 @@ function PaymentsCard() {
           className="h-full bg-foreground/20" />
       </div>
       <div className="mt-2 text-xs text-muted-foreground">
-        {pct(paid)}% encaissé sur {eur(total)}
+        {pct(paid)}% encaissé sur {mad(total)}
       </div>
 
       <div className="mt-6 space-y-4">
@@ -455,7 +457,7 @@ function PaymentsCard() {
               <span className={`size-2 rounded-full ${r.color}`} />
               {r.label}
             </div>
-            <div className="text-sm font-medium tabular-nums">{eur(r.value)}</div>
+            <div className="text-sm font-medium tabular-nums">{mad(r.value)}</div>
           </div>
         ))}
       </div>
@@ -471,7 +473,7 @@ function PaymentsCard() {
 const EVENTS = [
   { name: "Mariage Sara & Yanis", client: "Sophie Lambert", date: "12 juin 2026", guests: 180, status: "Confirmé", days: 12, accent: true },
   { name: "Gala Maison Rivière", client: "Maison Rivière", date: "14 juin 2026", guests: 120, status: "Préparation", days: 14 },
-  { name: "Cocktail Atelier Noé", client: "Atelier Noé", date: "22 juin 2026", guests: 60, status: "Acompte attendu", days: 22 },
+  { name: "Cocktail Atelier Noé", client: "Atelier Noé", date: "22 juin 2026", guests: 60, status: "En attente", days: 22 },
 ];
 
 function UpcomingEvents() {
@@ -570,11 +572,11 @@ function MiniCalendar() {
 
 /* ---------------- Business health ---------------- */
 const HEALTH = [
-  { label: "Valeur moyenne / événement", value: "€ 6 240", delta: "+8.2%", icon: TrendingUp },
-  { label: "Acompte moyen", value: "€ 1 870", delta: "+3.1%", icon: Wallet },
+  { label: "Valeur moyenne / événement", value: "62 400 MAD", delta: "+8.2%", icon: TrendingUp },
+  { label: "Acompte moyen", value: "18 700 MAD", delta: "+3.1%", icon: Wallet },
   { label: "Plat le plus demandé", value: "Bastila pigeon", delta: "32 commandes", icon: Utensils },
   { label: "Pack vedette", value: "Wedding Premium", delta: "18 ventes", icon: Crown },
-  { label: "Meilleur client", value: "Sophie Lambert", delta: "€ 24 800", icon: Users },
+  { label: "Meilleur client", value: "Sophie Lambert", delta: "248 000 MAD", icon: Users },
   { label: "Croissance mensuelle", value: "+14.7%", delta: "vs mai", icon: Activity },
 ];
 
@@ -719,7 +721,7 @@ function TodayEvents() {
 
 /* ---------------- Alerts ---------------- */
 const ALERTS = [
-  { type: "warn", icon: AlertTriangle, title: "Acompte en retard", text: "Atelier Noé — 1 850 €", time: "il y a 2h" },
+  { type: "warn", icon: AlertTriangle, title: "Acompte en retard", text: "Atelier Noé — 18 500 MAD", time: "il y a 2h" },
   { type: "info", icon: Clock, title: "Événement dans 3 jours", text: "Gala Maison Rivière", time: "demain" },
   { type: "danger", icon: AlertTriangle, title: "Risque double booking", text: "22 juin — 2 événements", time: "à vérifier" },
 ];
@@ -737,8 +739,8 @@ function AlertsCard() {
         {ALERTS.map((a, i) => {
           const tone =
             a.type === "danger" ? "bg-rose-50/60 border-rose-200/60 text-rose-900" :
-            a.type === "warn" ? "bg-amber-50/60 border-amber-200/60 text-amber-900" :
-            "bg-blue-50/60 border-blue-200/60 text-blue-900";
+              a.type === "warn" ? "bg-amber-50/60 border-amber-200/60 text-amber-900" :
+                "bg-blue-50/60 border-blue-200/60 text-blue-900";
           return (
             <motion.div key={i}
               initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
@@ -761,7 +763,7 @@ function AlertsCard() {
 const FEED = [
   { who: "Anas", action: "a créé la commande", target: "CMD-2841", time: "à l'instant" },
   { who: "Ahmed", action: "a généré un PDF pour", target: "Maison Rivière", time: "il y a 12 min" },
-  { who: "Sara", action: "a payé l'acompte —", target: "€ 1 250", time: "il y a 38 min" },
+  { who: "Sara", action: "a payé l'acompte —", target: "12 500 MAD", time: "il y a 38 min" },
   { who: "Système", action: "a envoyé un rappel à", target: "Atelier Noé", time: "il y a 1h" },
   { who: "Anas", action: "a confirmé l'événement", target: "Gala Lumen", time: "il y a 2h" },
 ];
