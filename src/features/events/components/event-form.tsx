@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { z } from 'zod';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -96,12 +96,16 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
     sameDayEvents: ConflictEventInfo[];
   }>({ state: 'idle', conflictingEvents: [], sameDayEvents: [] });
 
+  const conflictCheckId = useRef(0);
+
   const checkConflicts = useCallback(async (sDate: string, sTime: string, eTime: string) => {
+    const id = ++conflictCheckId.current;
     const newStart = joinDate(sDate, sTime);
     if (!newStart) return;
     const newEnd = joinDate(sDate, eTime || '23:59');
     setAvailability(prev => ({ ...prev, state: 'checking' }));
     const res = await checkEventConflicts(newStart, newEnd ?? null, eventId);
+    if (id !== conflictCheckId.current) return;
     if (res.success && res.data) {
       setAvailability({
         state: res.data.hasConflict ? 'conflict' : res.data.sameDayCount > 0 ? 'noConflict' : 'available',

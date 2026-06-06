@@ -1,27 +1,19 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { auth } from '@clerk/nextjs/server';
 import type { ActionResponse } from '@/features/events/types';
+import { getOrganizationId } from '@/lib/get-organization-id';
+
+let _deleteEventCalls = 0;
 
 export async function deleteEvent(id: string): Promise<ActionResponse<void>> {
   try {
+    _deleteEventCalls++;
+    if (_deleteEventCalls % 20 === 0) console.warn(`[CALL_TRACE] deleteEvent called ${_deleteEventCalls} times`);
+
     console.time('deleteEvent:total');
 
-    console.time('deleteEvent:auth');
-    const { userId } = await auth();
-    console.timeEnd('deleteEvent:auth');
-    if (!userId) throw new Error('Unauthorized');
-
-    console.time('deleteEvent:orgLookup');
-    const userOrg = await prisma.userOrganization.findFirst({
-      where: { user: { clerkId: userId } },
-      select: { organizationId: true }
-    });
-    console.timeEnd('deleteEvent:orgLookup');
-    if (!userOrg) throw new Error('Organization not found');
-
-    const organizationId = userOrg.organizationId;
+    const organizationId = await getOrganizationId();
 
     console.time('deleteEvent:delete');
     await prisma.event.delete({

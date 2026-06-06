@@ -1,27 +1,19 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { auth } from '@clerk/nextjs/server';
 import type { ActionResponse, Event, UpdateEventInput } from '@/features/events/types';
+import { getOrganizationId } from '@/lib/get-organization-id';
+
+let _updateEventCalls = 0;
 
 export async function updateEvent(data: UpdateEventInput): Promise<ActionResponse<Event>> {
   try {
+    _updateEventCalls++;
+    if (_updateEventCalls % 20 === 0) console.warn(`[CALL_TRACE] updateEvent called ${_updateEventCalls} times`);
+
     console.time('updateEvent:total');
 
-    console.time('updateEvent:auth');
-    const { userId } = await auth();
-    console.timeEnd('updateEvent:auth');
-    if (!userId) throw new Error('Unauthorized');
-
-    console.time('updateEvent:orgLookup');
-    const userOrg = await prisma.userOrganization.findFirst({
-      where: { user: { clerkId: userId } },
-      select: { organizationId: true }
-    });
-    console.timeEnd('updateEvent:orgLookup');
-    if (!userOrg) throw new Error('Organization not found');
-
-    const organizationId = userOrg.organizationId;
+    const organizationId = await getOrganizationId();
     const { id, ...updateData } = data;
 
     console.time('updateEvent:update');

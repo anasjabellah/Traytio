@@ -1,7 +1,9 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { auth } from '@clerk/nextjs/server';
+import { getOrganizationId } from '@/lib/get-organization-id';
+
+let _checkConflictsCalls = 0;
 
 export type ConflictEventInfo = {
   id: string;
@@ -23,23 +25,12 @@ export async function checkEventConflicts(
   excludeEventId?: string
 ): Promise<{ success: boolean; data?: ConflictCheckResult; error?: string }> {
   try {
+    _checkConflictsCalls++;
+    if (_checkConflictsCalls % 20 === 0) console.warn(`[CALL_TRACE] checkEventConflicts called ${_checkConflictsCalls} times`);
+
     console.time('checkEventConflicts:total');
 
-    console.time('checkEventConflicts:auth');
-    const { userId } = await auth();
-    console.timeEnd('checkEventConflicts:auth');
-    if (!userId) return { success: false, error: 'Unauthorized' };
-
-    console.time('checkEventConflicts:orgLookup');
-    const userOrg = await prisma.userOrganization.findFirst({
-      where: { user: { clerkId: userId } },
-      select: { organizationId: true },
-    });
-    console.timeEnd('checkEventConflicts:orgLookup');
-
-    if (!userOrg) return { success: false, error: 'Organization not found' };
-
-    const orgId = userOrg.organizationId;
+    const orgId = await getOrganizationId();
 
     const dayStart = new Date(startDate);
     dayStart.setHours(0, 0, 0, 0);

@@ -1,26 +1,11 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { auth } from '@clerk/nextjs/server';
 import type { ActionResponse, Event, PaginatedEvents, GetEventsParams } from '@/features/events/types';
 import { EVENT_DEFAULT_PAGE_SIZE } from '@/features/events/constants';
+import { getOrganizationId } from '@/lib/get-organization-id';
 
-async function getOrganizationId(): Promise<string> {
-  console.time('getOrganizationId:auth');
-  const { userId } = await auth();
-  console.timeEnd('getOrganizationId:auth');
-  if (!userId) throw new Error('Unauthorized');
-
-    console.time('getOrganizationId:orgLookup');
-    const userOrg = await prisma.userOrganization.findFirst({
-      where: { user: { clerkId: userId } },
-      select: { organizationId: true }
-    });
-    console.timeEnd('getOrganizationId:orgLookup');
-
-    if (!userOrg) throw new Error('Organization not found');
-  return userOrg.organizationId;
-}
+let _getEventsCalls = 0;
 
 export async function getEvents(params: GetEventsParams): Promise<ActionResponse<PaginatedEvents>> {
   try {
@@ -32,6 +17,9 @@ export async function getEvents(params: GetEventsParams): Promise<ActionResponse
     const { search, page = 1, limit = EVENT_DEFAULT_PAGE_SIZE, sortBy = 'createdAt', sortOrder = 'desc' } = params;
 
     const skip = (page - 1) * limit;
+
+    _getEventsCalls++;
+    if (_getEventsCalls % 20 === 0) console.warn(`[CALL_TRACE] getEvents called ${_getEventsCalls} times`);
 
     const where: any = { organizationId };
 

@@ -1,34 +1,38 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { auth } from '@clerk/nextjs/server';
-import type { ActionResponse, Event } from '@/features/events/types';
+import type { ActionResponse, EventDetail } from '@/features/events/types';
+import { getOrganizationId } from '@/lib/get-organization-id';
 
-async function getOrganizationId(): Promise<string> {
-  console.time('getEventById:auth');
-  const { userId } = await auth();
-  console.timeEnd('getEventById:auth');
-  if (!userId) throw new Error('Unauthorized');
+let _getEventByIdCalls = 0;
 
-  console.time('getEventById:orgLookup');
-  const userOrg = await prisma.userOrganization.findFirst({
-    where: { user: { clerkId: userId } },
-    select: { organizationId: true }
-  });
-  console.timeEnd('getEventById:orgLookup');
-
-  if (!userOrg) throw new Error('Organization not found');
-  return userOrg.organizationId;
-}
-
-export async function getEventById(id: string): Promise<ActionResponse<Event>> {
+export async function getEventById(id: string): Promise<ActionResponse<EventDetail>> {
   try {
+    _getEventByIdCalls++;
+    if (_getEventByIdCalls % 20 === 0) console.warn(`[CALL_TRACE] getEventById called ${_getEventByIdCalls} times`);
+
     console.time('getEventById:total');
     const organizationId = await getOrganizationId();
 
     console.time('getEventById:findUnique');
     const event = await prisma.event.findUnique({
-      where: { id, organizationId }
+      where: { id, organizationId },
+      include: {
+        client: {
+          select: { id: true, name: true, email: true, phone: true },
+        },
+        commandes: {
+          select: {
+            id: true,
+            number: true,
+            status: true,
+            totalAmount: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        },
+      },
     });
     console.timeEnd('getEventById:findUnique');
 
@@ -36,7 +40,7 @@ export async function getEventById(id: string): Promise<ActionResponse<Event>> {
       return { success: false, error: 'Event not found' };
     }
 
-    const result: Event = {
+    const result: EventDetail = {
       id: event.id,
       organizationId: event.organizationId,
       clientId: event.clientId,
@@ -50,7 +54,12 @@ export async function getEventById(id: string): Promise<ActionResponse<Event>> {
       budget: Number(event.budget) || null,
       notes: event.notes,
       createdAt: event.createdAt,
-      updatedAt: event.updatedAt
+      updatedAt: event.updatedAt,
+      client: event.client ?? undefined,
+      commandes: event.commandes?.map((c) => ({
+        ...c,
+        totalAmount: Number(c.totalAmount),
+      })) ?? undefined,
     };
 
     console.timeEnd('getEventById:total');

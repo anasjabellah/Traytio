@@ -48,6 +48,17 @@ export type PaginatedEvents = {
   totalPages: number;
 };
 
+export type EventDetail = Event & {
+  client?: { id: string; name: string; email?: string | null; phone?: string | null } | null;
+  commandes?: Array<{
+    id: string;
+    number: string;
+    status: string;
+    totalAmount: string | number;
+    createdAt: Date;
+  }>;
+};
+
 export type ActionResponse<T = void> = {
   success: boolean;
   data?: T;

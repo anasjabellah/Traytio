@@ -1,28 +1,20 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { auth } from '@clerk/nextjs/server';
 import type { ActionResponse, Event, CreateEventInput } from '@/features/events/types';
 import { createEventSchema } from '@/features/events/validations/create-event-schema';
+import { getOrganizationId } from '@/lib/get-organization-id';
+
+let _createEventCalls = 0;
 
 export async function createEvent(data: CreateEventInput): Promise<ActionResponse<Event>> {
   try {
+    _createEventCalls++;
+    if (_createEventCalls % 20 === 0) console.warn(`[CALL_TRACE] createEvent called ${_createEventCalls} times`);
+
     console.time('createEvent:total');
 
-    console.time('createEvent:auth');
-    const { userId } = await auth();
-    console.timeEnd('createEvent:auth');
-    if (!userId) throw new Error('Unauthorized');
-
-    console.time('createEvent:orgLookup');
-    const userOrg = await prisma.userOrganization.findFirst({
-      where: { user: { clerkId: userId } },
-      select: { organizationId: true }
-    });
-    console.timeEnd('createEvent:orgLookup');
-    if (!userOrg) throw new Error('Organization not found');
-
-    const organizationId = userOrg.organizationId;
+    const organizationId = await getOrganizationId();
 
     const eventData = {
       ...data,

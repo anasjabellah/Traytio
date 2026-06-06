@@ -1,22 +1,9 @@
 'use server';
 
 import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
 import type { ActionResponse, Client, ClientWithStats, GetClientsParams, PaginatedClients } from "@/features/clients/types";
 import { CLIENT_DEFAULT_PAGE_SIZE } from "@/features/clients/constants";
-
-async function getOrganizationId(): Promise<string> {
-  const { userId } = await auth()
-  if (!userId) throw new Error("Unauthorized")
-
-  const userOrg = await prisma.userOrganization.findFirst({
-    where: { user: { clerkId: userId } },
-    select: { organizationId: true }
-  })
-
-  if (!userOrg) throw new Error("Organization not found")
-  return userOrg.organizationId
-}
+import { getOrganizationId } from "@/lib/get-organization-id";
 
 export async function getClients(params: GetClientsParams): Promise<ActionResponse<PaginatedClients>> {
   try {

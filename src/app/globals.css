@@ -266,6 +266,15 @@
     color: transparent;
   }
 
+  .text-gradient-charcoal {
+    background: var(--gradient-charcoal);
+
+    -webkit-background-clip: text;
+    background-clip: text;
+
+    color: transparent;
+  }
+
   .bg-gradient-charcoal { 
     background: var(--gradient-charcoal); 
   }
