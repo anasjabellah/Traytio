@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import {
   Plus, Calendar as CalendarIcon, FileText, TrendingUp, TrendingDown,
   Users, Wallet, CheckCircle2, ChevronRight, Sparkles, Crown,
-  Search, PartyPopper, Filter, X, Eye,
+  Search, PartyPopper, Filter, X, Eye, EyeOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEvents } from '@/features/events/hooks/use-events';
@@ -15,6 +15,7 @@ import { CreateEventDialog } from '@/features/events/components/create-event-dia
 import { EditEventDialog } from '@/features/events/components/edit-event-dialog';
 import { DeleteEventDialog } from '@/features/events/components/delete-event-dialog';
 import type { Event } from '@/features/events/types';
+import { PrivacyModeProvider, EyeToggle, SensitiveValue, usePrivacyMode } from '@/components/privacy-mode';
 
 const mad = (n: number) =>
   new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(n);
@@ -89,10 +90,10 @@ export default function EventsPage() {
   const handleView = (event: Event) => { router.push(`/dashboard/events/${event.id}`); };
 
   const KPIS = [
-    { label: "Total événements", value: totalEvents, delta: 12.4, trend: "up" as const, spark: SPARK_DEFAULTS.CONFIRMED, icon: PartyPopper, accent: true },
-    { label: "Confirmés", value: confirmedEvents, delta: 8.2, trend: "up" as const, spark: SPARK_DEFAULTS.CONFIRMED, icon: CheckCircle2 },
-    { label: "Ce mois-ci", value: thisMonthEvents, delta: 4.1, trend: "up" as const, spark: SPARK_DEFAULTS.PLANNED, icon: CalendarIcon },
-    { label: "Budget total", value: totalBudget, prefix: "MAD", delta: 14.7, trend: "up" as const, spark: SPARK_DEFAULTS.COMPLETED, icon: Wallet },
+    { label: "Total événements", value: totalEvents, delta: 12.4, trend: "up" as const, spark: SPARK_DEFAULTS.CONFIRMED, icon: PartyPopper, accent: true, sensitive: true },
+    { label: "Confirmés", value: confirmedEvents, delta: 8.2, trend: "up" as const, spark: SPARK_DEFAULTS.CONFIRMED, icon: CheckCircle2, sensitive: true },
+    { label: "Ce mois-ci", value: thisMonthEvents, delta: 4.1, trend: "up" as const, spark: SPARK_DEFAULTS.PLANNED, icon: CalendarIcon, sensitive: true },
+    { label: "Budget total", value: totalBudget, prefix: "MAD", delta: 14.7, trend: "up" as const, spark: SPARK_DEFAULTS.COMPLETED, icon: Wallet, sensitive: true },
   ];
 
   const today = new Date();
@@ -115,6 +116,7 @@ export default function EventsPage() {
   const statusKeys = Object.keys(STATUS_LABELS);
 
   return (
+    <PrivacyModeProvider>
     <div className="min-h-screen bg-[var(--surface-soft)] text-foreground">
       <div className="pointer-events-none fixed inset-0 bg-gradient-mesh opacity-60" />
       <div className="pointer-events-none fixed inset-x-0 top-0 h-[420px] bg-radiance" />
@@ -143,6 +145,7 @@ export default function EventsPage() {
             <Button variant="outline" className="h-10 rounded-lg border-border bg-background/60 backdrop-blur">
               <FileText className="size-4" /> Exporter
             </Button>
+            <EyeToggle />
             <Button onClick={openCreate} className="h-10 rounded-lg bg-gradient-charcoal text-white shadow-lift hover:opacity-95">
               <Plus className="size-4" /> Nouvel événement
             </Button>
@@ -246,14 +249,16 @@ export default function EventsPage() {
         <DeleteEventDialog event={selectedEvent} open={true} onOpenChange={(open) => { if (!open) closeAll(); }} onSuccess={refresh} />
       )}
     </div>
+    </PrivacyModeProvider>
   );
 }
 
 /* ---------------- KPI card ---------------- */
-function KpiCard({ label, value, prefix, delta, trend, spark, icon: Icon, accent, delay }: any) {
+function KpiCard({ label, value, prefix, delta, trend, spark, icon: Icon, accent, delay, sensitive }: any) {
   const counted = useCounter(value, 1400);
   const display = prefix ? mad(Math.round(counted)) : Math.round(counted).toLocaleString('fr-FR');
   const up = trend === 'up';
+  const { isPrivacyMode } = usePrivacyMode();
   return (
     <motion.div
       initial={{ opacity: 0, y: 14 }}
@@ -267,7 +272,9 @@ function KpiCard({ label, value, prefix, delta, trend, spark, icon: Icon, accent
       <div className="flex items-start justify-between">
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
-          <div className="mt-3 font-display text-4xl text-gradient-charcoal tabular-nums">{display}</div>
+          <div className="mt-3 font-display text-4xl tabular-nums">
+            <SensitiveValue hidden={sensitive && isPrivacyMode} className="text-gradient-charcoal">{display}</SensitiveValue>
+          </div>
         </div>
         <div className={`size-10 rounded-xl flex items-center justify-center ${accent ? 'bg-gradient-gold text-[var(--gold-foreground)]' : 'bg-foreground/[0.04] text-foreground'}`}>
           <Icon className="size-5" />
@@ -306,6 +313,13 @@ function Sparkline({ data, up }: { data: number[]; up: boolean }) {
       <path d={fill} fill={`url(#sg-${up ? 'u' : 'd'}-ev)`} />
       <path d={path} fill="none" stroke={stroke} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+function TableBudget({ budget }: { budget: string | number | null | undefined }) {
+  const { isPrivacyMode } = usePrivacyMode();
+  return (
+    <SensitiveValue hidden={isPrivacyMode}>{mad(Number(budget || 0))}</SensitiveValue>
   );
 }
 
@@ -398,10 +412,10 @@ function EventsTableSection({ events, isLoading, statusFilter, onView, onEdit, o
               {new Date(event.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
             </div>
             <div className="col-span-1 text-sm text-muted-foreground text-center tabular-nums">
-              {event.guestCount ?? <span className="opacity-40">—</span>}
+              {event.guestCount ?? 0}
             </div>
             <div className="col-span-2 text-sm font-medium text-right tabular-nums">
-              {event.budget ? mad(Number(event.budget)) : <span className="opacity-40">—</span>}
+              <TableBudget budget={event.budget} />
             </div>
             <div className="col-span-1 flex justify-center">
               <span className={`text-[10px] px-2 py-0.5 rounded-full ${STATUS_STYLES[event.status] || 'bg-foreground/[0.05] text-muted-foreground'}`}>
@@ -474,14 +488,14 @@ function UpcomingEventsSection({ events }: { events: Event[] }) {
               </div>
               <div className="mt-4 font-display text-xl leading-tight">{e.name}</div>
               <div className="mt-1 text-xs text-muted-foreground">
-                {e.guestCount ? `${e.guestCount} invités` : ''}
+                {e.guestCount != null ? `${e.guestCount} invités` : ''}
               </div>
               <div className="mt-4 flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">
                   {new Date(e.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </span>
                 <span className="inline-flex items-center gap-1 text-foreground">
-                  <Users className="size-3" /> {e.guestCount ?? '—'}
+                  <Users className="size-3" /> {e.guestCount ?? 0}
                 </span>
               </div>
               <div className="mt-4 pt-4 border-t border-border/60 flex items-center justify-between">
@@ -501,6 +515,7 @@ function UpcomingEventsSection({ events }: { events: Event[] }) {
 
 /* ---------------- Event analytics ---------------- */
 function EventAnalytics({ events }: { events: Event[] }) {
+  const { isPrivacyMode } = usePrivacyMode();
   const byMonth: Record<string, number> = {};
   events.forEach((e) => {
     const d = new Date(e.startDate);
@@ -538,7 +553,9 @@ function EventAnalytics({ events }: { events: Event[] }) {
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-muted-foreground">{c.label}</span>
             </div>
-            <div className="text-2xl font-display text-gradient-charcoal tabular-nums">{c.value}</div>
+            <div className="text-2xl font-display tabular-nums">
+              <SensitiveValue hidden={isPrivacyMode} className="text-gradient-charcoal">{c.value}</SensitiveValue>
+            </div>
           </motion.div>
         ))}
       </div>
@@ -617,6 +634,7 @@ function TodayEventsSection({ events }: { events: Event[] }) {
 
 /* ---------------- Quick stats ---------------- */
 function QuickStatsSection({ stats, totalBudget }: { stats: Array<{ label: string; value: number }>; totalBudget: number }) {
+  const { isPrivacyMode } = usePrivacyMode();
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
       <div className="mb-4">
@@ -631,7 +649,7 @@ function QuickStatsSection({ stats, totalBudget }: { stats: Array<{ label: strin
               <div className="flex items-center justify-between text-xs mb-1.5">
                 <span className="text-muted-foreground">{s.label}</span>
                 <span className="font-medium tabular-nums">
-                  {s.label === 'Budget moyen' ? mad(s.value) : `${s.value}%`}
+                  <SensitiveValue hidden={isPrivacyMode}>{s.label === 'Budget moyen' ? mad(s.value) : `${s.value}%`}</SensitiveValue>
                 </span>
               </div>
               <div className="h-1.5 rounded-full bg-foreground/[0.05] overflow-hidden">
@@ -648,7 +666,7 @@ function QuickStatsSection({ stats, totalBudget }: { stats: Array<{ label: strin
       </div>
       <div className="mt-5 pt-4 border-t border-border flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <CheckCircle2 className="size-3.5 text-emerald-600" /> Budget total {mad(totalBudget)}
+          <CheckCircle2 className="size-3.5 text-emerald-600" /> Budget total{' '}<SensitiveValue hidden={isPrivacyMode}>{mad(totalBudget)}</SensitiveValue>
         </div>
       </div>
     </div>

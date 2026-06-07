@@ -11,35 +11,42 @@ import {
   PartyPopper, Banknote, Receipt, Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PrivacyModeProvider, EyeToggle, SensitiveValue, usePrivacyMode } from '@/components/privacy-mode';
+import { getDashboardData } from '@/features/dashboard/actions/get-dashboard-stats';
+import type { DashboardData } from '@/features/dashboard/types';
 
+const STATUS_STYLES: Record<string, string> = {
+  "Confirmée": "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50",
+  "En cours": "bg-blue-50 text-blue-700 ring-1 ring-blue-200/50",
+  "Devis": "bg-amber-50 text-amber-700 ring-1 ring-amber-200/50",
+  "En attente": "bg-rose-50 text-rose-700 ring-1 ring-rose-200/50",
+};
 
+const COMMANDE_STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Brouillon", QUOTED: "Devis", CONFIRMED: "Confirmée",
+  IN_PROGRESS: "En cours", READY: "Prête", DELIVERED: "Livrée", CANCELLED: "Annulée",
+};
+
+const EVENT_STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Brouillon", PLANNED: "Planifié", CONFIRMED: "Confirmé",
+  IN_PROGRESS: "En cours", COMPLETED: "Terminé", CANCELLED: "Annulé",
+};
+
+const EVENT_STATUS_STYLES: Record<string, string> = {
+  DRAFT: "bg-gray-100 text-gray-700 ring-1 ring-gray-300/50",
+  PLANNED: "bg-blue-50 text-blue-700 ring-1 ring-blue-200/50",
+  CONFIRMED: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50",
+  IN_PROGRESS: "bg-amber-50 text-amber-700 ring-1 ring-amber-200/50",
+  COMPLETED: "bg-emerald-800 text-white ring-1 ring-emerald-900/50",
+  CANCELLED: "bg-red-50 text-red-700 ring-1 ring-red-200/50",
+};
+
+const mad = (n: number) =>
+  new Intl.NumberFormat("fr-MA", { style: "currency", currency: "MAD", maximumFractionDigits: 0 }).format(n);
 
 export default function Page() {
   return <Dashboard />;
 }
-
-/* ---------------- Module-level static data ---------------- */
-const PERF_CHARTS = [
-  { label: "Revenue", data: [12, 18, 16, 24, 22, 30, 34, 40], color: "oklch(0.65 0.13 78)" },
-  { label: "Événements", data: [3, 5, 4, 6, 7, 8, 9, 12], color: "oklch(0.45 0.05 240)" },
-  { label: "Clients", data: [40, 50, 60, 72, 84, 96, 110, 142], color: "oklch(0.55 0.12 160)" },
-  { label: "Paiements", data: [8, 10, 14, 18, 22, 28, 32, 38], color: "oklch(0.50 0.10 20)" },
-];
-const QUICK_STATS = [
-  { label: "Taux de conversion devis", value: 68 },
-  { label: "Satisfaction client", value: 96 },
-  { label: "Capacité utilisée (mois)", value: 74 },
-];
-const TODAY_ITEMS = [
-  { time: "10:30", name: "Dégustation — Sophie L.", tag: "Showroom" },
-  { time: "14:00", name: "Livraison Maison Rivière", tag: "Logistique" },
-  { time: "18:30", name: "Cocktail Atelier Noé", tag: "Événement" },
-];
-const CALENDAR_DAYS = Array.from({ length: 35 }, (_, i) => i - 1);
-const CALENDAR_EVENTS: Record<number, "booked" | "busy" | "warning"> = {
-  3: "booked", 7: "booked", 12: "busy", 14: "busy", 18: "booked",
-  22: "warning", 28: "booked",
-};
 
 /* ---------------- Animated counter ---------------- */
 function useCounter(target: number, duration = 1200) {
@@ -59,48 +66,46 @@ function useCounter(target: number, duration = 1200) {
   return v;
 }
 
-const mad = (n: number) =>
-  new Intl.NumberFormat("fr-MA", { style: "currency", currency: "MAD", maximumFractionDigits: 0 }).format(n);
+/* ---------------- Fetch hook ---------------- */
+function useDashboardData() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getDashboardData().then((res) => {
+      if (res.success && res.data) {
+        setData(res.data);
+      } else {
+        setError(res.error || 'Erreur de chargement');
+      }
+      setLoading(false);
+    });
+  }, []);
+
+  return { data, loading, error };
+}
 
 /* ---------------- Page ---------------- */
 function Dashboard() {
+  const { data, loading, error } = useDashboardData();
+
   return (
+    <PrivacyModeProvider>
     <div className="min-h-screen bg-[var(--surface-soft)] text-foreground">
-      {/* Ambient mesh */}
       <div className="pointer-events-none fixed inset-0 bg-gradient-mesh opacity-60" />
       <div className="pointer-events-none fixed inset-x-0 top-0 h-[420px] bg-radiance" />
 
       <div className="relative mx-auto max-w-[1480px] px-6 py-8 lg:px-10">
         <Header />
 
-        <div className="mt-8 grid grid-cols-12 gap-6">
-          {/* Main column */}
-          <div className="col-span-12 xl:col-span-9 space-y-6">
-            <KpiGrid />
-            <RevenueChart />
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-              <div className="lg:col-span-3"><RecentCommandes /></div>
-              <div className="lg:col-span-2"><PaymentsCard /></div>
-            </div>
-            <UpcomingEvents />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <MiniCalendar />
-              <BusinessHealth />
-            </div>
-            <QuickActions />
-            <PerformanceCharts />
-          </div>
-
-          {/* Right rail */}
-          <aside className="col-span-12 xl:col-span-3 space-y-6">
-            <div className="xl:sticky xl:top-24 space-y-6">
-              <TodayEvents />
-              <AlertsCard />
-              <ActivityFeed />
-              <QuickStats />
-            </div>
-          </aside>
-        </div>
+        {loading ? (
+          <DashboardSkeleton />
+        ) : error ? (
+          <DashboardError message={error} />
+        ) : data ? (
+          <DashboardContent data={data} />
+        ) : null}
 
         <footer className="mt-16 mb-6 flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
@@ -110,6 +115,93 @@ function Dashboard() {
           <div>© TUR — Suite traiteur premium</div>
         </footer>
       </div>
+    </div>
+    </PrivacyModeProvider>
+  );
+}
+
+function DashboardContent({ data }: { data: DashboardData }) {
+  const KPIS = useMemo(() => [
+    { label: "Chiffre d'affaires", value: data.revenue, prefix: "MAD", delta: data.health.monthlyGrowth, trend: data.health.monthlyGrowth >= 0 ? "up" as const : "down" as const, spark: data.perfRevenue, icon: Wallet, accent: true, sensitive: true },
+    { label: "Commandes actives", value: data.activeCommandes, delta: 0, trend: "up" as const, spark: data.perfPayments, icon: Receipt, sensitive: true },
+    { label: "Événements à venir", value: data.upcomingEvents.length, delta: 0, trend: "up" as const, spark: data.perfEvents, icon: PartyPopper, sensitive: true },
+    { label: "Clients actifs", value: data.activeClients, delta: 0, trend: "up" as const, spark: data.perfClients, icon: Users, sensitive: true },
+    { label: "Acomptes en attente", value: data.pendingDeposits, prefix: "MAD", delta: 0, trend: "down" as const, spark: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, data.pendingDeposits > 0 ? 5 : 1], icon: Clock, sensitive: true },
+    { label: "Paiements encaissés", value: data.paymentsReceived, prefix: "MAD", delta: 0, trend: "up" as const, spark: data.perfPayments, icon: Banknote, sensitive: true },
+  ], [data]);
+
+  return (
+    <>
+      <div className="mt-8 grid grid-cols-12 gap-6">
+        <div className="col-span-12 xl:col-span-9 space-y-6">
+          <KpiGrid kpis={KPIS} />
+          <RevenueChart
+            weekData={data.revenueWeek}
+            weekLabels={data.revenueWeekLabels}
+            monthData={data.revenueMonth}
+            monthLabels={data.revenueMonthLabels}
+            yearData={data.revenueYear}
+            yearLabels={data.revenueYearLabels}
+            total={data.revenue}
+            growth={data.health.monthlyGrowth}
+          />
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <div className="lg:col-span-3"><RecentCommandes commandes={data.recentCommandes} /></div>
+            <div className="lg:col-span-2"><PaymentsCard paid={data.paymentsReceived} pending={data.pendingDeposits} remaining={data.totalBudget - data.paymentsReceived - data.pendingDeposits} /></div>
+          </div>
+          <UpcomingEvents events={data.upcomingEvents} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <MiniCalendar />
+            <BusinessHealth health={data.health} />
+          </div>
+          <QuickActions />
+          <PerformanceCharts perfRevenue={data.perfRevenue} perfEvents={data.perfEvents} perfClients={data.perfClients} />
+        </div>
+
+        <aside className="col-span-12 xl:col-span-3 space-y-6">
+          <div className="xl:sticky xl:top-24 space-y-6">
+            <TodayEvents events={data.todayEvents} />
+            <AlertsCard alerts={data.alerts} />
+            <ActivityFeed activity={data.activity} />
+            <QuickStats stats={data.quickStats} />
+          </div>
+        </aside>
+      </div>
+    </>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="mt-8 grid grid-cols-12 gap-6 animate-pulse">
+      <div className="col-span-12 xl:col-span-9 space-y-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card p-5 h-36" />
+          ))}
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-6 h-80" />
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <div className="lg:col-span-3 rounded-2xl border border-border bg-card p-6 h-64" />
+          <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-6 h-64" />
+        </div>
+      </div>
+      <aside className="col-span-12 xl:col-span-3 space-y-6">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-2xl border border-border bg-card p-5 h-48" />
+        ))}
+      </aside>
+    </div>
+  );
+}
+
+function DashboardError({ message }: { message: string }) {
+  return (
+    <div className="mt-16 flex flex-col items-center gap-4 text-muted-foreground">
+      <AlertTriangle className="size-10" />
+      <p className="font-display text-xl">Erreur de chargement</p>
+      <p className="text-sm">{message}</p>
+      <Button variant="outline" onClick={() => window.location.reload()}>Réessayer</Button>
     </div>
   );
 }
@@ -121,13 +213,13 @@ const Header = memo(function Header() {
       <div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
           <Sparkles className="size-3.5 text-[var(--gold-deep)]" />
-          <span>Aperçu en direct • mis à jour il y a 2 min</span>
+          <span>Aperçu en direct</span>
         </div>
         <h1 className="font-display text-5xl lg:text-6xl text-gradient-charcoal leading-[1.05]">
           Dashboard
         </h1>
         <p className="mt-3 text-muted-foreground max-w-xl">
-          Bienvenue Anas, voici un aperçu de votre activité aujourd'hui.
+          Bienvenue, voici un aperçu de votre activité.
         </p>
       </div>
 
@@ -138,6 +230,7 @@ const Header = memo(function Header() {
         <Button variant="outline" className="h-10 rounded-lg border-border bg-background/60 backdrop-blur">
           <CalendarIcon className="size-4" /> Calendrier
         </Button>
+        <EyeToggle />
         <Link href="/nouvelle-commande">
           <Button className="h-10 rounded-lg bg-gradient-charcoal text-white shadow-lift hover:opacity-95">
             <Plus className="size-4" /> Nouvelle commande
@@ -149,29 +242,21 @@ const Header = memo(function Header() {
 });
 
 /* ---------------- KPI grid ---------------- */
-const KPIS = [
-  { label: "Chiffre d'affaires", value: 1842500, prefix: "MAD", delta: 12.4, trend: "up", spark: [12, 18, 14, 22, 19, 28, 32, 30, 38, 42, 47, 54], icon: Wallet, accent: true },
-  { label: "Commandes actives", value: 28, delta: 6.1, trend: "up", spark: [4, 6, 5, 7, 8, 7, 9, 8, 10, 11, 12, 14], icon: Receipt },
-  { label: "Événements à venir", value: 14, delta: 2, trend: "up", spark: [2, 3, 2, 4, 4, 5, 5, 6, 6, 7, 7, 8], icon: PartyPopper },
-  { label: "Clients actifs", value: 142, delta: 8.3, trend: "up", spark: [50, 58, 60, 65, 72, 78, 84, 92, 100, 112, 124, 142], icon: Users },
-  { label: "Acomptes en attente", value: 184000, prefix: "MAD", delta: -3.2, trend: "down", spark: [40, 36, 38, 32, 30, 28, 32, 30, 26, 24, 22, 18], icon: Clock },
-  { label: "Paiements encaissés", value: 968200, prefix: "MAD", delta: 14.7, trend: "up", spark: [20, 24, 28, 30, 36, 42, 48, 56, 64, 72, 82, 96], icon: Banknote },
-];
-
-const KpiGrid = memo(function KpiGrid() {
+const KpiGrid = memo(function KpiGrid({ kpis }: { kpis: Array<any> }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-      {KPIS.map((k, i) => (
+      {kpis.map((k, i) => (
         <KpiCard key={k.label} {...k} delay={i * 0.05} />
       ))}
     </div>
   );
 });
 
-const KpiCard = memo(function KpiCard({ label, value, prefix, delta, trend, spark, icon: Icon, accent, delay }: any) {
+const KpiCard = memo(function KpiCard({ label, value, prefix, delta, trend, spark, icon: Icon, accent, delay, sensitive }: any) {
   const counted = useCounter(value, 1400);
   const display = prefix ? mad(Math.round(counted)) : Math.round(counted).toLocaleString("fr-FR");
   const up = trend === "up";
+  const { isPrivacyMode } = usePrivacyMode();
   return (
     <motion.div
       initial={{ opacity: 0, y: 14 }}
@@ -185,7 +270,9 @@ const KpiCard = memo(function KpiCard({ label, value, prefix, delta, trend, spar
       <div className="flex items-start justify-between">
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
-          <div className="mt-3 font-display text-4xl text-gradient-charcoal tabular-nums">{display}</div>
+          <div className="mt-3 font-display text-4xl tabular-nums">
+            <SensitiveValue hidden={sensitive && isPrivacyMode} className="text-gradient-charcoal">{display}</SensitiveValue>
+          </div>
         </div>
         <div className={`size-10 rounded-xl flex items-center justify-center ${accent ? "bg-gradient-gold text-[var(--gold-foreground)]" : "bg-foreground/[0.04] text-foreground"}`}>
           <Icon className="size-5" />
@@ -194,7 +281,7 @@ const KpiCard = memo(function KpiCard({ label, value, prefix, delta, trend, spar
       <div className="mt-4 flex items-end justify-between gap-3">
         <div className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md ${up ? "text-emerald-700 bg-emerald-50" : "text-rose-700 bg-rose-50"}`}>
           {up ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
-          {up ? "+" : ""}{delta}%
+          {delta > 0 ? "+" : ""}{delta}%
         </div>
         <Sparkline data={spark} up={up} />
       </div>
@@ -231,27 +318,26 @@ const Sparkline = memo(function Sparkline({ data, up }: { data: number[]; up: bo
 });
 
 /* ---------------- Revenue chart ---------------- */
-const REV_DATA: Record<string, number[]> = {
-  Semaine: [3200, 4100, 3800, 5200, 4900, 6800, 7400],
-  Mois: Array.from({ length: 30 }, (_, i) => 3000 + Math.round(Math.sin(i / 3) * 1200 + i * 180 + Math.sin(i * 3.7) * 300 + 300)),
-  Année: [12, 14, 18, 17, 22, 26, 24, 30, 34, 40, 46, 52].map((n) => n * 1000),
-};
-const REV_LABELS: Record<string, string[]> = {
-  Semaine: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
-  Mois: Array.from({ length: 30 }, (_, i) => `${i + 1}`),
-  Année: ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"],
-};
-
-const RevenueChart = memo(function RevenueChart() {
-  const [range, setRange] = useState<"Semaine" | "Mois" | "Année">("Mois");
-  const data = REV_DATA[range];
-  const labels = REV_LABELS[range];
+const RevenueChart = memo(function RevenueChart({
+  weekData, weekLabels, monthData, monthLabels, yearData, yearLabels, total, growth,
+}: {
+  weekData: number[]; weekLabels: string[];
+  monthData: number[]; monthLabels: string[];
+  yearData: number[]; yearLabels: string[];
+  total: number; growth: number;
+}) {
+  const { isPrivacyMode } = usePrivacyMode();
+  const [range, setRange] = useState<"Semaine" | "Mois" | "Année">("Année");
+  const data = range === "Semaine" ? weekData : range === "Mois" ? monthData : yearData;
+  const labels = range === "Semaine" ? weekLabels : range === "Mois" ? monthLabels : yearLabels;
   const [hover, setHover] = useState<number | null>(null);
   const [w, h, padX, padY] = [800, 260, 28, 24];
 
-  const { total, pts, path, fill } = useMemo(() => {
-    const tot = data.reduce((a, b) => a + b, 0);
-    const mx = Math.max(...data) * 1.15;
+  const { pts, path, fill } = useMemo(() => {
+    if (data.length < 2) {
+      return { pts: [], path: '', fill: '' };
+    }
+    const mx = Math.max(...data, 1) * 1.15;
     const mn = 0;
     const p = data.map((d, i) => {
       const x = padX + (i * (w - padX * 2)) / (data.length - 1);
@@ -260,7 +346,7 @@ const RevenueChart = memo(function RevenueChart() {
     });
     const pa = p.map((pt, i) => (i === 0 ? `M${pt[0]},${pt[1]}` : `L${pt[0]},${pt[1]}`)).join(" ");
     const fi = `${pa} L${p[p.length - 1][0]},${h - padY} L${p[0][0]},${h - padY} Z`;
-    return { total: tot, pts: p, path: pa, fill: fi };
+    return { pts: p, path: pa, fill: fi };
   }, [data, w, h, padX, padY]);
 
   return (
@@ -272,9 +358,12 @@ const RevenueChart = memo(function RevenueChart() {
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Évolution du chiffre d'affaires</div>
           <div className="mt-2 flex items-baseline gap-3">
-            <div className="font-display text-4xl text-gradient-charcoal tabular-nums">{mad(total)}</div>
-            <span className="text-emerald-700 bg-emerald-50 text-xs font-medium px-2 py-1 rounded-md inline-flex items-center gap-1">
-              <TrendingUp className="size-3" /> +18.4%
+            <div className="font-display text-4xl tabular-nums">
+              <SensitiveValue hidden={isPrivacyMode} className="text-gradient-charcoal">{mad(total)}</SensitiveValue>
+            </div>
+            <span className={`text-xs font-medium px-2 py-1 rounded-md inline-flex items-center gap-1 ${growth >= 0 ? "text-emerald-700 bg-emerald-50" : "text-rose-700 bg-rose-50"}`}>
+              {growth >= 0 ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+              <SensitiveValue hidden={isPrivacyMode}>{growth >= 0 ? "+" : ""}{growth}%</SensitiveValue>
             </span>
           </div>
         </div>
@@ -304,15 +393,19 @@ const RevenueChart = memo(function RevenueChart() {
             <line key={t} x1={padX} x2={w - padX} y1={padY + t * (h - padY * 2)} y2={padY + t * (h - padY * 2)}
               stroke="oklch(0.20 0.012 70 / 0.06)" strokeDasharray="2 4" />
           ))}
-          <motion.path d={fill} fill="url(#rev-fill)"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }} />
-          <motion.path d={path} fill="none" stroke="url(#rev-stroke)" strokeWidth={2.5}
-            strokeLinecap="round" strokeLinejoin="round"
-            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.2, ease: "easeOut" }} />
+          {path && (
+            <>
+              <motion.path d={fill} fill="url(#rev-fill)"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }} />
+              <motion.path d={path} fill="none" stroke="url(#rev-stroke)" strokeWidth={2.5}
+                strokeLinecap="round" strokeLinejoin="round"
+                initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.2, ease: "easeOut" }} />
+            </>
+          )}
 
           {pts.map((p, i) => (
             <g key={i} onMouseEnter={() => setHover(i)}>
-              <rect x={p[0] - (w / data.length) / 2} y={0} width={w / data.length} height={h} fill="transparent" />
+              <rect x={p[0] - (w / Math.max(1, data.length)) / 2} y={0} width={w / Math.max(1, data.length)} height={h} fill="transparent" />
               {hover === i && (
                 <>
                   <line x1={p[0]} x2={p[0]} y1={padY} y2={h - padY} stroke="oklch(0.20 0.012 70 / 0.2)" strokeDasharray="3 3" />
@@ -323,12 +416,12 @@ const RevenueChart = memo(function RevenueChart() {
           ))}
         </svg>
 
-        {hover !== null && (
+        {hover !== null && data[hover] > 0 && (
           <div className="absolute -translate-x-1/2 -translate-y-full pointer-events-none"
             style={{ left: `${(pts[hover][0] / w) * 100}%`, top: `${(pts[hover][1] / h) * 100}%` }}>
             <div className="mb-3 px-3 py-2 rounded-lg bg-foreground text-background text-xs shadow-lift whitespace-nowrap">
               <div className="opacity-70">{labels[hover]}</div>
-              <div className="font-medium tabular-nums">{mad(data[hover])}</div>
+              <div className="font-medium tabular-nums"><SensitiveValue hidden={isPrivacyMode}>{mad(data[hover])}</SensitiveValue></div>
             </div>
           </div>
         )}
@@ -344,21 +437,8 @@ const RevenueChart = memo(function RevenueChart() {
 });
 
 /* ---------------- Recent commandes ---------------- */
-const COMMANDES = [
-  { id: "CMD-2841", client: "Sophie Lambert", date: "12 juin", total: 84200, status: "Confirmée", vip: true },
-  { id: "CMD-2840", client: "Maison Rivière", date: "14 juin", total: 126400, status: "En cours", vip: false },
-  { id: "CMD-2839", client: "Élise Moreau", date: "18 juin", total: 42800, status: "Devis", vip: true },
-  { id: "CMD-2838", client: "Atelier Noé", date: "22 juin", total: 21500, status: "En attente", vip: false },
-  { id: "CMD-2837", client: "Groupe Lumen", date: "28 juin", total: 189000, status: "Confirmée", vip: false },
-];
-const STATUS_STYLES: Record<string, string> = {
-  "Confirmée": "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50",
-  "En cours": "bg-blue-50 text-blue-700 ring-1 ring-blue-200/50",
-  "Devis": "bg-amber-50 text-amber-700 ring-1 ring-amber-200/50",
-  "En attente": "bg-rose-50 text-rose-700 ring-1 ring-rose-200/50",
-};
-
-const RecentCommandes = memo(function RecentCommandes() {
+const RecentCommandes = memo(function RecentCommandes({ commandes }: { commandes: DashboardData['recentCommandes'] }) {
+  const { isPrivacyMode } = usePrivacyMode();
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
       <div className="flex items-center justify-between p-6 pb-4">
@@ -378,22 +458,30 @@ const RecentCommandes = memo(function RecentCommandes() {
           <div className="col-span-2 text-right">Total</div>
           <div className="col-span-2 text-right">Statut</div>
         </div>
-        {COMMANDES.map((c, i) => (
+        {commandes.length === 0 && (
+          <div className="px-6 py-8 text-center text-sm text-muted-foreground">Aucune commande récente</div>
+        )}
+        {commandes.map((c, i) => (
           <motion.div key={c.id}
             initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}
             className="grid grid-cols-12 items-center px-6 py-4 hover:bg-foreground/[0.02] transition-colors group cursor-pointer">
-            <div className="col-span-3 text-sm font-medium tabular-nums">{c.id}</div>
-            <div className="col-span-3 flex items-center gap-2 text-sm">
-              <div className="size-7 rounded-full bg-gradient-to-br from-foreground/10 to-foreground/5 flex items-center justify-center text-[10px] font-medium">
-                {c.client.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+            <div className="col-span-3 text-sm font-medium tabular-nums">{c.number}</div>
+            <div className="col-span-3 flex items-center gap-2 text-sm truncate">
+              <div className="size-7 rounded-full bg-gradient-to-br from-foreground/10 to-foreground/5 flex items-center justify-center text-[10px] font-medium shrink-0">
+                {c.clientName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
               </div>
-              <span className="truncate">{c.client}</span>
-              {c.vip && <Crown className="size-3 text-[var(--gold-deep)]" />}
+              <span className="truncate">{c.clientName}</span>
             </div>
-            <div className="col-span-2 text-sm text-muted-foreground">{c.date}</div>
-            <div className="col-span-2 text-sm font-medium text-right tabular-nums">{mad(c.total)}</div>
+            <div className="col-span-2 text-sm text-muted-foreground">
+              {new Date(c.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+            </div>
+            <div className="col-span-2 text-sm font-medium text-right tabular-nums">
+              <SensitiveValue hidden={isPrivacyMode}>{mad(c.total)}</SensitiveValue>
+            </div>
             <div className="col-span-2 flex items-center justify-end gap-2">
-              <span className={`whitespace-nowrap text-[10px] px-2 py-0.5 rounded-full ${STATUS_STYLES[c.status]}`}>{c.status}</span>
+              <span className={`whitespace-nowrap text-[10px] px-2 py-0.5 rounded-full ${STATUS_STYLES[COMMANDE_STATUS_LABELS[c.status]] || 'bg-foreground/[0.05]'}`}>
+                {COMMANDE_STATUS_LABELS[c.status] || c.status}
+              </span>
               <ChevronRight className="size-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           </motion.div>
@@ -404,10 +492,10 @@ const RecentCommandes = memo(function RecentCommandes() {
 });
 
 /* ---------------- Payments ---------------- */
-const PaymentsCard = memo(function PaymentsCard() {
-  const paid = 968200, pending = 184000, remaining = 246000;
+const PaymentsCard = memo(function PaymentsCard({ paid, pending, remaining }: { paid: number; pending: number; remaining: number }) {
+  const { isPrivacyMode } = usePrivacyMode();
   const total = paid + pending + remaining;
-  const pct = (n: number) => Math.round((n / total) * 100);
+  const pct = (n: number) => Math.round((n / Math.max(1, total)) * 100);
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-6 h-full">
       <div className="flex items-center justify-between">
@@ -427,7 +515,7 @@ const PaymentsCard = memo(function PaymentsCard() {
           className="h-full bg-foreground/20" />
       </div>
       <div className="mt-2 text-xs text-muted-foreground">
-        {pct(paid)}% encaissé sur {mad(total)}
+        <SensitiveValue hidden={isPrivacyMode}>{pct(paid)}% encaissé sur {mad(total)}</SensitiveValue>
       </div>
 
       <div className="mt-6 space-y-4">
@@ -441,7 +529,7 @@ const PaymentsCard = memo(function PaymentsCard() {
               <span className={`size-2 rounded-full ${r.color}`} />
               {r.label}
             </div>
-            <div className="text-sm font-medium tabular-nums">{mad(r.value)}</div>
+            <div className="text-sm font-medium tabular-nums"><SensitiveValue hidden={isPrivacyMode}>{mad(r.value)}</SensitiveValue></div>
           </div>
         ))}
       </div>
@@ -454,13 +542,7 @@ const PaymentsCard = memo(function PaymentsCard() {
 });
 
 /* ---------------- Upcoming events ---------------- */
-const EVENTS = [
-  { name: "Mariage Sara & Yanis", client: "Sophie Lambert", date: "12 juin 2026", guests: 180, status: "Confirmé", days: 12, accent: true },
-  { name: "Gala Maison Rivière", client: "Maison Rivière", date: "14 juin 2026", guests: 120, status: "Préparation", days: 14 },
-  { name: "Cocktail Atelier Noé", client: "Atelier Noé", date: "22 juin 2026", guests: 60, status: "En attente", days: 22 },
-];
-
-const UpcomingEvents = memo(function UpcomingEvents() {
+const UpcomingEvents = memo(function UpcomingEvents({ events }: { events: DashboardData['upcomingEvents'] }) {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-6">
       <div className="flex items-center justify-between mb-5">
@@ -468,52 +550,70 @@ const UpcomingEvents = memo(function UpcomingEvents() {
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Agenda</div>
           <h3 className="font-display text-2xl mt-1">Prochains événements</h3>
         </div>
-        <Link href="/nouvelle-commande" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+        <Link href="/dashboard/events" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
           Tout voir <ArrowRight className="size-3" />
         </Link>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {EVENTS.map((e, i) => (
-          <motion.div key={e.name}
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
-            className={`group relative rounded-xl border p-5 overflow-hidden transition-all hover:shadow-lift ${e.accent ? "border-gold bg-gradient-to-br from-[var(--gold-soft)]/60 to-transparent" : "border-border bg-card"}`}>
-            {e.accent && <div className="absolute -top-12 -right-12 size-32 rounded-full bg-gradient-gold opacity-20 blur-2xl" />}
-            <div className="flex items-start justify-between">
-              <PartyPopper className={`size-5 ${e.accent ? "text-[var(--gold-deep)]" : "text-muted-foreground"}`} />
-              <span className={`text-[10px] px-2 py-0.5 rounded-full ${STATUS_STYLES[e.status] ?? "bg-foreground/[0.05] text-muted-foreground"}`}>{e.status}</span>
-            </div>
-            <div className="mt-4 font-display text-xl leading-tight">{e.name}</div>
-            <div className="mt-1 text-xs text-muted-foreground">{e.client}</div>
-            <div className="mt-4 flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">{e.date}</span>
-              <span className="inline-flex items-center gap-1 text-foreground">
-                <Users className="size-3" /> {e.guests}
-              </span>
-            </div>
-            <div className="mt-4 pt-4 border-t border-border/60 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Dans</span>
-              <span className="font-display text-2xl tabular-nums">{e.days}<span className="text-xs text-muted-foreground ml-1">jours</span></span>
-            </div>
-          </motion.div>
-        ))}
+        {events.length === 0 && (
+          <div className="col-span-3 py-8 text-center text-sm text-muted-foreground">Aucun événement à venir</div>
+        )}
+        {events.map((e, i) => {
+          const daysUntil = Math.ceil((new Date(e.startDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+          const accent = e.status === 'CONFIRMED';
+          return (
+            <motion.div key={e.id}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
+              className={`group relative rounded-xl border p-5 overflow-hidden transition-all hover:shadow-lift ${accent ? "border-gold bg-gradient-to-br from-[var(--gold-soft)]/60 to-transparent" : "border-border bg-card"}`}>
+              {accent && <div className="absolute -top-12 -right-12 size-32 rounded-full bg-gradient-gold opacity-20 blur-2xl" />}
+              <div className="flex items-start justify-between">
+                <PartyPopper className={`size-5 ${accent ? "text-[var(--gold-deep)]" : "text-muted-foreground"}`} />
+                <span className={`text-[10px] px-2 py-0.5 rounded-full ${EVENT_STATUS_STYLES[e.status] || "bg-foreground/[0.05] text-muted-foreground"}`}>
+                  {EVENT_STATUS_LABELS[e.status] || e.status}
+                </span>
+              </div>
+              <div className="mt-4 font-display text-xl leading-tight">{e.name}</div>
+              {e.clientName && <div className="mt-1 text-xs text-muted-foreground">{e.clientName}</div>}
+              <div className="mt-4 flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">
+                  {new Date(e.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </span>
+                {e.guestCount && (
+                  <span className="inline-flex items-center gap-1 text-foreground">
+                    <Users className="size-3" /> {e.guestCount}
+                  </span>
+                )}
+              </div>
+              <div className="mt-4 pt-4 border-t border-border/60 flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Dans</span>
+                <span className="font-display text-2xl tabular-nums">
+                  {daysUntil < 0 ? 0 : daysUntil}
+                  <span className="text-xs text-muted-foreground ml-1">jour{daysUntil > 1 ? 's' : ''}</span>
+                </span>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
 });
 
 /* ---------------- Mini calendar ---------------- */
+const CALENDAR_DAYS = Array.from({ length: 35 }, (_, i) => i - 1);
+const CALENDAR_EVENTS: Record<number, "booked" | "busy" | "warning"> = {
+  3: "booked", 7: "booked", 12: "busy", 14: "busy", 18: "booked",
+  22: "warning", 28: "booked",
+};
+
 const MiniCalendar = memo(function MiniCalendar() {
   const today = 5;
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-6">
       <div className="flex items-center justify-between mb-5">
         <div>
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Juin 2026</div>
-          <h3 className="font-display text-2xl mt-1">Calendrier</h3>
-        </div>
-        <div className="flex gap-1">
-          <button className="size-8 rounded-md border border-border hover:bg-foreground/[0.04] text-sm">‹</button>
-          <button className="size-8 rounded-md border border-border hover:bg-foreground/[0.04] text-sm">›</button>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">Calendrier</div>
+          <h3 className="font-display text-2xl mt-1">Aperçu</h3>
         </div>
       </div>
       <div className="grid grid-cols-7 gap-1 text-[10px] uppercase text-muted-foreground text-center mb-2">
@@ -550,16 +650,17 @@ const MiniCalendar = memo(function MiniCalendar() {
 });
 
 /* ---------------- Business health ---------------- */
-const HEALTH = [
-  { label: "Valeur moyenne / événement", value: "62 400 MAD", delta: "+8.2%", icon: TrendingUp },
-  { label: "Acompte moyen", value: "18 700 MAD", delta: "+3.1%", icon: Wallet },
-  { label: "Plat le plus demandé", value: "Bastila pigeon", delta: "32 commandes", icon: Utensils },
-  { label: "Pack vedette", value: "Wedding Premium", delta: "18 ventes", icon: Crown },
-  { label: "Meilleur client", value: "Sophie Lambert", delta: "248 000 MAD", icon: Users },
-  { label: "Croissance mensuelle", value: "+14.7%", delta: "vs mai", icon: Activity },
-];
+const BusinessHealth = memo(function BusinessHealth({ health }: { health: DashboardData['health'] }) {
+  const { isPrivacyMode } = usePrivacyMode();
+  const items = useMemo(() => [
+    { label: "Valeur moyenne / événement", value: mad(health.avgEventValue), delta: "CA global", icon: TrendingUp, sensitive: true },
+    { label: "Acompte moyen", value: mad(health.avgDeposit), delta: health.monthlyGrowth >= 0 ? `+${health.monthlyGrowth}%` : `${health.monthlyGrowth}%`, icon: Wallet, sensitive: true },
+    { label: "Menu le plus commandé", value: health.topMenuItem || "Aucun", delta: health.topMenuCount ? `${health.topMenuCount} commandes` : "", icon: Utensils, sensitive: false },
+    { label: "Meilleur client", value: health.bestClientName || "Aucun", delta: health.bestClientTotal ? mad(health.bestClientTotal) : "", icon: Crown, sensitive: true },
+    { label: "Croissance mensuelle", value: health.monthlyGrowth >= 0 ? `+${health.monthlyGrowth}%` : `${health.monthlyGrowth}%`, delta: "vs mois précédent", icon: Activity, sensitive: true },
+    { label: "Nombre total d'événements", value: "0", delta: "", icon: CalendarIcon, sensitive: false },
+  ], [health]);
 
-const BusinessHealth = memo(function BusinessHealth() {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-6">
       <div className="mb-5">
@@ -567,7 +668,7 @@ const BusinessHealth = memo(function BusinessHealth() {
         <h3 className="font-display text-2xl mt-1">Santé de l'activité</h3>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        {HEALTH.map((h, i) => (
+        {items.map((h, i) => (
           <motion.div key={h.label}
             initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04 }}
             className="rounded-xl border border-border bg-[var(--surface-elevated)] p-4 hover:shadow-soft transition-all">
@@ -575,10 +676,12 @@ const BusinessHealth = memo(function BusinessHealth() {
               <div className="size-7 rounded-lg bg-foreground/[0.04] flex items-center justify-center">
                 <h.icon className="size-3.5" />
               </div>
-              <span className="text-[10px] text-emerald-700">{h.delta}</span>
+              {h.delta && <span className="text-[10px] text-emerald-700">{h.delta}</span>}
             </div>
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{h.label}</div>
-            <div className="mt-1 text-sm font-medium truncate">{h.value}</div>
+            <div className="mt-1 text-sm font-medium truncate">
+              <SensitiveValue hidden={h.sensitive && isPrivacyMode}>{h.value}</SensitiveValue>
+            </div>
           </motion.div>
         ))}
       </div>
@@ -589,11 +692,12 @@ const BusinessHealth = memo(function BusinessHealth() {
 /* ---------------- Quick actions ---------------- */
 const ACTIONS = [
   { label: "Nouvelle commande", icon: Plus, to: "/nouvelle-commande", primary: true },
-  { label: "Nouveau client", icon: UserPlus },
-  { label: "Nouveau menu", icon: Utensils },
-  { label: "Nouveau devis", icon: FileSignature },
+  { label: "Nouveau client", icon: UserPlus, to: "/dashboard/clients" },
+  { label: "Nouveau menu", icon: Utensils, to: "/dashboard/menus" },
+  { label: "Événements", icon: PartyPopper, to: "/dashboard/events" },
   { label: "Ouvrir calendrier", icon: CalendarIcon },
 ];
+
 const QuickActions = memo(function QuickActions() {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-6">
@@ -622,7 +726,27 @@ const QuickActions = memo(function QuickActions() {
 });
 
 /* ---------------- Performance charts ---------------- */
-const PerformanceCharts = memo(function PerformanceCharts() {
+const PERF_COLORS = [
+  "oklch(0.65 0.13 78)",
+  "oklch(0.45 0.05 240)",
+  "oklch(0.55 0.12 160)",
+  "oklch(0.50 0.10 20)",
+];
+
+const PerformanceCharts = memo(function PerformanceCharts({
+  perfRevenue, perfEvents, perfClients,
+}: {
+  perfRevenue: number[];
+  perfEvents: number[];
+  perfClients: number[];
+}) {
+  const charts = useMemo(() => [
+    { label: "Revenue", data: perfRevenue, color: PERF_COLORS[0] },
+    { label: "Événements", data: perfEvents, color: PERF_COLORS[1] },
+    { label: "Clients", data: perfClients, color: PERF_COLORS[2] },
+    { label: "Paiements", data: perfRevenue, color: PERF_COLORS[3] },
+  ], [perfRevenue, perfEvents, perfClients]);
+
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-6">
       <div className="flex items-center justify-between mb-5">
@@ -632,35 +756,40 @@ const PerformanceCharts = memo(function PerformanceCharts() {
         </div>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {PERF_CHARTS.map((c, ci) => (
-          <motion.div key={c.label}
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: ci * 0.08 }}
-            className="rounded-xl border border-border p-4 bg-[var(--surface-elevated)]">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs text-muted-foreground">{c.label}</span>
-              <span className="text-xs font-medium text-emerald-700">+{12 + ci * 3}%</span>
-            </div>
-            <div className="flex items-end gap-1 h-20">
-              {c.data.map((v, i) => {
-                const max = Math.max(...c.data);
-                return (
+        {charts.map((c, ci) => {
+          const max = Math.max(...c.data, 1);
+          return (
+            <motion.div key={c.label}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: ci * 0.08 }}
+              className="rounded-xl border border-border p-4 bg-[var(--surface-elevated)]">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs text-muted-foreground">{c.label}</span>
+                {c.data.length > 0 && (
+                  <span className="text-xs font-medium text-emerald-700">
+                    {c.data[c.data.length - 1] > c.data[0] ? '+' : ''}
+                    {c.data.length > 1 ? Math.round(((c.data[c.data.length - 1] - c.data[0]) / Math.max(1, c.data[0])) * 100) : 0}%
+                  </span>
+                )}
+              </div>
+              <div className="flex items-end gap-1 h-20">
+                {c.data.map((v, i) => (
                   <motion.div key={i}
                     initial={{ height: 0 }} animate={{ height: `${(v / max) * 100}%` }}
                     transition={{ delay: 0.3 + i * 0.04, duration: 0.5, ease: "easeOut" }}
                     className="flex-1 rounded-t-sm"
                     style={{ background: `linear-gradient(180deg, ${c.color}, ${c.color}55)` }} />
-                );
-              })}
-            </div>
-          </motion.div>
-        ))}
+                ))}
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
 });
 
 /* ---------------- Right rail: today events ---------------- */
-const TodayEvents = memo(function TodayEvents() {
+const TodayEvents = memo(function TodayEvents({ events }: { events: DashboardData['todayEvents'] }) {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
       <div className="flex items-center justify-between mb-4">
@@ -668,32 +797,39 @@ const TodayEvents = memo(function TodayEvents() {
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Aujourd'hui</div>
           <h3 className="font-display text-xl mt-1">Programme du jour</h3>
         </div>
-        <span className="text-xs text-muted-foreground">{TODAY_ITEMS.length}</span>
+        <span className="text-xs text-muted-foreground">{events.length}</span>
       </div>
-      <div className="space-y-1">
-        {TODAY_ITEMS.map((it, i) => (
-          <motion.div key={i}
-            initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
-            className="flex items-start gap-3 p-2 -mx-2 rounded-lg hover:bg-foreground/[0.03] cursor-pointer">
-            <div className="text-xs tabular-nums text-muted-foreground w-12 pt-0.5">{it.time}</div>
-            <div className="relative flex-1 pl-3 border-l-2 border-[var(--gold)]/40">
-              <div className="text-sm font-medium leading-tight">{it.name}</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">{it.tag}</div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+      {events.length === 0 ? (
+        <div className="py-6 text-center text-xs text-muted-foreground">
+          Aucun événement programmé aujourd'hui
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {events.map((ev, i) => {
+            const d = new Date(ev.startDate);
+            const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+            return (
+              <motion.div key={ev.id}
+                initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
+                className="flex items-start gap-3 p-2 -mx-2 rounded-lg hover:bg-foreground/[0.03] cursor-pointer"
+                onClick={() => { window.location.href = `/dashboard/events/${ev.id}`; }}>
+                <div className="text-xs tabular-nums text-muted-foreground w-12 pt-0.5">{time}</div>
+                <div className="relative flex-1 pl-3 border-l-2 border-[var(--gold)]/40">
+                  <div className="text-sm font-medium leading-tight">{ev.name}</div>
+                  {ev.guestCount && <div className="text-[10px] text-muted-foreground mt-0.5">{ev.guestCount} pax</div>}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 });
 
 /* ---------------- Alerts ---------------- */
-const ALERTS = [
-  { type: "warn", icon: AlertTriangle, title: "Acompte en retard", text: "Atelier Noé — 18 500 MAD", time: "il y a 2h" },
-  { type: "info", icon: Clock, title: "Événement dans 3 jours", text: "Gala Maison Rivière", time: "demain" },
-  { type: "danger", icon: AlertTriangle, title: "Risque double booking", text: "22 juin — 2 événements", time: "à vérifier" },
-];
-const AlertsCard = memo(function AlertsCard() {
+const AlertsCard = memo(function AlertsCard({ alerts }: { alerts: DashboardData['alerts'] }) {
+  const { isPrivacyMode } = usePrivacyMode();
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
       <div className="flex items-center justify-between mb-4">
@@ -701,10 +837,16 @@ const AlertsCard = memo(function AlertsCard() {
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Vigilance</div>
           <h3 className="font-display text-xl mt-1">Alertes</h3>
         </div>
-        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700">{ALERTS.length}</span>
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700">{alerts.length}</span>
       </div>
       <div className="space-y-2">
-        {ALERTS.map((a, i) => {
+        {alerts.length === 0 && (
+          <div className="py-6 text-center text-xs text-muted-foreground">
+            Aucune alerte
+          </div>
+        )}
+        {alerts.map((a, i) => {
+          const Icon = a.type === "danger" ? AlertTriangle : a.type === "warn" ? Clock : AlertTriangle;
           const tone =
             a.type === "danger" ? "bg-rose-50/60 border-rose-200/60 text-rose-900" :
               a.type === "warn" ? "bg-amber-50/60 border-amber-200/60 text-amber-900" :
@@ -713,12 +855,13 @@ const AlertsCard = memo(function AlertsCard() {
             <motion.div key={i}
               initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
               className={`rounded-xl border p-3 flex items-start gap-3 ${tone}`}>
-              <a.icon className="size-4 mt-0.5 shrink-0" />
+              <Icon className="size-4 mt-0.5 shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium">{a.title}</div>
-                <div className="text-xs opacity-80 truncate">{a.text}</div>
+                <div className="text-xs opacity-80 truncate">
+                  {a.type === 'warn' ? <SensitiveValue hidden={isPrivacyMode}>{a.text}</SensitiveValue> : a.text}
+                </div>
               </div>
-              <span className="text-[10px] opacity-70 whitespace-nowrap">{a.time}</span>
             </motion.div>
           );
         })}
@@ -728,25 +871,22 @@ const AlertsCard = memo(function AlertsCard() {
 });
 
 /* ---------------- Activity feed ---------------- */
-const FEED = [
-  { who: "Anas", action: "a créé la commande", target: "CMD-2841", time: "à l'instant" },
-  { who: "Ahmed", action: "a généré un PDF pour", target: "Maison Rivière", time: "il y a 12 min" },
-  { who: "Sara", action: "a payé l'acompte —", target: "12 500 MAD", time: "il y a 38 min" },
-  { who: "Système", action: "a envoyé un rappel à", target: "Atelier Noé", time: "il y a 1h" },
-  { who: "Anas", action: "a confirmé l'événement", target: "Gala Lumen", time: "il y a 2h" },
-];
-const ActivityFeed = memo(function ActivityFeed() {
+const ActivityFeed = memo(function ActivityFeed({ activity }: { activity: DashboardData['activity'] }) {
+  const { isPrivacyMode } = usePrivacyMode();
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
       <div className="flex items-center justify-between mb-4">
         <div>
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Temps réel</div>
-          <h3 className="font-display text-xl mt-1">Activité de l'équipe</h3>
+          <h3 className="font-display text-xl mt-1">Activité récente</h3>
         </div>
       </div>
       <div className="relative space-y-3">
         <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border" />
-        {FEED.map((f, i) => (
+        {activity.length === 0 && (
+          <div className="py-6 text-center text-xs text-muted-foreground">Aucune activité récente</div>
+        )}
+        {activity.map((f, i) => (
           <motion.div key={i}
             initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
             className="relative pl-6">
@@ -754,7 +894,11 @@ const ActivityFeed = memo(function ActivityFeed() {
             <div className="text-xs leading-snug">
               <span className="font-medium">{f.who}</span>{" "}
               <span className="text-muted-foreground">{f.action}</span>{" "}
-              <span className="font-medium">{f.target}</span>
+              {f.financial ? (
+                <SensitiveValue hidden={isPrivacyMode} as="span" className="font-medium">{f.target}</SensitiveValue>
+              ) : (
+                <span className="font-medium">{f.target}</span>
+              )}
             </div>
             <div className="text-[10px] text-muted-foreground mt-0.5">{f.time}</div>
           </motion.div>
@@ -765,7 +909,14 @@ const ActivityFeed = memo(function ActivityFeed() {
 });
 
 /* ---------------- Quick stats ---------------- */
-const QuickStats = memo(function QuickStats() {
+const QuickStats = memo(function QuickStats({ stats }: { stats: DashboardData['quickStats'] }) {
+  const { isPrivacyMode } = usePrivacyMode();
+  const items = useMemo(() => [
+    { label: "Budget moyen", value: mad(stats.avgBudget) },
+    { label: "Invités moyen", value: stats.avgGuests > 0 ? `${stats.avgGuests} pax` : "0 pax" },
+    { label: "Taux de réalisation", value: `${stats.completionRate}%` },
+  ], [stats]);
+
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
       <div className="mb-4">
@@ -773,25 +924,30 @@ const QuickStats = memo(function QuickStats() {
         <h3 className="font-display text-xl mt-1">Stats rapides</h3>
       </div>
       <div className="space-y-4">
-        {QUICK_STATS.map((s, i) => (
-          <div key={s.label}>
-            <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="text-muted-foreground">{s.label}</span>
-              <span className="font-medium tabular-nums">{s.value}%</span>
+        {items.map((s, i) => {
+          const isPercent = s.value.endsWith('%');
+          const numVal = isPercent ? parseInt(s.value) : 50;
+          return (
+            <div key={s.label}>
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="text-muted-foreground">{s.label}</span>
+                <span className="font-medium tabular-nums"><SensitiveValue hidden={isPrivacyMode}>{s.value}</SensitiveValue></span>
+              </div>
+              {isPercent && (
+                <div className="h-1.5 rounded-full bg-foreground/[0.05] overflow-hidden">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${numVal}%` }}
+                    transition={{ duration: 1, delay: i * 0.1, ease: "easeOut" }}
+                    className="h-full bg-gradient-gold" />
+                </div>
+              )}
             </div>
-            <div className="h-1.5 rounded-full bg-foreground/[0.05] overflow-hidden">
-              <motion.div initial={{ width: 0 }} animate={{ width: `${s.value}%` }}
-                transition={{ duration: 1, delay: i * 0.1, ease: "easeOut" }}
-                className="h-full bg-gradient-gold" />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <div className="mt-5 pt-4 border-t border-border flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <CheckCircle2 className="size-3.5 text-emerald-600" /> Compte premium actif
+          <CheckCircle2 className="size-3.5 text-emerald-600" /> Données mises à jour
         </div>
-        <button className="text-xs text-foreground hover:underline">Gérer</button>
       </div>
     </div>
   );
