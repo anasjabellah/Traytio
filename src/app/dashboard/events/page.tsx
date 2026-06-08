@@ -7,7 +7,7 @@ import {
   Plus, Calendar as CalendarIcon, FileText, TrendingUp, TrendingDown,
   Users, Wallet, CheckCircle2, Sparkles,
   Search, PartyPopper, X,
-  Clock, List, RefreshCw, SlidersHorizontal, ChevronLeft, ChevronRight,
+  Clock, RefreshCw, SlidersHorizontal, ChevronLeft, ChevronRight,
   Eye, Pencil, MessageCircle, MapPin,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -238,8 +238,8 @@ export default function EventsPage() {
         </div>
 
         {/* Search + Filters + View toggle */}
-        <div className="mt-8 flex flex-col lg:flex-row lg:items-center gap-4">
-          <div className="flex items-center gap-2 px-4 h-11 rounded-2xl border border-border bg-card shadow-soft flex-1 max-w-md transition-all focus-within:border-gold focus-within:ring-1 focus-within:ring-gold/30">
+        <div className="mt-8 flex flex-col lg:flex-row lg:items-center gap-3">
+          <div className="flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft flex-1 max-w-[420px] transition-all focus-within:border-gold focus-within:ring-1 focus-within:ring-gold/30">
             <Search className="size-4 text-muted-foreground shrink-0" />
             <input
               value={searchQuery}
@@ -254,40 +254,45 @@ export default function EventsPage() {
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 ml-auto">
             <Button
-              variant="outline"
+              variant={showFilters ? 'default' : 'outline'}
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
-              className={`h-9 rounded-lg gap-1.5 ${showFilters ? 'border-gold text-gold' : ''}`}
+              className={`h-11 rounded-xl gap-2 px-4 ${showFilters ? 'bg-foreground text-background hover:bg-foreground/90' : ''}`}
             >
               <SlidersHorizontal className="size-3.5" />
               Filtres
             </Button>
-            <div className="flex items-center gap-1 p-1 rounded-lg bg-foreground/[0.04] border border-border">
-              <button
-                onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded-md transition-colors ${viewMode === 'table' ? 'bg-background shadow-soft text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                title="Tableau"
-              >
-                <List className="size-3.5" />
-              </button>
-
-              <button
-                onClick={() => setViewMode('calendar')}
-                className={`p-1.5 rounded-md transition-colors ${viewMode === 'calendar' ? 'bg-background shadow-soft text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                title="Calendrier"
-              >
-                <CalendarIcon className="size-3.5" />
-              </button>
-            </div>
             <button
               onClick={() => refresh()}
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors"
+              className="size-11 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors flex items-center justify-center"
               title="Rafraîchir"
             >
               <RefreshCw className="size-3.5" />
             </button>
+            <div className="flex p-0.5 rounded-xl bg-foreground/[0.04] border border-border">
+              <button
+                onClick={() => setViewMode('table')}
+                className={`h-10 px-4 rounded-[10px] text-sm font-medium transition-all ${
+                  viewMode === 'table'
+                    ? 'bg-foreground text-background shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Table
+              </button>
+              <button
+                onClick={() => setViewMode('calendar')}
+                className={`h-10 px-4 rounded-[10px] text-sm font-medium transition-all ${
+                  viewMode === 'calendar'
+                    ? 'bg-foreground text-background shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Calendrier
+              </button>
+            </div>
           </div>
         </div>
 

@@ -244,6 +244,22 @@
     color: #1a1a1a;
   }
 
+  button:not(:disabled),
+  a,
+  [role="button"]:not(:disabled),
+  summary,
+  select,
+  label:has(input[type="checkbox"], input[type="radio"]) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"]:disabled,
+  a[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
 }
 
 /* =========================================================
@@ -251,6 +267,10 @@
 ========================================================= */
 
 @layer utilities {
+
+  .clickable {
+    cursor: pointer;
+  }
 
   .font-display {
     font-family: var(--font-heading);
