@@ -67,6 +67,8 @@ export function EditEventDialog({ event, open, onClose, onSuccess }: EditEventDi
                 clientId: event.clientId ?? undefined,
                 guestCount: event.guestCount ?? undefined,
                 budget: event.budget ?? undefined,
+                contactPerson: event.contactPerson ?? undefined,
+                contactPhone: event.contactPhone ?? undefined,
                 notes: event.notes ?? undefined,
               }}
               onSubmit={handleUpdate}

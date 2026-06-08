@@ -24,6 +24,8 @@ export const createEventSchema = z.object({
   location: z.string().optional(),
   guestCount: z.number().optional(),
   budget: z.number().optional(),
+  contactPerson: z.string().optional(),
+  contactPhone: z.string().optional(),
   notes: z.string().optional(),
   clientId: z.string().optional()
 });

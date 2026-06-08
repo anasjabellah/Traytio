@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 export function Table({ className, ...props }: React.ComponentProps<'table'>) {
   return (
-    <div className="w-full overflow-auto rounded-lg border border-border/30 bg-card/30">
+    <div className="w-full rounded-lg border border-border/30 bg-card/30">
       <table
         className={cn(
           "w-full caption-bottom text-sm",

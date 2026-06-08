@@ -12,6 +12,8 @@ export type Event = {
   location?: string | null;
   guestCount?: number | null;
   budget?: number | null; // converted from Decimal
+  contactPerson?: string | null;
+  contactPhone?: string | null;
   notes?: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -26,6 +28,8 @@ export type CreateEventInput = {
   location?: string;
   guestCount?: number;
   budget?: number;
+  contactPerson?: string;
+  contactPhone?: string;
   notes?: string;
   clientId?: string;
 };

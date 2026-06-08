@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Event, CreateEventInput } from '@/features/events/types';
 import { createEventSchema } from '@/features/events/validations/create-event-schema';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { startTimer, endTimer } from '@/lib/log-timer';
 
 let _createEventCalls = 0;
 
@@ -12,7 +13,7 @@ export async function createEvent(data: CreateEventInput): Promise<ActionRespons
     _createEventCalls++;
     if (_createEventCalls % 20 === 0) console.warn(`[CALL_TRACE] createEvent called ${_createEventCalls} times`);
 
-    console.time('createEvent:total');
+    const totalTimer = startTimer('createEvent:total');
 
     const organizationId = await getOrganizationId();
 
@@ -22,7 +23,7 @@ export async function createEvent(data: CreateEventInput): Promise<ActionRespons
       budget: data.budget ? data.budget : null
     };
 
-    console.time('createEvent:create');
+    const createTimer = startTimer('createEvent:create');
     const event = await prisma.event.create({
       data: eventData,
       select: {
@@ -37,12 +38,14 @@ export async function createEvent(data: CreateEventInput): Promise<ActionRespons
         location: true,
         guestCount: true,
         budget: true,
+        contactPerson: true,
+        contactPhone: true,
         notes: true,
         createdAt: true,
         updatedAt: true
       }
     });
-    console.timeEnd('createEvent:create');
+    endTimer(createTimer);
 
     const result: Event = {
       id: event.id,
@@ -56,12 +59,14 @@ export async function createEvent(data: CreateEventInput): Promise<ActionRespons
       location: event.location,
       guestCount: event.guestCount,
       budget: Number(event.budget) || null,
+      contactPerson: event.contactPerson,
+      contactPhone: event.contactPhone,
       notes: event.notes,
       createdAt: event.createdAt,
       updatedAt: event.updatedAt
     };
 
-    console.timeEnd('createEvent:total');
+    endTimer(totalTimer);
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: error.message || 'An error occurred' };

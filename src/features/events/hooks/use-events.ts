@@ -17,7 +17,7 @@ type Pagination = {
  */
 export function useEvents(initialLimit = 20) {
   const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState<string>('');

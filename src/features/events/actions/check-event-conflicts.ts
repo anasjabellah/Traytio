@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { startTimer, endTimer } from '@/lib/log-timer';
 
 let _checkConflictsCalls = 0;
 
@@ -28,7 +29,7 @@ export async function checkEventConflicts(
     _checkConflictsCalls++;
     if (_checkConflictsCalls % 20 === 0) console.warn(`[CALL_TRACE] checkEventConflicts called ${_checkConflictsCalls} times`);
 
-    console.time('checkEventConflicts:total');
+    const totalTimer = startTimer('checkEventConflicts:total');
 
     const orgId = await getOrganizationId();
 
@@ -38,7 +39,7 @@ export async function checkEventConflicts(
     const dayEnd = new Date(startDate);
     dayEnd.setHours(23, 59, 59, 999);
 
-    console.time('checkEventConflicts:findMany');
+    const queryTimer = startTimer('checkEventConflicts:findMany');
     const eventsOnDay = await prisma.event.findMany({
       where: {
         organizationId: orgId,
@@ -48,7 +49,7 @@ export async function checkEventConflicts(
       },
       select: { id: true, name: true, startDate: true, endDate: true },
     });
-    console.timeEnd('checkEventConflicts:findMany');
+    endTimer(queryTimer);
 
     const newStart = new Date(startDate);
     const newEnd = endDate ? new Date(endDate) : null;
@@ -71,7 +72,7 @@ export async function checkEventConflicts(
       }
     }
 
-    console.timeEnd('checkEventConflicts:total');
+    endTimer(totalTimer);
     return {
       success: true,
       data: {

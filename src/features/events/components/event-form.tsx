@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { z } from 'zod';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Calendar, Clock, MapPin, Users, Wallet, Minus, Plus, Search, X } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Wallet, Minus, Plus, Search, X, User, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createEventSchema } from '@/features/events/validations/create-event-schema';
 import { AvailabilityCard } from '@/features/events/components/availability-card';
@@ -367,6 +367,32 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
                 )}
               </>
             )}
+          />
+        </div>
+      </div>
+
+      {/* Contact Person */}
+      <div>
+        <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Personne de contact</div>
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-soft px-4 h-14 transition-all focus-within:border-gold focus-within:ring-gold">
+          <User className="h-4 w-4 text-muted-foreground shrink-0" />
+          <input
+            {...register('contactPerson')}
+            placeholder="Nom du contact"
+            className="flex-1 bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground"
+          />
+        </div>
+      </div>
+
+      {/* Contact Phone */}
+      <div>
+        <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Téléphone contact</div>
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-soft px-4 h-14 transition-all focus-within:border-gold focus-within:ring-gold">
+          <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+          <input
+            {...register('contactPhone')}
+            placeholder="+212 6 XX XX XX XX"
+            className="flex-1 bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground"
           />
         </div>
       </div>

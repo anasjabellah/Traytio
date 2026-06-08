@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, EventDetail } from '@/features/events/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { startTimer, endTimer } from '@/lib/log-timer';
 
 let _getEventByIdCalls = 0;
 
@@ -11,10 +12,10 @@ export async function getEventById(id: string): Promise<ActionResponse<EventDeta
     _getEventByIdCalls++;
     if (_getEventByIdCalls % 20 === 0) console.warn(`[CALL_TRACE] getEventById called ${_getEventByIdCalls} times`);
 
-    console.time('getEventById:total');
+    const totalTimer = startTimer('getEventById:total');
     const organizationId = await getOrganizationId();
 
-    console.time('getEventById:findUnique');
+    const queryTimer = startTimer('getEventById:findUnique');
     const event = await prisma.event.findUnique({
       where: { id, organizationId },
       include: {
@@ -34,7 +35,7 @@ export async function getEventById(id: string): Promise<ActionResponse<EventDeta
         },
       },
     });
-    console.timeEnd('getEventById:findUnique');
+    endTimer(queryTimer);
 
     if (!event) {
       return { success: false, error: 'Event not found' };
@@ -49,9 +50,11 @@ export async function getEventById(id: string): Promise<ActionResponse<EventDeta
       status: event.status,
       startDate: event.startDate,
       endDate: event.endDate,
-      location: event.location,
+       location: event.location,
       guestCount: event.guestCount,
       budget: Number(event.budget) || null,
+      contactPerson: event.contactPerson,
+      contactPhone: event.contactPhone,
       notes: event.notes,
       createdAt: event.createdAt,
       updatedAt: event.updatedAt,
@@ -62,7 +65,7 @@ export async function getEventById(id: string): Promise<ActionResponse<EventDeta
       })) ?? undefined,
     };
 
-    console.timeEnd('getEventById:total');
+    endTimer(totalTimer);
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: error.message || 'An error occurred' };

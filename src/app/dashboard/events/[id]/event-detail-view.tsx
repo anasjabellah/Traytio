@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Pencil, Trash2, Calendar, MapPin, Users, Wallet,
   Sparkles, Clock, FileText, PartyPopper, CheckCircle2, Crown,
-  Phone, Mail, ChevronRight, CircleDot, Banknote, Receipt,
+  Phone, Mail, User, ChevronRight, CircleDot, Banknote, Receipt,
   Hourglass, TrendingUp, AlertTriangle, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -394,6 +394,27 @@ export default function EventDetailView({ event }: { event: EventDetail }) {
                       </div>
                     )}
                   </div>
+
+                  {(event.contactPerson || event.contactPhone) && (
+                    <>
+                      <div className="h-px bg-border" />
+                      <div className="space-y-3">
+                        <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Contact direct</div>
+                        {event.contactPerson && (
+                          <div className="flex items-center gap-3 text-sm">
+                            <User className="size-3.5 text-muted-foreground shrink-0" />
+                            <span>{event.contactPerson}</span>
+                          </div>
+                        )}
+                        {event.contactPhone && (
+                          <div className="flex items-center gap-3 text-sm">
+                            <Phone className="size-3.5 text-muted-foreground shrink-0" />
+                            <a href={`tel:${event.contactPhone}`} className="hover:text-foreground transition-colors">{event.contactPhone}</a>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="py-6 flex flex-col items-center gap-3 text-muted-foreground">

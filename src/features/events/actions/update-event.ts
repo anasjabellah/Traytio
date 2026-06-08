@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Event, UpdateEventInput } from '@/features/events/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { startTimer, endTimer } from '@/lib/log-timer';
 
 let _updateEventCalls = 0;
 
@@ -11,12 +12,12 @@ export async function updateEvent(data: UpdateEventInput): Promise<ActionRespons
     _updateEventCalls++;
     if (_updateEventCalls % 20 === 0) console.warn(`[CALL_TRACE] updateEvent called ${_updateEventCalls} times`);
 
-    console.time('updateEvent:total');
+    const totalTimer = startTimer('updateEvent:total');
 
     const organizationId = await getOrganizationId();
     const { id, ...updateData } = data;
 
-    console.time('updateEvent:update');
+    const updateTimer = startTimer('updateEvent:update');
     const event = await prisma.event.update({
       where: { id, organizationId },
       data: {
@@ -35,12 +36,14 @@ export async function updateEvent(data: UpdateEventInput): Promise<ActionRespons
         location: true,
         guestCount: true,
         budget: true,
+        contactPerson: true,
+        contactPhone: true,
         notes: true,
         createdAt: true,
         updatedAt: true
       }
     });
-    console.timeEnd('updateEvent:update');
+    endTimer(updateTimer);
 
     const result: Event = {
       id: event.id,
@@ -54,12 +57,14 @@ export async function updateEvent(data: UpdateEventInput): Promise<ActionRespons
       location: event.location,
       guestCount: event.guestCount,
       budget: Number(event.budget) || null,
+      contactPerson: event.contactPerson,
+      contactPhone: event.contactPhone,
       notes: event.notes,
       createdAt: event.createdAt,
       updatedAt: event.updatedAt
     };
 
-    console.timeEnd('updateEvent:total');
+    endTimer(totalTimer);
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: error.message || 'An error occurred' };
