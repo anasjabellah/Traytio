@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { z } from 'zod';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Calendar, Clock, MapPin, Users, Wallet, Minus, Plus, Search, X, User, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { createEventSchema } from '@/features/events/validations/create-event-schema';
+import { createEventSchema, validationErrorMap } from '@/features/events/validations/create-event-schema';
 import { AvailabilityCard } from '@/features/events/components/availability-card';
 import { checkEventConflicts } from '@/features/events/actions/check-event-conflicts';
 import type { ConflictEventInfo } from '@/features/events/actions/check-event-conflicts';
@@ -50,14 +50,15 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
     register,
     setValue,
     watch,
   } = useForm<EventFormValues>({
-    resolver: zodResolver(createEventSchema),
+    resolver: zodResolver(createEventSchema, { error: validationErrorMap }),
     defaultValues,
-    mode: 'onTouched',
+    mode: 'onChange',
+    reValidateMode: 'onChange',
   });
 
   const startDateVal = watch('startDate') as Date | undefined;
@@ -67,28 +68,59 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
   const { dateStr: startDateStr, timeStr: startTimeStr } = splitDate(startDateVal);
   const { timeStr: endTimeStr } = splitDate(endDateVal);
 
+  const durationLabel = React.useMemo(() => {
+    if (!startDateVal || !endDateVal) return null;
+    let ms = endDateVal.getTime() - startDateVal.getTime();
+    if (ms < 0) ms += 24 * 60 * 60 * 1000;
+    if (ms < 60000) return null;
+    const hours = Math.floor(ms / 3600000);
+    const mins = Math.round((ms % 3600000) / 60000);
+    if (hours === 0) return `${mins} min`;
+    if (mins === 0) return `${hours}h`;
+    return `${hours}h ${mins}min`;
+  }, [startDateVal, endDateVal]);
+
   const [clients, setClients] = useState<Array<{ label: string; value: string }>>([]);
   const [clientQuery, setClientQuery] = useState('');
   const [clientFocused, setClientFocused] = useState(false);
+  const clientDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    async function loadClients() {
-      try {
-        const res = await fetch('/api/clients');
-        const json = await res.json();
-        const list = (Array.isArray(json) ? json : []).map((c: any) => ({ label: c.name, value: c.id }));
-        setClients(list);
-      } catch (e) {
-        console.error('Failed to load clients', e);
-      }
+  const loadClients = useCallback(async (search?: string) => {
+    try {
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      params.set('limit', '50');
+      const res = await fetch(`/api/clients?${params}`);
+      const json = await res.json();
+      const list = (Array.isArray(json) ? json : json.data ?? []).map((c: any) => ({ label: c.name, value: c.id }));
+      setClients(list);
+    } catch (e) {
+      console.error('Failed to load clients', e);
     }
-    loadClients();
   }, []);
 
-  const selectedClient = clients.find(c => c.value === watch('clientId'));
-  const filteredClients = clients.filter(c =>
-    c.label.toLowerCase().includes(clientQuery.toLowerCase())
-  );
+  useEffect(() => {
+    loadClients();
+  }, [loadClients]);
+
+  useEffect(() => {
+    return () => {
+      if (clientDebounceRef.current) clearTimeout(clientDebounceRef.current);
+      if (conflictTimerRef.current) clearTimeout(conflictTimerRef.current);
+    };
+  }, []);
+
+  const handleClientInputChange = useCallback((value: string) => {
+    setClientQuery(value);
+    if (clientDebounceRef.current) clearTimeout(clientDebounceRef.current);
+    clientDebounceRef.current = setTimeout(() => {
+      loadClients(value || undefined);
+    }, 300);
+  }, [loadClients]);
+
+  const currentClientId = useWatch({ control, name: 'clientId' });
+  const selectedClient = clients.find(c => c.value === currentClientId);
+  const filteredClients = clients;
 
   const [availability, setAvailability] = useState<{
     state: 'idle' | 'checking' | 'available' | 'noConflict' | 'conflict';
@@ -97,8 +129,14 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
   }>({ state: 'idle', conflictingEvents: [], sameDayEvents: [] });
 
   const conflictCheckId = useRef(0);
+  const conflictTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastCheckedKeyRef = useRef('');
 
   const checkConflicts = useCallback(async (sDate: string, sTime: string, eTime: string) => {
+    const key = `${sDate}|${sTime}|${eTime}`;
+    if (key === lastCheckedKeyRef.current) return;
+    lastCheckedKeyRef.current = key;
+
     const id = ++conflictCheckId.current;
     const newStart = joinDate(sDate, sTime);
     if (!newStart) return;
@@ -120,12 +158,40 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
       setAvailability({ state: 'idle', conflictingEvents: [], sameDayEvents: [] });
       return;
     }
-    const timer = setTimeout(() => checkConflicts(startDateStr, startTimeStr, endTimeStr), 300);
-    return () => clearTimeout(timer);
+    if (conflictTimerRef.current) clearTimeout(conflictTimerRef.current);
+    conflictTimerRef.current = setTimeout(() => checkConflicts(startDateStr, startTimeStr, endTimeStr), 600);
+    return () => {
+      if (conflictTimerRef.current) clearTimeout(conflictTimerRef.current);
+    };
   }, [startDateStr, startTimeStr, endTimeStr, checkConflicts]);
 
   return (
-    <form id="event-form" onSubmit={handleSubmit(async (v) => await onSubmit(v))} className="space-y-6">
+    <form id="event-form" onSubmit={handleSubmit(async (v) => {
+      const values = v as unknown as { startDate?: Date | null; endDate?: Date | null };
+      const adjusted = { ...v } as EventFormValues;
+      if (values.endDate && values.startDate) {
+        const e = values.endDate;
+        const s = values.startDate;
+        const eh = e.getHours(), em = e.getMinutes();
+        const sh = s.getHours(), sm = s.getMinutes();
+        if (eh < sh || (eh === sh && em < sm)) {
+          e.setDate(e.getDate() + 1);
+          adjusted.endDate = e;
+        }
+      }
+      await onSubmit(adjusted);
+    }, (errs) => {
+      setTimeout(() => {
+        const keys = Object.keys(errs);
+        if (keys.length > 0) {
+          const el = document.querySelector(`[data-field="${keys[0]}"]`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            (el.querySelector('input, button, textarea') as HTMLElement)?.focus();
+          }
+        }
+      }, 100);
+    })} className="space-y-6">
       {/* Header */}
       {/* <div className="flex items-center gap-4">
         <div className="h-9 w-9 rounded-xl bg-foreground text-primary-foreground flex items-center justify-center text-xs font-medium tabular-nums">
@@ -171,23 +237,28 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
               </button>
             ))}
           </div>
-          {errors.type && <p className="text-xs text-red-600 mt-1">{errors.type.message?.toString()}</p>}
+          {errors.type && <p className="text-sm text-red-600 mt-1">{errors.type.message?.toString()}</p>}
         </div>
       </div>
 
       {/* Row 2: Date + Heure début + Heure fin */}
       <div className="grid sm:grid-cols-3 gap-4">
         {/* Date */}
-        <div>
+        <div data-field="startDate">
           <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Date *</div>
-          <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold">
+          <div className={`flex items-center gap-2 rounded-2xl border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold ${errors.startDate ? 'border-red-500' : 'border-border'}`}>
             <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
             <input
               type="date"
               value={startDateStr}
               onChange={(e) => {
-                const joined = joinDate(e.target.value, startTimeStr);
-                setValue('startDate', joined, { shouldValidate: !!e.target.value });
+                const nd = e.target.value;
+                const joined = joinDate(nd, startTimeStr);
+                setValue('startDate', joined, { shouldValidate: !!nd });
+                if (endDateVal) {
+                  const { timeStr: et } = splitDate(endDateVal);
+                  setValue('endDate', joinDate(nd, et || '23:59'), { shouldValidate: true });
+                }
               }}
               className="flex-1 bg-transparent text-sm focus:outline-none [color-scheme:light]"
             />
@@ -196,9 +267,9 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
         </div>
 
         {/* Heure début */}
-        <div>
-          <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Début</div>
-          <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold">
+        <div data-field="startDate">
+          <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Début *</div>
+          <div className={`flex items-center gap-2 rounded-2xl border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold ${errors.startDate ? 'border-red-500' : 'border-border'}`}>
             <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
             <input
               type="time"
@@ -213,20 +284,25 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
         </div>
 
         {/* Heure fin */}
-        <div>
-          <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Fin</div>
-          <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold">
+        <div data-field="endDate">
+          <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Fin *</div>
+          <div className={`flex items-center gap-2 rounded-2xl border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold ${errors.endDate ? 'border-red-500' : 'border-border'}`}>
             <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
             <input
               type="time"
               value={endTimeStr}
               onChange={(e) => {
-                const joined = joinDate(startDateStr || new Date().toISOString().split('T')[0], e.target.value);
-                setValue('endDate', joined, { shouldValidate: false });
+                if (!startDateStr) return;
+                const joined = joinDate(startDateStr, e.target.value);
+                setValue('endDate', joined, { shouldValidate: true });
               }}
               className="flex-1 bg-transparent text-sm focus:outline-none [color-scheme:light]"
             />
           </div>
+          {errors.endDate && <p className="text-xs text-red-600 mt-1">{errors.endDate.message?.toString()}</p>}
+          {durationLabel && !errors.endDate && (
+            <p className="text-xs text-emerald-600 mt-1">Durée : {durationLabel}</p>
+          )}
         </div>
       </div>
 
@@ -325,7 +401,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
                         {selectedClient.label.split(' ').map((p: string) => p[0]).slice(0, 2).join('')}
                       </div>
                       <span className="flex-1 text-sm">{selectedClient.label}</span>
-                      <button type="button" onClick={() => { field.onChange(null); setClientQuery(''); }} className="h-6 w-6 rounded-full hover:bg-secondary flex items-center justify-center">
+                      <button type="button" onClick={() => { field.onChange(null); setClientQuery(''); loadClients(); }} className="h-6 w-6 rounded-full hover:bg-secondary flex items-center justify-center">
                         <X className="h-3 w-3 text-muted-foreground" />
                       </button>
                     </>
@@ -334,7 +410,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
                       <Search className="h-4 w-4 text-muted-foreground shrink-0" />
                       <input
                         value={clientQuery}
-                        onChange={(e) => setClientQuery(e.target.value)}
+                        onChange={(e) => handleClientInputChange(e.target.value)}
                         onFocus={() => setClientFocused(true)}
                         onBlur={() => setTimeout(() => setClientFocused(false), 150)}
                         placeholder="Rechercher un client…"
@@ -349,7 +425,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
                       <button
                         key={c.value}
                         type="button"
-                        onMouseDown={() => { field.onChange(c.value); setClientQuery(''); setClientFocused(false); }}
+                        onMouseDown={() => { if (clientDebounceRef.current) clearTimeout(clientDebounceRef.current); field.onChange(c.value); setClientQuery(''); setClientFocused(false); }}
                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-soft transition-colors text-left"
                       >
                         <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-xs font-medium">
@@ -444,7 +520,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
           >
             Annuler
           </button>
-          <Button type="submit" disabled={isLoading} className="rounded-full bg-foreground text-primary-foreground hover:shadow-gold transition-all px-6">
+          <Button type="submit" disabled={isLoading || !isValid} className="rounded-full bg-foreground text-primary-foreground hover:shadow-gold transition-all px-6 disabled:opacity-50 disabled:cursor-not-allowed">
             {isLoading ? 'En cours...' : 'Mettre à jour'}
           </Button>
         </div>

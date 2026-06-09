@@ -172,7 +172,6 @@ export function MenuItemForm({ defaultValues = {}, onSubmit, isLoading = false, 
             if (!res.ok) throw new Error('Upload failed');
             const json = await res.json();
             setValue('imageUrl', json.url);
-            console.log('Image URL set:', json.url);
             toast.success('Image uploaded');
           } catch (err) {
             toast.error('Image upload error');

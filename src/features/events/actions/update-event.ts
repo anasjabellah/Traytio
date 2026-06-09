@@ -1,28 +1,43 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import type { ActionResponse, Event, UpdateEventInput } from '@/features/events/types';
+import type { ActionResponse, Event } from '@/features/events/types';
+import { updateEventSchema } from '@/features/events/validations/update-event-schema';
 import { getOrganizationId } from '@/lib/get-organization-id';
-import { startTimer, endTimer } from '@/lib/log-timer';
-
-let _updateEventCalls = 0;
-
-export async function updateEvent(data: UpdateEventInput): Promise<ActionResponse<Event>> {
+export async function updateEvent(data: Record<string, unknown>): Promise<ActionResponse<Event>> {
   try {
-    _updateEventCalls++;
-    if (_updateEventCalls % 20 === 0) console.warn(`[CALL_TRACE] updateEvent called ${_updateEventCalls} times`);
-
-    const totalTimer = startTimer('updateEvent:total');
-
     const organizationId = await getOrganizationId();
-    const { id, ...updateData } = data;
 
-    const updateTimer = startTimer('updateEvent:update');
+    const parsed = updateEventSchema.safeParse(data);
+    if (!parsed.success) {
+      const first = parsed.error.issues[0];
+      return { success: false, error: first?.message || 'Données invalides.' };
+    }
+
+    const { id, ...validData } = parsed.data;
+
+    let endDate = validData.endDate ? new Date(validData.endDate as Date) : undefined;
+    if (endDate && validData.startDate) {
+      const s = new Date(validData.startDate as Date);
+      const e = endDate;
+      const sameDay = s.getFullYear() === e.getFullYear() && s.getMonth() === e.getMonth() && s.getDate() === e.getDate();
+      if (sameDay) {
+        const eh = e.getHours(), em = e.getMinutes();
+        const sh = s.getHours(), sm = s.getMinutes();
+        if (eh < sh || (eh === sh && em < sm)) {
+          e.setDate(e.getDate() + 1);
+          endDate = e;
+        }
+      }
+    }
+
     const event = await prisma.event.update({
       where: { id, organizationId },
       data: {
-        ...updateData,
-        budget: updateData.budget !== undefined ? updateData.budget : undefined
+        ...validData,
+        startDate: validData.startDate ? new Date(validData.startDate as Date) : undefined,
+        endDate: endDate ?? undefined,
+        budget: validData.budget !== undefined ? validData.budget : undefined,
       },
       select: {
         id: true,
@@ -40,10 +55,9 @@ export async function updateEvent(data: UpdateEventInput): Promise<ActionRespons
         contactPhone: true,
         notes: true,
         createdAt: true,
-        updatedAt: true
-      }
+        updatedAt: true,
+      },
     });
-    endTimer(updateTimer);
 
     const result: Event = {
       id: event.id,
@@ -61,10 +75,9 @@ export async function updateEvent(data: UpdateEventInput): Promise<ActionRespons
       contactPhone: event.contactPhone,
       notes: event.notes,
       createdAt: event.createdAt,
-      updatedAt: event.updatedAt
+      updatedAt: event.updatedAt,
     };
 
-    endTimer(totalTimer);
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: error.message || 'An error occurred' };

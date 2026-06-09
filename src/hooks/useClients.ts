@@ -8,7 +8,7 @@ type Client = {
   createdAt: string;
 };
 
-export function useClients() {
+export function useClients(search?: string) {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,10 +16,13 @@ export function useClients() {
   useEffect(() => {
     async function fetchClients() {
       try {
-        const res = await fetch("/api/clients");
+        const params = new URLSearchParams();
+        if (search) params.set("search", search);
+        params.set("limit", "200");
+        const res = await fetch(`/api/clients?${params}`);
         if (!res.ok) throw new Error("Failed to load clients");
-        const data = await res.json();
-        setClients(data);
+        const json = await res.json();
+        setClients(Array.isArray(json) ? json : json.data ?? []);
       } catch (e: any) {
         setError(e.message);
       } finally {
@@ -27,7 +30,7 @@ export function useClients() {
       }
     }
     fetchClients();
-  }, []);
+  }, [search]);
 
   return { clients, loading, error };
 }

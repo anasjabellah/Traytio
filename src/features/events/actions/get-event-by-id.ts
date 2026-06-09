@@ -3,19 +3,11 @@
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, EventDetail } from '@/features/events/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
-import { startTimer, endTimer } from '@/lib/log-timer';
-
-let _getEventByIdCalls = 0;
 
 export async function getEventById(id: string): Promise<ActionResponse<EventDetail>> {
   try {
-    _getEventByIdCalls++;
-    if (_getEventByIdCalls % 20 === 0) console.warn(`[CALL_TRACE] getEventById called ${_getEventByIdCalls} times`);
-
-    const totalTimer = startTimer('getEventById:total');
     const organizationId = await getOrganizationId();
 
-    const queryTimer = startTimer('getEventById:findUnique');
     const event = await prisma.event.findUnique({
       where: { id, organizationId },
       include: {
@@ -35,7 +27,6 @@ export async function getEventById(id: string): Promise<ActionResponse<EventDeta
         },
       },
     });
-    endTimer(queryTimer);
 
     if (!event) {
       return { success: false, error: 'Event not found' };
@@ -65,7 +56,6 @@ export async function getEventById(id: string): Promise<ActionResponse<EventDeta
       })) ?? undefined,
     };
 
-    endTimer(totalTimer);
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: error.message || 'An error occurred' };

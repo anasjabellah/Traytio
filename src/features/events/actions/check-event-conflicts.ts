@@ -2,10 +2,6 @@
 
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
-import { startTimer, endTimer } from '@/lib/log-timer';
-
-let _checkConflictsCalls = 0;
-
 export type ConflictEventInfo = {
   id: string;
   name: string;
@@ -20,66 +16,72 @@ export type ConflictCheckResult = {
   sameDayEvents: ConflictEventInfo[];
 };
 
+const FAR_FUTURE = new Date(8640000000000000);
+
+function toConflictInfo(ev: { id: string; name: string; startDate: Date; endDate: Date | null }): ConflictEventInfo {
+  return { id: ev.id, name: ev.name, startDate: new Date(ev.startDate), endDate: ev.endDate ? new Date(ev.endDate) : null };
+}
+
+type EventRow = {
+  id: string;
+  name: string;
+  startDate: Date;
+  endDate: Date | null;
+  is_conflicting: boolean;
+};
+
 export async function checkEventConflicts(
   startDate: Date,
   endDate: Date | null,
   excludeEventId?: string
 ): Promise<{ success: boolean; data?: ConflictCheckResult; error?: string }> {
   try {
-    _checkConflictsCalls++;
-    if (_checkConflictsCalls % 20 === 0) console.warn(`[CALL_TRACE] checkEventConflicts called ${_checkConflictsCalls} times`);
-
-    const totalTimer = startTimer('checkEventConflicts:total');
-
     const orgId = await getOrganizationId();
-
-    const dayStart = new Date(startDate);
-    dayStart.setHours(0, 0, 0, 0);
-
-    const dayEnd = new Date(startDate);
-    dayEnd.setHours(23, 59, 59, 999);
-
-    const queryTimer = startTimer('checkEventConflicts:findMany');
-    const eventsOnDay = await prisma.event.findMany({
-      where: {
-        organizationId: orgId,
-        id: excludeEventId ? { not: excludeEventId } : undefined,
-        startDate: { lte: dayEnd },
-        endDate: { gte: dayStart },
-      },
-      select: { id: true, name: true, startDate: true, endDate: true },
-    });
-    endTimer(queryTimer);
 
     const newStart = new Date(startDate);
     const newEnd = endDate ? new Date(endDate) : null;
 
+    const dayStart = new Date(startDate);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(startDate);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    const excludeParam = excludeEventId ?? null;
+
+    const rows = await prisma.$queryRaw<EventRow[]>`
+      SELECT
+        id,
+        name,
+        "startDate",
+        "endDate",
+        "startDate" < ${newEnd ?? FAR_FUTURE} AND ("endDate" IS NULL OR "endDate" > ${newStart}) AS is_conflicting
+      FROM events
+      WHERE "organizationId" = ${orgId}
+        AND (${excludeParam}::text IS NULL OR id != ${excludeParam}::text)
+        AND "startDate" <= ${dayEnd}
+        AND "endDate" >= ${dayStart}
+      ORDER BY "startDate"
+    `;
+
     const conflicting: ConflictEventInfo[] = [];
-    const nonConflicting: ConflictEventInfo[] = [];
+    const sameDay: ConflictEventInfo[] = [];
 
-    for (const ev of eventsOnDay) {
-      const evStart = new Date(ev.startDate);
-      const evEnd = ev.endDate ? new Date(ev.endDate) : null;
-
-      const overlaps =
-        evStart < (newEnd ?? new Date(8640000000000000)) &&
-        (evEnd === null || evEnd > newStart);
-
-      if (overlaps) {
-        conflicting.push({ id: ev.id, name: ev.name, startDate: evStart, endDate: evEnd });
+    for (const row of rows) {
+      const info = toConflictInfo(row);
+      if (row.is_conflicting) {
+        conflicting.push(info);
       } else {
-        nonConflicting.push({ id: ev.id, name: ev.name, startDate: evStart, endDate: evEnd });
+        sameDay.push(info);
       }
     }
 
-    endTimer(totalTimer);
     return {
       success: true,
       data: {
         hasConflict: conflicting.length > 0,
-        sameDayCount: eventsOnDay.length,
+        sameDayCount: rows.length,
         conflictingEvents: conflicting,
-        sameDayEvents: nonConflicting,
+        sameDayEvents: sameDay,
       },
     };
   } catch (error: any) {

@@ -8,7 +8,7 @@ import {
   Users, Wallet, CheckCircle2, Sparkles,
   Search, PartyPopper, X,
   Clock, RefreshCw, SlidersHorizontal, ChevronLeft, ChevronRight,
-  Eye, Pencil, MessageCircle, MapPin,
+  Eye, Pencil, MessageCircle, MapPin, User, Phone,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEvents } from '@/features/events/hooks/use-events';
@@ -21,6 +21,7 @@ import { STATUS_LABELS, STATUS_COLORS } from '@/features/events/types';
 import { PrivacyModeProvider, EyeToggle, SensitiveValue, usePrivacyMode } from '@/components/privacy-mode';
 import { EventsTable } from '@/features/events/components/events-table';
 import { useNotificationStore } from '@/stores/notification-store';
+import { formatCurrency } from '@/lib/utils';
 
 const mad = (n: number) =>
   new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(n);
@@ -805,11 +806,11 @@ function EventHoverCard({ event, onView, onEdit, onMouseEnter, onMouseLeave }: {
         <div className="space-y-1.5 text-xs text-muted-foreground/80">
           <div className="flex items-center gap-2">
             <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />
-            <span>{fmt(new Date(event.startDate))}{event.endDate && !sameDayF(new Date(event.startDate), new Date(event.endDate)) ? ` → ${fmt(new Date(event.endDate))}` : ''}</span>
+            <span>{fmt(new Date(event.startDate))}{hasValidEndDate(event) && !sameDayF(new Date(event.startDate), new Date(event.endDate!)) ? ` → ${fmt(new Date(event.endDate!))}` : ''}</span>
           </div>
           <div className="flex items-center gap-2">
             <Clock className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />
-            <span>{fmtTime(new Date(event.startDate))}{event.endDate ? ` → ${fmtTime(new Date(event.endDate))}` : ''}</span>
+            <span>{fmtTime(new Date(event.startDate))}{hasValidEndDate(event) ? ` → ${fmtTime(new Date(event.endDate!))}` : ''}</span>
           </div>
           {event.clientName && (
             <div className="flex items-center gap-2">
@@ -826,7 +827,7 @@ function EventHoverCard({ event, onView, onEdit, onMouseEnter, onMouseLeave }: {
           {event.budget != null && (
             <div className="flex items-center gap-2">
               <Wallet className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />
-              <span>{event.budget.toLocaleString('fr-FR')} TND</span>
+              <span>{formatCurrency(event.budget)}</span>
             </div>
           )}
           {event.location && (
@@ -834,6 +835,22 @@ function EventHoverCard({ event, onView, onEdit, onMouseEnter, onMouseLeave }: {
               <MapPin className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />
               <span className="truncate">{event.location}</span>
             </div>
+          )}
+          {(event.contactPerson || event.contactPhone) && (
+            <>
+              {event.contactPerson && (
+                <div className="flex items-center gap-2">
+                  <User className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />
+                  <span className="truncate">{event.contactPerson}</span>
+                </div>
+              )}
+              {event.contactPhone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />
+                  <span className="truncate">{event.contactPhone}</span>
+                </div>
+              )}
+            </>
           )}
         </div>
         <div className="h-px bg-border/30" />
@@ -865,6 +882,18 @@ function EventHoverCard({ event, onView, onEdit, onMouseEnter, onMouseLeave }: {
 
 function sameDayF(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+function hasValidEndDate(e: Event) {
+  if (!e.endDate) return false;
+  const d = new Date(e.endDate);
+  if (isNaN(d.getTime())) return false;
+  const s = new Date(e.startDate);
+  if (isNaN(s.getTime())) return false;
+  if (d.getFullYear() < 2020 || d.getFullYear() > 2100) return false;
+  const startOfDay = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+  if (d.getTime() < startOfDay.getTime()) return false;
+  return true;
 }
 
 function CalendarView({ events, isLoading, onView, onEdit }: {
@@ -927,7 +956,7 @@ function CalendarView({ events, isLoading, onView, onEdit }: {
   }, [monthEvents]);
 
   const multiDayEvents = useMemo(() => {
-    return monthEvents.filter(e => e.endDate && !sameDayF(new Date(e.startDate), new Date(e.endDate)));
+    return monthEvents.filter(e => hasValidEndDate(e) && !sameDayF(new Date(e.startDate), new Date(e.endDate!)));
   }, [monthEvents]);
 
   const fmtTime = (d: Date) =>
@@ -1091,7 +1120,7 @@ function CalendarView({ events, isLoading, onView, onEdit }: {
                           <div className="px-1.5 space-y-1">
                             {dayEvents.slice(0, 5).map((e) => {
                               const st = fmtTime(new Date(e.startDate));
-                              const endDt = e.endDate ? new Date(e.endDate) : null;
+                              const endDt = hasValidEndDate(e) ? new Date(e.endDate!) : null;
                               const et = endDt ? fmtTime(endDt) : null;
                               const timeLabel = et
                                 ? `${st} → ${et}`
@@ -1104,8 +1133,8 @@ function CalendarView({ events, isLoading, onView, onEdit }: {
                                     onClick={(ev) => { ev.stopPropagation(); onView(e); }}
                                   >
                                     <span className={`size-1.5 rounded-full shrink-0 ${TYPE_ACCENT[e.type] || TYPE_ACCENT.OTHER}`} />
-                                    <span className="text-[10px] text-gray-600 shrink-0 whitespace-nowrap tabular-nums">{timeLabel}</span>
-                                    <span className="truncate">{e.name}</span>
+                                    <span className="truncate font-medium text-gray-900">{e.name}</span>
+                                    <span className="text-[11px] text-gray-600 shrink-0 whitespace-nowrap tabular-nums ml-auto">{timeLabel}</span>
                                   </div>
                                   {isHovered && (
                                     <EventHoverCard event={e} onView={onView} onEdit={onEdit} onMouseEnter={handleTooltipEnter} onMouseLeave={handleTooltipLeave} />

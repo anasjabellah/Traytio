@@ -24,7 +24,7 @@ export type CreateEventInput = {
   type: EventType;
   status?: EventStatus;
   startDate: Date;
-  endDate?: Date;
+  endDate: Date;
   location?: string;
   guestCount?: number;
   budget?: number;

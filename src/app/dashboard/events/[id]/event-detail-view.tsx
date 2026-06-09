@@ -70,6 +70,8 @@ export default function EventDetailView({ event }: { event: EventDetail }) {
   const formatTime = (d: Date) =>
     d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 
+  const sameDay = endDate && startDate.toDateString() === endDate.toDateString();
+
   const durationHours = endDate
     ? Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60) * 10) / 10
     : null;
@@ -151,9 +153,9 @@ export default function EventDetailView({ event }: { event: EventDetail }) {
                   </span>
                 )}
                 <span className="text-xs text-muted-foreground">
-                  {formatDate(startDate)}
-                  {endDate && ` • ${formatTime(startDate)} → ${formatTime(endDate)}`}
-                  {!endDate && ` • ${formatTime(startDate)}`}
+                  {endDate && !sameDay
+                    ? `${formatDate(startDate)} → ${formatDate(endDate)} • ${formatTime(startDate)} → ${formatTime(endDate)}`
+                    : `${formatDate(startDate)} • ${formatTime(startDate)}${endDate ? ` → ${formatTime(endDate)}` : ''}`}
                 </span>
               </div>
             </div>
@@ -236,6 +238,15 @@ export default function EventDetailView({ event }: { event: EventDetail }) {
                 <InfoItem icon={Clock} label="Début" value={formatTime(startDate)} />
                 <InfoItem icon={Clock} label="Fin" value={endDate ? formatTime(endDate) : "Non définie"} />
                 <InfoItem icon={Users} label="Invités" value={event.guestCount ? `${event.guestCount} pax` : "Nombre d'invités non renseigné"} />
+                {event.contactPerson && (
+                  <InfoItem icon={User} label="Personne de contact" value={event.contactPerson} />
+                )}
+                {event.contactPhone && (
+                  <InfoItem icon={Phone} label="Téléphone contact" value={event.contactPhone} />
+                )}
+                {!event.contactPerson && !event.contactPhone && (
+                  <InfoItem icon={User} label="Contact" value="Aucun contact renseigné" />
+                )}
               </div>
             </motion.div>
 

@@ -32,6 +32,7 @@ export async function getDashboardData(): Promise<{
       const m = new Date(currentYear, now.getMonth() - i, 1);
       last8Months.push({ key: `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, '0')}`, start: m });
     }
+    const eightMonthsAgo = last8Months[0].start;
 
     const [
       revenueAgg,
@@ -51,7 +52,8 @@ export async function getDashboardData(): Promise<{
       topItemAgg,
       bestClient,
       recentActivities,
-      eventCountsPerMonth,
+      eventCountsRaw,
+      clientCountsRaw,
     ] = await Promise.all([
       prisma.commande.aggregate({
         where: { organizationId, status: COMMANDE_REVENUE_STATUSES },
@@ -134,14 +136,26 @@ export async function getDashboardData(): Promise<{
         take: 5,
         select: { id: true, action: true, description: true, createdAt: true },
       }),
-      Promise.all(
-        last8Months.map(async ({ start }, i) => {
-          const end = i < 7 ? last8Months[i + 1].start : new Date(currentYear, now.getMonth() + 1, 1);
-          return prisma.event.count({
-            where: { organizationId, createdAt: { gte: start, lt: end } },
-          });
-        }),
-      ),
+      prisma.$queryRaw<Array<{ month: Date; count: bigint }>>`
+        SELECT
+          DATE_TRUNC('month', "createdAt") AS month,
+          COUNT(*)::int AS count
+        FROM "Event"
+        WHERE "organizationId" = ${organizationId}
+          AND "createdAt" >= ${eightMonthsAgo}
+        GROUP BY 1
+        ORDER BY 1
+      `,
+      prisma.$queryRaw<Array<{ month: Date; count: bigint }>>`
+        SELECT
+          DATE_TRUNC('month', "createdAt") AS month,
+          COUNT(*)::int AS count
+        FROM "Client"
+        WHERE "organizationId" = ${organizationId}
+          AND "createdAt" >= ${eightMonthsAgo}
+        GROUP BY 1
+        ORDER BY 1
+      `,
     ]);
 
     // Revenue chart: daily and monthly aggregation
@@ -289,14 +303,20 @@ export async function getDashboardData(): Promise<{
     const perfRevenue = last8Months.map(({ key }) => Math.round(monthlyMap[key] || 0));
     const perfPayments = last8Months.map(({ key }) => Math.round(paidMonthlyMap[key] || 0));
 
-    const clientCountsPerMonth = await Promise.all(
-      last8Months.map(async ({ start }, i) => {
-        const end = i < 7 ? last8Months[i + 1].start : new Date(currentYear, now.getMonth() + 1, 1);
-        return prisma.client.count({
-          where: { organizationId, createdAt: { gte: start, lt: end } },
-        });
-      }),
-    );
+    const eventCountMap = new Map<string, number>();
+    for (const row of (eventCountsRaw as Array<{ month: Date; count: bigint }>)) {
+      const d = new Date(row.month);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      eventCountMap.set(key, Number(row.count));
+    }
+
+    const clientCountMap = new Map<string, number>();
+    for (const row of (clientCountsRaw as Array<{ month: Date; count: bigint }>)) {
+      const d = new Date(row.month);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      clientCountMap.set(key, Number(row.count));
+    }
+    const clientCountsPerMonth = last8Months.map(({ key }) => clientCountMap.get(key) ?? 0);
 
     return {
       success: true,
@@ -349,7 +369,7 @@ export async function getDashboardData(): Promise<{
         },
         quickStats: { avgBudget, avgGuests, completionRate },
         perfRevenue,
-        perfEvents: eventCountsPerMonth,
+        perfEvents: last8Months.map(({ key }) => eventCountMap.get(key) ?? 0),
         perfClients: clientCountsPerMonth,
         perfPayments,
       },

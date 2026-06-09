@@ -1,29 +1,47 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import type { ActionResponse, Event, CreateEventInput } from '@/features/events/types';
+import type { ActionResponse, Event } from '@/features/events/types';
 import { createEventSchema } from '@/features/events/validations/create-event-schema';
 import { getOrganizationId } from '@/lib/get-organization-id';
-import { startTimer, endTimer } from '@/lib/log-timer';
-
-let _createEventCalls = 0;
-
-export async function createEvent(data: CreateEventInput): Promise<ActionResponse<Event>> {
+export async function createEvent(data: Record<string, unknown>): Promise<ActionResponse<Event>> {
   try {
-    _createEventCalls++;
-    if (_createEventCalls % 20 === 0) console.warn(`[CALL_TRACE] createEvent called ${_createEventCalls} times`);
+    const parsed = createEventSchema.safeParse(data);
+    if (!parsed.success) {
+      const first = parsed.error.issues[0];
+      return { success: false, error: first?.message || 'Données invalides.' };
+    }
 
-    const totalTimer = startTimer('createEvent:total');
+    const validData = parsed.data;
 
     const organizationId = await getOrganizationId();
 
+    let endDate = validData.endDate;
+    if (endDate && validData.startDate) {
+      const e = new Date(endDate);
+      const s = new Date(validData.startDate);
+      const sameDay = s.getFullYear() === e.getFullYear() && s.getMonth() === e.getMonth() && s.getDate() === e.getDate();
+      if (sameDay) {
+        const eh = e.getHours(), em = e.getMinutes();
+        const sh = s.getHours(), sm = s.getMinutes();
+        if (eh < sh || (eh === sh && em < sm)) {
+          e.setDate(e.getDate() + 1);
+          endDate = e;
+        }
+      }
+    }
+
     const eventData = {
-      ...data,
+      ...validData,
       organizationId,
-      budget: data.budget ? data.budget : null
+      name: validData.name,
+      type: validData.type,
+      status: validData.status,
+      startDate: validData.startDate,
+      endDate,
+      budget: validData.budget ? validData.budget : null,
     };
 
-    const createTimer = startTimer('createEvent:create');
     const event = await prisma.event.create({
       data: eventData,
       select: {
@@ -42,10 +60,9 @@ export async function createEvent(data: CreateEventInput): Promise<ActionRespons
         contactPhone: true,
         notes: true,
         createdAt: true,
-        updatedAt: true
-      }
+        updatedAt: true,
+      },
     });
-    endTimer(createTimer);
 
     const result: Event = {
       id: event.id,
@@ -63,10 +80,9 @@ export async function createEvent(data: CreateEventInput): Promise<ActionRespons
       contactPhone: event.contactPhone,
       notes: event.notes,
       createdAt: event.createdAt,
-      updatedAt: event.updatedAt
+      updatedAt: event.updatedAt,
     };
 
-    endTimer(totalTimer);
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: error.message || 'An error occurred' };
