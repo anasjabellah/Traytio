@@ -48,7 +48,6 @@ export async function getDashboardData(): Promise<{
       commandesForChart,
       eventsForStats,
       depositsAlert,
-      allEvents,
       topItemAgg,
       bestClient,
       recentActivities,
@@ -106,17 +105,13 @@ export async function getDashboardData(): Promise<{
         select: { totalAmount: true, createdAt: true, paidAmount: true },
       }),
       prisma.event.findMany({
-        where: { organizationId },
+        where: { organizationId, createdAt: { gte: startOfYear } },
         select: { budget: true, guestCount: true, status: true, createdAt: true },
       }),
       prisma.commande.findMany({
         where: { organizationId, remainingAmount: { gt: 0 }, status: { in: ['CONFIRMED', 'IN_PROGRESS'] } },
         take: 3,
         select: { remainingAmount: true, client: { select: { name: true } }, number: true },
-      }),
-      prisma.event.findMany({
-        where: { organizationId, startDate: { gte: startOfYear } },
-        select: { id: true, name: true, startDate: true, status: true },
       }),
       prisma.commandeItem.groupBy({
         by: ['name'],
@@ -157,6 +152,15 @@ export async function getDashboardData(): Promise<{
         ORDER BY 1
       `,
     ]);
+
+    // Compute conflict map from upcoming + today events instead of fetching all events
+    const conflictCandidates = [...upcoming, ...todayEventsDb];
+    const conflictMap = new Map<string, string[]>();
+    for (const e of conflictCandidates) {
+      const d = new Date(e.startDate).toLocaleDateString('fr-FR');
+      if (!conflictMap.has(d)) conflictMap.set(d, []);
+      conflictMap.get(d)!.push(e.name);
+    }
 
     // Revenue chart: daily and monthly aggregation
     const dailyMap: Record<string, number> = {};
@@ -218,12 +222,6 @@ export async function getDashboardData(): Promise<{
       alerts.push({ type: 'info', title: 'Événement dans 3 jours', text: e.name });
     }
 
-    const conflictMap = new Map<string, string[]>();
-    for (const e of allEvents) {
-      const d = new Date(e.startDate).toLocaleDateString('fr-FR');
-      if (!conflictMap.has(d)) conflictMap.set(d, []);
-      conflictMap.get(d)!.push(e.name);
-    }
     for (const [date, names] of conflictMap) {
       if (names.length >= 2) {
         alerts.push({ type: 'danger', title: 'Conflit de planning', text: `${date} — ${names.length} événements` });
@@ -284,7 +282,7 @@ export async function getDashboardData(): Promise<{
         ? Math.round(((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
         : 0;
 
-    // Quick stats
+    // Quick stats (from eventsForStats which is now limited to current year)
     const totalEvents = eventsForStats.length;
     const eventsWithBudget = eventsForStats.filter((e) => e.budget);
     const avgBudget =

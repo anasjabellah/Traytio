@@ -94,6 +94,8 @@ model Client {
 
   @@index([organizationId, name])
   @@index([organizationId, createdAt])
+  @@index([organizationId, totalSpent])
+  @@index([organizationId, lastOrderAt])
   @@map("clients")
 }
 
@@ -221,6 +223,7 @@ model Commande {
 
   @@index([organizationId])
   @@index([clientId])
+  @@index([clientId, status])
   @@index([eventId])
   @@index([eventId, createdAt])
   @@map("commandes")

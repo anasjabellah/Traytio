@@ -3,13 +3,17 @@
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Menu, UpdateMenuInput } from '@/features/menus/types';
 import { updateMenuSchema } from '@/features/menus/validations/update-menu-schema';
-import { getOrganizationId } from '@/features/menus/actions/_helpers';
+import { getOrganizationId } from '@/lib/get-organization-id';
 
 export async function updateMenu(data: UpdateMenuInput): Promise<ActionResponse<Menu>> {
   try {
-    updateMenuSchema.parse(data);
+    const parsed = updateMenuSchema.safeParse(data);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message || 'Invalid data' };
+    }
+    const validData = parsed.data;
     const organizationId = await getOrganizationId();
-    const { id, menuItems, ...rest } = data;
+    const { id, menuItems, ...rest } = validData;
 
     const menu = await prisma.$transaction(async (tx) => {
       const updated = await tx.menu.update({

@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse } from '@/features/menu-items/types';
-import { getOrganizationId } from '@/features/menu-items/actions/_helpers';
+import { getOrganizationId } from '@/lib/get-organization-id';
 
 export async function deleteMenuItem(id: string): Promise<ActionResponse> {
   try {

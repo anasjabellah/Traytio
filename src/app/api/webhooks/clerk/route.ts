@@ -33,34 +33,39 @@ export async function POST(req: Request) {
   }
 
   if (evt.type === 'user.created') {
-    const { id, email_addresses, first_name, last_name } = evt.data
-    const email = email_addresses?.[0]?.email_address ?? ''
-    const name = `${first_name ?? ''} ${last_name ?? ''}`.trim() || email
+    try {
+      const { id, email_addresses, first_name, last_name } = evt.data
+      const email = email_addresses?.[0]?.email_address ?? ''
+      const name = `${first_name ?? ''} ${last_name ?? ''}`.trim() || email
 
-    const user = await prisma.user.create({
-      data: {
-        clerkId: id,
-        email,
-        firstName: first_name ?? null,
-        lastName: last_name ?? null,
-      }
-    })
+      const user = await prisma.user.create({
+        data: {
+          clerkId: id,
+          email,
+          firstName: first_name ?? null,
+          lastName: last_name ?? null,
+        }
+      })
 
-    const org = await prisma.organization.create({
-      data: {
-        name: `${name}'s Organisation`,
-        slug: `org-${id.slice(0, 8)}-${Date.now()}`,
-        email,
-      }
-    })
+      const org = await prisma.organization.create({
+        data: {
+          name: `${name}'s Organisation`,
+          slug: `org-${id.slice(0, 8)}-${Date.now()}`,
+          email,
+        }
+      })
 
-    await prisma.userOrganization.create({
-      data: {
-        userId: user.id,
-        organizationId: org.id,
-        role: 'OWNER',
-      }
-    })
+      await prisma.userOrganization.create({
+        data: {
+          userId: user.id,
+          organizationId: org.id,
+          role: 'OWNER',
+        }
+      })
+    } catch (err) {
+      console.error('[clerk-webhook] user.created failed:', err)
+      return new Response('Failed to create user resources', { status: 500 })
+    }
   }
 
   return new Response('OK', { status: 200 })

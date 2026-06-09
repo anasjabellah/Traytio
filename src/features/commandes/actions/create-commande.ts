@@ -1,7 +1,8 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getOrganizationId } from "@/features/commandes/_helpers"
+import { getOrganizationId } from "@/lib/get-organization-id"
+import { createCommandeSchema } from "@/features/commandes/validations/create-commande-schema"
 
 export async function generateCommandeNumber(): Promise<string> {
   const organizationId = await getOrganizationId()
@@ -12,30 +13,14 @@ export async function generateCommandeNumber(): Promise<string> {
   return `CMD-${year}-${String(count + 1).padStart(3, "0")}`
 }
 
-type CreateCommandeInput = {
-  number: string
-  clientId: string
-  eventType?: string | null
-  eventDate?: string | null
-  guestCount?: number | null
-  location?: string | null
-  menuId?: string | null
-  menuName?: string | null
-  pricePerPerson?: number | null
-  totalAmount?: number | null
-  notes?: string | null
-  status?: string
-  items: {
-    name: string
-    quantity: number
-    unitPrice: number
-    totalPrice: number
-    menuItemId?: string | null
-  }[]
-}
-
-export async function createCommande(data: CreateCommandeInput) {
+export async function createCommande(input: unknown) {
   try {
+    const parsed = createCommandeSchema.safeParse(input)
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" }
+    }
+
+    const data = parsed.data
     const organizationId = await getOrganizationId()
 
     const commande = await prisma.commande.create({
@@ -43,8 +28,8 @@ export async function createCommande(data: CreateCommandeInput) {
         organizationId,
         clientId: data.clientId,
         number: data.number,
-        status: (data.status as any) ?? "DRAFT",
-        eventType: (data.eventType as any) ?? undefined,
+        status: data.status as any,
+        eventType: (data.eventType ?? undefined) as any,
         eventDate: data.eventDate ? new Date(data.eventDate) : undefined,
         guestCount: data.guestCount ?? undefined,
         location: data.location ?? undefined,
@@ -57,7 +42,7 @@ export async function createCommande(data: CreateCommandeInput) {
         paidAmount: 0,
         remainingAmount: data.totalAmount ?? 0,
         items: {
-          create: data.items.map(item => ({
+          create: (data.items ?? []).map(item => ({
             name: item.name,
             quantity: item.quantity,
             unitPrice: item.unitPrice,

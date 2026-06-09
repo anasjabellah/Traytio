@@ -53,7 +53,6 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
     formState: { errors, isValid },
     register,
     setValue,
-    watch,
   } = useForm<EventFormValues>({
     resolver: zodResolver(createEventSchema, { error: validationErrorMap }),
     defaultValues,
@@ -61,9 +60,9 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
     reValidateMode: 'onChange',
   });
 
-  const startDateVal = watch('startDate') as Date | undefined;
-  const endDateVal = watch('endDate') as Date | undefined;
-  const typeVal = watch('type') as string | undefined;
+  const startDateVal = useWatch({ control, name: 'startDate' }) as Date | undefined;
+  const endDateVal = useWatch({ control, name: 'endDate' }) as Date | undefined;
+  const typeVal = useWatch({ control, name: 'type' }) as string | undefined;
 
   const { dateStr: startDateStr, timeStr: startTimeStr } = splitDate(startDateVal);
   const { timeStr: endTimeStr } = splitDate(endDateVal);

@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Menu, PaginatedMenus, GetMenusParams } from '@/features/menus/types';
 import { MENU_DEFAULT_PAGE_SIZE } from '@/features/menus/constants';
-import { getOrganizationId } from '@/features/menus/actions/_helpers';
+import { getOrganizationId } from '@/lib/get-organization-id';
 
 export async function getMenus(params: GetMenusParams): Promise<ActionResponse<PaginatedMenus>> {
   try {

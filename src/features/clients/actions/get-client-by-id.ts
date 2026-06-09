@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from "@/lib/prisma";
-import type { ActionResponse, Client, ClientWithStats } from "@/features/clients/types";
+import type { ActionResponse, ClientWithStats } from "@/features/clients/types";
 import { getOrganizationId } from "@/lib/get-organization-id";
 
 export async function getClientById(id: string): Promise<ActionResponse<ClientWithStats>> {
@@ -9,10 +9,7 @@ export async function getClientById(id: string): Promise<ActionResponse<ClientWi
     const organizationId = await getOrganizationId();
 
     const client = await prisma.client.findFirst({
-      where: {
-        id,
-        organizationId
-      },
+      where: { id, organizationId },
       select: {
         id: true,
         organizationId: true,
@@ -30,52 +27,34 @@ export async function getClientById(id: string): Promise<ActionResponse<ClientWi
         createdAt: true,
         updatedAt: true,
         commandes: {
-          orderBy: {
-            createdAt: 'desc'
-          },
+          orderBy: { createdAt: 'desc' },
           take: 5,
-          select: {
-            id: true,
-            number: true,
-            status: true,
-            totalAmount: true,
-            createdAt: true
-          }
+          select: { id: true, number: true, status: true, totalAmount: true, createdAt: true },
         },
         events: {
-          orderBy: {
-            startDate: 'desc'
-          },
+          orderBy: { startDate: 'desc' },
           take: 5,
-          select: {
-            id: true,
-            name: true,
-            type: true,
-            status: true,
-            startDate: true,
-            endDate: true
-          }
+          select: { id: true, name: true, type: true, status: true, startDate: true, endDate: true },
         },
-        _count: {
-          select: {
-            commandes: true,
-            events: true
-          }
-        }
-      }
+      },
     });
 
     if (!client) {
       return { success: false, error: "Client not found" };
     }
 
-    const { _count, totalSpent, ...rest } = client;
-      const clientWithStats = {
-        ...rest,
-        totalSpent: Number(totalSpent),
-        commandesCount: _count.commandes,
-        eventsCount: _count.events,
-      } as unknown as import("@/features/clients/types").ClientWithStats;
+    const { totalSpent, commandes, events, ...rest } = client;
+    const clientWithStats: ClientWithStats = {
+      ...rest,
+      totalSpent: Number(totalSpent),
+      commandesCount: commandes?.length ?? 0,
+      eventsCount: events?.length ?? 0,
+      commandes: commandes?.map((c) => ({
+        ...c,
+        totalAmount: Number(c.totalAmount),
+      })) ?? undefined,
+      events: events ?? undefined,
+    };
 
     return { success: true, data: clientWithStats };
   } catch (error: any) {

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useClients } from '@/features/clients/hooks/use-clients';
 import { useClientForm } from '@/features/clients/hooks/use-client-form';
@@ -9,36 +10,35 @@ import { ClientsToolbar } from '@/features/clients/components/clients-toolbar';
 import { CreateClientDialog } from '@/features/clients/components/create-client-dialog';
 import { EditClientDialog } from '@/features/clients/components/edit-client-dialog';
 import { DeleteClientDialog } from '@/features/clients/components/delete-client-dialog';
+import type { ClientWithStats } from '@/features/clients/types';
 
 export default function ClientsPage() {
-  const { clients, isLoading, error, pagination, handleSearch, handlePageChange, refresh } = useClients();
+  const router = useRouter();
+  const { clients, isLoading, pagination, handleSearch, refresh } = useClients();
   const {
-  isCreateOpen,
-  isEditOpen,
-  isDeleteOpen,
-  selectedClient,
-  openCreate,
-  openEdit,
-  openDelete,
-  closeAll
-} = useClientForm();
+    isCreateOpen,
+    isEditOpen,
+    isDeleteOpen,
+    selectedClient,
+    openCreate,
+    openEdit,
+    openDelete,
+    closeAll,
+  } = useClientForm();
 
   const totalClients = clients.length;
-  const totalRevenue = clients.reduce((sum, c) => sum + Number(c.totalSpent), 0);
 
-  const handleView = (client: any) => {
-    // Navigate to client detail page
-    // Using Next router client-side navigation
-    window.location.href = `/dashboard/clients/${client.id}`;
-  };
+  const handleView = useCallback((client: ClientWithStats) => {
+    router.push(`/dashboard/clients/${client.id}`);
+  }, [router]);
 
-  const handleEdit = (client: any) => {
+  const handleEdit = useCallback((client: ClientWithStats) => {
     openEdit(client);
-  };
+  }, [openEdit]);
 
-  const handleDelete = (client: any) => {
+  const handleDelete = useCallback((client: ClientWithStats) => {
     openDelete(client);
-  };
+  }, [openDelete]);
 
   return (
     <motion.main
@@ -56,10 +56,6 @@ export default function ClientsPage() {
           <p className="text-sm text-[#888888] mb-1">Total clients</p>
           <p className="text-2xl font-medium text-[#1a1a1a]">{totalClients}</p>
         </div>
-        <div className="border-l-2 border-[#C9A96E] p-6 bg-[#f8f8f8] border border-[#e2e2e2] rounded-xl">
-          <p className="text-sm text-[#888888] mb-1">Total revenue</p>
-          <p className="text-2xl font-medium text-[#1a1a1a]">${totalRevenue.toLocaleString()}</p>
-        </div>
       </div>
 
       <div className="mt-6 mb-6"><ClientsToolbar onSearch={handleSearch} onAddClient={openCreate} totalCount={totalClients} /></div>
@@ -72,9 +68,6 @@ export default function ClientsPage() {
         onDelete={handleDelete}
       />
 
-      {/* Pagination controls could be added here */}
-
-      {/* Modals / Sheets */}
       <CreateClientDialog open={isCreateOpen} onOpenChange={(open) => { if (!open) closeAll(); }} onSuccess={refresh} />
       {isEditOpen && selectedClient && (
         <EditClientDialog client={selectedClient} open={true} onOpenChange={(open) => { if (!open) closeAll(); }} onSuccess={refresh} />

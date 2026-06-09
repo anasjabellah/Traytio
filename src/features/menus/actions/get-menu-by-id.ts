@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Menu } from '@/features/menus/types';
-import { getOrganizationId } from '@/features/menus/actions/_helpers';
+import { getOrganizationId } from '@/lib/get-organization-id';
 
 export async function getMenuById(id: string): Promise<ActionResponse<Menu>> {
   try {

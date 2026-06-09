@@ -3,26 +3,29 @@
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, MenuItem, CreateMenuItemInput } from '@/features/menu-items/types';
 import { createMenuItemSchema } from '@/features/menu-items/validations/create-menu-item-schema';
-import { getOrganizationId } from '@/features/menu-items/actions/_helpers';
+import { getOrganizationId } from '@/lib/get-organization-id';
 
 export async function createMenuItem(
   data: CreateMenuItemInput,
 ): Promise<ActionResponse<MenuItem>> {
   try {
-    // Validate payload
-    createMenuItemSchema.parse(data);
+    const parsed = createMenuItemSchema.safeParse(data);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message || 'Invalid data' };
+    }
+    const validData = parsed.data;
     const organizationId = await getOrganizationId();
 
     const item = await prisma.menuItem.create({
       data: {
         organizationId,
-        name: data.name,
-        category: data.category,
-        unitPrice: data.unitPrice,
-        unit: data.unit,
-        isActive: data.isActive ?? true,
-        notes: data.notes,
-        imageUrl: data.imageUrl
+        name: validData.name,
+        category: validData.category,
+        unitPrice: validData.unitPrice,
+        unit: validData.unit,
+        isActive: validData.isActive ?? true,
+        notes: validData.notes,
+        imageUrl: validData.imageUrl
       },
       select: {
         imageUrl: true,

@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getOrganizationId } from "@/features/commandes/_helpers"
+import { getOrganizationId } from "@/lib/get-organization-id"
 
 export async function getCommandeMenus() {
   try {

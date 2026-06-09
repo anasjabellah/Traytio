@@ -46,53 +46,51 @@ export async function getEvents(params: GetEventsParams): Promise<ActionResponse
       if (params.budgetMax !== undefined) where.budget.lte = params.budgetMax;
     }
 
-    const total = await prisma.event.count({ where });
-
-    const events = await prisma.event.findMany({
-      where,
-      select: {
-        id: true,
-        organizationId: true,
-        clientId: true,
-        name: true,
-        type: true,
-        status: true,
-        startDate: true,
-        endDate: true,
-        location: true,
-        guestCount: true,
-        budget: true,
-        contactPerson: true,
-        contactPhone: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true,
-        client: {
-          select: { name: true, phone: true },
-        },
-        commandes: {
-          select: {
-            status: true,
-            totalAmount: true,
-            paidAmount: true,
-            remainingAmount: true,
+    const [total, events] = await prisma.$transaction([
+      prisma.event.count({ where }),
+      prisma.event.findMany({
+        where,
+        select: {
+          id: true,
+          organizationId: true,
+          clientId: true,
+          name: true,
+          type: true,
+          status: true,
+          startDate: true,
+          endDate: true,
+          location: true,
+          guestCount: true,
+          budget: true,
+          createdAt: true,
+          updatedAt: true,
+          client: {
+            select: { name: true, phone: true },
+          },
+          commandes: {
+            select: {
+              status: true,
+              totalAmount: true,
+              paidAmount: true,
+              remainingAmount: true,
+            },
           },
         },
-      },
-      orderBy: { [sortBy]: sortOrder },
-      skip,
-      take: limit
-    });
+        orderBy: { [sortBy]: sortOrder },
+        skip,
+        take: limit,
+      }),
+    ]);
 
     const now = Date.now();
-    const result: Event[] = events.map((event: typeof events[0]) => {
+    const result: Event[] = events.map((event) => {
       const budget = Number(event.budget) || null;
       const startTime = event.startDate?.getTime() ?? 0;
       const daysUntil = startTime ? Math.ceil((startTime - now) / 86400000) : 0;
 
       let totalPaid = 0;
       let totalDue = 0;
-      const commandes = (event.commandes || []).map((c: any) => {
+      const commandes = (event.commandes || []).map((c) => {
         const paid = Number(c.paidAmount ?? 0);
         const remaining = Number(c.remainingAmount ?? 0);
         totalPaid += paid;
@@ -117,9 +115,9 @@ export async function getEvents(params: GetEventsParams): Promise<ActionResponse
         location: event.location,
         guestCount: event.guestCount,
         budget,
-        contactPerson: event.contactPerson,
-        contactPhone: event.contactPhone,
-        notes: event.notes,
+        contactPerson: null,
+        contactPhone: null,
+        notes: null,
         createdAt: event.createdAt,
         updatedAt: event.updatedAt,
         clientName: event.client?.name ?? null,
