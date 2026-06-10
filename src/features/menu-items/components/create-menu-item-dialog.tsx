@@ -1,5 +1,3 @@
-// src/features/menu-items/components/create-menu-item-dialog.tsx
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -53,11 +51,11 @@ export function CreateMenuItemDialog({ open, onOpenChange, onSuccess }: CreateMe
         <div className="flex-1 overflow-y-auto px-6 py-5">
           <MenuItemForm mode="create" onSubmit={handleCreate} isLoading={isSubmitting} />
         </div>
-        <div className="px-6 py-4 border-t border-[#e2e2e2] flex items-center justify-end gap-3 shrink-0 bg-white">
+        <div className="px-6 py-4 border-t border-[#e2e2e2] flex items-center justify-end gap-3 shrink-0 bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="px-5 py-2 rounded-[0.75rem] border border-[#e2e2e2] text-[#888888] hover:text-[#1a1a1a] transition-colors"
+            className="px-5 py-2 rounded-[0.75rem] border border-[#e2e2e2] text-[#888888] hover:text-[#1a1a1a] hover:border-[#1a1a1a] transition-colors"
           >
             Annuler
           </button>
@@ -65,9 +63,9 @@ export function CreateMenuItemDialog({ open, onOpenChange, onSuccess }: CreateMe
             type="submit"
             form="menu-item-form"
             disabled={isSubmitting}
-            className="px-5 py-2 rounded-[0.75rem] bg-[#C9A96E] hover:bg-[#b8975e] text-white text-sm font-medium disabled:opacity-50"
+            className="px-5 py-2 rounded-[0.75rem] bg-[#C9A96E] hover:bg-[#b8975e] text-white text-sm font-medium transition-colors disabled:opacity-50"
           >
-            {isSubmitting ? 'Création...' : 'Créer l\'article'}
+            {isSubmitting ? 'Création...' : "Créer l'article"}
           </button>
         </div>
       </DialogContent>

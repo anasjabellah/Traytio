@@ -41,14 +41,15 @@ export async function getMenuItems(
         notes: true,
         createdAt: true,
         updatedAt: true,
-          imageUrl: true,
+        imageUrl: true,
+        _count: { select: { menus: true } },
       },
       orderBy: { [sortBy]: sortOrder },
       skip,
       take: limit,
     });
 
-    const data = items.map(i => ({ ...i, unitPrice: Number(i.unitPrice) }));
+    const data = items.map(i => ({ ...i, unitPrice: Number(i.unitPrice), usageCount: i._count.menus }));
     const totalPages = Math.ceil(total / limit);
     return { success: true, data: { data, total, page, limit, totalPages } };
   } catch (e: any) {

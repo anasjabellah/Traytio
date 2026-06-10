@@ -14,13 +14,23 @@ export type MenuItem = {
   organizationId: string;
   name: string;
   category: MenuItemCategory;
-  unitPrice: number; // stored as Decimal in DB
+  unitPrice: number;
   unit?: string | null;
   isActive: boolean;
   notes?: string | null;
-  imageUrl?: string | null; 
+  imageUrl?: string | null;
+  usageCount?: number;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type MenuItemUsage = {
+  times: number;
+  revenue: number;
+};
+
+export type MenuItemWithUsage = MenuItem & {
+  usage?: MenuItemUsage;
 };
 
 export type CreateMenuItemInput = {
