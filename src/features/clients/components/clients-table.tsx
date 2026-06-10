@@ -1,11 +1,25 @@
+'use client';
+
 import { useMemo } from 'react';
-import { useReactTable, getCoreRowModel, flexRender, Row } from '@tanstack/react-table';
+import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 import { motion } from 'framer-motion';
-import { Users } from 'lucide-react';
+import { Users, Plus } from 'lucide-react';
 import { clientsColumns } from './clients-columns';
 import { ClientWithStats } from '@/features/clients/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
+const COL_WIDTHS: Record<string, string> = {
+  name: '24%',
+  contact: '24%',
+  city: '14%',
+  createdAt: '12%',
+  totalSpent: '12%',
+  activity: '12%',
+  actions: '100px',
+};
+
+const CENTERED = new Set(['actions']);
 
 interface ClientsTableProps {
   data: ClientWithStats[];
@@ -16,51 +30,10 @@ interface ClientsTableProps {
 }
 
 export function ClientsTable({ data, loading, onView, onEdit, onDelete }: ClientsTableProps) {
-  // Override the actions column to use the provided callbacks
-  const columns = useMemo(() => {
-    return clientsColumns.map(column =>
-      column.id === 'actions'
-        ? {
-          ...column,
-          cell: ({ row }: { row: Row<ClientWithStats> }) => {
-            const client = row.original;
-            return (
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => onView(client)}
-                  className="btn-ghost btn-sm hover:btn-primary"
-                  title="Voir les détails"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => onEdit(client)}
-                  className="btn-ghost btn-sm hover:btn-primary"
-                  title="Modifier"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 012.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => onDelete(client)}
-                  className="btn-ghost btn-sm hover:btn-destructive"
-                  title="Supprimer"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
-            );
-          },
-        }
-        : column
-    );
-  }, [onView, onEdit, onDelete]);
+  const columns = useMemo(
+    () => clientsColumns(onView, onEdit, onDelete),
+    [onView, onEdit, onDelete],
+  );
 
   const table = useReactTable({
     data,
@@ -70,58 +43,66 @@ export function ClientsTable({ data, loading, onView, onEdit, onDelete }: Client
 
   if (loading) {
     return (
-      <Table className="mt-4">
-        <TableBody>
-          {Array.from({ length: 5 }).map((_, index) => (
-            <motion.tr
-              key={`skeleton-${index}`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05, duration: 0.3 }}
-            >
-              {columns.map((column, index) => (
-                <TableCell
-                  key={column.id ?? `column-${index}`}
-                  className="px-4 py-2"
-                >
-                  <Skeleton className="h-4 w-full" />
-                  {!(column as any).accessorKey && column.id === 'actions' && (
-                    <Skeleton className="h-4 w-full" />
-                  )}
-                </TableCell>
-              ))}
-            </motion.tr>
-          ))}
-        </TableBody>
-      </Table>
+      <div className="divide-y divide-border/10">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05, duration: 0.3 }}
+            className="flex items-center gap-4 px-5 py-2.5"
+          >
+            <Skeleton className="size-9 rounded-lg shrink-0" />
+            <Skeleton className="h-3.5 w-[24%]" />
+            <Skeleton className="h-3.5 w-[24%]" />
+            <Skeleton className="h-3.5 w-[14%]" />
+            <Skeleton className="h-3.5 w-[12%]" />
+            <Skeleton className="h-3.5 w-[12%]" />
+            <Skeleton className="h-3.5 w-[12%]" />
+            <Skeleton className="h-6 w-[100px]" />
+          </motion.div>
+        ))}
+      </div>
     );
   }
 
-  const rowModel = table.getRowModel();
-
-  if (rowModel.rows.length === 0 && !loading) {
+  if (data.length === 0) {
     return (
-      <div className="py-20 flex flex-col items-center gap-4">
-        <Users className="text-[#e2e2e2]" size={48} />
-        <p className="text-lg font-medium text-[#1a1a1a]">Aucun client trouvé</p>
-        <p className="text-sm text-[#888888] mt-1">Commencez par ajouter votre premier client.</p>
-        <button className="bg-[#C9A96E] text-white rounded-[0.75rem] px-5 py-2 font-medium hover:bg-[#b8975e]">
+      <div className="py-24 flex flex-col items-center gap-5">
+        <div className="size-16 rounded-2xl border bg-background flex items-center justify-center">
+          <Users className="size-7 text-muted-foreground/40" strokeWidth={1.5} />
+        </div>
+        <div className="text-center">
+          <p className="text-lg font-semibold text-foreground">Aucun client trouvé</p>
+          <p className="text-sm text-muted-foreground mt-1">Ajoutez votre premier client pour commencer.</p>
+        </div>
+        <button
+          onClick={() => {
+            const btn = document.querySelector('[data-create-client-btn]') as HTMLButtonElement;
+            btn?.click();
+          }}
+          className="inline-flex items-center gap-2 bg-foreground hover:opacity-90 text-background rounded-xl px-5 py-2.5 text-sm font-medium transition-all shadow-sm"
+        >
+          <Plus className="size-4" strokeWidth={1.8} />
           Ajouter un client
         </button>
       </div>
     );
   }
 
+  const rowModel = table.getRowModel();
+
   return (
-    <Table className="mt-4">
+    <Table className="w-full table-fixed">
       <TableHeader>
         {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id}>
+          <TableRow key={headerGroup.id} className="border-b border-border/20 bg-muted/20">
             {headerGroup.headers.map((header) => (
               <TableHead
                 key={header.id}
                 colSpan={header.colSpan}
-                className="text-left text-xs uppercase tracking-wider text-[#888888] font-medium"
+                style={{ width: COL_WIDTHS[header.id] || 'auto' }}
+                className={`text-xs uppercase tracking-[0.15em] text-muted-foreground/80 font-medium px-2 py-2 whitespace-nowrap overflow-hidden ${CENTERED.has(header.id) ? 'text-center' : ''}`}
               >
                 {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
               </TableHead>
@@ -130,29 +111,29 @@ export function ClientsTable({ data, loading, onView, onEdit, onDelete }: Client
         ))}
       </TableHeader>
       <TableBody>
-        {rowModel.rows.map((row, index) => {
-          const client = row.original;
-          return (
-            <motion.tr
-              key={row.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.03, duration: 0.4 }}
-              className="cursor-pointer hover:bg-[#f8f8f8] border-b border-[#e2e2e2]"
-            >
-              {row.getVisibleCells().map((cell) => (
-                <TableCell
-                  key={cell.id}
-                  className="px-4 py-2 text-sm"
-                >
-                  {cell.getIsPlaceholder()
-                    ? null
-                    : flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
-            </motion.tr>
-          );
-        })}
+        {rowModel.rows.map((row, index) => (
+          <motion.tr
+            key={row.id}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.015, duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="group border-b border-border/[0.04] hover:bg-muted/40 transition-all cursor-pointer"
+            onClick={() => onView(row.original)}
+          >
+            {row.getVisibleCells().map((cell) => (
+              <TableCell
+                key={cell.id}
+                style={{ width: COL_WIDTHS[cell.column.id] || 'auto' }}
+                className={`px-2 py-2.5 text-sm overflow-hidden ${CENTERED.has(cell.column.id) ? 'text-center' : ''}`}
+                onClick={(e) => {
+                  if (cell.column.id === 'actions') e.stopPropagation();
+                }}
+              >
+                {cell.getIsPlaceholder() ? null : flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </TableCell>
+            ))}
+          </motion.tr>
+        ))}
       </TableBody>
     </Table>
   );

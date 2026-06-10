@@ -1,15 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
+import { User, Mail, Phone, MapPin, MapPinHouse, Building, FileText } from 'lucide-react';
 
-// Schema defined locally (no external validation imports)
-// No external Client type needed in this form
-
-// Local schema for client form (create/update)
 const clientFormSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères' }),
@@ -23,11 +17,11 @@ const clientFormSchema = z.object({
   notes: z.string().optional().or(z.literal('')),
 });
 
-type ClientClientFormValues = z.infer<typeof clientFormSchema>;
+type ClientFormValues = z.infer<typeof clientFormSchema>;
 
 type ClientFormProps = {
-  defaultValues?: Partial<ClientClientFormValues>;
-  onSubmit: (values: ClientClientFormValues) => Promise<void>;
+  defaultValues?: Partial<ClientFormValues>;
+  onSubmit: (values: ClientFormValues) => Promise<void>;
   isLoading?: boolean;
   mode: 'create' | 'edit';
 };
@@ -36,112 +30,150 @@ export function ClientForm({ defaultValues = {}, onSubmit, isLoading = false, mo
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
-  } = useForm<ClientClientFormValues>({
+  } = useForm<ClientFormValues>({
     resolver: zodResolver(clientFormSchema),
     defaultValues,
     mode: 'onTouched',
   });
 
-  const onSubmitHandler = async (values: ClientClientFormValues) => {
-    await onSubmit(values);
-  };
+  useEffect(() => {
+    console.log('[ClientForm] reset with defaultValues:', defaultValues);
+    reset(defaultValues);
+  }, [defaultValues, reset]);
+
+  const inputClass = "flex items-center gap-2 rounded-2xl border border-border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold";
+  const inputInnerClass = "flex-1 bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground";
+  const labelClass = "text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5";
+  const sectionTitleClass = "text-[10px] uppercase tracking-[0.16em] text-foreground/50 font-semibold mb-3";
+
+  function ErrorSlot({ error }: { error?: { message?: string } }) {
+    return (
+      <div className="min-h-[24px]">
+        {error && <p className="text-xs text-red-600 mt-1">{error.message}</p>}
+      </div>
+    );
+  }
 
   return (
-    <form id="client-form" onSubmit={handleSubmit(onSubmitHandler)} className="space-y-8">
-      {/* Informations */}
-      <section>
-        <h3 className="font-[family-name:var(--font-finlandica)] text-xs uppercase tracking-[0.15em] text-foreground/70 mb-3 font-semibold">Informations</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Nom *</label>
-            <Input placeholder="Nom du client" className="h-11 text-sm px-4" {...register('name')} />
-            {errors.name && <p className="text-sm text-red-600">{errors.name.message?.toString()}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
-            <Input placeholder="client@example.com" type="email" className="h-11 text-sm px-4" {...register('email')} />
-            {errors.email && <p className="text-sm text-red-600">{errors.email.message?.toString()}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Téléphone</label>
-            <Input placeholder="+33 1 23 45 67 89" className="h-11 text-sm px-4" {...register('phone')} />
-            {errors.phone && <p className="text-sm text-red-600">{errors.phone.message?.toString()}</p>}
-          </div>
-        </div>
-      </section>
+    <form id="client-form" onSubmit={handleSubmit(async (values) => {
+      await onSubmit(values);
+    }, (errs) => {
+      setTimeout(() => {
+        const keys = Object.keys(errs);
+        if (keys.length > 0) {
+          const el = document.querySelector(`[data-field="${keys[0]}"]`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            (el.querySelector('input, button, textarea') as HTMLElement)?.focus();
+          }
+        }
+      }, 100);
+    })} className="space-y-6">
 
-      {/* Adresse */}
-      <section>
-        <h3 className="font-[family-name:var(--font-finlandica)] text-xs uppercase tracking-[0.15em] text-foreground/70 mb-3 font-semibold">Adresse</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Rue</label>
-            <Input placeholder="123 Rue de la Paix" className="h-11 text-sm px-4" {...register('address')} />
-            {errors.address && <p className="text-sm text-red-600">{errors.address.message?.toString()}</p>}
+      {/* SECTION 1 — INFORMATIONS */}
+      <div>
+        <div className={sectionTitleClass}>Informations</div>
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div data-field="name">
+            <div className={labelClass}>Nom *</div>
+            <div className={inputClass}>
+              <User className="h-4 w-4 text-muted-foreground shrink-0" />
+              <input {...register('name')} placeholder="Nom du client" className={inputInnerClass} />
+            </div>
+            <ErrorSlot error={errors.name} />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Ville</label>
-            <Input placeholder="Paris" className="h-11 text-sm px-4" {...register('city')} />
-            {errors.city && <p className="text-sm text-red-600">{errors.city.message?.toString()}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Code postal</label>
-            <Input placeholder="75001" className="h-11 text-sm px-4" {...register('postalCode')} />
-            {errors.postalCode && <p className="text-sm text-red-600">{errors.postalCode.message?.toString()}</p>}
-          </div>
-        </div>
-      </section>
 
-      {/* Entreprise */}
-      <section>
-        <h3 className="font-[family-name:var(--font-finlandica)] text-xs uppercase tracking-[0.15em] text-foreground/70 mb-3 font-semibold">Entreprise</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Nom de l'entreprise</label>
-            <Input placeholder="Société XYZ" className="h-11 text-sm px-4" {...register('company')} />
-            {errors.company && <p className="text-sm text-red-600">{errors.company.message?.toString()}</p>}
+          <div data-field="email">
+            <div className={labelClass}>Email</div>
+            <div className={inputClass}>
+              <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+              <input {...register('email')} type="email" placeholder="client@example.com" className={inputInnerClass} />
+            </div>
+            <ErrorSlot error={errors.email} />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">SIRET</label>
-            <Input placeholder="123 456 789 00012" className="h-11 text-sm px-4" {...register('siret')} />
-            {errors.siret && <p className="text-sm text-red-600">{errors.siret.message?.toString()}</p>}
+
+          <div data-field="phone">
+            <div className={labelClass}>Téléphone</div>
+            <div className={inputClass}>
+              <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+              <input {...register('phone')} placeholder="+33 1 23 45 67 89" className={inputInnerClass} />
+            </div>
+            <ErrorSlot error={errors.phone} />
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Notes */}
-      <section>
-        <h3 className="font-[family-name:var(--font-finlandica)] text-xs uppercase tracking-[0.15em] text-foreground/70 mb-3 font-semibold">Notes</h3>
-        <div>
-          <label className="block text-sm font-medium mb-1">Notes</label>
-          <Textarea placeholder="Informations complémentaires..." rows={4} className="text-sm px-4 py-3" {...register('notes')} />
-          {errors.notes && <p className="text-sm text-red-600">{errors.notes.message?.toString()}</p>}
-        </div>
-      </section>
+      {/* SECTION 2 — ADRESSE */}
+      <div>
+        <div className={sectionTitleClass}>Adresse</div>
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div data-field="address">
+            <div className={labelClass}>Rue</div>
+            <div className={inputClass}>
+              <MapPinHouse className="h-4 w-4 text-muted-foreground shrink-0" />
+              <input {...register('address')} placeholder="123 Rue de la Paix" className={inputInnerClass} />
+            </div>
+            <ErrorSlot error={errors.address} />
+          </div>
 
-      {mode === 'edit' && (
-        <div className="flex justify-end items-center gap-3 pt-4">
-          <button
-            type="button"
-            onClick={() => (document.querySelector('[data-cancel-btn]') as HTMLElement)?.click()}
-            className="px-5 py-2 rounded-[0.75rem] border border-[#e2e2e3] text-[#888888] hover:text-[#1a1a1a] hover:border-[#1a1a1a] transition-colors"
-          >
-            Annuler
-          </button>
-          <Button type="submit" disabled={isLoading} className="btn-primary">
-            {isLoading ? (
-              <span className="flex items-center">
-                <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                </svg>
-                En cours...
-              </span>
-            ) : 'Mettre à jour'}
-          </Button>
+          <div data-field="city">
+            <div className={labelClass}>Ville</div>
+            <div className={inputClass}>
+              <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+              <input {...register('city')} placeholder="Paris" className={inputInnerClass} />
+            </div>
+            <ErrorSlot error={errors.city} />
+          </div>
+
+          <div data-field="postalCode">
+            <div className={labelClass}>Code postal</div>
+            <div className={inputClass}>
+              <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+              <input {...register('postalCode')} placeholder="75001" className={inputInnerClass} />
+            </div>
+            <ErrorSlot error={errors.postalCode} />
+          </div>
         </div>
-      )}
+      </div>
+
+      {/* SECTION 3 — ENTREPRISE */}
+      <div>
+        <div className={sectionTitleClass}>Entreprise</div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div data-field="company">
+            <div className={labelClass}>Nom de l'entreprise</div>
+            <div className={inputClass}>
+              <Building className="h-4 w-4 text-muted-foreground shrink-0" />
+              <input {...register('company')} placeholder="Société XYZ" className={inputInnerClass} />
+            </div>
+            <ErrorSlot error={errors.company} />
+          </div>
+
+          <div data-field="siret">
+            <div className={labelClass}>SIRET</div>
+            <div className={inputClass}>
+              <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+              <input {...register('siret')} placeholder="123 456 789 00012" className={inputInnerClass} />
+            </div>
+            <ErrorSlot error={errors.siret} />
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 4 — NOTES */}
+      <div>
+        <div className={sectionTitleClass}>Notes</div>
+        <div data-field="notes">
+          <textarea
+            {...register('notes')}
+            placeholder="Informations complémentaires..."
+            className="w-full min-h-[120px] max-h-[140px] rounded-2xl border border-border bg-surface-soft px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold transition-all resize-none"
+          />
+          <ErrorSlot error={errors.notes} />
+        </div>
+      </div>
     </form>
   );
 }

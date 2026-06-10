@@ -1,83 +1,148 @@
-import { ColumnDef } from '@tanstack/react-table';
-import { ClientWithStats } from '@/features/clients/types';
-import { formatCurrency } from '@/lib/utils';
+'use client';
 
-export const clientsColumns: ColumnDef<ClientWithStats>[] = [
+import { ColumnDef } from '@tanstack/react-table';
+import {
+  Eye, Pencil, Trash2, Mail, Phone, MapPin,
+} from 'lucide-react';
+import { ClientWithStats } from '@/features/clients/types';
+
+const mad = (n: number) =>
+  new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(n);
+
+function Avatar({ name }: { name: string }) {
+  const initials = name.split(' ').map(n => n[0]).filter(Boolean).slice(0, 2).join('');
+  return (
+    <div className="size-9 rounded-lg bg-gradient-to-br from-[var(--gold-soft)] to-[var(--gold-deep)]/20 flex items-center justify-center font-medium text-[var(--gold-foreground)] shrink-0 text-xs">
+      {initials}
+    </div>
+  );
+}
+
+function CreatedCell({ date }: { date: Date }) {
+  return (
+    <span className="text-sm text-muted-foreground/70 whitespace-nowrap">
+      {new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' })}
+    </span>
+  );
+}
+
+function ActivityCell({ lastOrderAt, createdAt }: { lastOrderAt: Date | null | undefined; createdAt: Date }) {
+  const date = lastOrderAt ?? createdAt;
+  const now = new Date();
+  const diff = now.getTime() - new Date(date).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return <span className="text-sm font-medium text-emerald-600">Aujourd&apos;hui</span>;
+  if (days === 1) return <span className="text-sm text-muted-foreground/70">Hier</span>;
+  if (days < 7) return <span className="text-sm text-muted-foreground/70">Il y a {days} jours</span>;
+  return <span className="text-sm text-muted-foreground/50">{new Date(date).toLocaleDateString('fr-FR')}</span>;
+}
+
+export const clientsColumns = (
+  onView: (client: ClientWithStats) => void,
+  onEdit: (client: ClientWithStats) => void,
+  onDelete: (client: ClientWithStats) => void,
+): ColumnDef<ClientWithStats>[] => [
   {
     accessorKey: 'name',
-    header: 'Nom du client',
-    size: 200,
+    header: 'Client',
+    size: 300,
+    cell: ({ row }) => {
+      const c = row.original;
+      return (
+        <div className="flex items-center gap-2.5">
+          <Avatar name={c.name} />
+          <div className="min-w-0 flex-1">
+            <div className="font-semibold text-sm text-foreground leading-tight truncate">{c.name}</div>
+            {c.company && (
+              <div className="text-xs text-muted-foreground/50 mt-0.5 truncate">{c.company}</div>
+            )}
+          </div>
+        </div>
+      );
+    },
   },
   {
-    accessorKey: 'email',
-    header: 'Email',
-    size: 200,
-  },
-  {
-    accessorKey: 'phone',
-    header: 'Téléphone',
-    size: 150,
+    id: 'contact',
+    header: 'Contact',
+    size: 220,
+    cell: ({ row }) => {
+      const c = row.original;
+      return (
+        <div className="space-y-1 min-w-0">
+          <div className="flex items-center gap-1.5 text-xs truncate">
+            <Mail className="size-3 shrink-0 text-muted-foreground/30" strokeWidth={1.5} />
+            <span className={c.email ? 'text-muted-foreground/70 truncate' : 'text-muted-foreground/30 truncate'}>
+              {c.email ?? '—'}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs truncate">
+            <Phone className="size-3 shrink-0 text-muted-foreground/30" strokeWidth={1.5} />
+            <span className={c.phone ? 'text-muted-foreground/70 truncate' : 'text-muted-foreground/30 truncate'}>
+              {c.phone ?? '—'}
+            </span>
+          </div>
+        </div>
+      );
+    },
   },
   {
     accessorKey: 'city',
     header: 'Ville',
-    size: 150,
+    size: 120,
+    cell: ({ row }) => {
+      const city = row.getValue('city') as string | null;
+      return city ? (
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground/70 truncate">
+          <MapPin className="size-3.5 shrink-0 text-muted-foreground/30" strokeWidth={1.5} />
+          <span className="truncate">{city}</span>
+        </div>
+      ) : (
+        <span className="text-muted-foreground/30 text-sm">—</span>
+      );
+    },
+  },
+  {
+    accessorKey: 'createdAt',
+    header: 'Créé le',
+    size: 110,
+    cell: ({ row }) => <CreatedCell date={row.getValue('createdAt') as Date} />,
   },
   {
     accessorKey: 'totalSpent',
-    header: 'Total dépensé',
-    size: 150,
+    header: 'Revenu',
+    size: 120,
     cell: ({ row }) => {
-      const totalSpent = Number(row.getValue('totalSpent'));
-      return formatCurrency(totalSpent);
+      const val = Number(row.getValue('totalSpent'));
+      return (
+        <span className={`text-sm font-semibold tabular-nums ${val > 0 ? 'text-foreground' : 'text-muted-foreground/30'}`}>
+          {val > 0 ? mad(val) : '—'}
+        </span>
+      );
     },
   },
   {
-    accessorKey: 'lastOrderAt',
-    header: 'Dernière commande',
-    size: 180,
-    cell: ({ row }) => {
-      const lastOrderAt = row.getValue('lastOrderAt');
-      return lastOrderAt ? new Date(lastOrderAt as string).toLocaleDateString('fr-FR') : '—';
-    },
-  },
-  {
-    accessorKey: 'commandesCount',
-    header: 'Commandes',
-    size: 100,
+    id: 'activity',
+    header: 'Activité',
+    size: 120,
+    cell: ({ row }) => <ActivityCell lastOrderAt={row.original.lastOrderAt} createdAt={row.original.createdAt} />,
   },
   {
     id: 'actions',
     header: 'Actions',
-    size: 120,
+    size: 90,
     cell: ({ row }) => {
-      const client = row.original;
+      const c = row.original;
+      const b = 'size-7 rounded-md hover:bg-muted/50 transition-all flex items-center justify-center text-muted-foreground/40 hover:text-foreground';
       return (
-        <div className="flex space-x-2">
-          <button
-            className="btn-ghost btn-sm hover:btn-primary"
-            title="Voir les détails"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
+        <div className="flex items-center justify-center gap-3" onClick={(e) => e.stopPropagation()}>
+          <button className={b} title="Voir" onClick={() => onView(c)}>
+            <Eye className="size-3.5" strokeWidth={1.8} />
           </button>
-          <button
-            className="btn-ghost btn-sm hover:btn-primary"
-            title="Modifier"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 012.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
+          <button className={b} title="Modifier" onClick={() => onEdit(c)}>
+            <Pencil className="size-3.5" strokeWidth={1.8} />
           </button>
-          <button
-            className="btn-ghost btn-sm hover:btn-destructive"
-            title="Supprimer"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
+          <button className={`${b} hover:text-red-600`} title="Supprimer" onClick={() => onDelete(c)}>
+            <Trash2 className="size-3.5" strokeWidth={1.8} />
           </button>
         </div>
       );

@@ -135,7 +135,7 @@ export async function getDashboardData(): Promise<{
         SELECT
           DATE_TRUNC('month', "createdAt") AS month,
           COUNT(*)::int AS count
-        FROM "Event"
+        FROM "events"
         WHERE "organizationId" = ${organizationId}
           AND "createdAt" >= ${eightMonthsAgo}
         GROUP BY 1
@@ -145,7 +145,7 @@ export async function getDashboardData(): Promise<{
         SELECT
           DATE_TRUNC('month', "createdAt") AS month,
           COUNT(*)::int AS count
-        FROM "Client"
+        FROM "clients"
         WHERE "organizationId" = ${organizationId}
           AND "createdAt" >= ${eightMonthsAgo}
         GROUP BY 1

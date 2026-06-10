@@ -57,7 +57,7 @@ export function CreateEventDialog({ open, onOpenChange, onSuccess }: CreateEvent
         </div>
 
         {/* FIXED FOOTER */}
-        <div className="px-6 py-4 border-t border-[#e2e2e2] flex items-center justify-end gap-3 shrink-0 bg-white">
+        <div className="px-6 py-4 border-t border-[#e2e2e2] flex items-center justify-end gap-3 shrink-0 bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
           <button
             type="button"
             onClick={() => onOpenChange(false)}

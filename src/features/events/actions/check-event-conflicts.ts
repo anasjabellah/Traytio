@@ -55,7 +55,7 @@ export async function checkEventConflicts(
         "startDate",
         "endDate",
         "startDate" < ${newEnd ?? FAR_FUTURE} AND ("endDate" IS NULL OR "endDate" > ${newStart}) AS is_conflicting
-      FROM events
+      FROM "events"
       WHERE "organizationId" = ${orgId}
         AND (${excludeParam}::text IS NULL OR id != ${excludeParam}::text)
         AND "startDate" <= ${dayEnd}

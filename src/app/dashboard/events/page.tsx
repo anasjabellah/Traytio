@@ -240,7 +240,7 @@ export default function EventsPage() {
 
         {/* Search + Filters + View toggle */}
         <div className="mt-8 flex flex-col lg:flex-row lg:items-center gap-3">
-          <div className="flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft flex-1 max-w-[420px] transition-all focus-within:border-gold focus-within:ring-1 focus-within:ring-gold/30">
+          <div className="flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft flex-1 max-w-[400px] transition-all focus-within:border-gold focus-within:ring-1 focus-within:ring-gold/30">
             <Search className="size-4 text-muted-foreground shrink-0" />
             <input
               value={searchQuery}
@@ -313,7 +313,7 @@ export default function EventsPage() {
                     <select
                       value={statusFilter ?? ''}
                       onChange={(e) => setStatusFilter(e.target.value || null)}
-                      className="w-full h-9 rounded-lg border border-border bg-surface-soft px-3 text-xs focus:outline-none focus:border-gold"
+                      className="w-full h-9 rounded-lg border border-border bg-surface-soft px-3 text-xs focus:outline-none focus:ring-2 focus:ring-[#D4A94A]/20 focus:border-[#D4A94A]"
                     >
                       <option value="">Tous</option>
                       {statusKeys.map((key) => (
@@ -326,7 +326,7 @@ export default function EventsPage() {
                     <select
                       value={typeFilter ?? ''}
                       onChange={(e) => setTypeFilter(e.target.value || null)}
-                      className="w-full h-9 rounded-lg border border-border bg-surface-soft px-3 text-xs focus:outline-none focus:border-gold"
+                      className="w-full h-9 rounded-lg border border-border bg-surface-soft px-3 text-xs focus:outline-none focus:ring-2 focus:ring-[#D4A94A]/20 focus:border-[#D4A94A]"
                     >
                       <option value="">Tous</option>
                       {eventTypeKeys.map((key) => (
@@ -339,7 +339,7 @@ export default function EventsPage() {
                     <select
                       value={paymentFilter ?? ''}
                       onChange={(e) => setPaymentFilter(e.target.value || null)}
-                      className="w-full h-9 rounded-lg border border-border bg-surface-soft px-3 text-xs focus:outline-none focus:border-gold"
+                      className="w-full h-9 rounded-lg border border-border bg-surface-soft px-3 text-xs focus:outline-none focus:ring-2 focus:ring-[#D4A94A]/20 focus:border-[#D4A94A]"
                     >
                       <option value="">Tous</option>
                       <option value="PAID">Payé</option>
@@ -372,7 +372,7 @@ export default function EventsPage() {
                       value={budgetMin}
                       onChange={(e) => setBudgetMin(e.target.value)}
                       placeholder="0"
-                      className="w-full h-9 rounded-lg border border-border bg-surface-soft px-3 text-xs focus:outline-none focus:border-gold"
+                      className="w-full h-9 rounded-lg border border-border bg-surface-soft px-3 text-xs focus:outline-none focus:ring-2 focus:ring-[#D4A94A]/20 focus:border-[#D4A94A]"
                     />
                   </div>
                   <div>
@@ -382,7 +382,7 @@ export default function EventsPage() {
                       value={budgetMax}
                       onChange={(e) => setBudgetMax(e.target.value)}
                       placeholder="999999"
-                      className="w-full h-9 rounded-lg border border-border bg-surface-soft px-3 text-xs focus:outline-none focus:border-gold"
+                      className="w-full h-9 rounded-lg border border-border bg-surface-soft px-3 text-xs focus:outline-none focus:ring-2 focus:ring-[#D4A94A]/20 focus:border-[#D4A94A]"
                     />
                   </div>
                 </div>
