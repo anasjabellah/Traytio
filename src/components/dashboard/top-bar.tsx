@@ -2,12 +2,14 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Search, Bell, CheckCheck, AlertTriangle, Clock } from "lucide-react";
 import { useNotificationStore } from "@/stores/notification-store";
 
 export function TopBar() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotificationStore();
 
   useEffect(() => {
@@ -56,11 +58,27 @@ export function TopBar() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-1 ml-6 text-sm">
-          {["Dashboard", "Commandes", "Clients", "Menus", "Calendrier", "Paiements"].map((n, i) => (
-            <a key={n} className={`px-3 py-1.5 rounded-md transition-colors ${i === 0 ? "bg-foreground/[0.06] text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]"}`}>
-              {n}
-            </a>
-          ))}
+          {([
+            ["Dashboard", "/dashboard"],
+            ["Commandes", "/dashboard/commandes"],
+            ["Clients", "/dashboard/clients"],
+            ["Événements", "/dashboard/events"],
+            ["Packs", "/dashboard/menus"],
+            ["Menu Items", "/dashboard/menu-items"],
+            ["Calendrier", "/dashboard/calendar"],
+            ["Paiements", "/dashboard/payments"],
+          ] as const).map(([label, href]) => {
+            const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+            return (
+              <Link
+                key={label}
+                href={href}
+                className={`px-3 py-1.5 rounded-md transition-colors ${isActive ? "bg-foreground/[0.06] text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]"}`}
+              >
+                {label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="ml-auto flex items-center gap-2">

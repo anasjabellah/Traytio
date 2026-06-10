@@ -32,8 +32,8 @@ export function MenusTable({ data, loading, onEdit, onDelete, onAdd, pagination,
         <TableBody>
           {Array.from({ length: 5 }).map((_, index) => (
             <TableRow key={index}>
-              {columns.map((col) => (
-                <TableCell key={col.id} className="px-4 py-2">
+              {columns.map((col, colIndex) => (
+                <TableCell key={`${col.id || colIndex}-${colIndex}`} className="px-4 py-2">
                   <Skeleton className="h-4 w-full" />
                 </TableCell>
               ))}
