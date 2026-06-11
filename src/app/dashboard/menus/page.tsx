@@ -4,11 +4,11 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Download, Search, LayoutGrid, List, Eye, Pencil, Copy,
-  Archive, X, Sparkles, TrendingUp, Star, Clock,
-  ChefHat, Wine, Cake, Flower2, Users, Box,
-  Settings2, CheckCircle2, CircleDashed, ArrowUpRight,
+  Archive, X, Sparkles, TrendingUp, Star, Clock, Clock3,
+  Settings2, CheckCircle2, ArrowUpRight,
+  Wine, Cake, Flower2, Users, Box,
   Crown, Trash2, BarChart3, Tag, Utensils,
-  DollarSign, Heart, Briefcase, Coffee, Wand2, Package,
+  Heart, Briefcase, Coffee, Wand2, Package, Building, Martini,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +22,7 @@ import { CreateMenuDialog } from '@/features/menus/components/create-menu-dialog
 import { EditMenuDialog } from '@/features/menus/components/edit-menu-dialog';
 import { DeleteMenuDialog } from '@/features/menus/components/delete-menu-dialog';
 import type { Menu, MenuCategory } from '@/features/menus/types';
-import { CATEGORY_LABELS, CATEGORY_BADGE_COLORS, CATEGORY_ACCENT } from '@/features/menus/constants';
+import { CATEGORY_LABELS, CATEGORY_BADGE_COLORS } from '@/features/menus/constants';
 import { formatCurrency } from '@/lib/utils';
 
 const dh = (n: number) => formatCurrency(n);
@@ -58,11 +58,6 @@ const CAT_ACCENT: Record<string, string> = {
   CORPORATE: 'from-blue-50 to-indigo-50',
 };
 
-const CAT_EMOJI: Record<string, string> = {
-  WEDDING: '💍', CORPORATE: '💼', BUFFET: '🍽️',
-  COCKTAIL: '🍸', BRUNCH: '🥞', DESSERT: '🍰', CUSTOM: '📋',
-};
-
 const KPI_CARDS = [
   { key: 'total', label: 'Total Menus' },
   { key: 'active', label: 'Menus Actifs' },
@@ -76,13 +71,13 @@ const CAT_CHIPS = [
 ];
 
 const PACK_COVER: Record<string, string> = {
-  WEDDING: 'from-rose-300 via-rose-200 to-amber-100',
-  CORPORATE: 'from-slate-300 via-slate-200 to-stone-100',
-  BUFFET: 'from-orange-300 via-amber-200 to-yellow-100',
-  COCKTAIL: 'from-emerald-300 via-emerald-200 to-teal-100',
-  BRUNCH: 'from-amber-300 via-yellow-200 to-orange-100',
-  DESSERT: 'from-pink-300 via-pink-200 to-rose-100',
-  CUSTOM: 'from-violet-300 via-violet-200 to-indigo-100',
+  WEDDING: 'from-pink-100 to-yellow-50',
+  CORPORATE: 'from-slate-100 to-gray-50',
+  BUFFET: 'from-amber-50 to-orange-50',
+  COCKTAIL: 'from-emerald-100 to-cyan-50',
+  BRUNCH: 'from-yellow-50 to-amber-50',
+  DESSERT: 'from-pink-100 to-rose-50',
+  CUSTOM: 'from-violet-100 to-indigo-50',
 };
 
 const ITEM_EMOJI: Record<string, string> = {
@@ -389,7 +384,7 @@ function GridView({ menus, loading, onView, onEdit, onDelete }: {
     return (
       <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="mx-auto w-full max-w-[430px] rounded-3xl border border-border/60 bg-card shadow-soft overflow-hidden animate-pulse">
+          <div key={i} className="mx-auto w-full max-w-[420px] rounded-3xl border border-stone-200/80 bg-white shadow-[0_4px_24px_-8px_rgba(50,40,20,0.08)] overflow-hidden animate-pulse">
             <div className="h-[170px] bg-foreground/[0.04]" />
             <div className="p-5 space-y-3">
               <div className="h-5 bg-foreground/[0.06] rounded w-3/4" />
@@ -431,28 +426,29 @@ function PackCard({ menu, onView, onEdit, onDelete }: {
     <motion.article
       variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } }}
       whileHover={{ y: -6 }}
-      className="group relative mx-auto w-full max-w-[430px] overflow-hidden rounded-3xl border border-stone-200/80 bg-white shadow-[0_4px_24px_-8px_rgba(50,40,20,0.08)] transition-all duration-300 hover:shadow-[0_20px_60px_-16px_rgba(50,40,20,0.22)]"
+      className="group relative mx-auto w-full max-w-[420px] overflow-hidden rounded-3xl border border-stone-200/80 bg-white shadow-[0_4px_24px_-8px_rgba(50,40,20,0.08)] transition-all duration-300 hover:shadow-[0_20px_60px_-16px_rgba(50,40,20,0.22)]"
     >
       {/* Header — 170px gradient with badges + price */}
       <div className={cn('relative h-[170px] bg-gradient-to-br', cover)}>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.55),transparent_60%)]" />
 
         {/* Category badge top‑left */}
-        <div className="absolute left-4 top-4 inline-flex h-7 items-center rounded-full bg-white/80 px-3 text-[11px] font-medium uppercase tracking-[0.08em] text-stone-700 backdrop-blur-sm">
+        <div className="absolute left-4 top-4 inline-flex h-[30px] items-center rounded-full bg-white/80 px-[10px] text-[12px] font-medium tracking-[0.05em] text-stone-700 backdrop-blur-sm">
           {meta}
         </div>
 
         {/* Status badge top‑right */}
         <div className="absolute right-4 top-4">
-          <span className={cn('inline-flex h-7 items-center rounded-full px-[10px] text-[11px] font-medium',
+          <span className={cn('inline-flex h-[30px] items-center gap-1.5 rounded-full px-[10px] text-[12px] font-medium',
             menu.isActive ? 'bg-emerald-500/10 text-emerald-700' : 'bg-zinc-500/10 text-zinc-600')}>
+            <span className={cn('size-[6px] rounded-full', menu.isActive ? 'bg-emerald-500' : 'bg-zinc-400')} />
             {menu.isActive ? 'Actif' : 'Inactif'}
           </span>
         </div>
 
         {/* Price bottom‑right */}
         <div className="absolute bottom-4 right-5 leading-none drop-shadow-sm tabular-nums">
-          <span className="font-display text-[28px] font-medium text-stone-800">{dh(Number(menu.pricePerPerson))}</span>
+          <span className="font-display text-[26px] font-medium text-stone-800">{dh(Number(menu.pricePerPerson))}</span>
           <span className="ml-1.5 font-sans text-[11px] font-medium text-stone-500/80">/ pers.</span>
         </div>
       </div>
@@ -537,6 +533,26 @@ function IconBtn({ children, danger, ...props }: any) {
 
 /* ---------------- Sidebar ---------------- */
 
+const CAT_ROW_ICON: Record<string, any> = {
+  WEDDING: Heart,
+  CORPORATE: Building,
+  COCKTAIL: Martini,
+  BUFFET: Utensils,
+  DESSERT: Cake,
+  BRUNCH: Coffee,
+  CUSTOM: Sparkles,
+};
+
+const CAT_ICON_BG: Record<string, string> = {
+  WEDDING: 'bg-rose-100',
+  CORPORATE: 'bg-blue-100',
+  COCKTAIL: 'bg-purple-100',
+  BUFFET: 'bg-amber-100',
+  DESSERT: 'bg-pink-100',
+  BRUNCH: 'bg-orange-100',
+  CUSTOM: 'bg-gray-100',
+};
+
 function Sidebar({ menus, onView }: { menus: Menu[]; onView: (m: Menu) => void }) {
   const mostItems = useMemo(() => [...menus].sort((a, b) => (b.menuItems?.length ?? 0) - (a.menuItems?.length ?? 0)).slice(0, 5), [menus]);
   const profitable = useMemo(() => [...menus].sort((a, b) => Number(b.pricePerPerson) - Number(a.pricePerPerson)).slice(0, 5), [menus]);
@@ -555,19 +571,19 @@ function Sidebar({ menus, onView }: { menus: Menu[]; onView: (m: Menu) => void }
     <aside className="space-y-4">
       <Panel title="Le plus d&apos;articles" icon={TrendingUp}>
         {mostItems.map((m) => (
-          <SidebarRow key={m.id} emoji={CAT_EMOJI[m.category] || '📋'} accent={CATEGORY_ACCENT[m.category] || 'from-gray-100 to-gray-50'}
+          <SidebarRow key={m.id} icon={CAT_ROW_ICON[m.category] || Package} bg={CAT_ICON_BG[m.category] || 'bg-gray-100'}
             name={m.name} sub={CATEGORY_LABELS[m.category] || m.category} right={`${m.menuItems?.length ?? 0} art.`} onClick={() => onView(m)} />
         ))}
       </Panel>
-      <Panel title="Les plus chers" icon={BarChart3} gold>
+      <Panel title="Les plus chers" icon={BarChart3}>
         {profitable.map((m) => (
-          <SidebarRow key={m.id} emoji={CAT_EMOJI[m.category] || '📋'} accent={CATEGORY_ACCENT[m.category] || 'from-gray-100 to-gray-50'}
+          <SidebarRow key={m.id} icon={CAT_ROW_ICON[m.category] || Package} bg={CAT_ICON_BG[m.category] || 'bg-gray-100'}
             name={m.name} sub={CATEGORY_LABELS[m.category] || m.category} right={dh(Number(m.pricePerPerson))} onClick={() => onView(m)} />
         ))}
       </Panel>
-      <Panel title="Ajoutés récemment" icon={Clock}>
+      <Panel title="Ajoutés récemment" icon={Clock3}>
         {recent.map((m) => (
-          <SidebarRow key={m.id} emoji={CAT_EMOJI[m.category] || '📋'} accent={CATEGORY_ACCENT[m.category] || 'from-gray-100 to-gray-50'}
+          <SidebarRow key={m.id} icon={CAT_ROW_ICON[m.category] || Package} bg={CAT_ICON_BG[m.category] || 'bg-gray-100'}
             name={m.name} sub={CATEGORY_LABELS[m.category] || m.category} right={new Date(m.createdAt).toLocaleDateString('fr-FR')} onClick={() => onView(m)} />
         ))}
       </Panel>
@@ -594,11 +610,11 @@ function Sidebar({ menus, onView }: { menus: Menu[]; onView: (m: Menu) => void }
   );
 }
 
-function Panel({ title, icon: Icon, gold, children }: { title: string; icon: any; gold?: boolean; children: React.ReactNode }) {
+function Panel({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {
   return (
-    <div className={cn('rounded-2xl border border-border/60 bg-card p-4 shadow-soft', gold && 'ring-1 ring-[var(--gold)]/30')}>
-      <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-        <Icon className={cn('size-4', gold ? 'text-[var(--gold-deep)]' : 'text-muted-foreground')} />
+    <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-soft">
+      <div className="flex items-center gap-2.5 text-sm font-medium text-foreground">
+        <Icon className="size-4 text-foreground" strokeWidth={1.5} />
         {title}
       </div>
       <div className="mt-3 space-y-1.5">{children}</div>
@@ -606,12 +622,14 @@ function Panel({ title, icon: Icon, gold, children }: { title: string; icon: any
   );
 }
 
-function SidebarRow({ emoji, accent, name, sub, right, onClick }: {
-  emoji: string; accent: string; name: string; sub: string; right: string; onClick: () => void;
+function SidebarRow({ icon: Icon, bg, name, sub, right, onClick }: {
+  icon: any; bg: string; name: string; sub: string; right: string; onClick: () => void;
 }) {
   return (
     <button onClick={onClick} className="flex w-full items-center gap-3 rounded-lg p-1.5 text-left transition hover:bg-[var(--surface-soft)]">
-      <div className={cn('grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br text-base', accent)}>{emoji}</div>
+      <div className={cn('grid h-8 w-8 shrink-0 place-items-center rounded-lg', bg)}>
+        <Icon className="size-[14px] text-muted-foreground" strokeWidth={1.5} />
+      </div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-xs font-medium text-foreground">{name}</div>
         <div className="truncate text-[10px] text-muted-foreground">{sub}</div>

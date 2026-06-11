@@ -6,13 +6,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number | string | null | undefined): string {
-  if (amount === null || amount === undefined) return '0,00 MAD'
+  if (amount === null || amount === undefined) return '0 MAD'
   const num = typeof amount === 'string' ? parseFloat(amount) : amount
-  if (isNaN(num)) return '0,00 MAD'
+  if (isNaN(num)) return '0 MAD'
   return new Intl.NumberFormat('fr-MA', {
     style: 'currency',
     currency: 'MAD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(num)
 }
