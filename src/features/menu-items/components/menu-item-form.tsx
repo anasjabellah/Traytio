@@ -2,39 +2,32 @@
 
 import React from 'react';
 import { z } from 'zod';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useFormContext, Controller } from 'react-hook-form';
+import { createMenuItemSchema } from '@/features/menu-items/validations/create-menu-item-schema';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { createMenuItemSchema } from '@/features/menu-items/validations/create-menu-item-schema';
+import { CATEGORY_LABELS, CATEGORY_BADGE_COLORS } from '@/features/menu-items/constants';
 import { toast } from 'sonner';
+import { CloudUpload, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type MenuItemFormValues = z.input<typeof createMenuItemSchema>;
 
 type MenuItemFormProps = {
-  defaultValues?: Partial<MenuItemFormValues>;
   onSubmit: (values: MenuItemFormValues) => Promise<void>;
   isLoading?: boolean;
   mode: 'create' | 'edit';
   onUploadingChange?: (isUploading: boolean) => void;
 };
 
-const triggerClass = "min-h-[44px] text-sm px-4 border !border-[#e2e2e2] !bg-white w-full !rounded-[0.75rem] font-normal";
+const inputClass = "flex items-center gap-2 rounded-2xl border border-border bg-white px-4 h-12 transition-all focus-within:border-gold focus-within:ring-1 focus-within:ring-gold/30";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  FOOD: 'Food',
-  DRINKS: 'Drinks',
-  DESSERTS: 'Desserts',
-  DECORATION: 'Decoration',
-  STAFF: 'Services',
-  ENTERTAINMENT: 'Divertissement',
-  EXTRAS: 'Extras',
-};
-
-export function MenuItemForm({ defaultValues = {}, onSubmit, isLoading = false, mode, onUploadingChange }: MenuItemFormProps) {
+export function MenuItemForm({ onSubmit, isLoading = false, mode, onUploadingChange }: MenuItemFormProps) {
   const [isUploading, setIsUploading] = React.useState(false);
+  const [dragOver, setDragOver] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   const {
     control,
     handleSubmit,
@@ -42,62 +35,107 @@ export function MenuItemForm({ defaultValues = {}, onSubmit, isLoading = false, 
     register,
     setValue,
     watch,
-  } = useForm<MenuItemFormValues>({
-    resolver: zodResolver(createMenuItemSchema),
-    defaultValues,
-    mode: 'onTouched',
-  });
+  } = useFormContext<MenuItemFormValues>();
+
   const imageUrl = watch('imageUrl');
 
+  const handleFileUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    setIsUploading(true);
+    onUploadingChange?.(true);
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      if (!res.ok) throw new Error('Upload failed');
+      const json = await res.json();
+      setValue('imageUrl', json.url);
+      toast.success('Image téléchargée');
+    } catch {
+      toast.error('Erreur lors du téléchargement');
+    } finally {
+      setIsUploading(false);
+      onUploadingChange?.(false);
+    }
+  };
+
   return (
-    <form id="menu-item-form" onSubmit={handleSubmit(async v => await onSubmit(v))} className="space-y-8">
+    <form id="menu-item-form" onSubmit={handleSubmit(async v => await onSubmit(v))} className="space-y-5">
       {/* INFORMATIONS */}
-      <section>
-        <h3 className="text-xs uppercase tracking-[0.15em] text-foreground/70 mb-3 font-semibold font-[family-name:var(--font-finlandica)]">
+      <div className="rounded-xl border border-border/60 bg-surface-soft p-5 space-y-4">
+        <h3 className="text-xs uppercase tracking-[0.16em] text-muted-foreground font-semibold">
           Informations
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Nom *</label>
-            <Input placeholder="Nom de l'article" className="h-11 text-sm px-4" {...register('name')} />
-            {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name.message?.toString()}</p>}
+            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Nom *</div>
+            <div className={inputClass}>
+              <input
+                {...register('name')}
+                placeholder="Nom de l'article"
+                className="flex-1 bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground"
+              />
+            </div>
+            {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name.message?.toString()}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Catégorie *</label>
+            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Catégorie *</div>
             <Controller
               name="category"
               control={control}
               render={({ field }) => {
-                const currentLabel = field.value ? CATEGORY_LABELS[field.value] || field.value : '';
+                const currentLabel = field.value ? CATEGORY_LABELS[field.value as keyof typeof CATEGORY_LABELS] || field.value : '';
+                const catColor = field.value ? CATEGORY_BADGE_COLORS[field.value as keyof typeof CATEGORY_BADGE_COLORS] : '';
                 return (
                   <Select onValueChange={field.onChange} value={field.value ?? ''}>
-                    <SelectTrigger className={triggerClass}>
-                      <span className="truncate">{currentLabel || 'Sélectionner une catégorie'}</span>
+                    <SelectTrigger className="min-h-12 text-sm px-4 border border-border bg-white rounded-2xl !h-12">
+                      {field.value ? (
+                        <span className={cn('inline-block rounded-full px-2 py-0.5 text-xs font-medium', catColor)}>
+                          {currentLabel}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">Sélectionner une catégorie</span>
+                      )}
                     </SelectTrigger>
                     <SelectContent side="bottom">
-                      {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-                        <SelectItem key={key} value={key}>{label}</SelectItem>
-                      ))}
+                      {Object.entries(CATEGORY_LABELS).map(([key, label]) => {
+                        const color = CATEGORY_BADGE_COLORS[key as keyof typeof CATEGORY_BADGE_COLORS];
+                        return (
+                          <SelectItem key={key} value={key}>
+                            <span className={cn('inline-block rounded-full px-2 py-0.5 text-xs font-medium', color)}>
+                              {label}
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 );
               }}
             />
-            {errors.category && <p className="text-sm text-red-600 mt-1">{errors.category.message?.toString()}</p>}
+            {errors.category && <p className="text-xs text-red-600 mt-1">{errors.category.message?.toString()}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Prix unitaire (MAD) *</label>
-            <Input type="number" step="0.01" placeholder="0" className="h-11 text-sm px-4" {...register('unitPrice', { valueAsNumber: true })} />
-            {errors.unitPrice && <p className="text-sm text-red-600 mt-1">{errors.unitPrice.message?.toString()}</p>}
+            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Prix unitaire (MAD) *</div>
+            <div className={inputClass}>
+              <span className="text-sm text-muted-foreground">MAD</span>
+              <input
+                type="number"
+                step="0.01"
+                placeholder="0"
+                {...register('unitPrice', { valueAsNumber: true })}
+                className="flex-1 bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+            </div>
+            {errors.unitPrice && <p className="text-xs text-red-600 mt-1">{errors.unitPrice.message?.toString()}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Unité</label>
+            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Unité</div>
             <Controller
               name="unit"
               control={control}
               render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value ?? ''}>
-                  <SelectTrigger className={triggerClass}>
+                  <SelectTrigger className="min-h-12 text-sm px-4 border border-border bg-white rounded-2xl !h-12 !text-muted-foreground">
                     <SelectValue placeholder="Sélectionner une unité" />
                   </SelectTrigger>
                   <SelectContent side="bottom">
@@ -115,55 +153,23 @@ export function MenuItemForm({ defaultValues = {}, onSubmit, isLoading = false, 
             />
           </div>
         </div>
-      </section>
+      </div>
 
       {/* DESCRIPTION */}
-      <section>
-        <h3 className="text-xs uppercase tracking-[0.15em] text-foreground/70 mb-3 font-semibold font-[family-name:var(--font-finlandica)]">
+      <div className="rounded-xl border border-border/60 bg-surface-soft p-5 space-y-4">
+        <h3 className="text-xs uppercase tracking-[0.16em] text-muted-foreground font-semibold">
           Description
         </h3>
-        <Textarea placeholder="Notes et description de l'article..." className="text-sm px-4 py-3" {...register('notes')} rows={4} />
-      </section>
-
-      {/* MEDIA */}
-      <section>
-        <h3 className="text-xs uppercase tracking-[0.15em] text-foreground/70 mb-3 font-semibold font-[family-name:var(--font-finlandica)]">
-          Media
-        </h3>
-        <input
-          type="file"
-          accept="image/*"
-          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-          onChange={async (e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            const formData = new FormData();
-            formData.append('file', file);
-            setIsUploading(true);
-            onUploadingChange?.(true);
-            try {
-              const res = await fetch('/api/upload', { method: 'POST', body: formData });
-              if (!res.ok) throw new Error('Upload failed');
-              const json = await res.json();
-              setValue('imageUrl', json.url);
-              toast.success('Image téléchargée');
-            } catch {
-              toast.error('Erreur lors du téléchargement');
-            } finally {
-              setIsUploading(false);
-              onUploadingChange?.(false);
-            }
-          }}
+        <textarea
+          {...register('notes')}
+          placeholder="Notes et description de l'article..."
+          className="w-full min-h-[100px] rounded-2xl border border-border bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold transition-all resize-none placeholder:text-muted-foreground"
         />
-        {isUploading && <p className="mt-2 text-sm text-gray-600">Téléchargement en cours...</p>}
-        {imageUrl && (
-          <img src={imageUrl} alt="Aperçu" className="mt-2 w-20 h-20 object-cover rounded-xl border border-border" />
-        )}
-      </section>
+      </div>
 
       {/* STATUT */}
-      <section>
-        <h3 className="text-xs uppercase tracking-[0.15em] text-foreground/70 mb-3 font-semibold font-[family-name:var(--font-finlandica)]">
+      <div className="rounded-xl border border-border/60 bg-surface-soft p-5 space-y-4">
+        <h3 className="text-xs uppercase tracking-[0.16em] text-muted-foreground font-semibold">
           Statut
         </h3>
         <div className="flex items-center gap-3">
@@ -176,7 +182,54 @@ export function MenuItemForm({ defaultValues = {}, onSubmit, isLoading = false, 
           />
           <span className="text-sm text-muted-foreground">{watch('isActive') !== false ? 'Actif' : 'Inactif'}</span>
         </div>
-      </section>
+      </div>
+
+      {/* MEDIA */}
+      <div className="rounded-xl border border-border/60 bg-surface-soft p-5 space-y-4">
+        <h3 className="text-xs uppercase tracking-[0.16em] text-muted-foreground font-semibold">
+          Média
+        </h3>
+        {imageUrl ? (
+          <div className="relative inline-block">
+            <img src={imageUrl} alt="Aperçu" className="h-40 w-full max-w-xs rounded-2xl border border-border object-cover object-center" />
+            <button
+              type="button"
+              onClick={() => setValue('imageUrl', '')}
+              className="absolute -top-2 -right-2 h-7 w-7 rounded-full bg-white border border-border shadow-sm flex items-center justify-center hover:bg-red-50 transition-colors"
+            >
+              <X className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          </div>
+        ) : (
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => { e.preventDefault(); setDragOver(false); const file = e.dataTransfer.files[0]; if (file) handleFileUpload(file); }}
+            onClick={() => fileInputRef.current?.click()}
+            className={cn(
+              'flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-all',
+              dragOver ? 'border-gold bg-gold/5' : 'border-border/60 bg-white hover:border-gold/50 hover:bg-gold/5'
+            )}
+          >
+            <CloudUpload className="h-8 w-8 text-muted-foreground mb-3" />
+            <p className="text-sm font-medium text-foreground">Glissez votre image ici</p>
+            <p className="text-xs text-muted-foreground mt-1">ou cliquez pour sélectionner</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                await handleFileUpload(file);
+                e.target.value = '';
+              }}
+            />
+            {isUploading && <p className="mt-3 text-xs text-muted-foreground animate-pulse">Téléchargement en cours...</p>}
+          </div>
+        )}
+      </div>
     </form>
   );
 }

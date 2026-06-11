@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+
 import { useMenuItems } from '@/features/menu-items/hooks/use-menu-items';
 import { useMenuItemForm } from '@/features/menu-items/hooks/use-menu-item-form';
 import { MenuItemsTable } from '@/features/menu-items/components/menu-items-table';
@@ -21,6 +21,7 @@ import { CreateMenuItemDialog } from '@/features/menu-items/components/create-me
 import { EditMenuItemDialog } from '@/features/menu-items/components/edit-menu-item-dialog';
 import { DeleteMenuItemDialog } from '@/features/menu-items/components/delete-menu-item-dialog';
 import type { MenuItem, MenuItemCategory } from '@/features/menu-items/types';
+import { CATEGORY_LABELS, CATEGORY_BADGE_COLORS } from '@/features/menu-items/constants';
 import { formatCurrency } from '@/lib/utils';
 
 const dh = (n: number) => formatCurrency(n);
@@ -61,13 +62,7 @@ const CAT_ACCENT: Record<string, string> = {
 
 const CAT_CHIPS = [
   { key: 'ALL', label: 'Toutes catégories' },
-  { key: 'FOOD', label: 'Food' },
-  { key: 'DRINKS', label: 'Drinks' },
-  { key: 'DESSERTS', label: 'Desserts' },
-  { key: 'DECORATION', label: 'Decoration' },
-  { key: 'STAFF', label: 'Services' },
-  { key: 'EXTRAS', label: 'Extras' },
-  { key: 'ENTERTAINMENT', label: 'Entertainment' },
+  ...Object.entries(CATEGORY_LABELS).map(([key, label]) => ({ key, label })),
 ];
 
 const ITEM_EMOJI: Record<string, string> = {
@@ -90,7 +85,7 @@ type ViewMode = 'grid' | 'table';
 type StatusFilter = 'all' | 'active' | 'inactive';
 
 export default function MenuItemsPage() {
-  const { items, isLoading, error, pagination, handleSearch, refresh, handleCategoryChange } = useMenuItems();
+  const { items, isLoading, error, pagination, handleSearch, refresh } = useMenuItems();
   const {
     isCreateOpen, isEditOpen, isDeleteOpen, selectedItem,
     openCreate, openEdit, openDelete, openDuplicate, openArchive, closeAll,
@@ -100,10 +95,8 @@ export default function MenuItemsPage() {
   const [catFilter, setCatFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [priceMax, setPriceMax] = useState(15000);
-  const [view, setView] = useState<ViewMode>('table');
+  const [view, setView] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(true);
-  const [detailItem, setDetailItem] = useState<MenuItem | null>(null);
-  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => handleSearch(query), 300);
@@ -136,6 +129,7 @@ export default function MenuItemsPage() {
     };
   }, [items]);
 
+  const handleView = useCallback((item: MenuItem) => { window.location.href = `/dashboard/menu-items/${item.id}`; }, []);
   const handleEdit = useCallback((item: MenuItem) => openEdit(item), [openEdit]);
   const handleDelete = useCallback((item: MenuItem) => openDelete(item), [openDelete]);
   const handleDuplicate = useCallback((item: MenuItem) => { openDuplicate(item).then(() => refresh()); }, [openDuplicate, refresh]);
@@ -145,10 +139,65 @@ export default function MenuItemsPage() {
   const hasNoResults = !isLoading && isSearching && filtered.length === 0;
   const hasNoItems = !isLoading && !isSearching && items.length === 0;
 
+  const fillPct = ((priceMax - 50) / (15000 - 50)) * 100;
+
   return (
     <div className="min-h-screen bg-[var(--surface-soft)] text-foreground">
       <div className="pointer-events-none fixed inset-0 bg-gradient-mesh opacity-60" />
       <div className="pointer-events-none fixed inset-x-0 top-0 h-[420px] bg-radiance" />
+
+      <style>{`
+        .tur-range-slider {
+          -webkit-appearance: none;
+          appearance: none;
+          height: 4px;
+          background: linear-gradient(to right, #D4A03A var(--fill), #E5E0D6 var(--fill));
+          border-radius: 2px;
+          outline: none;
+          cursor: pointer;
+        }
+        .tur-range-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #D4A03A;
+          border: none;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+          transition: transform 0.15s ease, box-shadow 0.15s ease;
+          cursor: pointer;
+        }
+        .tur-range-slider::-webkit-slider-thumb:hover {
+          transform: scale(1.2);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        }
+        .tur-range-slider::-moz-range-track {
+          height: 4px;
+          background: #E5E0D6;
+          border-radius: 2px;
+          border: none;
+        }
+        .tur-range-slider::-moz-range-thumb {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #D4A03A;
+          border: none;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+          cursor: pointer;
+        }
+        .tur-range-slider::-moz-range-progress {
+          background: #D4A03A;
+          height: 4px;
+          border-radius: 2px;
+        }
+        .tur-range-slider:focus-visible {
+          outline: 2px solid #D4A03A;
+          outline-offset: 3px;
+          border-radius: 2px;
+        }
+      `}</style>
 
       <div className="relative mx-auto max-w-[1480px] px-6 py-8 lg:px-10">
 
@@ -156,7 +205,6 @@ export default function MenuItemsPage() {
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
-              <Sparkles className="size-3.5 text-[var(--gold-deep)]" />
               <Badge variant="outline" className="gap-1 border-[var(--gold)]/40 bg-[var(--gold-soft)]/40 font-normal text-xs px-2 py-0">
                 <Sparkles className="size-3 text-[var(--gold-deep)]" /> Catalogue Premium
               </Badge>
@@ -235,17 +283,31 @@ export default function MenuItemsPage() {
             {showFilters && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                 <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
-                  {CAT_CHIPS.map((c) => (
-                    <button key={c.key} onClick={() => setCatFilter(c.key)}
-                      className={cn('flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition', catFilter === c.key ? 'border-charcoal bg-gradient-charcoal text-white' : 'border-border/60 bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground')}
-                    >{c.label}</button>
-                  ))}
+                  {CAT_CHIPS.map((c) => {
+                    const catColor = c.key !== 'ALL' ? CATEGORY_BADGE_COLORS[c.key as keyof typeof CATEGORY_BADGE_COLORS] : null;
+                    return (
+                      <button key={c.key} onClick={() => setCatFilter(c.key)}
+                        className={cn('flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition', catFilter === c.key ? catColor || 'border-charcoal bg-gradient-charcoal text-white' : 'border-border/60 bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground')}
+                      >{c.label}</button>
+                    );
+                  })}
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-4 border-t border-border/60 pt-3 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4">
                     <span className="font-medium text-foreground">Prix max</span>
-                    <input type="range" min={50} max={15000} step={50} value={priceMax} onChange={(e) => setPriceMax(Number(e.target.value))} className="accent-[var(--gold-deep)]" />
-                    <span className="tabular-nums text-foreground">{dh(priceMax)}</span>
+                    <div className="relative flex w-44 items-center">
+                      <input
+                        type="range"
+                        min={50}
+                        max={15000}
+                        step={50}
+                        value={priceMax}
+                        onChange={(e) => setPriceMax(Number(e.target.value))}
+                        className="tur-range-slider w-full"
+                        style={{ '--fill': `${fillPct}%` } as React.CSSProperties}
+                      />
+                    </div>
+                    <span className="tabular-nums text-foreground min-w-[80px]">{dh(priceMax)}</span>
                   </div>
                   <div className="ml-auto flex items-center gap-2">
                     <span>{filtered.length} résultat{filtered.length > 1 ? 's' : ''}</span>
@@ -269,7 +331,7 @@ export default function MenuItemsPage() {
             ) : hasNoResults ? (
               <NoResultsEmpty query={query} onClear={() => setQuery('')} />
             ) : view === 'grid' ? (
-              <GridView items={filtered} loading={isLoading} onView={setDetailItem} onEdit={handleEdit} onDuplicate={handleDuplicate} onArchive={handleArchive} />
+              <GridView items={filtered} loading={isLoading} onView={handleView} onEdit={handleEdit} onDuplicate={handleDuplicate} onArchive={handleArchive} />
             ) : (
               <div className="rounded-2xl border border-border bg-card shadow-soft">
                 <div className="flex items-center justify-between px-6 pt-5 pb-3">
@@ -284,7 +346,7 @@ export default function MenuItemsPage() {
             )}
           </div>
 
-          <Sidebar items={items} onView={setDetailItem} />
+          <Sidebar items={items} onView={handleView} />
         </div>
 
         <footer className="mt-16 mb-6 flex items-center justify-between text-xs text-muted-foreground">
@@ -295,13 +357,6 @@ export default function MenuItemsPage() {
           <div>© TUR — Suite traiteur premium</div>
         </footer>
       </div>
-
-      {/* Details drawer */}
-      <Sheet open={!!detailItem} onOpenChange={(o) => !o && setDetailItem(null)}>
-        <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-xl">
-          {detailItem && <ItemDetails item={detailItem} onClose={() => setDetailItem(null)} onDuplicate={() => { handleDuplicate(detailItem); setDetailItem(null); }} />}
-        </SheetContent>
-      </Sheet>
 
       {/* Dialogs */}
       <CreateMenuItemDialog open={isCreateOpen} onOpenChange={(open) => { if (!open) closeAll(); }} onSuccess={refresh} />
@@ -381,17 +436,17 @@ function GridView({ items, loading, onView, onEdit, onDuplicate, onArchive }: {
             <div className={cn('relative h-44 overflow-hidden bg-gradient-to-br', accent)}>
               <div className="absolute inset-0 grid place-items-center text-7xl drop-shadow-sm transition-transform duration-500 group-hover:scale-110">
                 {it.imageUrl ? (
-                  <img src={it.imageUrl} alt="" className="h-full w-full object-cover" />
+                  <img src={it.imageUrl} alt="" className={cn('h-full w-full object-cover', it.category === 'FOOD' ? 'object-top' : 'object-center')} />
                 ) : (
                   <span>{emoji}</span>
                 )}
               </div>
               <div className="absolute left-3 top-3 flex items-center gap-2">
-                <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm', it.isActive ? 'bg-emerald-500/15 text-emerald-700 ring-1 ring-emerald-500/30' : 'bg-zinc-500/15 text-zinc-700 ring-1 ring-zinc-500/30')}>
+                <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium shadow-sm backdrop-blur-md ring-1', it.isActive ? 'bg-emerald-600/85 text-white ring-white/20' : 'bg-zinc-500/70 text-white ring-white/10')}>
                   {it.isActive ? '● Active' : '○ Inactive'}
                 </span>
               </div>
-              <div className="absolute right-3 top-3 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-medium text-foreground backdrop-blur-sm">
+              <div className={cn('absolute right-3 top-3 rounded-full px-2 py-0.5 text-[10px] font-medium shadow-sm backdrop-blur-md', CATEGORY_BADGE_COLORS[it.category as keyof typeof CATEGORY_BADGE_COLORS] || 'bg-background/80 text-foreground')}>
                 {CAT_CHIPS.find(c => c.key === it.category)?.label || it.category}
               </div>
               <div className="absolute inset-x-3 bottom-3 flex translate-y-2 items-center gap-1.5 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
@@ -429,7 +484,7 @@ function GridView({ items, loading, onView, onEdit, onDuplicate, onArchive }: {
 function CardAction({ icon: Icon, label, onClick }: { icon: any; label: string; onClick?: () => void }) {
   return (
     <button onClick={(e) => { e.stopPropagation(); onClick?.(); }} title={label}
-      className="grid h-8 w-8 place-items-center rounded-lg bg-background/95 text-foreground shadow-soft backdrop-blur transition hover:bg-gradient-charcoal hover:text-white"
+      className="grid h-8 w-8 place-items-center rounded-lg bg-white text-gray-900 shadow-soft backdrop-blur transition hover:bg-black hover:text-white"
     >
       <Icon className="size-3.5" />
     </button>
@@ -439,11 +494,7 @@ function CardAction({ icon: Icon, label, onClick }: { icon: any; label: string; 
 /* ---------------- Sidebar ---------------- */
 
 function Sidebar({ items, onView }: { items: MenuItem[]; onView: (i: MenuItem) => void }) {
-  const categoryLabels: Record<string, string> = {
-    FOOD: 'Food', DRINKS: 'Drinks', DESSERTS: 'Desserts',
-    DECORATION: 'Decoration', STAFF: 'Services',
-    ENTERTAINMENT: 'Entertainment', EXTRAS: 'Extras',
-  };
+  const categoryLabels = CATEGORY_LABELS;
 
   const mostUsed = useMemo(() => [...items].sort((a, b) => (b.usageCount ?? 0) - (a.usageCount ?? 0)).slice(0, 5), [items]);
   const profitable = useMemo(() => [...items].sort((a, b) => (Number(b.unitPrice) * (b.usageCount ?? 1)) - (Number(a.unitPrice) * (a.usageCount ?? 1))).slice(0, 5), [items]);
@@ -568,75 +619,7 @@ function NoResultsEmpty({ query, onClear }: { query: string; onClear: () => void
   );
 }
 
-/* ---------------- Details drawer ---------------- */
-
-function ItemDetails({ item, onClose, onDuplicate }: { item: MenuItem; onClose: () => void; onDuplicate: () => void }) {
-  const accent = ITEM_ACCENT[item.category] || 'from-gray-100 to-gray-50';
-  const emoji = ITEM_EMOJI[item.category] || '📦';
-  const usageCount = item.usageCount ?? 0;
-  const revenue = Number(item.unitPrice) * usageCount;
-
-  return (
-    <div className="flex h-full flex-col">
-      <div className={cn('relative h-56 bg-gradient-to-br p-6', accent)}>
-        <div className="absolute right-4 top-4 flex items-center gap-1.5">
-          <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-lg bg-background/80 text-foreground backdrop-blur transition hover:bg-background">
-            <X className="size-4" />
-          </button>
-        </div>
-        <div className="absolute inset-0 grid place-items-center text-[120px] drop-shadow">
-          {item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : <span>{emoji}</span>}
-        </div>
-        <div className="absolute bottom-4 left-6 right-6 flex items-end justify-between">
-          <div>
-            <div className="text-[11px] uppercase tracking-wider text-charcoal/70">{CAT_CHIPS.find(c => c.key === item.category)?.label || item.category}</div>
-            <h2 className="mt-1 font-display text-3xl leading-tight text-charcoal">{item.name}</h2>
-          </div>
-          <span className={cn('rounded-full px-2.5 py-1 text-[10px] font-medium backdrop-blur-sm', item.isActive ? 'bg-emerald-500/20 text-emerald-800 ring-1 ring-emerald-600/30' : 'bg-zinc-500/20 text-zinc-800 ring-1 ring-zinc-600/30')}>
-            {item.isActive ? '● Active' : '○ Inactive'}
-          </span>
-        </div>
-      </div>
-
-      <div className="flex-1 space-y-6 overflow-y-auto p-6">
-        <div className="flex items-end justify-between rounded-2xl border border-border/60 bg-[var(--surface-soft)] p-4">
-          <div>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Prix unitaire</div>
-            <div className="font-display text-3xl text-charcoal tabular-nums">{dh(Number(item.unitPrice))}</div>
-            <div className="text-xs text-muted-foreground">/ {item.unit || '—'}</div>
-          </div>
-          <div className="flex gap-1.5">
-            <Button variant="outline" size="sm" className="gap-1.5"><Pencil className="size-3.5" />Edit</Button>
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={onDuplicate}><Copy className="size-3.5" />Duplicate</Button>
-          </div>
-        </div>
-
-        <div>
-          <h4 className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Description</h4>
-          <p className="mt-2 text-sm leading-relaxed text-foreground">{item.notes || 'Aucune description fournie.'}</p>
-        </div>
-
-        <div>
-          <h4 className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Usage Analytics</h4>
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            <StatCard label="Times Used" value={`${usageCount}×`} icon={TrendingUp} />
-            <StatCard label="Revenue" value={dh(revenue)} icon={BarChart3} gold />
-            <StatCard label="Catégorie" value={CAT_CHIPS.find(c => c.key === item.category)?.label || item.category} icon={Tag} small />
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between border-t border-border/60 pt-4">
-          <div className="text-[11px] text-muted-foreground">Créé le {new Date(item.createdAt).toLocaleDateString('fr-FR')}</div>
-          <button className="flex items-center gap-1.5 text-xs text-destructive hover:underline">
-            <Trash2 className="size-3.5" /> Archiver
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value, icon: Icon, gold, small }: { label: string; value: string; icon: any; gold?: boolean; small?: boolean }) {
+function StatCard({ label, value, icon: Icon, gold, small }: { label: string; value: string | React.ReactNode; icon: any; gold?: boolean; small?: boolean }) {
   return (
     <div className={cn('rounded-xl border border-border/60 bg-card p-3', gold && 'ring-1 ring-[var(--gold)]/40 bg-gradient-to-br from-[var(--gold-soft)]/40 to-card')}>
       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
