@@ -1,33 +1,8 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { Badge } from '@/components/ui/badge';
-import { Menu, MenuCategory } from '@/features/menus/types';
+import { Menu } from '@/features/menus/types';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
-
-const categoryColors: Record<MenuCategory, string> = {
-  WEDDING: 'bg-pink-200 text-pink-800',
-  CORPORATE: 'bg-blue-200 text-blue-800',
-  BUFFET: 'bg-amber-200 text-amber-800',
-  COCKTAIL: 'bg-purple-200 text-purple-800',
-  BRUNCH: 'bg-orange-200 text-orange-800',
-  DESSERT: 'bg-rose-200 text-rose-800',
-  CUSTOM: 'bg-gray-200 text-gray-800',
-};
-
-const categoryLabels: Record<MenuCategory, string> = {
-  WEDDING: 'Mariage',
-  CORPORATE: 'Entreprise',
-  BUFFET: 'Buffet',
-  COCKTAIL: 'Cocktail',
-  BRUNCH: 'Brunch',
-  DESSERT: 'Dessert',
-  CUSTOM: 'Custom',
-};
-
-const activeColors: Record<'true' | 'false', string> = {
-  true: 'bg-green-200 text-green-800',
-  false: 'bg-gray-200 text-gray-800',
-};
+import { formatCurrency, cn } from '@/lib/utils';
+import { CATEGORY_LABELS, CATEGORY_BADGE_COLORS } from '@/features/menus/constants';
 
 export const menusColumns = (
   onEdit: (menu: Menu) => void,
@@ -51,80 +26,104 @@ export const menusColumns = (
     header: 'Catégorie',
     size: 150,
     cell: ({ row }) => {
-      const cat = row.getValue('category') as MenuCategory;
-      const className = categoryColors[cat] ?? 'bg-gray-200 text-gray-800';
-      const label = categoryLabels[cat] ?? cat;
-      return <Badge className={className}>{label}</Badge>;
+      const cat = row.getValue('category') as keyof typeof CATEGORY_LABELS;
+      const colorClass = CATEGORY_BADGE_COLORS[cat] ?? 'bg-gray-100 text-gray-700 border-gray-200';
+      const label = CATEGORY_LABELS[cat] ?? cat;
+      return (
+        <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium border ${colorClass}`}>
+          {label}
+        </span>
+      );
     },
   },
   {
     accessorKey: 'pricePerPerson',
-    header: 'Prix par personne (MAD)',
+    header: 'Prix par personne',
     size: 150,
     cell: ({ row }) => {
       const price = Number(row.getValue('pricePerPerson'));
-      return formatCurrency(price);
+      return <span className="font-display tabular-nums">{formatCurrency(price)}</span>;
     },
   },
   {
     accessorKey: 'minPersons',
-    header: 'Nb. min',
-    size: 100,
+    header: 'Min. pax',
+    size: 80,
+    cell: ({ row }) => <span className="tabular-nums">{row.getValue('minPersons')}</span>,
   },
   {
     accessorKey: 'maxPersons',
-    header: 'Nb. max',
-    size: 100,
+    header: 'Max. pax',
+    size: 80,
+    cell: ({ row }) => {
+      const v = row.getValue('maxPersons');
+      return <span className="tabular-nums">{v != null ? String(v) : '—'}</span>;
+    },
   },
   {
     accessorKey: 'isActive',
-    header: 'Actif',
+    header: 'Statut',
     size: 100,
     cell: ({ row }) => {
       const active = row.getValue('isActive') as boolean;
-      const className = activeColors[active ? 'true' : 'false'];
-      return <Badge className={className}>{active ? 'Oui' : 'Non'}</Badge>;
+      return (
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+          active
+            ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50'
+            : 'bg-gray-100 text-gray-600 ring-1 ring-gray-200/50'
+        }`}>
+          <span className={`size-1.5 rounded-full ${active ? 'bg-emerald-500' : 'bg-gray-400'}`} />
+          {active ? 'Actif' : 'Inactif'}
+        </span>
+      );
     },
   },
   {
     accessorKey: 'createdAt',
     header: 'Créé le',
-    size: 150,
+    size: 120,
     cell: ({ row }) => {
       const d = new Date(row.getValue('createdAt'));
-      return d.toLocaleDateString('fr-FR');
+      return <span className="text-muted-foreground">{d.toLocaleDateString('fr-FR')}</span>;
+    },
+  },
+  {
+    id: 'items',
+    header: 'Articles',
+    size: 80,
+    cell: ({ row }) => {
+      const count = row.original.menuItems?.length ?? 0;
+      return <span className="tabular-nums text-muted-foreground">{count}</span>;
     },
   },
   {
     id: 'actions',
     header: 'Actions',
-    size: 150,
+    size: 120,
     cell: ({ row }) => {
       const menu = row.original;
       return (
-        <div className="flex space-x-2">
+        <div className="flex items-center gap-1">
           <button
-            className="btn-ghost btn-sm hover:btn-primary cursor-pointer hover:text-[#C9A96E]"
-            title="Voir les détails"
-            onClick={() => {
-              window.location.href = `/dashboard/menus/${menu.id}`;
-            }}
+            onClick={() => { window.location.href = `/dashboard/menus/${menu.id}`; }}
+            className="grid h-8 w-8 place-items-center rounded-lg bg-white text-gray-900 shadow-soft backdrop-blur transition hover:bg-black hover:text-white"
+            title="Voir"
           >
-            <Eye className="h-4 w-4" />
+            <Eye className="size-3.5" />
           </button>
           <button
-            className="btn-ghost btn-sm hover:btn-primary cursor-pointer hover:text-[#C9A96E]"
-            title="Modifier"
             onClick={() => onEdit(menu)}
+            className="grid h-8 w-8 place-items-center rounded-lg bg-white text-gray-900 shadow-soft backdrop-blur transition hover:bg-black hover:text-white"
+            title="Modifier"
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil className="size-3.5" />
           </button>
           <button
-            className="btn-ghost btn-sm hover:btn-destructive cursor-pointer hover:text-red-600"
-            title="Supprimer"
             onClick={() => onDelete(menu)}
+            className="grid h-8 w-8 place-items-center rounded-lg bg-white text-gray-900 shadow-soft backdrop-blur transition hover:bg-red-600 hover:text-white"
+            title="Supprimer"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="size-3.5" />
           </button>
         </div>
       );

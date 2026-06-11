@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { toast } from 'sonner';
+import { Trash2 } from 'lucide-react';
 import { deleteMenu } from '@/features/menus/actions/delete-menu';
 import type { Menu } from '@/features/menus/types';
 import {
@@ -45,6 +46,9 @@ export function DeleteMenuDialog({ open, onOpenChange, menu, onSuccess }: Delete
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
+          <div className="mx-auto mb-2 size-12 rounded-full bg-red-100 flex items-center justify-center">
+            <Trash2 className="size-6 text-red-600" />
+          </div>
           <AlertDialogTitle>Supprimer le menu</AlertDialogTitle>
           <AlertDialogDescription>
             Êtes‑vous sûr de vouloir supprimer le menu <strong>{menu.name}</strong> ? Cette action est irréversible.
