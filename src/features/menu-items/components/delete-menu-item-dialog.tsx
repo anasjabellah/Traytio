@@ -11,6 +11,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
+import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { deleteMenuItem } from '@/features/menu-items/actions/delete-menu-item';
 import type { MenuItem } from '@/features/menu-items/types';
@@ -57,8 +58,9 @@ export function DeleteMenuItemDialog({ open, onOpenChange, item, onSuccess }: De
           <AlertDialogAction
             onClick={handleDelete}
             disabled={isDeleting}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
           >
+            <Trash2 className="h-4 w-4" />
             {isDeleting ? 'Suppression…' : 'Supprimer'}
           </AlertDialogAction>
         </AlertDialogFooter>

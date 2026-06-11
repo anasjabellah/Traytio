@@ -331,7 +331,7 @@ export default function MenuItemsPage() {
             ) : hasNoResults ? (
               <NoResultsEmpty query={query} onClear={() => setQuery('')} />
             ) : view === 'grid' ? (
-              <GridView items={filtered} loading={isLoading} onView={handleView} onEdit={handleEdit} onDuplicate={handleDuplicate} onArchive={handleArchive} />
+              <GridView items={filtered} loading={isLoading} onView={handleView} onEdit={handleEdit} onDuplicate={handleDuplicate} onArchive={handleArchive} onDelete={handleDelete} />
             ) : (
               <div className="rounded-2xl border border-border bg-card shadow-soft">
                 <div className="flex items-center justify-between px-6 pt-5 pb-3">
@@ -395,12 +395,13 @@ function KpiCard({ label, value, icon: Icon, accent, gold }: { label: string; va
 
 /* ---------------- Grid view ---------------- */
 
-function GridView({ items, loading, onView, onEdit, onDuplicate, onArchive }: {
+function GridView({ items, loading, onView, onEdit, onDuplicate, onArchive, onDelete }: {
   items: MenuItem[]; loading: boolean;
   onView: (i: MenuItem) => void;
   onEdit: (i: MenuItem) => void;
   onDuplicate: (i: MenuItem) => void;
   onArchive: (i: MenuItem) => void;
+  onDelete: (i: MenuItem) => void;
 }) {
   if (loading) {
     return (
@@ -454,6 +455,7 @@ function GridView({ items, loading, onView, onEdit, onDuplicate, onArchive }: {
                 <CardAction icon={Pencil} label="Edit" onClick={() => onEdit(it)} />
                 <CardAction icon={Copy} label="Duplicate" onClick={() => onDuplicate(it)} />
                 <CardAction icon={Archive} label="Archive" onClick={() => onArchive(it)} />
+                <CardAction icon={Trash2} label="Delete" onClick={() => onDelete(it)} red />
               </div>
             </div>
             <button onClick={() => onView(it)} className="block w-full p-5 text-left">
@@ -481,10 +483,10 @@ function GridView({ items, loading, onView, onEdit, onDuplicate, onArchive }: {
   );
 }
 
-function CardAction({ icon: Icon, label, onClick }: { icon: any; label: string; onClick?: () => void }) {
+function CardAction({ icon: Icon, label, onClick, red }: { icon: any; label: string; onClick?: () => void; red?: boolean }) {
   return (
     <button onClick={(e) => { e.stopPropagation(); onClick?.(); }} title={label}
-      className="grid h-8 w-8 place-items-center rounded-lg bg-white text-gray-900 shadow-soft backdrop-blur transition hover:bg-black hover:text-white"
+      className={cn('grid h-8 w-8 place-items-center rounded-lg bg-white text-gray-900 shadow-soft backdrop-blur transition', red ? 'hover:bg-red-600 hover:text-white' : 'hover:bg-black hover:text-white')}
     >
       <Icon className="size-3.5" />
     </button>
