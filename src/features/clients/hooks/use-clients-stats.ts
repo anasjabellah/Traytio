@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Users, CheckCircle2, Wallet, UserPlus, ShoppingCart } from 'lucide-react';
+import { useCounter } from '@/shared/hooks/use-counter';
 import { getClientStats } from '@/features/clients/actions/get-client-stats';
 import { getClientActivity } from '@/features/clients/actions/get-client-activity';
 import type { ClientWithStats } from '@/features/clients/types';
@@ -13,23 +14,6 @@ export const SPARK_DEFAULTS: Record<string, number[]> = {
   down: [5, 4, 3, 4, 2, 3, 2],
   steady: [3, 3, 4, 4, 3, 4, 4],
 };
-
-export function useCounter(target: number, duration = 1200) {
-  const [v, setV] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    const start = performance.now();
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / duration);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setV(target * eased);
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
-  return v;
-}
 
 export function useClientsStats(clients: ClientWithStats[], totalClientsFromPagination: number) {
   const [stats, setStats] = useState<ClientStats | null>(null);

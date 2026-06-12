@@ -1,15 +1,13 @@
 'use client';
 
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { SensitiveValue, usePrivacyMode } from '@/components/privacy-mode';
 import { useCounter } from '@/shared/hooks/use-counter';
-import { formatCurrency } from '@/lib/utils';
+import { usePrivacyMode, SensitiveValue } from '@/components/privacy-mode';
+import { mad } from '@/features/dashboard/constants';
 
-const mad = (n: number) =>
-  new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(n);
-
-function Sparkline({ data, up }: { data: number[]; up: boolean }) {
+const Sparkline = memo(function Sparkline({ data, up }: { data: number[]; up: boolean }) {
   const w = 96, h = 32, pad = 2;
   const min = Math.min(...data), max = Math.max(...data);
   const pts = data.map((d, i) => {
@@ -23,31 +21,28 @@ function Sparkline({ data, up }: { data: number[]; up: boolean }) {
   return (
     <svg width={w} height={h} className="overflow-visible">
       <defs>
-        <linearGradient id={`sg-${up ? 'u' : 'd'}-ev`} x1="0" x2="0" y1="0" y2="1">
+        <linearGradient id={`sg-${up ? 'u' : 'd'}-ds`} x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor={stroke} stopOpacity="0.25" />
           <stop offset="100%" stopColor={stroke} stopOpacity="0" />
         </linearGradient>
       </defs>
-      <path d={fill} fill={`url(#sg-${up ? 'u' : 'd'}-ev)`} />
+      <path d={fill} fill={`url(#sg-${up ? 'u' : 'd'}-ds)`} />
       <path d={path} fill="none" stroke={stroke} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
-}
+});
 
-function KpiCard({ label, value, prefix, delta, trend, spark, icon: Icon, accent, delay, sensitive }: {
-  label: string; value: number; prefix?: string; delta: number; trend: 'up' | 'down';
-  spark: number[]; icon: React.ComponentType<{ className?: string }>; accent?: boolean; delay: number; sensitive: boolean;
-}) {
+const KpiCard = memo(function KpiCard({ label, value, prefix, delta, trend, spark, icon: Icon, accent, delay, sensitive }: any) {
   const counted = useCounter(value, 1400);
-  const display = prefix ? mad(Math.round(counted)) : Math.round(counted).toLocaleString('fr-FR');
-  const up = trend === 'up';
+  const display = prefix ? mad(Math.round(counted)) : Math.round(counted).toLocaleString("fr-FR");
+  const up = trend === "up";
   const { isPrivacyMode } = usePrivacyMode();
   return (
     <motion.div
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={`group relative overflow-hidden rounded-2xl border bg-card p-5 shadow-soft hover:shadow-lift transition-all ${accent ? 'border-gold' : 'border-border'}`}
+      className={`group relative overflow-hidden rounded-2xl border bg-card p-5 shadow-soft hover:shadow-lift transition-all ${accent ? "border-gold" : "border-border"}`}
     >
       {accent && (
         <div className="pointer-events-none absolute -top-16 -right-16 size-44 rounded-full bg-gradient-gold opacity-20 blur-2xl" />
@@ -59,30 +54,27 @@ function KpiCard({ label, value, prefix, delta, trend, spark, icon: Icon, accent
             <SensitiveValue hidden={sensitive && isPrivacyMode} className="text-gradient-charcoal">{display}</SensitiveValue>
           </div>
         </div>
-        <div className={`size-10 rounded-xl flex items-center justify-center ${accent ? 'bg-gradient-gold text-[var(--gold-foreground)]' : 'bg-foreground/[0.04] text-foreground'}`}>
+        <div className={`size-10 rounded-xl flex items-center justify-center ${accent ? "bg-gradient-gold text-[var(--gold-foreground)]" : "bg-foreground/[0.04] text-foreground"}`}>
           <Icon className="size-5" />
         </div>
       </div>
       <div className="mt-4 flex items-end justify-between gap-3">
-        <div className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md ${up ? 'text-emerald-700 bg-emerald-50' : 'text-rose-700 bg-rose-50'}`}>
+        <div className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md ${up ? "text-emerald-700 bg-emerald-50" : "text-rose-700 bg-rose-50"}`}>
           {up ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
-          {up ? '+' : ''}{delta}%
+          {delta > 0 ? "+" : ""}{delta}%
         </div>
         <Sparkline data={spark} up={up} />
       </div>
     </motion.div>
   );
-}
+});
 
-export function EventsStats({ kpis }: { kpis: Array<{
-  label: string; value: number; prefix?: string; delta: number; trend: 'up' | 'down';
-  spark: number[]; icon: React.ComponentType<{ className?: string }>; accent?: boolean; sensitive: boolean;
-}> }) {
+export const KpiGrid = memo(function KpiGrid({ kpis }: { kpis: Array<any> }) {
   return (
-    <div className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
       {kpis.map((k, i) => (
         <KpiCard key={k.label} {...k} delay={i * 0.05} />
       ))}
     </div>
   );
-}
+});

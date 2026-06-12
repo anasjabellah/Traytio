@@ -6,26 +6,10 @@ import type { Event } from '@/features/events/types';
 import { useNotificationStore } from '@/stores/notification-store';
 import { SPARK_DEFAULTS } from '@/features/events/constants';
 import { formatCurrency } from '@/lib/utils';
+import { useCounter } from '@/shared/hooks/use-counter';
 
 const mad = (n: number) =>
   new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(n);
-
-export function useCounter(target: number, duration = 1200) {
-  const [v, setV] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    const start = performance.now();
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / duration);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setV(target * eased);
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
-  return v;
-}
 
 export function useEventsStats(events: Event[]) {
   const today = useMemo(() => new Date(), []);
