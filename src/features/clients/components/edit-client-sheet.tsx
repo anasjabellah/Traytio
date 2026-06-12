@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ClientForm } from './client-form';
@@ -15,6 +15,21 @@ type EditClientSheetProps = {
 
 export function EditClientSheet({ open, onOpenChange, client, onSuccess }: EditClientSheetProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const defaultValues = useMemo(
+    () => ({
+      ...client,
+      email: client.email ?? undefined,
+      phone: client.phone ?? undefined,
+      address: client.address ?? undefined,
+      city: client.city ?? undefined,
+      postalCode: client.postalCode ?? undefined,
+      company: client.company ?? undefined,
+      siret: client.siret ?? undefined,
+      notes: client.notes ?? undefined,
+    }),
+    [client?.id],
+  );
 
   const handleUpdate = async (values: any) => {
     setIsSubmitting(true);
@@ -43,17 +58,7 @@ export function EditClientSheet({ open, onOpenChange, client, onSuccess }: EditC
         </SheetHeader>
         <ClientForm
           mode="edit"
-          defaultValues={{
-                ...client,
-                email: client.email ?? undefined,
-                phone: client.phone ?? undefined,
-                address: client.address ?? undefined,
-                city: client.city ?? undefined,
-                postalCode: client.postalCode ?? undefined,
-                company: client.company ?? undefined,
-                siret: client.siret ?? undefined,
-                notes: client.notes ?? undefined,
-              }}
+          defaultValues={defaultValues}
           onSubmit={handleUpdate}
           isLoading={isSubmitting}
         />

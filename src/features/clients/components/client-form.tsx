@@ -39,9 +39,10 @@ export function ClientForm({ defaultValues = {}, onSubmit, isLoading = false, mo
   });
 
   useEffect(() => {
-    console.log('[ClientForm] reset with defaultValues:', defaultValues);
-    reset(defaultValues);
-  }, [defaultValues, reset]);
+    if (mode === 'edit' && defaultValues?.name) {
+      reset(defaultValues);
+    }
+  }, [defaultValues?.name, reset]);
 
   const inputClass = "flex items-center gap-2 rounded-2xl border border-border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold";
   const inputInnerClass = "flex-1 bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground";

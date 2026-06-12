@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -66,19 +66,23 @@ export function EditClientDialog({ client, open, onOpenChange, onSuccess }: Edit
     }
   };
 
-  const defaultValues = fullClient
-    ? {
-        name: fullClient.name,
-        email: fullClient.email ?? undefined,
-        phone: fullClient.phone ?? undefined,
-        address: fullClient.address ?? undefined,
-        city: fullClient.city ?? undefined,
-        postalCode: fullClient.postalCode ?? undefined,
-        company: fullClient.company ?? undefined,
-        siret: fullClient.siret ?? undefined,
-        notes: fullClient.notes ?? undefined,
-      }
-    : undefined;
+  const defaultValues = useMemo(
+    () => fullClient
+      ? {
+          id: fullClient.id,
+          name: fullClient.name,
+          email: fullClient.email ?? undefined,
+          phone: fullClient.phone ?? undefined,
+          address: fullClient.address ?? undefined,
+          city: fullClient.city ?? undefined,
+          postalCode: fullClient.postalCode ?? undefined,
+          company: fullClient.company ?? undefined,
+          siret: fullClient.siret ?? undefined,
+          notes: fullClient.notes ?? undefined,
+        }
+      : undefined,
+    [fullClient],
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
