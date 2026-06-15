@@ -1,8 +1,9 @@
-"use server"
+﻿"use server"
 
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { createCommandeSchema } from "@/features/commandes/validations/create-commande-schema"
+import type { CommandeStatus, EventType } from "@prisma/client";
 
 export async function generateCommandeNumber(): Promise<string> {
   const organizationId = await getOrganizationId()
@@ -28,8 +29,8 @@ export async function createCommande(input: unknown) {
         organizationId,
         clientId: data.clientId,
         number: data.number,
-        status: data.status as any,
-        eventType: (data.eventType ?? undefined) as any,
+        status: data.status as CommandeStatus,
+        eventType: (data.eventType ?? undefined) as EventType | undefined,
         eventDate: data.eventDate ? new Date(data.eventDate) : undefined,
         guestCount: data.guestCount ?? undefined,
         location: data.location ?? undefined,
@@ -55,7 +56,7 @@ export async function createCommande(input: unknown) {
     })
 
     return { success: true, data: commande }
-  } catch (err: any) {
-    return { success: false, error: err?.message ?? "Failed to create commande" }
+  } catch (err: unknown) {
+    return { success: false, error: err instanceof Error ? err.message : "Failed to create commande" }
   }
 }

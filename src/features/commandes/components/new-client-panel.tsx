@@ -1,13 +1,12 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Crown, Check } from "lucide-react";
 import { PremiumField } from "./premium-field";
+import type { Client } from "@/features/commandes/types";
 
-type Client = any;
-
-export function NewClientPanel({ onClose, onCreate }: { onClose: () => void; onCreate: (c: NonNullable<Client>) => void }) {
+export function NewClientPanel({ onClose, onCreate }: { onClose: () => void; onCreate: (c: Client) => void }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -73,7 +72,7 @@ export function NewClientPanel({ onClose, onCreate }: { onClose: () => void; onC
                 id: "new-" + Date.now(),
                 name: name || "Nouveau client",
                 phone, email, vip, events: 0,
-              })
+              } as Client)
             }
             className="flex-1 rounded-full bg-foreground text-primary-foreground py-3 text-sm font-medium hover:shadow-gold transition-all inline-flex items-center justify-center gap-2"
           >

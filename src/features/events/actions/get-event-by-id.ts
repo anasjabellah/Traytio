@@ -1,4 +1,4 @@
-'use server';
+﻿'use server';
 
 import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
@@ -7,13 +7,8 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 
 export const getEventById = cache(async (id: string): Promise<ActionResponse<EventDetail>> => {
   try {
-    console.time('[PERF] getEventById total');
-
-    console.time('[PERF] getOrganizationId');
     const organizationId = await getOrganizationId();
-    console.timeEnd('[PERF] getOrganizationId');
 
-    console.time('[PERF] eventQuery');
     const eventData = await prisma.event.findUnique({
       where: { id, organizationId },
       select: {
@@ -34,14 +29,11 @@ export const getEventById = cache(async (id: string): Promise<ActionResponse<Eve
         clientId: true,
       },
     });
-    console.timeEnd('[PERF] eventQuery');
 
     if (!eventData) {
-      console.timeEnd('[PERF] getEventById total');
       return { success: false, error: 'Event not found' };
     }
 
-    console.time('[PERF] clientQuery');
     const [clientData, commandes] = await Promise.all([
       eventData.clientId
         ? prisma.client.findUnique({
@@ -62,9 +54,7 @@ export const getEventById = cache(async (id: string): Promise<ActionResponse<Eve
         take: 10,
       }),
     ]);
-    console.timeEnd('[PERF] clientQuery');
 
-    console.time('[PERF] dataProcessing');
     const result: EventDetail = {
       id: eventData.id,
       organizationId,
@@ -88,12 +78,9 @@ export const getEventById = cache(async (id: string): Promise<ActionResponse<Eve
         totalAmount: Number(c.totalAmount),
       })) ?? undefined,
     };
-    console.timeEnd('[PERF] dataProcessing');
 
-    console.timeEnd('[PERF] getEventById total');
     return { success: true, data: result };
   } catch (error: any) {
-    console.timeEnd('[PERF] getEventById total');
     return { success: false, error: error.message || 'An error occurred' };
   }
 });

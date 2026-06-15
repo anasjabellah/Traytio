@@ -1,14 +1,13 @@
-"use client"
+﻿"use client"
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MENU, PACKS, type MenuItem, type Cat, type SelectedItem } from "@/features/commandes/data/mock-data";
 import { getCommandeClients } from "@/features/commandes/actions/get-commande-clients";
-
-type Client = any;
+import type { Client } from "@/features/commandes/types";
 
 export function useCommandeForm() {
-  const [client, setClient] = useState<Client>(null);
+  const [client, setClient] = useState<Client | null>(null);
   const [showClientPanel, setShowClientPanel] = useState(false);
 
   const [eventName, setEventName] = useState("Mariage Lambert");

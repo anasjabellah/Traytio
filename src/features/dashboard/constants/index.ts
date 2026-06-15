@@ -1,5 +1,9 @@
-import { Plus, UserPlus, Utensils, PartyPopper, CalendarIcon } from 'lucide-react';
+﻿import { Plus, UserPlus, Utensils, PartyPopper, CalendarIcon } from 'lucide-react';
 import type { ComponentType } from 'react';
+import { formatMAD } from '@/shared/components/kpi-card';
+
+/** @deprecated Use `formatMAD` from `@/shared/components/kpi-card` instead. */
+export const mad = formatMAD;
 
 export const STATUS_STYLES: Record<string, string> = {
   "Confirm\u00e9e": "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50",
@@ -55,6 +59,3 @@ export const ACTIONS: ActionConfig[] = [
   { label: "\u00c9v\u00e9nements", icon: PartyPopper, to: "/dashboard/events" },
   { label: "Ouvrir calendrier", icon: CalendarIcon },
 ];
-
-export const mad = (n: number) =>
-  new Intl.NumberFormat("fr-MA", { style: "currency", currency: "MAD", maximumFractionDigits: 0 }).format(n);

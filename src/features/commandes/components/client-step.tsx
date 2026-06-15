@@ -1,12 +1,19 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, X, Crown } from "lucide-react";
+import type { Client } from "@/features/commandes/types";
 
-type Client = any;
-
-export function ClientStep({ client, setClient, onCreate, clients, isLoading }: { client: Client; setClient: (c: Client) => void; onCreate: () => void; clients: any[]; isLoading: boolean }) {
+export function ClientStep({
+  client, setClient, onCreate, clients, isLoading
+}: {
+  client: Client | null;
+  setClient: (c: Client | null) => void;
+  onCreate: () => void;
+  clients: Client[];
+  isLoading: boolean;
+}) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
 

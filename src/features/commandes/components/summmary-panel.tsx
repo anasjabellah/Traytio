@@ -1,9 +1,8 @@
-"use client"
+﻿"use client"
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Package } from "lucide-react";
-
-type Client = any;
+import type { Client } from "@/features/commandes/types";
 
 function Row({ label, value, muted, accent }: { label: string; value: number; muted?: boolean; accent?: string }) {
   return (
@@ -15,7 +14,7 @@ function Row({ label, value, muted, accent }: { label: string; value: number; mu
 }
 
 export function SummaryPanel(props: {
-  client: Client; eventName: string; eventDate: string; guests: number;
+  client: Client | null; eventName: string; eventDate: string; guests: number;
   packName?: string; selectedList: any[]; itemsSubtotal: number; extrasTotal: number;
   discountAmount: number; total: number; deposit: number; remaining: number;
   budget: number; budgetUsed: number; overBudget: boolean;
