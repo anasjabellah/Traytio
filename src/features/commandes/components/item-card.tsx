@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Minus, StickyNote } from "lucide-react";
-import { type MenuItem, type SelectedItem } from "@/features/commandes/data/mock-data";
+import { type SelectedItem } from "@/features/commandes/data/mock-data";
+import type { MenuItemDisplay } from "@/features/commandes/types";
 
 export function ItemCard({
   item, state, onToggle, onQty, onNote,
 }: {
-  item: MenuItem; state?: SelectedItem;
+  item: MenuItemDisplay; state?: SelectedItem;
   onToggle: () => void; onQty: (n: number) => void; onNote: (n: string) => void;
 }) {
   const qty = state?.qty || 0;
@@ -32,8 +33,12 @@ export function ItemCard({
         </span>
       )}
       <div className="flex items-start gap-3">
-        <div className="h-14 w-14 shrink-0 rounded-xl bg-surface-soft border border-border flex items-center justify-center text-3xl">
-          {item.emoji}
+        <div className="h-14 w-14 shrink-0 rounded-xl bg-surface-soft border border-border flex items-center justify-center text-3xl overflow-hidden">
+          {item.imageUrl ? (
+            <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
+          ) : (
+            item.emoji ?? "\u2022"
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-medium text-sm">{item.name}</div>

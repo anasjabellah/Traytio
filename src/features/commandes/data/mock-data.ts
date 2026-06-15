@@ -1,4 +1,4 @@
-export type Cat = "Food" | "Drinks" | "Desserts" | "Decoration" | "Extras";
+export type Cat = "Food" | "Drinks" | "Desserts" | "Decoration" | "Services" | "Divertissement" | "Extras";
 
 export type SelectedItem = { id: string; qty: number; note?: string };
 

@@ -25,6 +25,8 @@ export async function getCommandeMenus() {
                 category: true,
                 unitPrice: true,
                 unit: true,
+                notes: true,
+                imageUrl: true,
               },
             },
           },
@@ -44,6 +46,8 @@ export async function getCommandeMenus() {
         category: mi.menuItem.category,
         unitPrice: Number(mi.menuItem.unitPrice),
         unit: mi.menuItem.unit,
+        notes: mi.menuItem.notes,
+        imageUrl: mi.menuItem.imageUrl,
         defaultQty: mi.defaultQty,
       })),
     }))

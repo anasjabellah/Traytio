@@ -3,7 +3,7 @@
 import { FinancialCard } from "./financial-card";
 
 export function DepositStep({ depositPercent, setDepositPercent, total, deposit, remaining }: any) {
-  const presets = [20, 30, 50, 100];
+  const presets = [0, 20, 30, 50, 100];
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
