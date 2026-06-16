@@ -18,11 +18,11 @@ export const COMMANDE_STATUS_LABELS: Record<string, string> = {
 };
 
 export const COMMANDE_STATUS_STYLES: Record<string, string> = {
-  DRAFT: 'bg-gray-100 text-gray-700 ring-1 ring-gray-300/50',
-  QUOTED: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/50',
-  CONFIRMED: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50',
-  IN_PROGRESS: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200/50',
-  READY: 'bg-purple-50 text-purple-700 ring-1 ring-purple-200/50',
-  DELIVERED: 'bg-emerald-800 text-white ring-1 ring-emerald-900/50',
-  CANCELLED: 'bg-red-50 text-red-700 ring-1 ring-red-200/50',
+  DRAFT: 'bg-gray-100 text-gray-600 ring-1 ring-gray-200/60',
+  QUOTED: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/60',
+  CONFIRMED: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-300/60',
+  IN_PROGRESS: 'bg-amber-50 text-amber-700 ring-1 ring-amber-300/60',
+  READY: 'bg-violet-50 text-violet-700 ring-1 ring-violet-200/60',
+  DELIVERED: 'bg-emerald-700 text-white ring-1 ring-emerald-600/60',
+  CANCELLED: 'bg-red-50 text-red-700 ring-1 ring-red-200/60',
 };

@@ -2,7 +2,7 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import {
-  Eye, Pencil, Trash2,
+  Eye, Pencil, Trash2, Calendar, Users,
 } from 'lucide-react';
 import { COMMANDE_STATUS_LABELS, COMMANDE_STATUS_STYLES } from '@/features/commandes/constants';
 import type { Commande } from '@/features/commandes/types';
@@ -22,14 +22,9 @@ function ClientCell({ name }: { name: string | null }) {
   );
 }
 
-function EventCell({ name }: { name: string | null }) {
-  if (!name) return <span className="text-muted-foreground/30 text-sm">—</span>;
-  return <span className="text-sm text-foreground/70 truncate block">{name}</span>;
-}
-
 function TotalCell({ amount }: { amount: number }) {
   return (
-    <span className="text-sm font-semibold tabular-nums text-foreground">
+    <span className="text-sm font-bold tabular-nums text-foreground tracking-tight">
       {amount > 0 ? mad(amount) : '—'}
     </span>
   );
@@ -37,16 +32,32 @@ function TotalCell({ amount }: { amount: number }) {
 
 function StatusCell({ status }: { status: string }) {
   return (
-    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium inline-block ${COMMANDE_STATUS_STYLES[status] || 'bg-foreground/[0.05] text-muted-foreground'}`}>
+    <span className={`text-[11px] px-3 py-1 rounded-full font-semibold inline-block ${COMMANDE_STATUS_STYLES[status] || 'bg-foreground/[0.05] text-muted-foreground'}`}>
       {COMMANDE_STATUS_LABELS[status] || status}
     </span>
   );
 }
 
-function DateCell({ date }: { date: Date }) {
+function DateCell({ date }: { date: Date | null | undefined }) {
+  if (!date) return <span className="text-muted-foreground/30 text-sm">—</span>;
   return (
-    <span className="text-sm text-muted-foreground/70 whitespace-nowrap tabular-nums">
-      {new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' })}
+    <span className="text-sm text-muted-foreground/80 whitespace-nowrap tabular-nums">
+      {new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+    </span>
+  );
+}
+
+function GuestCell({ count }: { count: number | null }) {
+  if (!count) return <span className="text-muted-foreground/30 text-sm">—</span>;
+  return (
+    <span className="text-sm text-foreground/80 tabular-nums">{count}</span>
+  );
+}
+
+function AmountCell({ amount }: { amount: number }) {
+  return (
+    <span className={`text-sm tabular-nums ${amount > 0 ? 'text-foreground/80' : 'text-muted-foreground/30'}`}>
+      {amount > 0 ? mad(amount) : '—'}
     </span>
   );
 }
@@ -67,21 +78,24 @@ export const commandesColumns = (
     cell: ({ row }) => <ClientCell name={row.original.clientName} />,
   },
   {
-    id: 'event',
-    header: 'Événement',
-    cell: ({ row }) => <EventCell name={row.original.eventName} />,
+    id: 'eventDate',
+    header: 'Date événement',
+    cell: ({ row }) => (
+      <div className="flex items-center gap-1.5">
+        <Calendar className="size-3.5 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />
+        <DateCell date={row.original.eventDate} />
+      </div>
+    ),
   },
   {
-    id: 'menuName',
-    header: 'Pack/Menu',
-    cell: ({ row }) => {
-      const name = row.original.menuName;
-      return name ? (
-        <span className="text-sm text-foreground/70 truncate block">{name}</span>
-      ) : (
-        <span className="text-muted-foreground/30 text-sm">—</span>
-      );
-    },
+    id: 'guestCount',
+    header: 'Invités',
+    cell: ({ row }) => (
+      <div className="flex items-center gap-1.5">
+        <Users className="size-3.5 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />
+        <GuestCell count={row.original.guestCount} />
+      </div>
+    ),
   },
   {
     accessorKey: 'totalAmount',
@@ -89,23 +103,28 @@ export const commandesColumns = (
     cell: ({ row }) => <TotalCell amount={Number(row.getValue('totalAmount'))} />,
   },
   {
+    id: 'acompteAmount',
+    header: 'Acompte',
+    cell: ({ row }) => <AmountCell amount={Number(row.original.acompteAmount)} />,
+  },
+  {
+    id: 'remainingAmount',
+    header: 'Solde',
+    cell: ({ row }) => <AmountCell amount={Number(row.original.remainingAmount)} />,
+  },
+  {
     accessorKey: 'status',
     header: 'Statut',
     cell: ({ row }) => <StatusCell status={row.getValue('status')} />,
   },
   {
-    accessorKey: 'createdAt',
-    header: 'Créé le',
-    cell: ({ row }) => <DateCell date={row.getValue('createdAt') as Date} />,
-  },
-  {
     id: 'actions',
-    header: 'Actions',
+    header: '',
     cell: ({ row }) => {
       const cmd = row.original;
       const b = 'size-7 rounded-md hover:bg-muted/50 transition-all flex items-center justify-center text-muted-foreground/40 hover:text-foreground';
       return (
-        <div className="flex items-center justify-center gap-3" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
           <button className={b} title="Voir" onClick={() => onView(cmd)}>
             <Eye className="size-3.5" strokeWidth={1.8} />
           </button>

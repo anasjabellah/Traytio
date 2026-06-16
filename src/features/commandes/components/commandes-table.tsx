@@ -10,17 +10,18 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const COL_WIDTHS: Record<string, string> = {
-  number: '12%',
-  client: '18%',
-  event: '14%',
-  menuName: '12%',
-  totalAmount: '10%',
-  status: '10%',
-  createdAt: '12%',
+  number: '10%',
+  client: '14%',
+  eventDate: '12%',
+  guestCount: '8%',
+  totalAmount: '11%',
+  acompteAmount: '10%',
+  remainingAmount: '10%',
+  status: '11%',
   actions: '100px',
 };
 
-const CENTERED = new Set(['actions', 'totalAmount', 'status']);
+const CENTERED = new Set(['actions']);
 
 interface CommandesTableProps {
   data: Commande[];
@@ -100,7 +101,7 @@ export function CommandesTable({ data, loading, onView, onEdit, onDelete }: Comm
                 key={header.id}
                 colSpan={header.colSpan}
                 style={{ width: COL_WIDTHS[header.id] || 'auto' }}
-                className={`text-xs uppercase tracking-[0.15em] text-muted-foreground/80 font-medium px-2 py-2 whitespace-nowrap overflow-hidden ${CENTERED.has(header.id) ? 'text-center' : ''}`}
+                className={`text-xs uppercase tracking-[0.15em] text-muted-foreground/80 font-medium px-3 py-3 whitespace-nowrap overflow-hidden ${CENTERED.has(header.id) ? 'text-center' : ''}`}
               >
                 {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
               </TableHead>
@@ -122,7 +123,7 @@ export function CommandesTable({ data, loading, onView, onEdit, onDelete }: Comm
               <TableCell
                 key={cell.id}
                 style={{ width: COL_WIDTHS[cell.column.id] || 'auto' }}
-                className={`px-2 py-2.5 text-sm overflow-hidden ${CENTERED.has(cell.column.id) ? 'text-center' : ''}`}
+                className={`px-3 py-3 text-sm overflow-hidden ${CENTERED.has(cell.column.id) ? 'text-center' : ''}`}
                 onClick={(e) => {
                   if (cell.column.id === 'actions') e.stopPropagation();
                 }}
