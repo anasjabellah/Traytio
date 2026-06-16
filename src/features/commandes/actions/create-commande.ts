@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { createCommandeSchema } from "@/features/commandes/validations/create-commande-schema"
-import type { CommandeStatus, EventType } from "@prisma/client";
+import type { CommandeStatus, EventType, DiscountType } from "@prisma/client";
 
 export async function generateCommandeNumber(): Promise<string> {
   const organizationId = await getOrganizationId()
@@ -38,10 +38,22 @@ export async function createCommande(input: unknown) {
         menuName: data.menuName ?? undefined,
         pricePerPerson: data.pricePerPerson ?? undefined,
         totalAmount: data.totalAmount ?? 0,
-        notes: data.notes ?? undefined,
-        acompteAmount: 0,
+        transportFees: data.transportFees ?? undefined,
+        deliveryFees: data.deliveryFees ?? undefined,
+        equipmentFees: data.equipmentFees ?? undefined,
+        discountType: data.discountType as DiscountType | undefined,
+        discountValue: data.discountValue ?? undefined,
+        discountAmount: data.discountAmount ?? undefined,
+        acomptePercent: data.acomptePercent ?? 0,
+        acompteAmount: data.acompteAmount ?? 0,
         paidAmount: 0,
-        remainingAmount: data.totalAmount ?? 0,
+        remainingAmount: data.remainingAmount ?? (data.totalAmount ?? 0),
+        clientBudget: data.clientBudget ?? undefined,
+        contactName: data.contactName ?? undefined,
+        contactPhone: data.contactPhone ?? undefined,
+        notes: data.notes ?? undefined,
+        internalNotes: data.internalNotes ?? undefined,
+        clientNotes: data.clientNotes ?? undefined,
         items: {
           create: (data.items ?? []).map(item => ({
             name: item.name,
@@ -49,13 +61,34 @@ export async function createCommande(input: unknown) {
             unitPrice: item.unitPrice,
             totalPrice: item.totalPrice,
             menuItemId: item.menuItemId ?? undefined,
+            notes: item.notes ?? undefined,
           })),
         },
       },
-      include: { items: true, client: true },
+      include: { items: true, client: true, tasks: true },
     })
 
-    return { success: true, data: commande }
+    const serialized = {
+      ...commande,
+      totalAmount: Number(commande.totalAmount),
+      acompteAmount: Number(commande.acompteAmount),
+      paidAmount: Number(commande.paidAmount),
+      remainingAmount: Number(commande.remainingAmount),
+      clientBudget: commande.clientBudget ? Number(commande.clientBudget) : null,
+      discountAmount: commande.discountAmount ? Number(commande.discountAmount) : null,
+      discountValue: commande.discountValue ? Number(commande.discountValue) : null,
+      pricePerPerson: commande.pricePerPerson ? Number(commande.pricePerPerson) : null,
+      transportFees: commande.transportFees ? Number(commande.transportFees) : null,
+      deliveryFees: commande.deliveryFees ? Number(commande.deliveryFees) : null,
+      equipmentFees: commande.equipmentFees ? Number(commande.equipmentFees) : null,
+      items: (commande.items ?? []).map((item: any) => ({
+        ...item,
+        unitPrice: Number(item.unitPrice),
+        totalPrice: Number(item.totalPrice),
+      })),
+    }
+
+    return { success: true, data: serialized }
   } catch (err: unknown) {
     return { success: false, error: err instanceof Error ? err.message : "Failed to create commande" }
   }

@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { createCommandeSchema } from '@/features/commandes/validations/create-commande-schema';
 import type { ActionResponse } from '@/features/commandes/types';
-import type { CommandeStatus, EventType } from '@prisma/client';
+import type { CommandeStatus, EventType, DiscountType } from '@prisma/client';
 
 export async function updateCommande(id: string, input: unknown): Promise<ActionResponse<void>> {
   try {
@@ -16,7 +16,6 @@ export async function updateCommande(id: string, input: unknown): Promise<Action
     const organizationId = await getOrganizationId();
     const data = parsed.data;
 
-    // Verify ownership
     const existing = await prisma.commande.findFirst({
       where: { id, organizationId },
     });
@@ -38,10 +37,21 @@ export async function updateCommande(id: string, input: unknown): Promise<Action
         menuName: data.menuName ?? undefined,
         pricePerPerson: data.pricePerPerson ?? undefined,
         totalAmount: data.totalAmount ?? 0,
+        transportFees: data.transportFees ?? undefined,
+        deliveryFees: data.deliveryFees ?? undefined,
+        equipmentFees: data.equipmentFees ?? undefined,
+        discountType: data.discountType as DiscountType | undefined,
+        discountValue: data.discountValue ?? undefined,
+        discountAmount: data.discountAmount ?? undefined,
+        acomptePercent: data.acomptePercent ?? 0,
+        acompteAmount: data.acompteAmount ?? 0,
+        remainingAmount: data.remainingAmount ?? (data.totalAmount ?? 0),
+        clientBudget: data.clientBudget ?? undefined,
+        contactName: data.contactName ?? undefined,
+        contactPhone: data.contactPhone ?? undefined,
         notes: data.notes ?? undefined,
-        acompteAmount: 0,
-        paidAmount: 0,
-        remainingAmount: data.totalAmount ?? 0,
+        internalNotes: data.internalNotes ?? undefined,
+        clientNotes: data.clientNotes ?? undefined,
         items: data.items && data.items.length > 0 ? {
           deleteMany: {},
           create: data.items.map((item) => ({
@@ -50,6 +60,7 @@ export async function updateCommande(id: string, input: unknown): Promise<Action
             unitPrice: item.unitPrice,
             totalPrice: item.totalPrice,
             menuItemId: item.menuItemId ?? undefined,
+            notes: item.notes ?? undefined,
           })),
         } : undefined,
       },

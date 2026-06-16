@@ -1,58 +1,84 @@
-﻿"use client"
+"use client"
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { type SelectedItem } from "@/features/commandes/data/mock-data";
 import { getCommandeClients } from "@/features/commandes/actions/get-commande-clients";
 import { getCommandeMenus } from "@/features/commandes/actions/get-commande-menus";
 import { getCommandeAllMenuItems } from "@/features/commandes/actions/get-commande-all-menu-items";
-import { getCommandeClientEvents, type ClientEventSummary } from "@/features/commandes/actions/get-commande-client-events";
-import { generateCommandeNumber, createCommande } from "@/features/commandes/actions/create-commande";
-import type { Client, MenuItemDisplay } from "@/features/commandes/types";
+import { updateCommande } from "@/features/commandes/actions/update-commande";
+import type { Client, MenuItemDisplay, CommandeWithDetails } from "@/features/commandes/types";
 
-export function useCommandeForm() {
-  const [client, setClient] = useState<Client | null>(null);
+const EVENT_TYPE_MAP: Record<string, string> = {
+  WEDDING: "Mariage", CORPORATE: "Entreprise", BIRTHDAY: "Anniversaire",
+  ANNIVERSARY: "Mariage", HOLIDAY: "Cocktail", OTHER: "Privé",
+};
+
+const FR_TO_EN_EVENT_TYPE: Record<string, string> = {
+  "Mariage": "WEDDING",
+  "Entreprise": "CORPORATE",
+  "Anniversaire": "ANNIVERSARY",
+  "Fête": "BIRTHDAY",
+  "Vacances": "HOLIDAY",
+  "Autre": "OTHER",
+};
+
+export function useEditCommandeForm(commande: CommandeWithDetails) {
+  const [client, setClient] = useState<Client | null>({
+    id: commande.clientId,
+    name: commande.clientName ?? commande.client?.name ?? "",
+    phone: commande.clientPhone ?? commande.client?.phone ?? undefined,
+    email: commande.client?.email ?? undefined,
+  } as Client);
   const [showClientPanel, setShowClientPanel] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<ClientEventSummary | "new" | null>(null);
+  const [selectedEvent] = useState<"new">("new");
 
-  const [eventName, setEventName] = useState("Mariage Lambert");
-  const [eventType, setEventType] = useState("Mariage");
-  const [eventDate, setEventDate] = useState("2026-10-12");
-  const [startTime, setStartTime] = useState("18:30");
-  const [endTime, setEndTime] = useState("01:00");
-  const [location, setLocation] = useState("Château de Vaux-le-Vicomte");
-  const [guests, setGuests] = useState(80);
-  const [budget, setBudget] = useState(18000);
-  const [contactPerson, setContactPerson] = useState("");
-  const [contactPhone, setContactPhone] = useState("");
-  const [eventNotes, setEventNotes] = useState("");
+  const eventDateStr = commande.eventDate
+    ? new Date(commande.eventDate).toISOString().split("T")[0]
+    : "";
+  const startTimeStr = commande.eventDate
+    ? (() => { const d = new Date(commande.eventDate); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; })()
+    : "";
 
-  const [selectedPack, setSelectedPack] = useState<string | null>(null);
+  const [eventName, setEventName] = useState(commande.eventName ?? commande.client?.name ?? "");
+  const [eventType, setEventType] = useState(commande.eventType ? (EVENT_TYPE_MAP[commande.eventType] ?? commande.eventType) : "");
+  const [eventDate, setEventDate] = useState(eventDateStr);
+  const [startTime, setStartTime] = useState(startTimeStr);
+  const [endTime, setEndTime] = useState("");
+  const [location, setLocation] = useState(commande.location ?? "");
+  const [guests, setGuests] = useState(commande.guestCount ?? 80);
+  const [budget, setBudget] = useState(commande.clientBudget ?? 0);
+  const [contactPerson, setContactPerson] = useState(commande.contactName ?? "");
+  const [contactPhone, setContactPhone] = useState(commande.contactPhone ?? "");
+  const [eventNotes, setEventNotes] = useState(commande.notes ?? "");
+
+  const [selectedPack, setSelectedPack] = useState<string | null>(commande.menuId);
   const [selected, setSelected] = useState<Record<string, SelectedItem>>({});
   const [openCats, setOpenCats] = useState<Record<string, boolean>>({});
 
-  const [transport, setTransport] = useState(150);
-  const [delivery, setDelivery] = useState(80);
-  const [equipment, setEquipment] = useState(0);
+  const [transport, setTransport] = useState(commande.transportFees ?? 0);
+  const [delivery, setDelivery] = useState(commande.deliveryFees ?? 0);
+  const [equipment, setEquipment] = useState(commande.equipmentFees ?? 0);
   const [extraService, setExtraService] = useState(0);
 
-  const [discountType, setDiscountType] = useState<"percent" | "fixed">("percent");
-  const [discountValue, setDiscountValue] = useState(0);
+  const [discountType, setDiscountType] = useState<"percent" | "fixed">(
+    commande.discountType === "FIXED" ? "fixed" : "percent"
+  );
+  const [discountValue, setDiscountValue] = useState(commande.discountValue ?? 0);
 
-  const [depositPercent, setDepositPercent] = useState(0);
+  const [depositPercent, setDepositPercent] = useState(commande.acomptePercent ?? 0);
 
-  const [attachments, setAttachments] = useState<{ name: string; size: string }[]>([
-    { name: "brief-client.pdf", size: "284 KB" },
-  ]);
-  const [internalNotes, setInternalNotes] = useState("");
-  const [clientNotes, setClientNotes] = useState("");
-  const [tasks, setTasks] = useState([
-    { id: "t1", label: "Commander les fleurs (pivoines)", done: true },
-    { id: "t2", label: "Confirmer DJ pour 21h", done: false },
-    { id: "t3", label: "Préparer la pièce montée — vendredi", done: false },
-    { id: "t4", label: "Confirmer transport équipement", done: false },
-    { id: "t5", label: "Réserver les tables Golden Round", done: false },
-  ]);
+  const initTasks = (commande.tasks ?? []).map((t, i) => ({
+    id: t.id ?? `t${i}`,
+    label: t.title,
+    done: t.isDone,
+  }));
+  const [attachments, setAttachments] = useState<{ name: string; size: string }[]>(
+    (commande.attachments ?? []).map(a => ({ name: a.name, size: "" }))
+  );
+  const [internalNotes, setInternalNotes] = useState(commande.internalNotes ?? "");
+  const [clientNotes, setClientNotes] = useState(commande.clientNotes ?? "");
+  const [tasks, setTasks] = useState(initTasks);
 
   const { data: clients, isLoading: clientsLoading } = useQuery({
     queryKey: ["commande-clients"],
@@ -69,12 +95,22 @@ export function useCommandeForm() {
     queryFn: () => getCommandeAllMenuItems(),
   });
 
-  const clientId = client?.id ?? null;
-  const { data: clientEvents, isLoading: clientEventsLoading } = useQuery({
-    queryKey: ["commande-client-events", clientId],
-    queryFn: () => getCommandeClientEvents(clientId!),
-    enabled: !!clientId,
-  });
+  useEffect(() => {
+    if (!clients || !Array.isArray(clients)) return;
+    const found = (clients as Client[]).find(c => c.id === commande.clientId);
+    if (found) setClient(found);
+    else setClient({ id: commande.clientId, name: commande.clientName ?? "", phone: commande.clientPhone ?? undefined });
+  }, [clients, commande.clientId, commande.clientName, commande.clientPhone]);
+
+  useEffect(() => {
+    if (!commande.items?.length) return;
+    const initialSelected: Record<string, SelectedItem> = {};
+    commande.items.forEach(item => {
+      const id = item.menuItemId ?? item.name;
+      initialSelected[id] = { id, qty: item.quantity, note: item.notes ?? "" };
+    });
+    setSelected(initialSelected);
+  }, [commande.items]);
 
   const packs: Array<{ id: string; name: string; subtitle: string; price: number; items: string[]; accent: string }> = useMemo(() => {
     if (!rawMenus || !Array.isArray(rawMenus)) return [];
@@ -107,9 +143,6 @@ export function useCommandeForm() {
       const pack = (rawMenus as any[]).find((m: any) => m.id === selectedPack);
       if (!pack) return [];
       const items = ((pack as any).items ?? []) as any[];
-      if (typeof window !== "undefined") {
-        console.log("[commande-form] mode: MENU_ITEMS | selectedMenuId:", selectedPack, "| count:", items.length);
-      }
       return items.map((i: any) => {
         const cat = CATEGORY_MAP[i.category] ?? "Extras";
         return {
@@ -125,9 +158,6 @@ export function useCommandeForm() {
     }
 
     if (!allMenuItems || !Array.isArray(allMenuItems)) return [];
-    if (typeof window !== "undefined") {
-      console.log("[commande-form] mode: ALL_ITEMS | selectedMenuId: null | count:", allMenuItems.length);
-    }
     return allMenuItems.map((i: any) => {
       const cat = CATEGORY_MAP[i.category] ?? "Extras";
       return {
@@ -176,65 +206,16 @@ export function useCommandeForm() {
     setSelected(next);
   };
 
-  const EVENT_TYPE_MAP: Record<string, string> = {
-    WEDDING: "Mariage", CORPORATE: "Entreprise", BIRTHDAY: "Anniversaire",
-    ANNIVERSARY: "Mariage", HOLIDAY: "Cocktail", OTHER: "Privé",
-  };
-
-  const FR_TO_EN_EVENT_TYPE: Record<string, string> = {
-    "Mariage": "WEDDING",
-    "Entreprise": "CORPORATE",
-    "Anniversaire": "ANNIVERSARY",
-    "Fête": "BIRTHDAY",
-    "Vacances": "HOLIDAY",
-    "Autre": "OTHER",
-  };
-
   const handleClientChange = useCallback((c: Client | null) => {
     setClient(c);
-    setSelectedEvent(null);
-    if (!c) {
-      setEventName(""); setEventType(""); setEventDate(""); setStartTime("");
-      setEndTime(""); setLocation(""); setGuests(80); setBudget(0);
-      setContactPerson(""); setContactPhone(""); setEventNotes("");
-    }
-  }, []);
-
-  const handleSelectEvent = useCallback((event: ClientEventSummary) => {
-    setSelectedEvent(event);
-    setEventName(event.name);
-    setEventType(EVENT_TYPE_MAP[event.type] ?? event.type);
-    const start = new Date(event.startDate);
-    setEventDate(start.toISOString().split("T")[0]);
-    setStartTime(`${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")}`);
-    if (event.endDate) {
-      const end = new Date(event.endDate);
-      setEndTime(`${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`);
-    } else {
-      setEndTime("");
-    }
-    setLocation(event.location ?? "");
-    setGuests(event.guestCount ?? 80);
-    setBudget(event.budget ? Number(event.budget) : 0);
-    setContactPerson(event.contactPerson ?? "");
-    setContactPhone(event.contactPhone ?? "");
-    setEventNotes(event.notes ?? "");
-  }, []);
-
-  const handleCreateNewEvent = useCallback(() => {
-    setSelectedEvent("new");
-    setEventName(""); setEventType(""); setEventDate(""); setStartTime("");
-    setEndTime(""); setLocation(""); setGuests(80); setBudget(0);
-    setContactPerson(""); setContactPhone(""); setEventNotes("");
   }, []);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = useCallback(async () => {
+  const handleUpdate = useCallback(async () => {
     if (!client) return { success: false as const, error: "Aucun client sélectionné" };
     setIsSubmitting(true);
     try {
-      const number = await generateCommandeNumber();
       const discountTypeDb = discountType === "percent" ? "PERCENTAGE" : "FIXED";
       const eventDateTime = eventDate && startTime ? `${eventDate}T${startTime}:00` : eventDate || null;
       const packName = selectedPack ? packs.find(p => p.id === selectedPack)?.name ?? null : null;
@@ -245,8 +226,8 @@ export function useCommandeForm() {
         totalPrice: s.item.price * s.qty,
         menuItemId: s.id,
       }));
-      const result = await createCommande({
-        number,
+      const result = await updateCommande(commande.id, {
+        number: commande.number,
         clientId: client.id,
         eventType: (eventType ? FR_TO_EN_EVENT_TYPE[eventType] ?? null : null),
         eventDate: eventDateTime,
@@ -271,14 +252,14 @@ export function useCommandeForm() {
         notes: eventNotes || null,
         internalNotes: internalNotes || null,
         clientNotes: clientNotes || null,
-        status: "DRAFT",
+        status: commande.status as any,
         items,
       });
       return result;
     } finally {
       setIsSubmitting(false);
     }
-  }, [client, discountType, eventDate, startTime, selectedPack, packs, selectedList, eventType, guests, location, total, transport, delivery, equipment, discountValue, discountAmount, depositPercent, deposit, remaining, budget, contactPerson, contactPhone, eventNotes, internalNotes, clientNotes]);
+  }, [client, commande.id, commande.number, commande.status, discountType, eventDate, startTime, selectedPack, packs, selectedList, eventType, guests, location, total, transport, delivery, equipment, discountValue, discountAmount, depositPercent, deposit, remaining, budget, contactPerson, contactPhone, eventNotes, internalNotes, clientNotes]);
 
   const dateHash = eventDate.split("-").reduce((a, b) => a + parseInt(b, 10), 0);
   const dateAvailable = dateHash % 3 !== 0;
@@ -299,7 +280,7 @@ export function useCommandeForm() {
     tasks, setTasks,
   };
 
-  const showEventForm = selectedEvent !== null;
+  const showEventForm = true;
 
   const derived = {
     selectedList, itemsSubtotal, extrasTotal, preDiscount,
@@ -308,7 +289,9 @@ export function useCommandeForm() {
 
   const handlers = {
     setQty, setNote, toggleItem, applyPack,
-    handleClientChange, handleSelectEvent, handleCreateNewEvent,
+    handleClientChange,
+    handleSelectEvent: undefined as any,
+    handleCreateNewEvent: undefined as any,
   };
 
   return {
@@ -316,8 +299,8 @@ export function useCommandeForm() {
     clients: Array.isArray(clients) ? clients : [],
     isClientsLoading: clientsLoading,
     selectedEvent, showEventForm,
-    clientEvents: Array.isArray(clientEvents) ? clientEvents : [],
-    clientEventsLoading,
-    isSubmitting, handleSubmit,
+    clientEvents: [],
+    clientEventsLoading: false,
+    isSubmitting, handleSubmit: handleUpdate,
   };
 }

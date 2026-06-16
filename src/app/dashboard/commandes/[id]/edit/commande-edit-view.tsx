@@ -1,197 +1,99 @@
 "use client"
 
-import { useState } from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { ArrowLeft, Save, Loader2, ShoppingBag } from "lucide-react";
-import { updateCommande } from "@/features/commandes/actions/update-commande";
-import { COMMANDE_STATUS_LABELS } from "@/features/commandes/constants";
+import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import { Lock, StickyNote } from "lucide-react";
+import { NewClientPanel } from "@/features/commandes/components/new-client-panel";
+import { useEditCommandeForm } from "@/features/commandes/hooks/use-edit-commande-form";
+import { PageHeader } from "@/features/commandes/components/page-header";
+import { StepCard } from "@/features/commandes/components/step-card";
+import { ClientStep } from "@/features/commandes/components/client-step";
+import { EventStep } from "@/features/commandes/components/event-step";
+import { PackStep } from "@/features/commandes/components/pack-step";
+import { BuilderStep } from "@/features/commandes/components/builder-step";
+import { ExtrasStep } from "@/features/commandes/components/extras-step";
+import { DiscountStep } from "@/features/commandes/components/discount-step";
+import { DepositStep } from "@/features/commandes/components/deposit-step";
+import { AttachmentsStep } from "@/features/commandes/components/attachments-step";
+import { TasksStep } from "@/features/commandes/components/tasks-step";
+import { SummaryPanel } from "@/features/commandes/components/summmary-panel";
+import { ActionBar } from "@/features/commandes/components/action-bar";
 import type { CommandeWithDetails } from "@/features/commandes/types";
-
-const STATUS_KEYS = Object.keys(COMMANDE_STATUS_LABELS);
 
 export default function CommandeEditView({ commande }: { commande: CommandeWithDetails }) {
   const router = useRouter();
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const form = useEditCommandeForm(commande);
+  const { state, derived, handlers, dateAvailable, packs, menuItems, clients, isClientsLoading, showEventForm, isSubmitting, handleSubmit } = form;
+  const { client, showClientPanel, setShowClientPanel, eventName, setEventName, eventType, setEventType, eventDate, setEventDate, startTime, setStartTime, endTime, setEndTime, location, setLocation, guests, setGuests, budget, setBudget, contactPerson, setContactPerson, contactPhone, setContactPhone, eventNotes, setEventNotes, selectedPack, setSelectedPack, selected, setSelected, openCats, setOpenCats, transport, setTransport, delivery, setDelivery, equipment, setEquipment, extraService, setExtraService, discountType, setDiscountType, discountValue, setDiscountValue, depositPercent, setDepositPercent, attachments, setAttachments, internalNotes, setInternalNotes, clientNotes, setClientNotes, tasks, setTasks } = state;
+  const { selectedList, itemsSubtotal, extrasTotal, discountAmount, total, deposit, remaining, budgetUsed, overBudget } = derived;
 
-  const [form, setForm] = useState({
-    number: commande.number,
-    status: commande.status,
-    eventDate: commande.eventDate ? new Date(commande.eventDate).toISOString().split("T")[0] : "",
-    guestCount: commande.guestCount ?? "",
-    location: commande.location ?? "",
-    totalAmount: commande.totalAmount,
-    notes: commande.notes ?? "",
-  });
-
-  const handleChange = (field: string, value: string | number) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    setError(null);
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    setError(null);
-    try {
-      const resp = await updateCommande(commande.id, {
-        number: form.number,
-        clientId: commande.clientId,
-        status: form.status,
-        eventDate: form.eventDate || null,
-        guestCount: form.guestCount ? Number(form.guestCount) : null,
-        location: form.location || null,
-        totalAmount: Number(form.totalAmount),
-        notes: form.notes || null,
-      });
-      if (resp.success) {
-        router.push(`/dashboard/commandes/${commande.id}`);
-        router.refresh();
-      } else {
-        setError(resp.error ?? "Erreur lors de la sauvegarde");
-      }
-    } catch (e: any) {
-      setError(e.message ?? "Erreur inattendue");
-    } finally {
-      setSaving(false);
+  const onUpdateCommande = useCallback(async () => {
+    const result = await handleSubmit();
+    if (result.success) {
+      toast.success("Commande mise à jour avec succès");
+      router.push(`/dashboard/commandes/${commande.id}`);
+    } else {
+      toast.error(result.error ?? "Erreur lors de la mise à jour de la commande");
     }
-  };
+  }, [handleSubmit, router, commande.id]);
 
   return (
-    <div className="min-h-screen bg-[var(--surface-soft)] text-foreground">
-      <div className="pointer-events-none fixed inset-0 bg-gradient-mesh opacity-60" />
-      <div className="pointer-events-none fixed inset-x-0 top-0 h-[420px] bg-radiance" />
+    <main className="min-h-screen bg-background text-foreground">
+      <div className="relative pt-6 pb-44">
+        <div className="absolute inset-x-0 top-0 h-[420px] bg-gradient-mesh opacity-50 pointer-events-none" />
+        <div className="relative mx-auto max-w-[1400px] px-6">
+          <PageHeader title={<>Commande <span className="italic text-gradient-gold">#{commande.number}</span></>} description="Modifiez les informations de la commande ci-dessous." />
+          <div className="mt-10 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
+            <div className="space-y-6">
+              <StepCard step={1} title="Client" subtitle="Sélectionnez ou créez un client">
+                <ClientStep client={client} setClient={handlers.handleClientChange} onCreate={() => setShowClientPanel(true)} clients={clients} isLoading={isClientsLoading} />
+              </StepCard>
 
-      <div className="relative mx-auto max-w-[700px] px-6 py-8 lg:px-10">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
-            <Link
-              href={`/dashboard/commandes/${commande.id}`}
-              className="size-8 rounded-lg border border-border bg-card flex items-center justify-center hover:bg-foreground/[0.04] transition-colors shadow-soft"
-            >
-              <ArrowLeft className="size-3.5 text-muted-foreground" />
-            </Link>
-            <ShoppingBag className="size-3 text-[var(--gold-deep)]" />
-            <span>Modifier la commande</span>
-          </div>
-
-          <h1 className="font-display text-4xl lg:text-5xl text-gradient-charcoal leading-[1.05] mb-2">
-            {commande.number}
-          </h1>
-          <p className="text-sm text-muted-foreground mb-8">
-            Modifiez les informations de la commande ci-dessous.
-          </p>
-
-          <div className="rounded-2xl border border-border bg-card shadow-soft p-6 space-y-6">
-            {error && (
-              <div className="rounded-xl bg-red-50 text-red-700 text-sm px-4 py-2.5">
-                {error}
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Statut">
-                <select
-                  value={form.status}
-                  onChange={(e) => handleChange("status", e.target.value)}
-                  className="w-full h-11 rounded-xl border border-border bg-surface-soft px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A94A]/20 focus:border-[#D4A94A]"
-                >
-                  {STATUS_KEYS.map((key) => (
-                    <option key={key} value={key}>{COMMANDE_STATUS_LABELS[key]}</option>
-                  ))}
-                </select>
-              </Field>
-
-              <Field label="Date de l'événement">
-                <input
-                  type="date"
-                  value={form.eventDate}
-                  onChange={(e) => handleChange("eventDate", e.target.value)}
-                  className="w-full h-11 rounded-xl border border-border bg-surface-soft px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A94A]/20 focus:border-[#D4A94A]"
-                />
-              </Field>
-
-              <Field label="Nombre d'invités">
-                <input
-                  type="number"
-                  value={form.guestCount}
-                  onChange={(e) => handleChange("guestCount", e.target.value)}
-                  placeholder="0"
-                  className="w-full h-11 rounded-xl border border-border bg-surface-soft px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A94A]/20 focus:border-[#D4A94A]"
-                />
-              </Field>
-
-              <Field label="Lieu">
-                <input
-                  type="text"
-                  value={form.location}
-                  onChange={(e) => handleChange("location", e.target.value)}
-                  placeholder="Lieu de l'événement"
-                  className="w-full h-11 rounded-xl border border-border bg-surface-soft px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A94A]/20 focus:border-[#D4A94A]"
-                />
-              </Field>
-
-              <Field label="Montant total (MAD)">
-                <input
-                  type="number"
-                  value={form.totalAmount}
-                  onChange={(e) => handleChange("totalAmount", Number(e.target.value))}
-                  placeholder="0"
-                  className="w-full h-11 rounded-xl border border-border bg-surface-soft px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A94A]/20 focus:border-[#D4A94A]"
-                />
-              </Field>
+              {showEventForm && (
+                <StepCard step={2} title="Informations de l'événement" subtitle="Tous les détails clés en un coup d'œil">
+                  <EventStep eventName={eventName} setEventName={setEventName} eventType={eventType} setEventType={setEventType} eventDate={eventDate} setEventDate={setEventDate} startTime={startTime} setStartTime={setStartTime} endTime={endTime} setEndTime={setEndTime} location={location} setLocation={setLocation} guests={guests} setGuests={setGuests} budget={budget} setBudget={setBudget} contactPerson={contactPerson} setContactPerson={setContactPerson} contactPhone={contactPhone} setContactPhone={setContactPhone} eventNotes={eventNotes} setEventNotes={setEventNotes} dateAvailable={dateAvailable} />
+                </StepCard>
+              )}
+              <StepCard step={3} title="Pack template" subtitle="Optionnel — démarrez plus vite">
+                <PackStep packs={packs} selectedPack={selectedPack} onSelect={handlers.applyPack} />
+              </StepCard>
+              <StepCard step={4} title="Event Builder" subtitle="Composez chaque catégorie de l'événement" highlight>
+                <BuilderStep menuItems={menuItems} selected={selected} openCats={openCats} setOpenCats={setOpenCats} setQty={handlers.setQty} setNote={handlers.setNote} toggleItem={handlers.toggleItem} />
+              </StepCard>
+              <StepCard step={5} title="Frais supplémentaires" subtitle="Transport, location et services">
+                <ExtrasStep transport={transport} setTransport={setTransport} delivery={delivery} setDelivery={setDelivery} equipment={equipment} setEquipment={setEquipment} extraService={extraService} setExtraService={setExtraService} />
+              </StepCard>
+              <StepCard step={6} title="Remise" subtitle="Pourcentage ou montant fixe">
+                <DiscountStep discountType={discountType} setDiscountType={setDiscountType} discountValue={discountValue} setDiscountValue={setDiscountValue} />
+              </StepCard>
+              <StepCard step={7} title="Acompte" subtitle="Calculé sur le total final">
+                <DepositStep depositPercent={depositPercent} setDepositPercent={setDepositPercent} total={total} deposit={deposit} remaining={remaining} />
+              </StepCard>
+              <StepCard step={8} title="Pièces jointes" subtitle="Brief, plan de salle, contrats">
+                <AttachmentsStep attachments={attachments} setAttachments={setAttachments} />
+              </StepCard>
+              <StepCard step={9} title="Notes internes" subtitle="Visible uniquement par votre équipe" icon={<Lock className="h-3.5 w-3.5" />}>
+                <textarea value={internalNotes} onChange={(e) => setInternalNotes(e.target.value)} placeholder="Notes équipe, instructions cuisine, logistique…" className="w-full min-h-[110px] rounded-2xl border border-border bg-surface-soft px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold transition-all resize-none" />
+              </StepCard>
+              <StepCard step={10} title="Notes client" subtitle="Apparaîtront sur le devis" icon={<StickyNote className="h-3.5 w-3.5" />}>
+                <textarea value={clientNotes} onChange={(e) => setClientNotes(e.target.value)} placeholder="Mot personnel, conditions, conseils dégustation…" className="w-full min-h-[110px] rounded-2xl border border-border bg-surface-soft px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold transition-all resize-none" />
+              </StepCard>
+              <StepCard step={11} title="Tâches" subtitle="Checklist opérationnelle de l'événement">
+                <TasksStep tasks={tasks} setTasks={setTasks} />
+              </StepCard>
             </div>
-
-            <Field label="Notes">
-              <textarea
-                value={form.notes}
-                onChange={(e) => handleChange("notes", e.target.value)}
-                placeholder="Notes générales..."
-                className="w-full min-h-[100px] rounded-xl border border-border bg-surface-soft px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A94A]/20 focus:border-[#D4A94A] resize-none"
-              />
-            </Field>
-
-            <div className="flex items-center gap-3 pt-2">
-              <Link
-                href={`/dashboard/commandes/${commande.id}`}
-                className="flex-1 h-11 rounded-xl border border-border text-sm font-medium hover:bg-muted/50 transition-colors flex items-center justify-center"
-              >
-                Annuler
-              </Link>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex-1 h-11 rounded-xl bg-foreground text-background text-sm font-medium hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {saving ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Save className="size-4" />
-                )}
-                {saving ? "Sauvegarde..." : "Enregistrer"}
-              </button>
+            <div className="lg:sticky lg:top-24 lg:self-start">
+              <SummaryPanel client={client} eventName={eventName} eventDate={eventDate} guests={guests} packName={packs.find((p) => p.id === selectedPack)?.name} selectedList={selectedList} itemsSubtotal={itemsSubtotal} extrasTotal={extrasTotal} discountAmount={discountAmount} total={total} deposit={deposit} remaining={remaining} budget={budget} budgetUsed={budgetUsed} overBudget={overBudget} />
             </div>
           </div>
-
-          <footer className="mt-16 mb-6 flex items-center justify-between text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <span className="inline-block size-1.5 rounded-full bg-emerald-500" />
-              Tous les services opérationnels
-            </div>
-            <div>© TUR — Suite traiteur premium</div>
-          </footer>
-        </motion.div>
+        </div>
       </div>
-    </div>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">{label}</div>
-      {children}
-    </div>
+      <ActionBar total={total} onSubmit={onUpdateCommande} isSubmitting={isSubmitting} submitLabel="Mettre à jour la commande" submittingLabel="Sauvegarde..." />
+      <AnimatePresence>
+        {showClientPanel && <NewClientPanel onClose={() => setShowClientPanel(false)} onCreate={(c) => { handlers.handleClientChange(c); setShowClientPanel(false); }} />}
+      </AnimatePresence>
+    </main>
   );
 }

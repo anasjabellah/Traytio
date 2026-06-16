@@ -1,23 +1,23 @@
 "use client"
 
 import { motion } from "framer-motion";
-import { Save, FileText, Send, Check } from "lucide-react";
+import { Save, FileText, Send, Check, Loader2 } from "lucide-react";
 
-function BarBtn({ icon, label, primary, ghost }: { icon: React.ReactNode; label: string; primary?: boolean; ghost?: boolean }) {
+function BarBtn({ icon, label, primary, ghost, onClick, disabled }: { icon: React.ReactNode; label: string; primary?: boolean; ghost?: boolean; onClick?: () => void; disabled?: boolean }) {
   return (
-    <button className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium transition-all ${
+    <button onClick={onClick} disabled={disabled} className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium transition-all ${
       primary
         ? "bg-gradient-gold text-gold-foreground hover:shadow-gold"
         : ghost
         ? "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
         : "bg-foreground text-primary-foreground hover:shadow-gold"
-    }`}>
+    } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
       {icon} <span className="hidden md:inline">{label}</span>
     </button>
   );
 }
 
-export function ActionBar({ total }: { total: number }) {
+export function ActionBar({ total, onSubmit, isSubmitting, submitLabel, submittingLabel }: { total: number; onSubmit?: () => void; isSubmitting?: boolean; submitLabel?: string; submittingLabel?: string }) {
   return (
     <motion.div
       initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
@@ -40,7 +40,13 @@ export function ActionBar({ total }: { total: number }) {
           <BarBtn icon={<Save className="h-3.5 w-3.5" />} label="Brouillon" ghost />
           <BarBtn icon={<FileText className="h-3.5 w-3.5" />} label="Devis" />
           <BarBtn icon={<Send className="h-3.5 w-3.5" />} label="WhatsApp" ghost />
-          <BarBtn icon={<Check className="h-3.5 w-3.5" />} label="Créer la commande" primary />
+          <BarBtn
+            icon={isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+            label={isSubmitting ? submittingLabel ?? "Création..." : submitLabel ?? "Créer la commande"}
+            primary
+            onClick={onSubmit}
+            disabled={isSubmitting}
+          />
         </div>
       </div>
     </motion.div>

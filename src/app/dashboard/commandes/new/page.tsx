@@ -1,5 +1,8 @@
 "use client"
 
+import { useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, StickyNote, Plus } from "lucide-react";
 import { useCommandeForm } from "@/features/commandes/hooks/use-commande-form";
@@ -20,10 +23,21 @@ import { SummaryPanel } from "@/features/commandes/components/summmary-panel";
 import { ActionBar } from "@/features/commandes/components/action-bar";
 
 function NouvelleCommandePage() {
+  const router = useRouter();
   const form = useCommandeForm();
-  const { state, derived, handlers, dateAvailable, packs, menuItems, clients, isClientsLoading, selectedEvent, showEventForm, clientEvents, clientEventsLoading } = form;
+  const { state, derived, handlers, dateAvailable, packs, menuItems, clients, isClientsLoading, selectedEvent, showEventForm, clientEvents, clientEventsLoading, isSubmitting, handleSubmit } = form;
   const { client, showClientPanel, setShowClientPanel, eventName, setEventName, eventType, setEventType, eventDate, setEventDate, startTime, setStartTime, endTime, setEndTime, location, setLocation, guests, setGuests, budget, setBudget, contactPerson, setContactPerson, contactPhone, setContactPhone, eventNotes, setEventNotes, selectedPack, setSelectedPack, selected, setSelected, openCats, setOpenCats, transport, setTransport, delivery, setDelivery, equipment, setEquipment, extraService, setExtraService, discountType, setDiscountType, discountValue, setDiscountValue, depositPercent, setDepositPercent, attachments, setAttachments, internalNotes, setInternalNotes, clientNotes, setClientNotes, tasks, setTasks } = state;
   const { selectedList, itemsSubtotal, extrasTotal, discountAmount, total, deposit, remaining, budgetUsed, overBudget } = derived;
+
+  const onCreateCommande = useCallback(async () => {
+    const result = await handleSubmit();
+    if (result.success && result.data) {
+      toast.success("Commande créée avec succès");
+      router.push(`/dashboard/commandes/${result.data.id}`);
+    } else {
+      toast.error(result.error ?? "Erreur lors de la création de la commande");
+    }
+  }, [handleSubmit, router]);
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -100,7 +114,7 @@ function NouvelleCommandePage() {
           </div>
         </div>
       </div>
-      <ActionBar total={total} />
+      <ActionBar total={total} onSubmit={onCreateCommande} isSubmitting={isSubmitting} />
       <AnimatePresence>
         {showClientPanel && <NewClientPanel onClose={() => setShowClientPanel(false)} onCreate={(c) => { handlers.handleClientChange(c); setShowClientPanel(false); }} />}
       </AnimatePresence>
