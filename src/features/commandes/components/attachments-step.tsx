@@ -99,6 +99,16 @@ export function AttachmentsStep({ attachments, setAttachments }: { attachments: 
   const previewFile = previewIdx !== null ? attachments[previewIdx] : null;
   const previewUrl = previewIdx !== null ? viewUrls[previewIdx] : null;
 
+  const getAttachmentKey = (a: File | PersistedAttachment, index: number): string => {
+    if (a instanceof File) {
+      return `file-${a.name}-${a.size}-${a.lastModified}`;
+    }
+    const pa = a as PersistedAttachment;
+    if (pa.id) return `persisted-${pa.id}`;
+    if (pa.url) return `persisted-${pa.url}`;
+    return `persisted-${pa.name}-${index}`;
+  };
+
   return (
     <div className="space-y-3">
       <div
@@ -126,7 +136,7 @@ export function AttachmentsStep({ attachments, setAttachments }: { attachments: 
             const canView = img || pdf || (!(a instanceof File) && !!viewUrls[i]);
             return (
               <motion.div
-                key={a instanceof File ? a.name + i : (a as PersistedAttachment).id}
+                key={getAttachmentKey(a, i)}
                 initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                 className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3"
               >

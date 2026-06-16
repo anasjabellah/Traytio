@@ -462,6 +462,7 @@ export default function CommandesPage() {
                 data={filteredByEventType}
                 loading={isLoading}
                 onView={handleView}
+                onEdit={handleEdit}
               />
             )}
           </div>
