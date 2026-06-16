@@ -7,6 +7,7 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 export async function getCommandeById(id: string): Promise<ActionResponse<CommandeWithDetails>> {
   try {
     const organizationId = await getOrganizationId();
+    console.log("getCommandeById — id:", id, "organizationId:", organizationId);
 
     const commande = await prisma.commande.findFirst({
       where: { id, organizationId },
@@ -30,6 +31,7 @@ export async function getCommandeById(id: string): Promise<ActionResponse<Comman
     });
 
     if (!commande) {
+      console.log("getCommandeById — commande not found for id:", id, "organizationId:", organizationId);
       return { success: false, error: 'Commande not found' };
     }
 

@@ -73,8 +73,8 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
     label: t.title,
     done: t.isDone,
   }));
-  const [attachments, setAttachments] = useState<{ name: string; size: string }[]>(
-    (commande.attachments ?? []).map(a => ({ name: a.name, size: "" }))
+  const [attachments, setAttachments] = useState<any[]>(
+    (commande.attachments ?? []).map(a => ({ name: a.name, size: "", url: a.url, type: a.type }))
   );
   const [internalNotes, setInternalNotes] = useState(commande.internalNotes ?? "");
   const [clientNotes, setClientNotes] = useState(commande.clientNotes ?? "");

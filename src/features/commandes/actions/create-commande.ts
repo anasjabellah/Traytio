@@ -65,7 +65,7 @@ export async function createCommande(input: unknown) {
           })),
         },
       },
-      include: { items: true, client: true, tasks: true },
+      include: { items: true, tasks: true },
     })
 
     const serialized = {

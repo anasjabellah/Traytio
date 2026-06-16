@@ -8,6 +8,7 @@ import { getCommandeMenus } from "@/features/commandes/actions/get-commande-menu
 import { getCommandeAllMenuItems } from "@/features/commandes/actions/get-commande-all-menu-items";
 import { getCommandeClientEvents, type ClientEventSummary } from "@/features/commandes/actions/get-commande-client-events";
 import { generateCommandeNumber, createCommande } from "@/features/commandes/actions/create-commande";
+import { createCommandeAttachment } from "@/features/commandes/actions/create-commande-attachment";
 import type { Client, MenuItemDisplay } from "@/features/commandes/types";
 
 export function useCommandeForm() {
@@ -21,8 +22,8 @@ export function useCommandeForm() {
   const [startTime, setStartTime] = useState("18:30");
   const [endTime, setEndTime] = useState("01:00");
   const [location, setLocation] = useState("Château de Vaux-le-Vicomte");
-  const [guests, setGuests] = useState(80);
-  const [budget, setBudget] = useState(18000);
+  const [guests, setGuests] = useState(0);
+  const [budget, setBudget] = useState(0);
   const [contactPerson, setContactPerson] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [eventNotes, setEventNotes] = useState("");
@@ -31,8 +32,8 @@ export function useCommandeForm() {
   const [selected, setSelected] = useState<Record<string, SelectedItem>>({});
   const [openCats, setOpenCats] = useState<Record<string, boolean>>({});
 
-  const [transport, setTransport] = useState(150);
-  const [delivery, setDelivery] = useState(80);
+  const [transport, setTransport] = useState(0);
+  const [delivery, setDelivery] = useState(0);
   const [equipment, setEquipment] = useState(0);
   const [extraService, setExtraService] = useState(0);
 
@@ -41,9 +42,7 @@ export function useCommandeForm() {
 
   const [depositPercent, setDepositPercent] = useState(0);
 
-  const [attachments, setAttachments] = useState<{ name: string; size: string }[]>([
-    { name: "brief-client.pdf", size: "284 KB" },
-  ]);
+  const [attachments, setAttachments] = useState<any[]>([]);
   const [internalNotes, setInternalNotes] = useState("");
   const [clientNotes, setClientNotes] = useState("");
   const [tasks, setTasks] = useState([
@@ -165,14 +164,19 @@ export function useCommandeForm() {
     setSelected((s) => ({ ...s, [id]: { ...(s[id] ?? { id, qty: 0 }), id, note } }));
   const toggleItem = (id: string) => {
     const current = selected[id]?.qty || 0;
-    setQty(id, current > 0 ? 0 : guests);
+    setQty(id, current > 0 ? 0 : Math.max(guests, 1));
   };
   const applyPack = (packId: string) => {
+    if (packId === selectedPack) {
+      setSelectedPack(null);
+      setSelected({});
+      return;
+    }
     const pack = packs.find((p) => p.id === packId);
     if (!pack) return;
     setSelectedPack(packId);
     const next: Record<string, SelectedItem> = {};
-    pack.items.forEach((id) => (next[id] = { id, qty: guests }));
+    pack.items.forEach((id) => (next[id] = { id, qty: Math.max(guests, 1) }));
     setSelected(next);
   };
 
@@ -230,7 +234,7 @@ export function useCommandeForm() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(async (): Promise<{ success: true; data: { id: string }; uploadErrors?: string[] } | { success: false; error: string }> => {
     if (!client) return { success: false as const, error: "Aucun client sélectionné" };
     setIsSubmitting(true);
     try {
@@ -274,11 +278,29 @@ export function useCommandeForm() {
         status: "DRAFT",
         items,
       });
-      return result;
+      if (!result.success || !result.data) return { success: false as const, error: result.error ?? "Erreur lors de la création" };
+
+      const commandeId = result.data.id;
+      const uploadErrors: string[] = [];
+      for (const file of attachments) {
+        if (!(file instanceof File)) continue;
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+          const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
+          if (!uploadRes.ok) throw new Error("Upload failed");
+          const { url } = await uploadRes.json();
+          await createCommandeAttachment(commandeId, file.name, url, file.type);
+        } catch {
+          uploadErrors.push(file.name);
+        }
+      }
+
+      return { success: true as const, data: { id: commandeId }, uploadErrors: uploadErrors.length > 0 ? uploadErrors : undefined };
     } finally {
       setIsSubmitting(false);
     }
-  }, [client, discountType, eventDate, startTime, selectedPack, packs, selectedList, eventType, guests, location, total, transport, delivery, equipment, discountValue, discountAmount, depositPercent, deposit, remaining, budget, contactPerson, contactPhone, eventNotes, internalNotes, clientNotes]);
+  }, [client, discountType, eventDate, startTime, selectedPack, packs, selectedList, eventType, guests, location, total, transport, delivery, equipment, discountValue, discountAmount, depositPercent, deposit, remaining, budget, contactPerson, contactPhone, eventNotes, internalNotes, clientNotes, attachments]);
 
   const dateHash = eventDate.split("-").reduce((a, b) => a + parseInt(b, 10), 0);
   const dateAvailable = dateHash % 3 !== 0;

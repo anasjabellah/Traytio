@@ -31,8 +31,12 @@ function NouvelleCommandePage() {
 
   const onCreateCommande = useCallback(async () => {
     const result = await handleSubmit();
-    if (result.success && result.data) {
-      toast.success("Commande créée avec succès");
+    if (result.success) {
+      if (result.uploadErrors?.length) {
+        toast.warning(`Commande créée, mais ${result.uploadErrors.length} fichier(s) n'ont pas pu être téléchargés.`);
+      } else {
+        toast.success("Commande créée avec succès");
+      }
       router.push(`/dashboard/commandes/${result.data.id}`);
     } else {
       toast.error(result.error ?? "Erreur lors de la création de la commande");
