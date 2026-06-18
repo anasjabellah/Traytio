@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Event } from '@/features/events/types';
 import { updateEventSchema } from '@/features/events/validations/update-event-schema';
 import { getOrganizationId } from '@/lib/get-organization-id';
+
 export async function updateEvent(data: Record<string, unknown>): Promise<ActionResponse<Event>> {
   try {
     const organizationId = await getOrganizationId();
@@ -58,6 +59,25 @@ export async function updateEvent(data: Record<string, unknown>): Promise<Action
         updatedAt: true,
       },
     });
+
+    // ── Sync snapshot fields on linked commandes ──────────────────
+    const snapshot: Record<string, unknown> = {};
+
+    if ('type' in validData) snapshot.eventType = validData.type;
+    if ('startDate' in validData) snapshot.eventDate = new Date(validData.startDate as Date);
+    if ('guestCount' in validData) snapshot.guestCount = validData.guestCount;
+    if ('location' in validData) snapshot.location = validData.location;
+    if ('contactPerson' in validData) snapshot.contactName = validData.contactPerson;
+    if ('contactPhone' in validData) snapshot.contactPhone = validData.contactPhone;
+    if ('notes' in validData) snapshot.notes = validData.notes;
+    if ('budget' in validData) snapshot.clientBudget = validData.budget;
+
+    if (Object.keys(snapshot).length > 0) {
+      await prisma.commande.updateMany({
+        where: { eventId: id },
+        data: snapshot,
+      });
+    }
 
     const result: Event = {
       id: event.id,

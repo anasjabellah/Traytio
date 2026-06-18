@@ -24,6 +24,8 @@ const FR_TO_EN_EVENT_TYPE: Record<string, string> = {
 };
 
 export function useEditCommandeForm(commande: CommandeWithDetails) {
+  const eventSrc = commande.event;
+
   const [client, setClient] = useState<Client | null>({
     id: commande.clientId,
     name: commande.clientName ?? commande.client?.name ?? "",
@@ -33,24 +35,31 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
   const [showClientPanel, setShowClientPanel] = useState(false);
   const [selectedEvent] = useState<"new">("new");
 
-  const eventDateStr = commande.eventDate
-    ? new Date(commande.eventDate).toISOString().split("T")[0]
+  const eventDateVal = eventSrc?.startDate ?? commande.eventDate;
+  const eventDateStr = eventDateVal
+    ? new Date(eventDateVal).toISOString().split("T")[0]
     : "";
-  const startTimeStr = commande.eventDate
-    ? (() => { const d = new Date(commande.eventDate); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; })()
+  const startTimeStr = eventDateVal
+    ? (() => { const d = new Date(eventDateVal); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; })()
     : "";
 
-  const [eventName, setEventName] = useState(commande.eventName ?? commande.client?.name ?? "");
-  const [eventType, setEventType] = useState(commande.eventType ? (EVENT_TYPE_MAP[commande.eventType] ?? commande.eventType) : "");
+  const endTimeVal = eventSrc?.endDate;
+  const endTimeStr = endTimeVal
+    ? (() => { const d = new Date(endTimeVal); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; })()
+    : "";
+
+  const [eventName, setEventName] = useState(eventSrc?.name ?? commande.eventName ?? commande.client?.name ?? "");
+  const rawEventType = eventSrc?.type ?? commande.eventType;
+  const [eventType, setEventType] = useState(rawEventType ? (EVENT_TYPE_MAP[rawEventType] ?? rawEventType) : "");
   const [eventDate, setEventDate] = useState(eventDateStr);
   const [startTime, setStartTime] = useState(startTimeStr);
-  const [endTime, setEndTime] = useState("");
-  const [location, setLocation] = useState(commande.location ?? "");
-  const [guests, setGuests] = useState(commande.guestCount ?? 80);
-  const [budget, setBudget] = useState(commande.clientBudget ?? 0);
-  const [contactPerson, setContactPerson] = useState(commande.contactName ?? "");
-  const [contactPhone, setContactPhone] = useState(commande.contactPhone ?? "");
-  const [eventNotes, setEventNotes] = useState(commande.notes ?? "");
+  const [endTime, setEndTime] = useState(endTimeStr);
+  const [location, setLocation] = useState(eventSrc?.location ?? commande.location ?? "");
+  const [guests, setGuests] = useState(eventSrc?.guestCount ?? commande.guestCount ?? 80);
+  const [budget, setBudget] = useState(eventSrc?.budget ?? commande.clientBudget ?? 0);
+  const [contactPerson, setContactPerson] = useState(eventSrc?.contactPerson ?? commande.contactName ?? "");
+  const [contactPhone, setContactPhone] = useState(eventSrc?.contactPhone ?? commande.contactPhone ?? "");
+  const [eventNotes, setEventNotes] = useState(eventSrc?.notes ?? commande.notes ?? "");
 
   const [selectedPack, setSelectedPack] = useState<string | null>(commande.menuId);
   const [selected, setSelected] = useState<Record<string, SelectedItem>>({});

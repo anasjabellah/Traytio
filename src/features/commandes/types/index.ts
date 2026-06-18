@@ -81,7 +81,11 @@ export type CommandeActivity = {
 
 export type CommandeWithDetails = Commande & {
   client?: { id: string; name: string; email?: string | null; phone?: string | null } | null;
-  event?: { id: string; name: string; type?: string | null; startDate?: Date | null } | null;
+  event?: {
+    id: string; name: string; type?: string | null; startDate?: Date | null; endDate?: Date | null;
+    guestCount?: number | null; location?: string | null; budget?: number | null;
+    contactPerson?: string | null; contactPhone?: string | null; notes?: string | null;
+  } | null;
   menu?: { id: string; name: string } | null;
   items?: CommandeItem[];
   tasks?: CommandeTask[];
@@ -92,6 +96,8 @@ export type CommandeWithDetails = Commande & {
 export type CreateCommandeInput = {
   number: string;
   clientId: string;
+  eventId?: string | null;
+  eventName?: string | null;
   eventType?: string | null;
   eventDate?: string | null;
   guestCount?: number | null;

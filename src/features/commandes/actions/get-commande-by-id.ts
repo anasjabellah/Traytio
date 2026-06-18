@@ -16,7 +16,11 @@ export async function getCommandeById(id: string): Promise<ActionResponse<Comman
           select: { id: true, name: true, email: true, phone: true },
         },
         event: {
-          select: { id: true, name: true, type: true, startDate: true },
+          select: {
+            id: true, name: true, type: true, startDate: true, endDate: true,
+            guestCount: true, location: true, budget: true,
+            contactPerson: true, contactPhone: true, notes: true,
+          },
         },
         menu: {
           select: { id: true, name: true },
@@ -51,6 +55,10 @@ export async function getCommandeById(id: string): Promise<ActionResponse<Comman
       clientName: commande.client?.name ?? null,
       clientPhone: commande.client?.phone ?? null,
       eventName: commande.event?.name ?? null,
+      event: commande.event ? {
+        ...commande.event,
+        budget: commande.event.budget ? Number(commande.event.budget) : null,
+      } : null,
       items: commande.items.map((i) => ({
         ...i,
         unitPrice: Number(i.unitPrice),

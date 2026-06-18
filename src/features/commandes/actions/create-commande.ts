@@ -24,11 +24,42 @@ export async function createCommande(input: unknown) {
     const data = parsed.data
     const organizationId = await getOrganizationId()
 
+    // ── Resolve eventId ──────────────────────────────────────────────
+    // If eventId was provided (user selected an existing event), use it.
+    // Otherwise, auto-create an Event record from the denormalized data.
+    let resolvedEventId = data.eventId ?? null;
+
+    if (!resolvedEventId && data.eventDate) {
+      const startDate = new Date(data.eventDate);
+      const endDate = new Date(startDate.getTime() + 4 * 60 * 60 * 1000);
+
+      const createdEvent = await prisma.event.create({
+        data: {
+          organizationId,
+          clientId: data.clientId,
+          name: data.eventName ?? `Événement - ${data.number}`,
+          type: (data.eventType ?? 'OTHER') as EventType,
+          status: 'CONFIRMED',
+          startDate,
+          endDate,
+          location: data.location ?? undefined,
+          guestCount: data.guestCount ?? undefined,
+          budget: data.clientBudget ?? undefined,
+          contactPerson: data.contactName ?? undefined,
+          contactPhone: data.contactPhone ?? undefined,
+          notes: data.notes ?? undefined,
+        },
+      });
+      resolvedEventId = createdEvent.id;
+    }
+
+    // ── Create Commande with eventId and snapshot ────────────────────
     const commande = await prisma.commande.create({
       data: {
         organizationId,
         clientId: data.clientId,
         number: data.number,
+        eventId: resolvedEventId,
         status: data.status as CommandeStatus,
         eventType: (data.eventType ?? undefined) as EventType | undefined,
         eventDate: data.eventDate ? new Date(data.eventDate) : undefined,

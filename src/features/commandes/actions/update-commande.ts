@@ -24,10 +24,67 @@ export async function updateCommande(id: string, input: unknown): Promise<Action
       return { success: false, error: 'Commande not found or access denied' };
     }
 
+    // ── Resolve eventId ──────────────────────────────────────────────
+    // 1. If eventId was provided, update the linked Event with new data.
+    // 2. If no eventId but event data exists, create an Event and link it.
+    // 3. If event data was cleared (no eventDate), leave eventId as null.
+
+    let resolvedEventId = existing.eventId;
+
+    if (data.eventId) {
+      // User explicitly selected an existing event — link to it
+      resolvedEventId = data.eventId;
+    }
+
+    if (resolvedEventId && data.eventDate) {
+      // Update the linked Event with current form data
+      await prisma.event.update({
+        where: { id: resolvedEventId },
+        data: {
+          name: data.eventName ?? undefined,
+          type: (data.eventType ?? undefined) as EventType | undefined,
+          startDate: data.eventDate ? new Date(data.eventDate) : undefined,
+          location: data.location ?? undefined,
+          guestCount: data.guestCount ?? undefined,
+          budget: data.clientBudget ?? undefined,
+          contactPerson: data.contactName ?? undefined,
+          contactPhone: data.contactPhone ?? undefined,
+          notes: data.notes ?? undefined,
+        },
+      });
+    } else if (!resolvedEventId && data.eventDate) {
+      // No existing event but event data present — create one
+      const startDate = new Date(data.eventDate);
+      const endDate = new Date(startDate.getTime() + 4 * 60 * 60 * 1000);
+
+      const createdEvent = await prisma.event.create({
+        data: {
+          organizationId,
+          clientId: data.clientId,
+          name: data.eventName ?? `Événement - ${data.number}`,
+          type: (data.eventType ?? 'OTHER') as EventType,
+          status: 'CONFIRMED',
+          startDate,
+          endDate,
+          location: data.location ?? undefined,
+          guestCount: data.guestCount ?? undefined,
+          budget: data.clientBudget ?? undefined,
+          contactPerson: data.contactName ?? undefined,
+          contactPhone: data.contactPhone ?? undefined,
+          notes: data.notes ?? undefined,
+        },
+      });
+      resolvedEventId = createdEvent.id;
+    }
+    // If resolvedEventId exists but eventDate is empty, keep the existing
+    // event link (don't null it out — the Event still exists).
+
+    // ── Update Commande ──────────────────────────────────────────────
     await prisma.commande.update({
       where: { id },
       data: {
         clientId: data.clientId,
+        eventId: resolvedEventId,
         status: data.status as CommandeStatus,
         eventType: (data.eventType ?? undefined) as EventType | undefined,
         eventDate: data.eventDate ? new Date(data.eventDate) : undefined,
