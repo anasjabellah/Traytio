@@ -14,6 +14,7 @@ export const createCommandeSchema = z.object({
   clientId: z.string().min(1),
   eventId: z.string().nullable().optional(),
   eventName: z.string().nullable().optional(),
+  eventStatus: z.string().nullable().optional(),
   eventType: z.string().nullable().optional(),
   eventDate: z.string().nullable().optional(),
   guestCount: z.number().int().min(1).nullable().optional(),

@@ -7,6 +7,7 @@ import { getCommandeClients } from "@/features/commandes/actions/get-commande-cl
 import { getCommandeMenus } from "@/features/commandes/actions/get-commande-menus";
 import { getCommandeAllMenuItems } from "@/features/commandes/actions/get-commande-all-menu-items";
 import { updateCommande } from "@/features/commandes/actions/update-commande";
+import { createCommandeAttachment } from "@/features/commandes/actions/create-commande-attachment";
 import type { Client, MenuItemDisplay, CommandeWithDetails } from "@/features/commandes/types";
 
 const EVENT_TYPE_MAP: Record<string, string> = {
@@ -57,6 +58,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
   const [location, setLocation] = useState(eventSrc?.location ?? commande.location ?? "");
   const [guests, setGuests] = useState(eventSrc?.guestCount ?? commande.guestCount ?? 80);
   const [budget, setBudget] = useState(eventSrc?.budget ?? commande.clientBudget ?? 0);
+  const [eventStatus, setEventStatus] = useState<string | null>(eventSrc?.status ?? null);
   const [contactPerson, setContactPerson] = useState(eventSrc?.contactPerson ?? commande.contactName ?? "");
   const [contactPhone, setContactPhone] = useState(eventSrc?.contactPhone ?? commande.contactPhone ?? "");
   const [eventNotes, setEventNotes] = useState(eventSrc?.notes ?? commande.notes ?? "");
@@ -238,6 +240,8 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
       const result = await updateCommande(commande.id, {
         number: commande.number,
         clientId: client.id,
+        eventName: eventName || null,
+        eventStatus: eventStatus,
         eventType: (eventType ? FR_TO_EN_EVENT_TYPE[eventType] ?? null : null),
         eventDate: eventDateTime,
         guestCount: guests || null,
@@ -264,11 +268,28 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
         status: commande.status as any,
         items,
       });
-      return result;
+      if (!result.success) return { success: false as const, error: result.error ?? "Erreur lors de la mise à jour" };
+
+      const uploadErrors: string[] = [];
+      for (const file of attachments) {
+        if (!(file instanceof File)) continue;
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+          const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
+          if (!uploadRes.ok) throw new Error("Upload failed");
+          const { url } = await uploadRes.json();
+          await createCommandeAttachment(commande.id, file.name, url, file.type);
+        } catch {
+          uploadErrors.push(file.name);
+        }
+      }
+
+      return { success: true as const, data: { id: commande.id }, uploadErrors: uploadErrors.length > 0 ? uploadErrors : undefined };
     } finally {
       setIsSubmitting(false);
     }
-  }, [client, commande.id, commande.number, commande.status, discountType, eventDate, startTime, selectedPack, packs, selectedList, eventType, guests, location, total, transport, delivery, equipment, discountValue, discountAmount, depositPercent, deposit, remaining, budget, contactPerson, contactPhone, eventNotes, internalNotes, clientNotes]);
+  }, [client, commande.id, commande.number, commande.status, eventStatus, eventName, discountType, eventDate, startTime, selectedPack, packs, selectedList, eventType, guests, location, total, transport, delivery, equipment, discountValue, discountAmount, depositPercent, deposit, remaining, budget, contactPerson, contactPhone, eventNotes, internalNotes, clientNotes, attachments]);
 
   const dateHash = eventDate.split("-").reduce((a, b) => a + parseInt(b, 10), 0);
   const dateAvailable = dateHash % 3 !== 0;
@@ -278,7 +299,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
     eventName, setEventName, eventType, setEventType,
     eventDate, setEventDate, startTime, setStartTime, endTime, setEndTime,
     location, setLocation, guests, setGuests, budget, setBudget,
-    contactPerson, setContactPerson, contactPhone, setContactPhone,
+    eventStatus, setEventStatus, contactPerson, setContactPerson, contactPhone, setContactPhone,
     eventNotes, setEventNotes, selectedPack, setSelectedPack,
     selected, setSelected, openCats, setOpenCats,
     transport, setTransport, delivery, setDelivery,

@@ -79,7 +79,7 @@ export async function getCommandes(params: GetCommandesParams): Promise<ActionRe
             select: { name: true, phone: true },
           },
           event: {
-            select: { name: true },
+            select: { name: true, status: true },
           },
         },
         orderBy: { [sortBy]: sortOrder },
@@ -127,6 +127,7 @@ export async function getCommandes(params: GetCommandesParams): Promise<ActionRe
       clientName: c.client?.name ?? null,
       clientPhone: c.client?.phone ?? null,
       eventName: c.event?.name ?? null,
+      eventStatus: c.event?.status ?? null,
     }));
 
     const totalPages = Math.ceil(total / limit);

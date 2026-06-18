@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { createCommandeSchema } from '@/features/commandes/validations/create-commande-schema';
 import type { ActionResponse } from '@/features/commandes/types';
-import type { CommandeStatus, EventType, DiscountType } from '@prisma/client';
+import type { CommandeStatus, EventType, EventStatus, DiscountType } from '@prisma/client';
 
 export async function updateCommande(id: string, input: unknown): Promise<ActionResponse<void>> {
   try {
@@ -43,6 +43,7 @@ export async function updateCommande(id: string, input: unknown): Promise<Action
         data: {
           name: data.eventName ?? undefined,
           type: (data.eventType ?? undefined) as EventType | undefined,
+          status: (data.eventStatus ?? undefined) as EventStatus | undefined,
           startDate: data.eventDate ? new Date(data.eventDate) : undefined,
           location: data.location ?? undefined,
           guestCount: data.guestCount ?? undefined,
@@ -63,7 +64,7 @@ export async function updateCommande(id: string, input: unknown): Promise<Action
           clientId: data.clientId,
           name: data.eventName ?? `Événement - ${data.number}`,
           type: (data.eventType ?? 'OTHER') as EventType,
-          status: 'CONFIRMED',
+          status: (data.eventStatus ?? 'CONFIRMED') as EventStatus,
           startDate,
           endDate,
           location: data.location ?? undefined,

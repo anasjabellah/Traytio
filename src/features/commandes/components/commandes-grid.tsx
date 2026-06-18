@@ -58,8 +58,7 @@ export function CommandesGrid({ data, loading, onView, onEdit, onDelete }: Comma
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.025, duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="group rounded-2xl border border-border bg-card shadow-soft hover:shadow-md transition-all overflow-hidden cursor-pointer"
-            onClick={() => onView(cmd)}
+            className="group rounded-2xl border border-border bg-card shadow-soft hover:shadow-md transition-all overflow-hidden"
           >
             <div className="p-5">
               <div className="flex items-start justify-between gap-3 mb-3">

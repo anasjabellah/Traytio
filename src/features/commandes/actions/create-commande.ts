@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { createCommandeSchema } from "@/features/commandes/validations/create-commande-schema"
-import type { CommandeStatus, EventType, DiscountType } from "@prisma/client";
+import type { CommandeStatus, EventType, EventStatus, DiscountType } from "@prisma/client";
 
 export async function generateCommandeNumber(): Promise<string> {
   const organizationId = await getOrganizationId()
@@ -39,7 +39,7 @@ export async function createCommande(input: unknown) {
           clientId: data.clientId,
           name: data.eventName ?? `Événement - ${data.number}`,
           type: (data.eventType ?? 'OTHER') as EventType,
-          status: 'CONFIRMED',
+          status: (data.eventStatus ?? 'CONFIRMED') as EventStatus,
           startDate,
           endDate,
           location: data.location ?? undefined,

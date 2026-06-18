@@ -26,13 +26,17 @@ export default function CommandeEditView({ commande }: { commande: CommandeWithD
   const router = useRouter();
   const form = useEditCommandeForm(commande);
   const { state, derived, handlers, dateAvailable, packs, menuItems, clients, isClientsLoading, showEventForm, isSubmitting, handleSubmit } = form;
-  const { client, showClientPanel, setShowClientPanel, eventName, setEventName, eventType, setEventType, eventDate, setEventDate, startTime, setStartTime, endTime, setEndTime, location, setLocation, guests, setGuests, budget, setBudget, contactPerson, setContactPerson, contactPhone, setContactPhone, eventNotes, setEventNotes, selectedPack, setSelectedPack, selected, setSelected, openCats, setOpenCats, transport, setTransport, delivery, setDelivery, equipment, setEquipment, extraService, setExtraService, discountType, setDiscountType, discountValue, setDiscountValue, depositPercent, setDepositPercent, attachments, setAttachments, internalNotes, setInternalNotes, clientNotes, setClientNotes, tasks, setTasks } = state;
+  const { client, showClientPanel, setShowClientPanel, eventName, setEventName, eventStatus, setEventStatus, eventType, setEventType, eventDate, setEventDate, startTime, setStartTime, endTime, setEndTime, location, setLocation, guests, setGuests, budget, setBudget, contactPerson, setContactPerson, contactPhone, setContactPhone, eventNotes, setEventNotes, selectedPack, setSelectedPack, selected, setSelected, openCats, setOpenCats, transport, setTransport, delivery, setDelivery, equipment, setEquipment, extraService, setExtraService, discountType, setDiscountType, discountValue, setDiscountValue, depositPercent, setDepositPercent, attachments, setAttachments, internalNotes, setInternalNotes, clientNotes, setClientNotes, tasks, setTasks } = state;
   const { selectedList, itemsSubtotal, extrasTotal, discountAmount, total, deposit, remaining, budgetUsed, overBudget } = derived;
 
   const onUpdateCommande = useCallback(async () => {
     const result = await handleSubmit();
     if (result.success) {
-      toast.success("Commande mise à jour avec succès");
+      if (result.uploadErrors?.length) {
+        toast.warning(`Commande mise à jour, mais ${result.uploadErrors.length} fichier(s) n'ont pas pu être téléchargés.`);
+      } else {
+        toast.success("Commande mise à jour avec succès");
+      }
       router.push(`/dashboard/commandes/${commande.id}`);
     } else {
       toast.error(result.error ?? "Erreur lors de la mise à jour de la commande");
@@ -53,7 +57,7 @@ export default function CommandeEditView({ commande }: { commande: CommandeWithD
 
               {showEventForm && (
                 <StepCard step={2} title="Informations de l'événement" subtitle="Tous les détails clés en un coup d'œil">
-                  <EventStep eventName={eventName} setEventName={setEventName} eventType={eventType} setEventType={setEventType} eventDate={eventDate} setEventDate={setEventDate} startTime={startTime} setStartTime={setStartTime} endTime={endTime} setEndTime={setEndTime} location={location} setLocation={setLocation} guests={guests} setGuests={setGuests} budget={budget} setBudget={setBudget} contactPerson={contactPerson} setContactPerson={setContactPerson} contactPhone={contactPhone} setContactPhone={setContactPhone} eventNotes={eventNotes} setEventNotes={setEventNotes} dateAvailable={dateAvailable} />
+                  <EventStep eventName={eventName} setEventName={setEventName} eventStatus={eventStatus} setEventStatus={setEventStatus} eventType={eventType} setEventType={setEventType} eventDate={eventDate} setEventDate={setEventDate} startTime={startTime} setStartTime={setStartTime} endTime={endTime} setEndTime={setEndTime} location={location} setLocation={setLocation} guests={guests} setGuests={setGuests} budget={budget} setBudget={setBudget} contactPerson={contactPerson} setContactPerson={setContactPerson} contactPhone={contactPhone} setContactPhone={setContactPhone} eventNotes={eventNotes} setEventNotes={setEventNotes} dateAvailable={dateAvailable} />
                 </StepCard>
               )}
               <StepCard step={3} title="Pack template" subtitle="Optionnel — démarrez plus vite">

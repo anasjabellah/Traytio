@@ -5,11 +5,18 @@ import { Calendar, Clock, MapPin, Users, Wallet, Phone, CheckCircle2, AlertTrian
 import { EVENT_TYPES } from "@/features/commandes/data/mock-data";
 import { PremiumField } from "./premium-field";
 
+const STATUS_KEYS = ['DRAFT', 'PLANNED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
+const STATUS_LABELS: Record<string, string> = {
+  DRAFT: 'Brouillon', PLANNED: 'Planifié', CONFIRMED: 'Confirmé',
+  IN_PROGRESS: 'En cours', COMPLETED: 'Terminé', CANCELLED: 'Annulé',
+};
+
 export function EventStep(props: any) {
   const {
     eventName, setEventName, eventType, setEventType, eventDate, setEventDate,
     startTime, setStartTime, endTime, setEndTime, location, setLocation,
-    guests, setGuests, budget, setBudget, contactPerson, setContactPerson,
+    guests, setGuests, budget, setBudget, eventStatus, setEventStatus,
+    contactPerson, setContactPerson,
     contactPhone, setContactPhone, eventNotes, setEventNotes, dateAvailable,
   } = props;
 
@@ -31,6 +38,22 @@ export function EventStep(props: any) {
             ))}
           </div>
         </label>
+      </div>
+
+      <div>
+        <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Statut de l'événement</div>
+        <div className="flex flex-wrap gap-1.5 rounded-2xl border border-border bg-surface-soft p-1.5">
+          {STATUS_KEYS.map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setEventStatus(key)}
+              className={`px-3 py-1.5 rounded-full text-xs transition-all ${(eventStatus ?? 'CONFIRMED') === key ? 'bg-foreground text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              {STATUS_LABELS[key]}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid sm:grid-cols-3 gap-4">

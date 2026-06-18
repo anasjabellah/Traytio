@@ -37,6 +37,7 @@
   clientName: string | null;
   clientPhone: string | null;
   eventName: string | null;
+  eventStatus: string | null;
   items?: CommandeItem[];
 };
 
@@ -82,7 +83,7 @@ export type CommandeActivity = {
 export type CommandeWithDetails = Commande & {
   client?: { id: string; name: string; email?: string | null; phone?: string | null } | null;
   event?: {
-    id: string; name: string; type?: string | null; startDate?: Date | null; endDate?: Date | null;
+    id: string; name: string; type?: string | null; startDate?: Date | null; endDate?: Date | null; status?: string | null;
     guestCount?: number | null; location?: string | null; budget?: number | null;
     contactPerson?: string | null; contactPhone?: string | null; notes?: string | null;
   } | null;
@@ -98,6 +99,7 @@ export type CreateCommandeInput = {
   clientId: string;
   eventId?: string | null;
   eventName?: string | null;
+  eventStatus?: string | null;
   eventType?: string | null;
   eventDate?: string | null;
   guestCount?: number | null;

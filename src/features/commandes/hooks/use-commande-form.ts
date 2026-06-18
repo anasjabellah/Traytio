@@ -24,6 +24,7 @@ export function useCommandeForm() {
   const [location, setLocation] = useState("Château de Vaux-le-Vicomte");
   const [guests, setGuests] = useState(0);
   const [budget, setBudget] = useState(0);
+  const [eventStatus, setEventStatus] = useState<string | null>(null);
   const [contactPerson, setContactPerson] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [eventNotes, setEventNotes] = useState("");
@@ -200,7 +201,8 @@ export function useCommandeForm() {
     if (!c) {
       setEventName(""); setEventType(""); setEventDate(""); setStartTime("");
       setEndTime(""); setLocation(""); setGuests(80); setBudget(0);
-      setContactPerson(""); setContactPhone(""); setEventNotes("");
+    setContactPerson(""); setContactPhone(""); setEventNotes("");
+    setEventStatus(null);
     }
   }, []);
 
@@ -223,6 +225,7 @@ export function useCommandeForm() {
     setContactPerson(event.contactPerson ?? "");
     setContactPhone(event.contactPhone ?? "");
     setEventNotes(event.notes ?? "");
+    setEventStatus(event.status ?? null);
   }, []);
 
   const handleCreateNewEvent = useCallback(() => {
@@ -252,6 +255,8 @@ export function useCommandeForm() {
       const result = await createCommande({
         number,
         clientId: client.id,
+        eventName: eventName || null,
+        eventStatus: eventStatus,
         eventType: (eventType ? FR_TO_EN_EVENT_TYPE[eventType] ?? null : null),
         eventDate: eventDateTime,
         guestCount: guests || null,
@@ -300,7 +305,7 @@ export function useCommandeForm() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [client, discountType, eventDate, startTime, selectedPack, packs, selectedList, eventType, guests, location, total, transport, delivery, equipment, discountValue, discountAmount, depositPercent, deposit, remaining, budget, contactPerson, contactPhone, eventNotes, internalNotes, clientNotes, attachments]);
+  }, [client, eventStatus, eventName, discountType, eventDate, startTime, selectedPack, packs, selectedList, eventType, guests, location, total, transport, delivery, equipment, discountValue, discountAmount, depositPercent, deposit, remaining, budget, contactPerson, contactPhone, eventNotes, internalNotes, clientNotes, attachments]);
 
   const dateHash = eventDate.split("-").reduce((a, b) => a + parseInt(b, 10), 0);
   const dateAvailable = dateHash % 3 !== 0;
@@ -310,7 +315,7 @@ export function useCommandeForm() {
     eventName, setEventName, eventType, setEventType,
     eventDate, setEventDate, startTime, setStartTime, endTime, setEndTime,
     location, setLocation, guests, setGuests, budget, setBudget,
-    contactPerson, setContactPerson, contactPhone, setContactPhone,
+    eventStatus, setEventStatus, contactPerson, setContactPerson, contactPhone, setContactPhone,
     eventNotes, setEventNotes, selectedPack, setSelectedPack,
     selected, setSelected, openCats, setOpenCats,
     transport, setTransport, delivery, setDelivery,

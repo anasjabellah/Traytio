@@ -1,9 +1,10 @@
 ﻿"use client"
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Crown, Check } from "lucide-react";
+import { motion } from "framer-motion";
+import { X, Crown, Check, Loader2 } from "lucide-react";
 import { PremiumField } from "./premium-field";
+import { createClient } from "@/features/commandes/actions/create-client";
 import type { Client } from "@/features/commandes/types";
 
 export function NewClientPanel({ onClose, onCreate }: { onClose: () => void; onCreate: (c: Client) => void }) {
@@ -13,6 +14,7 @@ export function NewClientPanel({ onClose, onCreate }: { onClose: () => void; onC
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [vip, setVip] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   return (
     <>
@@ -67,16 +69,22 @@ export function NewClientPanel({ onClose, onCreate }: { onClose: () => void; onC
             Annuler
           </button>
           <button
-            onClick={() =>
-              onCreate({
-                id: "new-" + Date.now(),
-                name: name || "Nouveau client",
-                phone, email, vip, events: 0,
-              } as Client)
-            }
-            className="flex-1 rounded-full bg-foreground text-primary-foreground py-3 text-sm font-medium hover:shadow-gold transition-all inline-flex items-center justify-center gap-2"
+            disabled={creating}
+            onClick={async () => {
+              setCreating(true);
+              try {
+                const result = await createClient({ name: name || "Nouveau client", phone, email, address, notes });
+                if (result.success) {
+                  onCreate({ ...result.data, vip } as Client);
+                }
+              } finally {
+                setCreating(false);
+              }
+            }}
+            className="flex-1 rounded-full bg-foreground text-primary-foreground py-3 text-sm font-medium hover:shadow-gold transition-all inline-flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            <Check className="h-4 w-4" /> Créer le client
+            {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+            {creating ? "Création..." : "Créer le client"}
           </button>
         </footer>
       </motion.div>
