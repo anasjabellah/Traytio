@@ -156,7 +156,7 @@ export function CommandesCalendar({ data, loading, onView, onEdit }: CommandesCa
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
         className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden"
       >
         <div className="flex items-center justify-between px-6 pt-5 pb-3">

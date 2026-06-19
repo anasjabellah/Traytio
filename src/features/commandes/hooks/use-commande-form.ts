@@ -292,8 +292,12 @@ export function useCommandeForm() {
         try {
           const formData = new FormData();
           formData.append("file", file);
+          formData.append("name", file.name);
           const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
-          if (!uploadRes.ok) throw new Error("Upload failed");
+          if (!uploadRes.ok) {
+            const err = await uploadRes.json().catch(() => null);
+            throw new Error(err?.error || "Upload failed");
+          }
           const { url } = await uploadRes.json();
           await createCommandeAttachment(commandeId, file.name, url, file.type);
         } catch {

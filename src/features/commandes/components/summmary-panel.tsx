@@ -28,7 +28,7 @@ export function SummaryPanel(props: {
   return (
     <motion.aside
       initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
       className="relative rounded-[1.75rem] glass shadow-glass overflow-hidden"
     >
       <div className="absolute inset-x-0 top-0 h-32 bg-gradient-mesh opacity-50 pointer-events-none" />

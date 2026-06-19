@@ -39,7 +39,7 @@ const EVENT_STATUS_STYLES: Record<string, string> = {
 const fadeUp = (delay: number) => ({
   initial: { opacity: 0, y: 10 },
   animate: { opacity: 1, y: 0 },
-  transition: { delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] },
+  transition: { delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const },
 });
 
 const NOTE_TABS = ["Internes", "Client", "Générales"] as const;

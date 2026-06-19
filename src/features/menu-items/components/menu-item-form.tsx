@@ -39,14 +39,29 @@ export function MenuItemForm({ onSubmit, isLoading = false, mode, onUploadingCha
 
   const imageUrl = watch('imageUrl');
 
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+
   const handleFileUpload = async (file: File) => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error('Format non supporté. Utilisez JPEG, PNG ou WebP.');
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      toast.error(`L'image dépasse la limite de ${MAX_SIZE / 1024 / 1024} MB`);
+      return;
+    }
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('name', file.name);
     setIsUploading(true);
     onUploadingChange?.(true);
     try {
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      if (!res.ok) throw new Error('Upload failed');
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error || 'Upload failed');
+      }
       const json = await res.json();
       setValue('imageUrl', json.url);
       toast.success('Image téléchargée');

@@ -21,7 +21,7 @@ export function ActionBar({ total, onSubmit, isSubmitting, submitLabel, submitti
   return (
     <motion.div
       initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] as const }}
       className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[min(1180px,calc(100%-2rem))]"
     >
       <div className="glass shadow-glass rounded-full pl-6 pr-2 py-2 flex items-center justify-between gap-4">

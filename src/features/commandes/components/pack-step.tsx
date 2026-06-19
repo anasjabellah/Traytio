@@ -24,7 +24,7 @@ export function PackStep({ packs, selectedPack, onSelect }: { packs: Pack[]; sel
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] as const }}
                 whileHover={{ y: -3 }}
                 onClick={() => onSelect(p.id)}
                 className={`relative text-left rounded-2xl border p-5 transition-all overflow-hidden ${

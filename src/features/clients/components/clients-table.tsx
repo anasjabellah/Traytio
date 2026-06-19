@@ -116,7 +116,7 @@ export function ClientsTable({ data, loading, onView, onEdit, onDelete }: Client
             key={row.id}
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.015, duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ delay: index * 0.015, duration: 0.2, ease: [0.22, 1, 0.36, 1] as const }}
             className="group border-b border-border/[0.04] hover:bg-muted/40 transition-all cursor-pointer"
             onClick={() => onView(row.original)}
           >

@@ -14,7 +14,7 @@ export function Navbar() {
     <motion.header
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
       className="fixed top-4 left-1/2 z-50 -translate-x-1/2 w-[min(1180px,calc(100%-2rem))]"
     >
       <nav className="glass-1 shadow-soft rounded-full pl-6 pr-2 py-2 flex items-center justify-between">

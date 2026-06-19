@@ -82,7 +82,7 @@ export function BuilderStep({
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] as const }}
                   >
                     <div className="p-4 grid sm:grid-cols-2 gap-3 bg-card border-t border-border">
                       {items.length === 0 ? (

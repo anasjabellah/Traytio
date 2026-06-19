@@ -218,7 +218,7 @@ export default function CommandesPage() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] as const }}
           className="mb-8"
         >
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--gold-soft)]/40 bg-[var(--gold-soft)]/10 text-[11px] font-medium text-[var(--gold-deep)] tracking-wide mb-4">
@@ -257,7 +257,7 @@ export default function CommandesPage() {
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.14, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ delay: 0.14, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
           className="mt-8 mb-4 space-y-3"
         >
           {/* Search row */}
@@ -341,7 +341,7 @@ export default function CommandesPage() {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] as const }}
                 className="overflow-hidden"
               >
                 <div className="flex flex-wrap gap-1.5 pt-1">
@@ -376,7 +376,7 @@ export default function CommandesPage() {
                 key="table-view"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ delay: 0.2, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
                 className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden"
               >
                 <div className="flex items-center justify-between px-6 pt-5 pb-3">
@@ -441,7 +441,7 @@ export default function CommandesPage() {
                 key="grid-view"
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] as const }}
               >
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -481,7 +481,7 @@ export default function CommandesPage() {
               <motion.div
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.25, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ delay: 0.25, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
                 className="rounded-2xl border border-border bg-card shadow-soft p-5"
               >
                 <div className="flex items-center gap-2 mb-4">
@@ -540,7 +540,7 @@ export default function CommandesPage() {
               <motion.div
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ delay: 0.3, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
                 className="rounded-2xl border border-border bg-card shadow-soft p-5"
               >
                 <div className="flex items-center gap-2 mb-4">

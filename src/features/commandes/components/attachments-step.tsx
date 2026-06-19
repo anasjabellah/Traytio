@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, Trash2, FileText, FileImage, Eye, X, Maximize2, Download } from "lucide-react";
+import { toast } from "sonner";
 
 type PersistedAttachment = { id: string; name: string; url: string; type?: string | null };
 
@@ -49,9 +50,30 @@ export function AttachmentsStep({ attachments, setAttachments }: { attachments: 
     };
   }, [viewUrls]);
 
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
+  const MAX_SIZE_IMAGES = 10 * 1024 * 1024;
+  const MAX_SIZE_PDF = 20 * 1024 * 1024;
+  const BLOCKED_EXTS = ['.exe', '.bat', '.cmd', '.zip', '.rar', '.7z', '.js', '.ts', '.sh', '.php', '.html', '.xml', '.svg'];
+
+  const isAllowed = (file: File): boolean => {
+    if (!ALLOWED_TYPES.includes(file.type)) return false;
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (BLOCKED_EXTS.includes(ext)) return false;
+    if (file.type === 'application/pdf' && file.size > MAX_SIZE_PDF) return false;
+    if (file.type.startsWith('image/') && file.size > MAX_SIZE_IMAGES) return false;
+    return true;
+  };
+
   const addFiles = useCallback((files: FileList | null) => {
     if (!files) return;
-    setAttachments([...attachments, ...Array.from(files)]);
+    const valid = Array.from(files).filter((f) => {
+      if (!isAllowed(f)) {
+        toast.error(`Fichier refusé : ${f.name} — type ou taille non autorisé`);
+        return false;
+      }
+      return true;
+    });
+    setAttachments([...attachments, ...valid]);
   }, [attachments, setAttachments]);
 
   const removeFile = useCallback((idx: number) => {
@@ -120,12 +142,12 @@ export function AttachmentsStep({ attachments, setAttachments }: { attachments: 
           drag ? "border-gold bg-gold-soft/30" : "border-border bg-surface-soft hover:border-foreground/30"
         }`}
       >
-        <input ref={inputRef} type="file" multiple className="hidden" onChange={(e) => addFiles(e.target.files)} />
+        <input ref={inputRef} type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" className="hidden" onChange={(e) => addFiles(e.target.files)} />
         <div className="mx-auto h-12 w-12 rounded-2xl bg-card border border-border flex items-center justify-center mb-3">
           <Upload className="h-5 w-5 text-gold-deep" />
         </div>
         <div className="text-sm font-medium">Glissez vos fichiers ici</div>
-        <div className="text-xs text-muted-foreground mt-1">Images, PDF, documents — jusqu'à 20 MB</div>
+        <div className="text-xs text-muted-foreground mt-1">Images (max 10 MB) · PDF (max 20 MB)</div>
       </div>
       {attachments.length > 0 && (
         <div className="space-y-2">

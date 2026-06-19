@@ -93,7 +93,7 @@ function DashboardMock() {
     <motion.div
       initial={{ opacity: 0, scale: 0.96, y: 24 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] as const }}
       className="relative"
     >
       {/* Glow */}

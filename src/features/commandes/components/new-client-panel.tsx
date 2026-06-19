@@ -25,7 +25,7 @@ export function NewClientPanel({ onClose, onCreate }: { onClose: () => void; onC
       />
       <motion.div
         initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] as const }}
         className="fixed top-0 right-0 bottom-0 z-[61] w-full max-w-md bg-background border-l border-border shadow-lift flex flex-col"
       >
         <header className="flex items-center justify-between px-7 py-6 border-b border-border">

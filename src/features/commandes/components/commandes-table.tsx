@@ -114,7 +114,7 @@ export function CommandesTable({ data, loading, onView, onEdit, onDelete }: Comm
               key={row.id}
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.02, duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ delay: index * 0.02, duration: 0.2, ease: [0.22, 1, 0.36, 1] as const }}
               className="group border-b border-border/[0.03] last:border-b-0 transition-all hover:bg-muted/20"
               style={{ height: 68 }}
             >

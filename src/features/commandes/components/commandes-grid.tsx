@@ -57,7 +57,7 @@ export function CommandesGrid({ data, loading, onView, onEdit, onDelete }: Comma
             key={cmd.id}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.025, duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ delay: index * 0.025, duration: 0.3, ease: [0.22, 1, 0.36, 1] as const }}
             className="group rounded-2xl border border-border bg-card shadow-soft hover:shadow-md transition-all overflow-hidden"
           >
             <div className="p-5">
