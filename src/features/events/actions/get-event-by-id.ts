@@ -42,7 +42,7 @@ export const getEventById = cache(async (id: string): Promise<ActionResponse<Eve
           })
         : Promise.resolve(null),
       prisma.commande.findMany({
-        where: { eventId: id },
+        where: { eventId: id, organizationId },
         select: {
           id: true,
           number: true,

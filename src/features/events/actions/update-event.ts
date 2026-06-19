@@ -74,7 +74,7 @@ export async function updateEvent(data: Record<string, unknown>): Promise<Action
 
     if (Object.keys(snapshot).length > 0) {
       await prisma.commande.updateMany({
-        where: { eventId: id },
+        where: { eventId: id, organizationId },
         data: snapshot,
       });
     }

@@ -38,8 +38,17 @@ export async function updateCommande(id: string, input: unknown): Promise<Action
 
     if (resolvedEventId && data.eventDate) {
       // Update the linked Event with current form data
+      // Verify the event belongs to this organization before updating
+      const targetEvent = await prisma.event.findFirst({
+        where: { id: resolvedEventId, organizationId },
+        select: { id: true },
+      });
+      if (!targetEvent) {
+        return { success: false, error: 'Event not found or access denied' };
+      }
+
       await prisma.event.update({
-        where: { id: resolvedEventId },
+        where: { id: resolvedEventId, organizationId },
         data: {
           name: data.eventName ?? undefined,
           type: (data.eventType ?? undefined) as EventType | undefined,
