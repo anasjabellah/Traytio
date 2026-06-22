@@ -31,7 +31,6 @@ export const createCommandeSchema = z.object({
   discountAmount: z.number().min(0).nullable().optional(),
   acomptePercent: z.number().int().min(0).max(100).nullable().optional(),
   acompteAmount: z.number().min(0).nullable().optional(),
-  remainingAmount: z.number().min(0).nullable().optional(),
   clientBudget: z.number().min(0).nullable().optional(),
   contactName: z.string().nullable().optional(),
   contactPhone: z.string().nullable().optional(),

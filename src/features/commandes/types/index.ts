@@ -80,7 +80,19 @@ export type CommandeActivity = {
   createdAt: Date;
 };
 
+export type PaymentSummary = {
+  id: string;
+  amount: number;
+  method: string;
+  status: string;
+  reference: string | null;
+  notes: string | null;
+  createdAt: Date;
+};
+
 export type CommandeWithDetails = Commande & {
+  paymentStatus?: string;
+  payments?: PaymentSummary[];
   client?: { id: string; name: string; email?: string | null; phone?: string | null } | null;
   event?: {
     id: string; name: string; type?: string | null; startDate?: Date | null; endDate?: Date | null; status?: string | null;

@@ -26,7 +26,7 @@ export default function CommandeEditView({ commande }: { commande: CommandeWithD
   const router = useRouter();
   const form = useEditCommandeForm(commande);
   const { state, derived, handlers, dateAvailable, packs, menuItems, clients, isClientsLoading, showEventForm, isSubmitting, handleSubmit } = form;
-  const { client, showClientPanel, setShowClientPanel, eventName, setEventName, eventStatus, setEventStatus, eventType, setEventType, eventDate, setEventDate, startTime, setStartTime, endTime, setEndTime, location, setLocation, guests, setGuests, budget, setBudget, contactPerson, setContactPerson, contactPhone, setContactPhone, eventNotes, setEventNotes, selectedPack, setSelectedPack, selected, setSelected, openCats, setOpenCats, transport, setTransport, delivery, setDelivery, equipment, setEquipment, extraService, setExtraService, discountType, setDiscountType, discountValue, setDiscountValue, depositPercent, setDepositPercent, attachments, setAttachments, internalNotes, setInternalNotes, clientNotes, setClientNotes, tasks, setTasks } = state;
+  const { client, showClientPanel, setShowClientPanel, eventName, setEventName, eventStatus, setEventStatus, eventType, setEventType, eventDate, setEventDate, startTime, setStartTime, endTime, setEndTime, location, setLocation, guests, setGuests, budget, setBudget, contactPerson, setContactPerson, contactPhone, setContactPhone, eventNotes, setEventNotes, selectedPack, setSelectedPack, selected, setSelected, openCats, setOpenCats, transport, setTransport, delivery, setDelivery, equipment, setEquipment, extraService, setExtraService, discountType, setDiscountType, discountValue, setDiscountValue, acompteAmount, setAcompteAmount, attachments, setAttachments, internalNotes, setInternalNotes, clientNotes, setClientNotes, tasks, setTasks } = state;
   const { selectedList, itemsSubtotal, extrasTotal, discountAmount, total, deposit, remaining, budgetUsed, overBudget } = derived;
 
   const onUpdateCommande = useCallback(async () => {
@@ -72,8 +72,8 @@ export default function CommandeEditView({ commande }: { commande: CommandeWithD
               <StepCard step={6} title="Remise" subtitle="Pourcentage ou montant fixe">
                 <DiscountStep discountType={discountType} setDiscountType={setDiscountType} discountValue={discountValue} setDiscountValue={setDiscountValue} />
               </StepCard>
-              <StepCard step={7} title="Acompte" subtitle="Calculé sur le total final">
-                <DepositStep depositPercent={depositPercent} setDepositPercent={setDepositPercent} total={total} deposit={deposit} remaining={remaining} />
+              <StepCard step={7} title="Acompte" subtitle="Montant demandé au client">
+                <DepositStep acompteAmount={acompteAmount} setAcompteAmount={setAcompteAmount} total={total} deposit={deposit} remaining={remaining} />
               </StepCard>
               <StepCard step={8} title="Pièces jointes" subtitle="Brief, plan de salle, contrats">
                 <AttachmentsStep attachments={attachments} setAttachments={setAttachments} />

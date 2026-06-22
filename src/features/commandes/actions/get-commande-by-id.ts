@@ -1,5 +1,3 @@
-'use server';
-
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, CommandeWithDetails } from '@/features/commandes/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
@@ -31,6 +29,18 @@ export async function getCommandeById(id: string): Promise<ActionResponse<Comman
         activities: {
           orderBy: { createdAt: 'desc' },
         },
+        payments: {
+          select: {
+            id: true,
+            amount: true,
+            method: true,
+            status: true,
+            reference: true,
+            notes: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
 
@@ -45,6 +55,7 @@ export async function getCommandeById(id: string): Promise<ActionResponse<Comman
       acompteAmount: Number(commande.acompteAmount),
       paidAmount: Number(commande.paidAmount),
       remainingAmount: Number(commande.remainingAmount),
+      paymentStatus: commande.paymentStatus,
       pricePerPerson: commande.pricePerPerson ? Number(commande.pricePerPerson) : null,
       transportFees: commande.transportFees ? Number(commande.transportFees) : null,
       deliveryFees: commande.deliveryFees ? Number(commande.deliveryFees) : null,
@@ -64,6 +75,10 @@ export async function getCommandeById(id: string): Promise<ActionResponse<Comman
         ...i,
         unitPrice: Number(i.unitPrice),
         totalPrice: Number(i.totalPrice),
+      })),
+      payments: (commande.payments ?? []).map((p) => ({
+        ...p,
+        amount: Number(p.amount),
       })),
     };
 

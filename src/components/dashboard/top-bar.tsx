@@ -48,7 +48,7 @@ export function TopBar() {
   }
 
   return (
-    <div className="sticky top-0 z-40 glass border-b border-border/60">
+    <div className="sticky top-0 z-30 bg-background border-b border-border/60">
       <div className="mx-auto max-w-[1480px] flex items-center gap-4 px-6 lg:px-10 h-16">
         <Link href="/dashboard/commandes/new" className="flex items-center gap-2">
           <div className="size-8 rounded-lg bg-gradient-charcoal flex items-center justify-center shadow-soft">

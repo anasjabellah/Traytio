@@ -77,7 +77,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
   );
   const [discountValue, setDiscountValue] = useState(commande.discountValue ?? 0);
 
-  const [depositPercent, setDepositPercent] = useState(commande.acomptePercent ?? 0);
+  const [acompteAmount, setAcompteAmount] = useState(commande.acompteAmount ?? 0);
 
   const initTasks = (commande.tasks ?? []).map((t, i) => ({
     id: t.id ?? `t${i}`,
@@ -195,7 +195,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
   const preDiscount = itemsSubtotal + extrasTotal;
   const discountAmount = discountType === "percent" ? (preDiscount * discountValue) / 100 : discountValue;
   const total = Math.max(0, preDiscount - discountAmount);
-  const deposit = (total * depositPercent) / 100;
+  const deposit = acompteAmount;
   const remaining = total - deposit;
   const budgetUsed = budget > 0 ? Math.min(100, (total / budget) * 100) : 0;
   const overBudget = total > budget && budget > 0;
@@ -256,9 +256,8 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
         discountType: discountValue > 0 ? discountTypeDb : null,
         discountValue: discountValue || null,
         discountAmount: discountAmount || null,
-        acomptePercent: depositPercent,
+        acomptePercent: total > 0 ? Math.round((deposit / total) * 100) : 0,
         acompteAmount: deposit,
-        remainingAmount: remaining,
         clientBudget: budget || null,
         contactName: contactPerson || null,
         contactPhone: contactPhone || null,
@@ -293,7 +292,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [client, commande.id, commande.number, commande.status, eventStatus, eventName, discountType, eventDate, startTime, selectedPack, packs, selectedList, eventType, guests, location, total, transport, delivery, equipment, discountValue, discountAmount, depositPercent, deposit, remaining, budget, contactPerson, contactPhone, eventNotes, internalNotes, clientNotes, attachments]);
+  }, [client, commande.id, commande.number, commande.status, eventStatus, eventName, discountType, eventDate, startTime, selectedPack, packs, selectedList, eventType, guests, location, total, transport, delivery, equipment, discountValue, discountAmount, acompteAmount, deposit, budget, contactPerson, contactPhone, eventNotes, internalNotes, clientNotes, attachments]);
 
   const dateHash = eventDate.split("-").reduce((a, b) => a + parseInt(b, 10), 0);
   const dateAvailable = dateHash % 3 !== 0;
@@ -309,7 +308,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
     transport, setTransport, delivery, setDelivery,
     equipment, setEquipment, extraService, setExtraService,
     discountType, setDiscountType, discountValue, setDiscountValue,
-    depositPercent, setDepositPercent, attachments, setAttachments,
+    acompteAmount, setAcompteAmount, attachments, setAttachments,
     internalNotes, setInternalNotes, clientNotes, setClientNotes,
     tasks, setTasks,
   };
