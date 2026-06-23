@@ -55,6 +55,12 @@ export async function recalculateCommandeBalances(
         paymentStatus,
       },
     });
+
+    // Sync paidAmount to all linked invoices
+    await tx.invoice.updateMany({
+      where: { commandeId },
+      data: { paidAmount },
+    });
   };
 
   if ("$transaction" in client) {

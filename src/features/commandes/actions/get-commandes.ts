@@ -8,7 +8,15 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 
 export async function getCommandes(params: GetCommandesParams): Promise<ActionResponse<PaginatedCommandes>> {
   try {
-    const organizationId = await getOrganizationId();
+    console.log('[getCommandes] auth start', { timestamp: new Date().toISOString() });
+    let organizationId: string;
+    try {
+      organizationId = await getOrganizationId();
+      console.log('[getCommandes] auth success', { organizationId, timestamp: new Date().toISOString() });
+    } catch (authErr) {
+      console.log('[getCommandes] auth FAILED', { error: authErr instanceof Error ? authErr.message : authErr, timestamp: new Date().toISOString() });
+      throw authErr;
+    }
     const { search, page = 1, limit = COMMANDE_DEFAULT_PAGE_SIZE, sortBy = 'createdAt', sortOrder = 'desc', status } = params;
 
     const skip = (page - 1) * limit;
@@ -65,6 +73,9 @@ export async function getCommandes(params: GetCommandesParams): Promise<ActionRe
           deliveryFees: true,
           equipmentFees: true,
           discountValue: true,
+          taxRate: true,
+          taxLabel: true,
+          taxAmount: true,
           clientBudget: true,
           contactName: true,
           contactPhone: true,
@@ -114,6 +125,9 @@ export async function getCommandes(params: GetCommandesParams): Promise<ActionRe
       discountType: c.discountType,
       discountValue: c.discountValue ? Number(c.discountValue) : null,
       discountAmount: c.discountAmount ? Number(c.discountAmount) : null,
+      taxRate: c.taxRate ? Number(c.taxRate) : null,
+      taxLabel: c.taxLabel ?? null,
+      taxAmount: c.taxAmount ? Number(c.taxAmount) : null,
       clientBudget: c.clientBudget ? Number(c.clientBudget) : null,
       contactName: c.contactName,
       contactPhone: c.contactPhone,
@@ -132,8 +146,11 @@ export async function getCommandes(params: GetCommandesParams): Promise<ActionRe
 
     const totalPages = Math.ceil(total / limit);
 
+    console.log('[getCommandes] SUCCESS', { total, resultCount: result.length, page, limit, totalPages, timestamp: new Date().toISOString() });
     return { success: true, data: { data: result, total, page, limit, totalPages } };
   } catch (error: unknown) {
-    return { success: false, error: error instanceof Error ? error.message : 'An error occurred' };
+    const msg = error instanceof Error ? error.message : 'An error occurred';
+    console.log('[getCommandes] FAILURE', { error: msg, timestamp: new Date().toISOString() });
+    return { success: false, error: msg };
   }
 }

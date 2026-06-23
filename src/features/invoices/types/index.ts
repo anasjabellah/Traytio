@@ -30,6 +30,9 @@ export type InvoiceWithCommande = Invoice & {
     discountType: string | null;
     discountValue: number | null;
     discountAmount: number | null;
+    taxRate: number | null;
+    taxLabel: string | null;
+    taxAmount: number | null;
     notes: string | null;
     clientNotes: string | null;
     items: Array<{
@@ -45,6 +48,11 @@ export type InvoiceWithCommande = Invoice & {
       name: string;
       email: string | null;
       phone: string | null;
+      address: string | null;
+      city: string | null;
+      postalCode: string | null;
+      company: string | null;
+      siret: string | null;
     } | null;
     event?: {
       name: string | null;

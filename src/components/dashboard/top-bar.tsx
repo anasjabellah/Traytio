@@ -66,6 +66,7 @@ export function TopBar() {
             ["Packs", "/dashboard/menus"],
             ["Menu Items", "/dashboard/menu-items"],
             ["Calendrier", "/dashboard/calendar"],
+            ["Factures", "/dashboard/invoices"],
             ["Paiements", "/dashboard/payments"],
           ] as const).map(([label, href]) => {
             const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));

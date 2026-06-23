@@ -27,7 +27,7 @@ export async function createQuoteFromCommande(commandeId: string): Promise<Actio
     const commande = await prisma.commande.findFirst({
       where: { id: commandeId, organizationId },
       include: {
-        client: { select: { id: true, name: true, email: true, phone: true } },
+        client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
         event: { select: { name: true, startDate: true, location: true } },
         items: true,
       },
@@ -55,7 +55,7 @@ export async function createQuoteFromCommande(commandeId: string): Promise<Actio
       include: {
         commande: {
           include: {
-            client: { select: { id: true, name: true, email: true, phone: true } },
+            client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
             event: { select: { name: true, startDate: true, location: true } },
             items: true,
           },
@@ -81,7 +81,7 @@ export async function createInvoiceFromCommande(commandeId: string): Promise<Act
     const commande = await prisma.commande.findFirst({
       where: { id: commandeId, organizationId },
       include: {
-        client: { select: { id: true, name: true, email: true, phone: true } },
+        client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
         event: { select: { name: true, startDate: true, location: true } },
         items: true,
       },
@@ -109,7 +109,7 @@ export async function createInvoiceFromCommande(commandeId: string): Promise<Act
       include: {
         commande: {
           include: {
-            client: { select: { id: true, name: true, email: true, phone: true } },
+            client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
             event: { select: { name: true, startDate: true, location: true } },
             items: true,
           },
@@ -137,7 +137,7 @@ export async function getInvoiceById(id: string): Promise<ActionResponse<Invoice
       include: {
         commande: {
           include: {
-            client: { select: { id: true, name: true, email: true, phone: true } },
+            client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
             event: { select: { name: true, startDate: true, location: true } },
             items: true,
           },
@@ -155,20 +155,34 @@ export async function getInvoiceById(id: string): Promise<ActionResponse<Invoice
   }
 }
 
+export type PaginatedResult<T> = {
+  data: T[]
+  total: number
+  totalPages: number
+  page: number
+  limit: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
 export async function getInvoices(params: {
   commandeId?: string
   type?: "DEVIS" | "FACTURE"
+  search?: string
   page?: number
   limit?: number
-}): Promise<ActionResponse<{ data: InvoiceWithCommande[]; total: number }>> {
+}): Promise<ActionResponse<PaginatedResult<InvoiceWithCommande>>> {
   try {
     const organizationId = await getOrganizationId()
-    const { commandeId, type, page = 1, limit = 20 } = params
+    const { commandeId, type, search, page = 1, limit = 20 } = params
     const skip = (page - 1) * limit
 
     const where: Record<string, unknown> = { organizationId }
     if (commandeId) where.commandeId = commandeId
     if (type) where.type = type
+    if (search) {
+      where.number = { contains: search, mode: "insensitive" }
+    }
 
     const [total, invoices] = await prisma.$transaction([
       prisma.invoice.count({ where }),
@@ -177,7 +191,7 @@ export async function getInvoices(params: {
         include: {
           commande: {
             include: {
-              client: { select: { id: true, name: true, email: true, phone: true } },
+              client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
               items: true,
             },
           },
@@ -188,11 +202,18 @@ export async function getInvoices(params: {
       }),
     ])
 
+    const totalPages = Math.max(1, Math.ceil(total / limit))
+
     return {
       success: true,
       data: {
         data: invoices.map(serializeInvoice),
         total,
+        totalPages,
+        page,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
       },
     }
   } catch (err: unknown) {
@@ -227,7 +248,7 @@ export async function updateInvoiceStatus(
       include: {
         commande: {
           include: {
-            client: { select: { id: true, name: true, email: true, phone: true } },
+            client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
             event: { select: { name: true, startDate: true, location: true } },
             items: true,
           },
@@ -240,6 +261,69 @@ export async function updateInvoiceStatus(
     return { success: true, data: serializeInvoice(invoice) }
   } catch (err: unknown) {
     return { success: false, error: err instanceof Error ? err.message : "Erreur lors de la mise à jour" }
+  }
+}
+
+export async function convertQuoteToInvoice(quoteId: string): Promise<ActionResponse<InvoiceWithCommande>> {
+  try {
+    const organizationId = await getOrganizationId()
+
+    const quote = await prisma.invoice.findFirst({
+      where: { id: quoteId, organizationId, type: "DEVIS" },
+      include: {
+        commande: {
+          include: {
+            client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
+            event: { select: { name: true, startDate: true, location: true } },
+            items: true,
+          },
+        },
+      },
+    })
+
+    if (!quote) {
+      return { success: false, error: "Devis introuvable" }
+    }
+
+    if (!quote.commande) {
+      return { success: false, error: "Le devis n'est lié à aucune commande" }
+    }
+
+    const number = await generateInvoiceNumber("FACTURE")
+
+    const invoice = await prisma.invoice.create({
+      data: {
+        organizationId,
+        commandeId: quote.commandeId,
+        number,
+        type: "FACTURE",
+        status: "DRAFT",
+        issueDate: new Date(),
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        totalAmount: quote.totalAmount,
+        paidAmount: quote.paidAmount,
+        notes: quote.notes,
+      },
+      include: {
+        commande: {
+          include: {
+            client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
+            event: { select: { name: true, startDate: true, location: true } },
+            items: true,
+          },
+        },
+      },
+    })
+
+    revalidatePath(`/dashboard/commandes/${quote.commandeId}`)
+    revalidatePath("/dashboard/invoices")
+
+    return {
+      success: true,
+      data: serializeInvoice(invoice),
+    }
+  } catch (err: unknown) {
+    return { success: false, error: err instanceof Error ? err.message : "Erreur lors de la conversion du devis" }
   }
 }
 
@@ -277,6 +361,9 @@ function serializeInvoice(invoice: unknown): InvoiceWithCommande {
           discountType: cmd.discountType as string | null,
           discountValue: cmd.discountValue != null ? Number(cmd.discountValue) : null,
           discountAmount: cmd.discountAmount != null ? Number(cmd.discountAmount) : null,
+          taxRate: cmd.taxRate != null ? Number(cmd.taxRate) : null,
+          taxLabel: cmd.taxLabel as string | null,
+          taxAmount: cmd.taxAmount != null ? Number(cmd.taxAmount) : null,
           notes: cmd.notes as string | null,
           clientNotes: cmd.clientNotes as string | null,
           items: ((cmd.items ?? []) as Array<Record<string, unknown>>).map((item) => ({
@@ -293,6 +380,11 @@ function serializeInvoice(invoice: unknown): InvoiceWithCommande {
                 name: (cmd.client as Record<string, unknown>).name as string,
                 email: (cmd.client as Record<string, unknown>).email as string | null,
                 phone: (cmd.client as Record<string, unknown>).phone as string | null,
+                address: (cmd.client as Record<string, unknown>).address as string | null,
+                city: (cmd.client as Record<string, unknown>).city as string | null,
+                postalCode: (cmd.client as Record<string, unknown>).postalCode as string | null,
+                company: (cmd.client as Record<string, unknown>).company as string | null,
+                siret: (cmd.client as Record<string, unknown>).siret as string | null,
               }
             : null,
           event: cmd.event

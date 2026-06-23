@@ -24,6 +24,9 @@
   discountType: string | null;
   discountValue: number | null;
   discountAmount: number | null;
+  taxRate: number | null;
+  taxLabel: string | null;
+  taxAmount: number | null;
   clientBudget: number | null;
   contactName: string | null;
   contactPhone: string | null;

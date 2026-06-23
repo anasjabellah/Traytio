@@ -1,0 +1,28 @@
+{
+  "version": "5.22.0",
+  "steps": [
+    {
+      "tag": "AlterTable",
+      "table": "organizations",
+      "operations": [
+        { "tag": "AddColumn", "column": { "name": "companyAddress", "type": "TEXT", "nullable": true } },
+        { "tag": "AddColumn", "column": { "name": "companyEmail", "type": "TEXT", "nullable": true } },
+        { "tag": "AddColumn", "column": { "name": "companyICE", "type": "TEXT", "nullable": true } },
+        { "tag": "AddColumn", "column": { "name": "companyIF", "type": "TEXT", "nullable": true } },
+        { "tag": "AddColumn", "column": { "name": "companyName", "type": "TEXT", "nullable": true } },
+        { "tag": "AddColumn", "column": { "name": "companyPhone", "type": "TEXT", "nullable": true } },
+        { "tag": "AddColumn", "column": { "name": "companyRC", "type": "TEXT", "nullable": true } },
+        { "tag": "AddColumn", "column": { "name": "companyWebsite", "type": "TEXT", "nullable": true } },
+        { "tag": "AddColumn", "column": { "name": "invoiceFooter", "type": "TEXT", "nullable": true } },
+        { "tag": "AddColumn", "column": { "name": "invoiceNotes", "type": "TEXT", "nullable": true } },
+        { "tag": "AddColumn", "column": { "name": "invoicePrefix", "type": "TEXT", "default": "'FAC'", "nullable": true } },
+        { "tag": "AddColumn", "column": { "name": "invoiceTerms", "type": "TEXT", "nullable": true } },
+        { "tag": "AddColumn", "column": { "name": "paymentDelayDays", "type": "INTEGER", "default": 30, "nullable": true } },
+        { "tag": "AddColumn", "column": { "name": "pdfFontFamily", "type": "TEXT", "default": "'DM Sans'", "nullable": true } },
+        { "tag": "AddColumn", "column": { "name": "primaryColor", "type": "TEXT", "default": "'#C9A96E'", "nullable": true } },
+        { "tag": "AddColumn", "column": { "name": "quotePrefix", "type": "TEXT", "default": "'DEV'", "nullable": true } },
+        { "tag": "AddColumn", "column": { "name": "secondaryColor", "type": "TEXT", "default": "'#1a1a1a'", "nullable": true } }
+      ]
+    }
+  ]
+}

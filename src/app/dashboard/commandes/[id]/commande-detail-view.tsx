@@ -18,7 +18,7 @@ import { DeleteCommandeDialog } from "@/features/commandes/components/delete-com
 import { PaymentCard } from "@/features/payments/components/payment-card";
 import { AddPaymentDialog } from "@/features/payments/components/add-payment-dialog";
 import { PaymentHistory } from "@/features/payments/components/payment-history";
-import { createQuoteFromCommande, createInvoiceFromCommande, getInvoices } from "@/features/invoices/actions/invoice-actions";
+import { createQuoteFromCommande, createInvoiceFromCommande, getInvoices, updateInvoiceStatus, convertQuoteToInvoice } from "@/features/invoices/actions/invoice-actions";
 import type { CommandeWithDetails } from "@/features/commandes/types";
 import type { InvoiceWithCommande } from "@/features/invoices/types";
 
@@ -169,6 +169,34 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
       toast.error("Erreur de téléchargement");
     }
   }, []);
+
+  const handleUpdateInvoiceStatus = useCallback(async (invoiceId: string, newStatus: string) => {
+    try {
+      const result = await updateInvoiceStatus(invoiceId, newStatus);
+      if (result.success) {
+        toast.success("Statut mis à jour");
+        await fetchInvoices();
+      } else {
+        toast.error(result.error ?? "Erreur de mise à jour");
+      }
+    } catch {
+      toast.error("Erreur de mise à jour");
+    }
+  }, [fetchInvoices]);
+
+  const handleConvertToInvoice = useCallback(async (quoteId: string) => {
+    try {
+      const result = await convertQuoteToInvoice(quoteId);
+      if (result.success) {
+        toast.success("Facture créée à partir du devis");
+        await fetchInvoices();
+      } else {
+        toast.error(result.error ?? "Erreur de conversion");
+      }
+    } catch {
+      toast.error("Erreur de conversion");
+    }
+  }, [fetchInvoices]);
 
   const handlePaymentChange = useCallback(() => {
     router.refresh();
@@ -719,6 +747,16 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                 <div className="space-y-2">
                   {invoices.map((inv) => {
                     const typeLabel = inv.type === "DEVIS" ? "Devis" : "Facture";
+                    const statusLabels: Record<string, string> = {
+                      DRAFT: "Brouillon", SENT: "Envoyé", VIEWED: "Vu",
+                      ACCEPTED: "Accepté", REJECTED: "Rejeté", PAID: "Payé", OVERDUE: "En retard",
+                    };
+                    const statusColors: Record<string, string> = {
+                      DRAFT: "bg-amber-50 text-amber-700", SENT: "bg-blue-50 text-blue-700",
+                      VIEWED: "bg-purple-50 text-purple-700", ACCEPTED: "bg-emerald-50 text-emerald-700",
+                      REJECTED: "bg-rose-50 text-rose-700", PAID: "bg-green-50 text-green-700",
+                      OVERDUE: "bg-red-50 text-red-700",
+                    };
                     return (
                       <div
                         key={inv.id}
@@ -727,15 +765,35 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-foreground truncate">{inv.number}</span>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${inv.status === "DRAFT" ? "bg-amber-50 text-amber-700" : inv.status === "SENT" ? "bg-blue-50 text-blue-700" : inv.status === "VIEWED" ? "bg-purple-50 text-purple-700" : inv.status === "ACCEPTED" ? "bg-emerald-50 text-emerald-700" : inv.status === "PAID" ? "bg-green-50 text-green-700" : inv.status === "OVERDUE" ? "bg-red-50 text-red-700" : inv.status === "REJECTED" ? "bg-rose-50 text-rose-700" : "bg-gray-100 text-gray-500"}`}>
-                              {inv.status === "DRAFT" ? "Brouillon" : inv.status === "SENT" ? "Envoyé" : inv.status === "VIEWED" ? "Vu" : inv.status === "ACCEPTED" ? "Accepté" : inv.status === "PAID" ? "Payé" : inv.status === "OVERDUE" ? "En retard" : inv.status === "REJECTED" ? "Rejeté" : ""}
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${statusColors[inv.status] ?? "bg-gray-100 text-gray-500"}`}>
+                              {statusLabels[inv.status] ?? inv.status}
                             </span>
                           </div>
                           <div className="text-[11px] text-foreground/50 mt-0.5">
                             {typeLabel} · {new Date(inv.issueDate).toLocaleDateString("fr-FR")}
                           </div>
+                          <div className="flex items-center gap-1.5 mt-2">
+                            <select
+                              value={inv.status}
+                              onChange={(e) => handleUpdateInvoiceStatus(inv.id, e.target.value)}
+                              className="text-[11px] rounded-md border border-border/50 bg-white px-2 py-1 text-foreground/70 focus:outline-none focus:ring-1 focus:ring-[var(--gold-deep)]"
+                            >
+                              {Object.entries(statusLabels).map(([key, label]) => (
+                                <option key={key} value={key}>{label}</option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
+                          {inv.type === "DEVIS" && inv.status !== "REJECTED" && (
+                            <button
+                              onClick={() => handleConvertToInvoice(inv.id)}
+                              className="size-8 rounded-lg border border-border bg-white hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 text-foreground/60 transition-all flex items-center justify-center"
+                              title="Convertir en facture"
+                            >
+                              <Receipt className="size-3.5" strokeWidth={1.8} />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDownloadInvoice(inv)}
                             className="size-8 rounded-lg border border-border bg-white hover:bg-foreground/[0.02] text-foreground/60 hover:text-foreground transition-all flex items-center justify-center"

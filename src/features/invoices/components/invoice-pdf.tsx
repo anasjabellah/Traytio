@@ -1,80 +1,134 @@
-import { Document, Page, View, Text, StyleSheet, Font } from "@react-pdf/renderer";
+import path from "node:path";
+import { Document, Page, View, Text, StyleSheet, Font, Image } from "@react-pdf/renderer";
+
+const fontDir = path.join(process.cwd(), "public", "fonts");
 
 Font.register({
   family: "DM Sans",
   fonts: [
-    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2tp2ywxg089UriI5-g4vlH9VoD8CmcqZG40F9JadbnoEwAopxhTg.ttf", fontWeight: 400 },
-    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2tp2ywxg089UriI5-g4vlH9VoD8CmcqZG40F9JadbnoEwAkJxhTg.ttf", fontWeight: 500 },
-    { src: "https://fonts.gstatic.com/s/dmsans/v17/rP2tp2ywxg089UriI5-g4vlH9VoD8CmcqZG40F9JadbnoEwAfJthTg.ttf", fontWeight: 600 },
+    { src: path.join(fontDir, "DMSans-Regular.ttf"), fontWeight: 400 },
+    { src: path.join(fontDir, "DMSans-Medium.ttf"), fontWeight: 500 },
+    { src: path.join(fontDir, "DMSans-SemiBold.ttf"), fontWeight: 600 },
   ],
 });
 
-const GOLD = "#C9A96E";
-const DARK = "#1a1a1a";
-const GRAY_LABEL = "#888888";
-const GRAY_LINE = "#e2e2e2";
-const GRAY_LIGHT = "#f7f7f7";
+Font.register({
+  family: "Inter",
+  fonts: [
+    { src: path.join(fontDir, "Inter-Regular.woff"), fontWeight: 400 },
+    { src: path.join(fontDir, "Inter-Medium.woff"), fontWeight: 500 },
+    { src: path.join(fontDir, "Inter-SemiBold.woff"), fontWeight: 600 },
+  ],
+});
 
-const styles = StyleSheet.create({
-  page: { padding: 44, fontFamily: "DM Sans", fontSize: 9, color: DARK },
-  header: { flexDirection: "row", justifyContent: "space-between", marginBottom: 36, paddingBottom: 22, borderBottom: `2px solid ${GOLD}` },
-  headerLeft: { flex: 1, paddingRight: 40 },
-  orgNameBlock: { marginBottom: 8 },
-  orgName: { fontSize: 20, fontWeight: 600, color: GOLD, letterSpacing: -0.3 },
-  orgDetailRow: { flexDirection: "row", marginTop: 2 },
-  orgDetail: { fontSize: 8, color: GRAY_LABEL, lineHeight: 1.6 },
-  headerRight: { alignItems: "flex-end", minWidth: 180 },
-  docType: { fontSize: 26, fontWeight: 600, color: DARK, letterSpacing: -0.5 },
-  docNumber: { fontSize: 10, color: GRAY_LABEL, marginTop: 3 },
-  sectionLabel: { fontSize: 7, color: GRAY_LABEL, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 6 },
-  infoRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 28 },
-  infoBlock: { flex: 1 },
-  clientName: { fontSize: 11, fontWeight: 600, color: DARK, marginBottom: 3 },
-  clientDetail: { fontSize: 9, color: GRAY_LABEL, lineHeight: 1.7 },
-  detailRow: { flexDirection: "row", marginBottom: 2 },
-  detailLabel: { fontSize: 8, color: GRAY_LABEL, width: 80 },
-  detailValue: { fontSize: 9, color: DARK, flex: 1 },
-  table: { marginTop: 4 },
-  tableHeader: { flexDirection: "row", backgroundColor: GRAY_LIGHT, paddingVertical: 7, paddingHorizontal: 10, borderRadius: 2 },
-  tableHeaderCell: { fontSize: 7, color: GRAY_LABEL, textTransform: "uppercase", letterSpacing: 1, fontWeight: 500 },
-  tableRow: { flexDirection: "row", paddingVertical: 7, paddingHorizontal: 10, borderBottom: `1px solid ${GRAY_LINE}` },
-  tableCell: { fontSize: 9, color: DARK },
-  colName: { width: "40%" },
-  colQty: { width: "15%", textAlign: "center" },
-  colPrice: { width: "22%", textAlign: "right" },
-  colTotal: { width: "23%", textAlign: "right" },
-  totals: { marginTop: 18, marginLeft: "auto", width: "48%" },
-  totalRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 3 },
-  totalLabel: { fontSize: 9, color: GRAY_LABEL },
-  totalValue: { fontSize: 9, color: DARK, fontWeight: 500 },
-  grandTotalRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 7, borderTop: `2px solid ${GOLD}`, marginTop: 5 },
-  grandTotalLabel: { fontSize: 13, fontWeight: 600, color: DARK },
-  grandTotalValue: { fontSize: 13, fontWeight: 600, color: GOLD },
-  paymentRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 2 },
-  paymentLabel: { fontSize: 9, color: GRAY_LABEL },
-  paymentValue: { fontSize: 9, color: DARK },
-  remainingRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 5, borderTop: `1px solid ${GRAY_LINE}`, marginTop: 3 },
-  remainingLabel: { fontSize: 10, fontWeight: 600, color: DARK },
-  remainingValue: { fontSize: 10, fontWeight: 600 },
-  notes: { marginTop: 28, paddingTop: 18, borderTop: `1px solid ${GRAY_LINE}` },
-  notesText: { fontSize: 8, color: GRAY_LABEL, lineHeight: 1.6, marginTop: 6 },
-  footerContainer: { position: "absolute", bottom: 28, left: 44, right: 44 },
-  footer: { borderTop: `1px solid ${GRAY_LINE}`, paddingTop: 10, flexDirection: "row", justifyContent: "space-between" },
-  footerText: { fontSize: 7, color: "#bbbbbb" },
-  missing: { fontSize: 9, color: "#cccccc", fontStyle: "italic" },
+Font.register({
+  family: "Poppins",
+  fonts: [
+    { src: path.join(fontDir, "Poppins-Regular.ttf"), fontWeight: 400 },
+    { src: path.join(fontDir, "Poppins-Medium.ttf"), fontWeight: 500 },
+    { src: path.join(fontDir, "Poppins-SemiBold.ttf"), fontWeight: 600 },
+  ],
+});
+
+const C = {
+  gray: "#666",
+  line: "#e5e5e5",
+  light: "#f5f5f5",
+  muted: "#999",
+};
+
+const buildStyles = (primary: string, secondary: string) => StyleSheet.create({
+  page: { padding: 48, fontSize: 9, fontFamily: "DM Sans", color: secondary },
+
+  header: { marginBottom: 18, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  headerLeft: { flexDirection: "row", gap: 14, alignItems: "center", flexShrink: 1 },
+  logo: { width: 64, height: 64, objectFit: "contain", flexShrink: 0 },
+  hCompany: { fontSize: 21, fontWeight: 600, color: primary, letterSpacing: -0.3 },
+  hLine: { fontSize: 7.5, color: C.gray, lineHeight: 1.35, marginTop: 2 },
+  headerRight: { alignItems: "flex-end", flexShrink: 0 },
+  badge: { backgroundColor: primary, paddingHorizontal: 16, paddingVertical: 5, borderRadius: 3 },
+  badgeText: { fontSize: 13, fontWeight: 700, color: "#fff", letterSpacing: 2 },
+  docNum: { fontSize: 9, color: C.gray, marginTop: 5 },
+  hr: { height: 2.5, backgroundColor: primary, marginVertical: 16, borderRadius: 1.5 },
+
+  infoRow: { flexDirection: "row", gap: 20, marginBottom: 18 },
+  infoCard: { flex: 1, backgroundColor: C.light, borderRadius: 3, padding: 10 },
+  infoTitle: { fontSize: 7, color: C.muted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 5 },
+  infoName: { fontSize: 10, fontWeight: 600, color: secondary, marginBottom: 2 },
+  infoLine: { fontSize: 7.5, color: C.gray, lineHeight: 1.35 },
+  infoHRow: { flexDirection: "row", gap: 4 },
+  infoLabel: { fontSize: 7.5, color: C.muted },
+  infoVal: { fontSize: 7.5, color: secondary, fontWeight: 500 },
+
+  tableWrap: { marginBottom: 14 },
+  th: { flexDirection: "row", backgroundColor: secondary, paddingVertical: 7, paddingHorizontal: 9, borderRadius: 2 },
+  thCell: { fontSize: 7, color: "#fff", textTransform: "uppercase", letterSpacing: 1, fontWeight: 500 },
+  td: { flexDirection: "row", paddingVertical: 5, paddingHorizontal: 9, borderBottomWidth: 1, borderBottomColor: C.line, alignItems: "center" },
+  tdCell: { fontSize: 9, color: secondary },
+  colD: { width: "44%" },
+  colQ: { width: "14%", textAlign: "center" },
+  colP: { width: "21%", textAlign: "right" },
+  colT: { width: "21%", textAlign: "right" },
+
+  totals: { marginLeft: "auto", width: "46%", marginBottom: 14 },
+  tr: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 2 },
+  tl: { fontSize: 8, color: C.gray },
+  tv: { fontSize: 9, color: secondary, fontWeight: 500 },
+  fh: { fontSize: 8.5, fontWeight: 600, color: secondary },
+  fs: { fontSize: 8, color: C.gray, paddingLeft: 8 },
+  discountV: { fontSize: 9, fontWeight: 500, color: "#059669" },
+  discountL: { fontSize: 8, color: "#059669" },
+  gtWrap: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 7, borderTopWidth: 2.5, borderTopColor: primary, marginTop: 2 },
+  gtL: { fontSize: 13, fontWeight: 700, color: secondary },
+  gtV: { fontSize: 13, fontWeight: 700, color: primary },
+  pi: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 1.5 },
+  piL: { fontSize: 8, color: C.gray },
+  piV: { fontSize: 9, color: secondary },
+  rl: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 4, borderTopWidth: 1, borderTopColor: C.line, marginTop: 1.5 },
+  rlL: { fontSize: 9, fontWeight: 600, color: secondary },
+  rlV: { fontSize: 9, fontWeight: 600 },
+
+  notes: { paddingTop: 8, borderTopWidth: 1, borderTopColor: C.line, marginBottom: 14 },
+  nTitle: { fontSize: 7, color: C.muted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 4 },
+  nText: { fontSize: 8, color: C.gray, lineHeight: 1.35 },
+
+  footer: { paddingTop: 8, borderTopWidth: 1, borderTopColor: C.line, flexDirection: "row", justifyContent: "space-between" },
+  fText: { fontSize: 7, color: "#bbb" },
+
+  missing: { fontSize: 9, color: "#ccc", fontStyle: "italic" },
 });
 
 function formatMAD(n: number): string {
-  return `${n.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} MAD`;
+  return `${n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MAD`;
 }
 
 function formatDate(d: Date): string {
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 }
 
+type PdfSettings = {
+  primaryColor: string;
+  secondaryColor: string;
+  pdfFontFamily: string;
+  companyName: string | null;
+  companyAddress: string | null;
+  companyPhone: string | null;
+  companyEmail: string | null;
+  companyWebsite: string | null;
+  companyICE: string | null;
+  companyIF: string | null;
+  companyRC: string | null;
+  invoicePrefix: string;
+  quotePrefix: string;
+  paymentDelayDays: number;
+  invoiceFooter: string | null;
+  invoiceTerms: string | null;
+};
+
 type InvoicePDFProps = {
-  org: { name: string; address?: string | null; city?: string | null; country?: string | null; phone?: string | null; email?: string | null };
-  client: { name: string; email?: string | null; phone?: string | null } | null;
+  settings?: PdfSettings;
+  org: { name: string; logo?: string | null; address?: string | null; city?: string | null; country?: string | null; phone?: string | null; email?: string | null };
+  client: { name: string; email?: string | null; phone?: string | null; address?: string | null; city?: string | null; postalCode?: string | null; company?: string | null; siret?: string | null } | null;
   invoice: {
     number: string;
     type: "DEVIS" | "FACTURE";
@@ -95,234 +149,264 @@ type InvoicePDFProps = {
     discountType: string | null;
     discountValue: number | null;
     discountAmount: number | null;
+    taxRate: number | null;
+    taxLabel: string | null;
+    taxAmount: number | null;
     notes: string | null;
     clientNotes: string | null;
+    eventDate: Date | null;
+    eventLocation: string | null;
+    guestCount: number | null;
+    menuName: string | null;
     items: Array<{ name: string; quantity: number; unitPrice: number; totalPrice: number }>;
   };
 };
 
-export function InvoicePDF({ org, client, invoice, commande }: InvoicePDFProps) {
-  const itemsSubtotal = commande.items.reduce((s, i) => s + i.totalPrice, 0);
+export function InvoicePDF({ settings, org, client, invoice, commande }: InvoicePDFProps) {
+  const primary = settings?.primaryColor ?? "#C9A96E";
+  const secondary = settings?.secondaryColor ?? "#1a1a1a";
+  const fontFamily = settings?.pdfFontFamily ?? "DM Sans";
+  const s = buildStyles(primary, secondary);
+
+  const itemsSubtotal = commande.items.reduce((sum, i) => sum + i.totalPrice, 0);
   const totalFees = (commande.transportFees ?? 0) + (commande.deliveryFees ?? 0) + (commande.equipmentFees ?? 0);
   const discountAmount = commande.discountAmount ?? 0;
-  const isDiscountPercentage = commande.discountType === "PERCENTAGE";
-  const discountLabel = isDiscountPercentage && commande.discountValue
-    ? `Remise (${commande.discountValue}%)`
-    : "Remise";
+  const discountPct = commande.discountType === "PERCENTAGE" && commande.discountValue ? ` (${commande.discountValue}%)` : "";
+  const taxAmount = commande.taxAmount ?? 0;
+  const taxLabel = commande.taxLabel ?? "TVA";
   const remaining = invoice.totalAmount - invoice.paidAmount;
+  const docLabel = invoice.type === "DEVIS" ? "DEVIS" : "FACTURE";
+  const companyName = settings?.companyName || org.name;
+  const companyAddr = settings?.companyAddress || [org.address, org.city, org.country].filter(Boolean).join(", ") || null;
+  const companyPhone = settings?.companyPhone || org.phone || null;
+  const companyEmail = settings?.companyEmail || org.email || null;
+  const companyWebsite = settings?.companyWebsite || null;
+
+  const metaLines: string[] = [];
+  if (companyAddr) metaLines.push(companyAddr);
+  if (companyPhone) metaLines.push(`Tél: ${companyPhone}`);
+  if (companyEmail) metaLines.push(companyEmail);
+  if (companyWebsite) metaLines.push(companyWebsite);
+  const companyICE = settings?.companyICE;
+  const companyIF = settings?.companyIF;
+  const companyRC = settings?.companyRC;
+  const ids = [companyICE && `ICE: ${companyICE}`, companyIF && `IF: ${companyIF}`, companyRC && `RC: ${companyRC}`].filter(Boolean) as string[];
+  if (ids.length) metaLines.push(ids.join(" · "));
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        <Header org={org} invoice={invoice} />
-        <InfoSection client={client} invoice={invoice} commande={commande} />
-        <ItemsTable items={commande.items} />
-        <TotalsSection
+      <Page size="A4" style={[s.page, { fontFamily }]}>
+        <View style={s.header}>
+          <View style={s.headerLeft}>
+            {org.logo ? <Image style={s.logo} src={org.logo} /> : null}
+            <View>
+              <Text style={s.hCompany}>{companyName}</Text>
+              {metaLines.map((line, i) => (
+                <Text key={i} style={s.hLine}>{line}</Text>
+              ))}
+            </View>
+          </View>
+          <View style={s.headerRight}>
+            <View style={s.badge}>
+              <Text style={s.badgeText}>{docLabel}</Text>
+            </View>
+            <Text style={s.docNum}>N° {invoice.number}</Text>
+          </View>
+        </View>
+
+        <View style={s.hr} />
+
+        <View style={s.infoRow}>
+          <View style={s.infoCard}>
+            <Text style={s.infoTitle}>Adressé à</Text>
+            {client ? (
+              <>
+                <Text style={s.infoName}>{client.company ? `${client.company} (${client.name})` : client.name}</Text>
+                {client.email ? <Text style={s.infoLine}>{client.email}</Text> : null}
+                {client.phone ? <Text style={s.infoLine}>Tél: {client.phone}</Text> : null}
+                {client.address ? <Text style={s.infoLine}>{client.address}</Text> : null}
+                {client.city ? <Text style={s.infoLine}>{client.city}{client.postalCode ? ` ${client.postalCode}` : ""}</Text> : null}
+                {client.siret ? <Text style={s.infoLine}>SIRET: {client.siret}</Text> : null}
+              </>
+            ) : (
+              <Text style={s.missing}>Client non renseigné</Text>
+            )}
+          </View>
+
+          {commande.eventDate || commande.eventLocation || commande.guestCount || commande.menuName ? (
+            <View style={s.infoCard}>
+              <Text style={s.infoTitle}>Événement</Text>
+              {commande.menuName ? <Text style={s.infoName}>{commande.menuName}</Text> : null}
+              {commande.eventDate ? <Text style={s.infoLine}>Date: {formatDate(commande.eventDate)}</Text> : null}
+              {commande.eventLocation ? <Text style={s.infoLine}>Lieu: {commande.eventLocation}</Text> : null}
+              {commande.guestCount ? <Text style={s.infoLine}>{commande.guestCount} invités</Text> : null}
+            </View>
+          ) : null}
+
+          <View style={s.infoCard}>
+            <Text style={s.infoTitle}>Document</Text>
+            <View style={s.infoHRow}>
+              <Text style={s.infoLabel}>Émission</Text>
+              <Text style={s.infoVal}>{formatDate(invoice.issueDate)}</Text>
+            </View>
+            {invoice.dueDate ? (
+              <View style={s.infoHRow}>
+                <Text style={s.infoLabel}>Échéance</Text>
+                <Text style={s.infoVal}>{formatDate(invoice.dueDate)}</Text>
+              </View>
+            ) : null}
+          </View>
+        </View>
+
+        {commande.items.length > 0 ? (
+          <View style={s.tableWrap}>
+            <View style={s.th}>
+              <Text style={[s.thCell, s.colD]}>Description</Text>
+              <Text style={[s.thCell, s.colQ]}>Qté</Text>
+              <Text style={[s.thCell, s.colP]}>Prix unitaire</Text>
+              <Text style={[s.thCell, s.colT]}>Total</Text>
+            </View>
+            {commande.items.map((item, i) => (
+              <View style={[s.td, i % 2 === 1 ? { backgroundColor: C.light } : {}]} key={i}>
+                <Text style={[s.tdCell, s.colD]}>{item.name}</Text>
+                <Text style={[s.tdCell, s.colQ]}>{item.quantity}</Text>
+                <Text style={[s.tdCell, s.colP]}>{formatMAD(item.unitPrice)}</Text>
+                <Text style={[s.tdCell, s.colT]}>{formatMAD(item.totalPrice)}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        <Totals
+          s={s}
+          primary={primary}
+          secondary={secondary}
           itemsSubtotal={itemsSubtotal}
           totalFees={totalFees}
           transportFees={commande.transportFees}
           deliveryFees={commande.deliveryFees}
           equipmentFees={commande.equipmentFees}
           discountAmount={discountAmount}
-          discountLabel={discountLabel}
+          discountLabel={`Remise${discountPct}`}
+          taxAmount={taxAmount}
+          taxLabel={taxLabel}
           totalAmount={invoice.totalAmount}
           paidAmount={invoice.paidAmount}
           acompteAmount={commande.acompteAmount}
           remaining={remaining}
         />
-        <NotesSection notes={invoice.notes ?? commande.clientNotes} />
-        <Footer />
+
+        {(invoice.notes || commande.clientNotes || settings?.invoiceTerms) ? (
+          <View style={s.notes}>
+            {invoice.notes || commande.clientNotes ? (
+              <>
+                <Text style={s.nTitle}>Notes</Text>
+                <Text style={s.nText}>{invoice.notes || commande.clientNotes}</Text>
+              </>
+            ) : null}
+            {settings?.invoiceTerms ? (
+              <>
+                <Text style={[s.nTitle, (invoice.notes || commande.clientNotes) ? { marginTop: 8 } : {}]}>Conditions générales</Text>
+                <Text style={s.nText}>{settings.invoiceTerms}</Text>
+              </>
+            ) : null}
+          </View>
+        ) : null}
+
+        <View style={s.footer}>
+          <Text style={s.fText}>{settings?.invoiceFooter || "Généré par TUR — Suite traiteur premium"}</Text>
+          <Text style={s.fText}>Généré le {new Date().toLocaleDateString("fr-FR")}</Text>
+        </View>
       </Page>
     </Document>
   );
 }
 
-function Header({ org, invoice }: { org: InvoicePDFProps["org"]; invoice: InvoicePDFProps["invoice"] }) {
-  const hasOrgAddress = org.address || org.city || org.country;
-  return (
-    <View style={styles.header}>
-      <View style={styles.headerLeft}>
-        <View style={styles.orgNameBlock}>
-          <Text style={styles.orgName}>{org.name || "Votre société"}</Text>
-        </View>
-        {hasOrgAddress && (
-          <View>
-            {org.address && <Text style={styles.orgDetail}>{org.address}</Text>}
-            {org.city && org.country ? (
-              <Text style={styles.orgDetail}>{org.city}, {org.country}</Text>
-            ) : org.city ? (
-              <Text style={styles.orgDetail}>{org.city}</Text>
-            ) : org.country ? (
-              <Text style={styles.orgDetail}>{org.country}</Text>
-            ) : null}
-          </View>
-        )}
-        {org.phone && <Text style={[styles.orgDetail, { marginTop: 3 }]}>Tél: {org.phone}</Text>}
-        {org.email && <Text style={styles.orgDetail}>{org.email}</Text>}
-      </View>
-      <View style={styles.headerRight}>
-        <Text style={styles.docType}>{invoice.type === "DEVIS" ? "DEVIS" : "FACTURE"}</Text>
-        <Text style={styles.docNumber}>N° {invoice.number}</Text>
-      </View>
-    </View>
-  );
-}
+/* ─────────────────────── Totals sub-component ─────────────────────── */
 
-function InfoSection({ client, invoice, commande }: { client: InvoicePDFProps["client"]; invoice: InvoicePDFProps["invoice"]; commande: InvoicePDFProps["commande"] }) {
-  const hasEventInfo = commande.notes;
-  return (
-    <View style={styles.infoRow}>
-      <View style={styles.infoBlock}>
-        <Text style={styles.sectionLabel}>Adressé à</Text>
-        {client ? (
-          <View>
-            <Text style={styles.clientName}>{client.name}</Text>
-            {client.email && <Text style={styles.clientDetail}>{client.email}</Text>}
-            {client.phone && <Text style={styles.clientDetail}>Tél: {client.phone}</Text>}
-          </View>
-        ) : (
-          <Text style={styles.missing}>Client non renseigné</Text>
-        )}
-      </View>
-      <View style={[styles.infoBlock, { alignItems: "flex-end" }]}>
-        <Text style={[styles.sectionLabel, { textAlign: "right" as const }]}>Détails du document</Text>
-        <View style={{ width: 200 }}>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Date d&apos;émission</Text>
-            <Text style={styles.detailValue}>{formatDate(invoice.issueDate)}</Text>
-          </View>
-          {invoice.dueDate && (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Date d&apos;échéance</Text>
-              <Text style={styles.detailValue}>{formatDate(invoice.dueDate)}</Text>
-            </View>
-          )}
-          {hasEventInfo && (
-            <View style={[styles.detailRow, { marginTop: 4 }]}>
-              <Text style={styles.detailLabel}>Notes</Text>
-              <Text style={[styles.detailValue, { color: GRAY_LABEL, fontSize: 8 }]}>{commande.notes}</Text>
-            </View>
-          )}
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function ItemsTable({ items }: { items: InvoicePDFProps["commande"]["items"] }) {
-  return (
-    <View style={styles.table}>
-      <View style={styles.tableHeader}>
-        <Text style={[styles.tableHeaderCell, styles.colName]}>Article</Text>
-        <Text style={[styles.tableHeaderCell, styles.colQty]}>Quantité</Text>
-        <Text style={[styles.tableHeaderCell, styles.colPrice]}>Prix unitaire</Text>
-        <Text style={[styles.tableHeaderCell, styles.colTotal]}>Total</Text>
-      </View>
-      {items.map((item, i) => (
-        <View style={i % 2 === 1 ? [styles.tableRow, { backgroundColor: GRAY_LIGHT }] : styles.tableRow} key={i}>
-          <Text style={[styles.tableCell, styles.colName]}>{item.name}</Text>
-          <Text style={[styles.tableCell, styles.colQty]}>{item.quantity}</Text>
-          <Text style={[styles.tableCell, styles.colPrice]}>{formatMAD(item.unitPrice)}</Text>
-          <Text style={[styles.tableCell, styles.colTotal]}>{formatMAD(item.totalPrice)}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function TotalsSection({
+function Totals({
+  s, primary, secondary,
   itemsSubtotal, totalFees, transportFees, deliveryFees, equipmentFees,
-  discountAmount, discountLabel, totalAmount, paidAmount, acompteAmount, remaining,
+  discountAmount, discountLabel, taxAmount, taxLabel,
+  totalAmount, paidAmount, acompteAmount, remaining,
 }: {
-  itemsSubtotal: number;
-  totalFees: number;
-  transportFees: number | null;
-  deliveryFees: number | null;
-  equipmentFees: number | null;
-  discountAmount: number;
-  discountLabel: string;
-  totalAmount: number;
-  paidAmount: number;
-  acompteAmount: number;
-  remaining: number;
+  s: ReturnType<typeof buildStyles>; primary: string; secondary: string;
+  itemsSubtotal: number; totalFees: number;
+  transportFees: number | null; deliveryFees: number | null; equipmentFees: number | null;
+  discountAmount: number; discountLabel: string; taxAmount: number; taxLabel: string;
+  totalAmount: number; paidAmount: number; acompteAmount: number; remaining: number;
 }) {
   const showFees = transportFees || deliveryFees || equipmentFees;
   return (
-    <View style={styles.totals}>
-      <View style={styles.totalRow}>
-        <Text style={styles.totalLabel}>Sous-total articles</Text>
-        <Text style={styles.totalValue}>{formatMAD(itemsSubtotal)}</Text>
+    <View style={s.totals}>
+      <View style={s.tr}>
+        <Text style={s.tl}>Sous-total</Text>
+        <Text style={s.tv}>{formatMAD(itemsSubtotal)}</Text>
       </View>
-      {showFees && <View style={[styles.totalRow, { borderTop: `1px solid ${GRAY_LINE}`, paddingTop: 4, marginTop: 2 }]}>
-        <Text style={[styles.totalLabel, { fontWeight: 600, color: DARK }]}>Frais</Text>
-        <Text style={[styles.totalValue, { fontWeight: 600 }]}>{formatMAD(totalFees)}</Text>
-      </View>}
-      {transportFees ? (
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>  Transport</Text>
-          <Text style={styles.totalValue}>{formatMAD(transportFees)}</Text>
-        </View>
+
+      {showFees ? (
+        <>
+          <View style={[s.tr, { borderTopWidth: 1, borderTopColor: C.line, paddingTop: 2, marginTop: 1 }]}>
+            <Text style={s.fh}>Frais</Text>
+            <Text style={s.fh}>{formatMAD(totalFees)}</Text>
+          </View>
+          {transportFees ? (
+            <View style={s.tr}>
+              <Text style={s.fs}>Transport</Text>
+              <Text style={[s.tv, { fontSize: 8 }]}>{formatMAD(transportFees)}</Text>
+            </View>
+          ) : null}
+          {deliveryFees ? (
+            <View style={s.tr}>
+              <Text style={s.fs}>Livraison</Text>
+              <Text style={[s.tv, { fontSize: 8 }]}>{formatMAD(deliveryFees)}</Text>
+            </View>
+          ) : null}
+          {equipmentFees ? (
+            <View style={s.tr}>
+              <Text style={s.fs}>Équipement</Text>
+              <Text style={[s.tv, { fontSize: 8 }]}>{formatMAD(equipmentFees)}</Text>
+            </View>
+          ) : null}
+        </>
       ) : null}
-      {deliveryFees ? (
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>  Livraison</Text>
-          <Text style={styles.totalValue}>{formatMAD(deliveryFees)}</Text>
-        </View>
-      ) : null}
-      {equipmentFees ? (
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>  Équipement</Text>
-          <Text style={styles.totalValue}>{formatMAD(equipmentFees)}</Text>
-        </View>
-      ) : null}
+
       {discountAmount > 0 ? (
-        <View style={styles.totalRow}>
-          <Text style={[styles.totalLabel, { color: "#059669" }]}>{discountLabel}</Text>
-          <Text style={[styles.totalValue, { color: "#059669" }]}>-{formatMAD(discountAmount)}</Text>
+        <View style={s.tr}>
+          <Text style={s.discountL}>{discountLabel}</Text>
+          <Text style={s.discountV}>-{formatMAD(discountAmount)}</Text>
         </View>
       ) : null}
-      <View style={styles.grandTotalRow}>
-        <Text style={styles.grandTotalLabel}>Total</Text>
-        <Text style={styles.grandTotalValue}>{formatMAD(totalAmount)}</Text>
+
+      {taxAmount > 0 ? (
+        <View style={s.tr}>
+          <Text style={s.tl}>{taxLabel}</Text>
+          <Text style={s.tv}>{formatMAD(taxAmount)}</Text>
+        </View>
+      ) : null}
+
+      <View style={s.gtWrap}>
+        <Text style={s.gtL}>Total</Text>
+        <Text style={s.gtV}>{formatMAD(totalAmount)}</Text>
       </View>
+
       {acompteAmount > 0 ? (
-        <View style={[styles.paymentRow, { marginTop: 4 }]}>
-          <Text style={styles.paymentLabel}>Acompte requis</Text>
-          <Text style={styles.paymentValue}>{formatMAD(acompteAmount)}</Text>
+        <View style={[s.pi, { marginTop: 3 }]}>
+          <Text style={s.piL}>Acompte requis</Text>
+          <Text style={s.piV}>{formatMAD(acompteAmount)}</Text>
         </View>
       ) : null}
       {paidAmount > 0 ? (
-        <View style={styles.paymentRow}>
-          <Text style={[styles.paymentLabel, { color: "#059669" }]}>Déjà payé</Text>
-          <Text style={[styles.paymentValue, { color: "#059669" }]}>{formatMAD(paidAmount)}</Text>
+        <View style={s.pi}>
+          <Text style={[s.piL, { color: "#059669" }]}>Déjà payé</Text>
+          <Text style={[s.piV, { color: "#059669" }]}>{formatMAD(paidAmount)}</Text>
         </View>
       ) : null}
-      <View style={styles.remainingRow}>
-        <Text style={styles.remainingLabel}>Solde restant</Text>
-        <Text style={remaining > 0 ? [styles.remainingValue, { color: "#d97706" }] : [styles.remainingValue, { color: "#059669" }]}>
+      <View style={s.rl}>
+        <Text style={s.rlL}>Solde restant</Text>
+        <Text style={[s.rlV, { color: remaining > 0 ? "#d97706" : "#059669" }]}>
           {remaining > 0 ? formatMAD(remaining) : "Soldé"}
         </Text>
-      </View>
-    </View>
-  );
-}
-
-function NotesSection({ notes }: { notes: string | null }) {
-  if (!notes) return null;
-  return (
-    <View style={styles.notes}>
-      <Text style={styles.sectionLabel}>Notes</Text>
-      <Text style={styles.notesText}>{notes}</Text>
-    </View>
-  );
-}
-
-function Footer() {
-  return (
-    <View style={styles.footerContainer}>
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>TUR — Suite traiteur premium</Text>
-        <Text style={styles.footerText}>Généré le {new Date().toLocaleDateString("fr-FR")}</Text>
       </View>
     </View>
   );

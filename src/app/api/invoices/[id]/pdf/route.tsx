@@ -18,7 +18,7 @@ export async function GET(
       include: {
         commande: {
           include: {
-            client: { select: { id: true, name: true, email: true, phone: true } },
+            client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
             event: { select: { name: true, startDate: true, location: true } },
             items: true,
           },
@@ -32,7 +32,14 @@ export async function GET(
 
     const org = await prisma.organization.findUnique({
       where: { id: organizationId },
-      select: { name: true, address: true, city: true, country: true, phone: true, email: true },
+      select: {
+        name: true, logo: true, address: true, city: true, country: true, phone: true, email: true,
+        primaryColor: true, secondaryColor: true, pdfFontFamily: true,
+        companyName: true, companyAddress: true, companyPhone: true, companyEmail: true, companyWebsite: true,
+        companyICE: true, companyIF: true, companyRC: true,
+        invoicePrefix: true, quotePrefix: true, paymentDelayDays: true,
+        invoiceFooter: true, invoiceTerms: true,
+      },
     });
 
     if (!org) {
@@ -46,15 +53,45 @@ export async function GET(
 
     const pdfBuffer = await renderToBuffer((
       <InvoicePDF
+        settings={{
+          primaryColor: org.primaryColor ?? "#C9A96E",
+          secondaryColor: org.secondaryColor ?? "#1a1a1a",
+          pdfFontFamily: org.pdfFontFamily ?? "DM Sans",
+          companyName: org.companyName,
+          companyAddress: org.companyAddress,
+          companyPhone: org.companyPhone,
+          companyEmail: org.companyEmail,
+          companyWebsite: org.companyWebsite,
+          companyICE: org.companyICE,
+          companyIF: org.companyIF,
+          companyRC: org.companyRC,
+          invoicePrefix: org.invoicePrefix ?? "FAC",
+          quotePrefix: org.quotePrefix ?? "DEV",
+          paymentDelayDays: org.paymentDelayDays ?? 30,
+          invoiceFooter: org.invoiceFooter,
+          invoiceTerms: org.invoiceTerms,
+        }}
         org={{
           name: org.name,
+          logo: org.logo,
           address: org.address,
           city: org.city,
           country: org.country,
           phone: org.phone,
           email: org.email,
         }}
-        client={cmd.client ?? null}
+        client={cmd.client
+          ? {
+              name: cmd.client.name,
+              email: cmd.client.email,
+              phone: cmd.client.phone,
+              address: cmd.client.address,
+              city: cmd.client.city,
+              postalCode: cmd.client.postalCode,
+              company: cmd.client.company,
+              siret: cmd.client.siret,
+            }
+          : null}
         invoice={{
           number: invoice.number,
           type: invoice.type as "DEVIS" | "FACTURE",
@@ -75,8 +112,15 @@ export async function GET(
           discountType: cmd.discountType,
           discountValue: cmd.discountValue ? Number(cmd.discountValue) : null,
           discountAmount: cmd.discountAmount ? Number(cmd.discountAmount) : null,
+          taxRate: cmd.taxRate ? Number(cmd.taxRate) : null,
+          taxLabel: cmd.taxLabel,
+          taxAmount: cmd.taxAmount ? Number(cmd.taxAmount) : null,
           notes: cmd.notes,
           clientNotes: cmd.clientNotes,
+          eventDate: cmd.event?.startDate ?? null,
+          eventLocation: cmd.event?.location ?? null,
+          guestCount: cmd.guestCount,
+          menuName: cmd.menuName,
           items: cmd.items.map((i) => ({
             name: i.name,
             quantity: i.quantity,

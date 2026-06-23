@@ -1,0 +1,18 @@
+-- AlterTable: Add PDF branding fields to organizations
+ALTER TABLE "organizations" ADD COLUMN     "companyAddress" TEXT,
+ADD COLUMN     "companyEmail" TEXT,
+ADD COLUMN     "companyICE" TEXT,
+ADD COLUMN     "companyIF" TEXT,
+ADD COLUMN     "companyName" TEXT,
+ADD COLUMN     "companyPhone" TEXT,
+ADD COLUMN     "companyRC" TEXT,
+ADD COLUMN     "companyWebsite" TEXT,
+ADD COLUMN     "invoiceFooter" TEXT,
+ADD COLUMN     "invoiceNotes" TEXT,
+ADD COLUMN     "invoicePrefix" TEXT DEFAULT 'FAC',
+ADD COLUMN     "invoiceTerms" TEXT,
+ADD COLUMN     "paymentDelayDays" INTEGER DEFAULT 30,
+ADD COLUMN     "pdfFontFamily" TEXT DEFAULT 'DM Sans',
+ADD COLUMN     "primaryColor" TEXT DEFAULT '#C9A96E',
+ADD COLUMN     "quotePrefix" TEXT DEFAULT 'DEV',
+ADD COLUMN     "secondaryColor" TEXT DEFAULT '#1a1a1a';

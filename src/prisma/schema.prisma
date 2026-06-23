@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
 }
 
 // ==================== CORE MODELS ====================
@@ -21,6 +21,29 @@ model Organization {
   plan      String   @default("starter") // starter, professional, enterprise
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // PDF branding
+  primaryColor    String? @default("#C9A96E")
+  secondaryColor  String? @default("#1a1a1a")
+  pdfFontFamily   String? @default("DM Sans")
+
+  // Company info (for PDF header/footer)
+  companyName    String?
+  companyAddress String?
+  companyPhone   String?
+  companyEmail   String?
+  companyWebsite String?
+  companyICE     String?
+  companyIF      String?
+  companyRC      String?
+
+  // Document defaults
+  invoicePrefix    String? @default("FAC")
+  quotePrefix      String? @default("DEV")
+  paymentDelayDays Int?    @default(30)
+  invoiceFooter    String?
+  invoiceTerms     String?
+  invoiceNotes     String?
 
   // Relations
   users       UserOrganization[]
@@ -200,6 +223,9 @@ model Commande {
   discountType    DiscountType?
   discountValue   Decimal?              @default(0)
   discountAmount  Decimal?              @default(0)
+  taxRate         Decimal?              @default(0)
+  taxLabel        String?
+  taxAmount       Decimal?              @default(0)
   clientBudget    Decimal?
   contactName     String?
   contactPhone    String?
