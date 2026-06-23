@@ -1,16 +1,26 @@
 "use server"
 
+import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
+import { revalidatePath } from "next/cache"
 
-export async function createClient(data: {
-  name: string
-  phone?: string
-  email?: string
-  address?: string
-  notes?: string
-}) {
+const createCommandesClientSchema = z.object({
+  name: z.string().min(1, "Le nom est requis"),
+  phone: z.string().nullable().optional(),
+  email: z.string().email("Email invalide").nullable().optional().or(z.literal("")),
+  address: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+})
+
+export async function createClient(input: unknown) {
   try {
+    const parsed = createCommandesClientSchema.safeParse(input)
+    if (!parsed.success) {
+      return { success: false as const, error: parsed.error.issues[0]?.message ?? "Données invalides" }
+    }
+
+    const data = parsed.data
     const organizationId = await getOrganizationId()
 
     const client = await prisma.client.create({
@@ -23,6 +33,9 @@ export async function createClient(data: {
         notes: data.notes || null,
       },
     })
+
+    revalidatePath("/dashboard/commandes")
+    revalidatePath("/dashboard/clients")
 
     return {
       success: true as const,

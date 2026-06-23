@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Menu, CreateMenuInput } from '@/features/menus/types';
 import { createMenuSchema } from '@/features/menus/validations/create-menu-schema';
@@ -49,6 +50,8 @@ export async function createMenu(data: CreateMenuInput): Promise<ActionResponse<
         })),
       });
     }
+
+    revalidatePath("/dashboard/menus")
 
     return {
       success: true,

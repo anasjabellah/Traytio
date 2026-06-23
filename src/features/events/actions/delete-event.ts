@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse } from '@/features/events/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
@@ -11,6 +12,8 @@ export async function deleteEvent(id: string): Promise<ActionResponse<void>> {
     await prisma.event.delete({
       where: { id, organizationId }
     });
+
+    revalidatePath("/dashboard/events")
 
     return { success: true, data: undefined };
   } catch (error: any) {

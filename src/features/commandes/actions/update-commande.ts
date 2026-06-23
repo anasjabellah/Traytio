@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { createCommandeSchema } from '@/features/commandes/validations/create-commande-schema';
@@ -136,6 +137,9 @@ export async function updateCommande(id: string, input: unknown): Promise<Action
 
       await recalculateCommandeBalances(tx, id);
     });
+
+    revalidatePath("/dashboard/commandes")
+    revalidatePath("/dashboard")
 
     return { success: true };
   } catch (error: unknown) {

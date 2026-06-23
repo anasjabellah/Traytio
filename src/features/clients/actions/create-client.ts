@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { ActionResponse, Client } from "@/features/clients/types";
 import { createClientSchema } from "@/features/clients/validations/create-client-schema";
@@ -45,6 +46,8 @@ export async function createClient(input: unknown): Promise<ActionResponse<Clien
         organizationId
       }
     });
+
+    revalidatePath("/dashboard/clients")
 
     return { success: true, data: {
     id: client.id,

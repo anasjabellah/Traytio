@@ -1,5 +1,6 @@
 ﻿"use server"
 
+import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { createCommandeSchema } from "@/features/commandes/validations/create-commande-schema"
@@ -122,6 +123,9 @@ export async function createCommande(input: unknown) {
         totalPrice: Number(item.totalPrice),
       })),
     }
+
+    revalidatePath("/dashboard/commandes")
+    revalidatePath("/dashboard")
 
     return { success: true, data: serialized }
   } catch (err: unknown) {

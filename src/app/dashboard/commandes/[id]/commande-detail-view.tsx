@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,7 +10,7 @@ import {
   Phone, Mail, ChevronRight, User,
   ShoppingBag, Hash, Tag, Clock, Package,
   Receipt, Download, Plus, FileDown, MessageCircle,
-  Landmark, CreditCard, Ban,
+  Landmark, CreditCard, Ban, Loader2, Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -18,7 +18,9 @@ import { DeleteCommandeDialog } from "@/features/commandes/components/delete-com
 import { PaymentCard } from "@/features/payments/components/payment-card";
 import { AddPaymentDialog } from "@/features/payments/components/add-payment-dialog";
 import { PaymentHistory } from "@/features/payments/components/payment-history";
+import { createQuoteFromCommande, createInvoiceFromCommande, getInvoices } from "@/features/invoices/actions/invoice-actions";
 import type { CommandeWithDetails } from "@/features/commandes/types";
+import type { InvoiceWithCommande } from "@/features/invoices/types";
 
 const mad = (n: number) =>
   new Intl.NumberFormat("fr-MA", { style: "currency", currency: "MAD", maximumFractionDigits: 0 }).format(n);
@@ -89,6 +91,84 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
   const [addPaymentOpen, setAddPaymentOpen] = useState(false);
   const [depositAmount, setDepositAmount] = useState<number | undefined>(undefined);
   const [activeNoteTab, setActiveNoteTab] = useState<string>("Internes");
+
+  const [invoices, setInvoices] = useState<InvoiceWithCommande[]>([]);
+  const [invoicesLoading, setInvoicesLoading] = useState(true);
+  const [generating, setGenerating] = useState<"quote" | "invoice" | null>(null);
+
+  const fetchInvoices = useCallback(async () => {
+    try {
+      setInvoicesLoading(true);
+      const result = await getInvoices({ commandeId: commande.id, limit: 50 });
+      if (result.success) {
+        setInvoices(result.data?.data ?? []);
+      }
+    } catch {
+      // silent
+    } finally {
+      setInvoicesLoading(false);
+    }
+  }, [commande.id]);
+
+  useEffect(() => {
+    fetchInvoices();
+  }, [fetchInvoices]);
+
+  const handleGenerateQuote = useCallback(async () => {
+    setGenerating("quote");
+    try {
+      const result = await createQuoteFromCommande(commande.id);
+      if (result.success) {
+        toast.success("Devis créé avec succès");
+        await fetchInvoices();
+      } else {
+        toast.error(result.error ?? "Erreur lors de la création du devis");
+      }
+    } catch {
+      toast.error("Erreur lors de la création du devis");
+    } finally {
+      setGenerating(null);
+    }
+  }, [commande.id, fetchInvoices]);
+
+  const handleGenerateInvoice = useCallback(async () => {
+    setGenerating("invoice");
+    try {
+      const result = await createInvoiceFromCommande(commande.id);
+      if (result.success) {
+        toast.success("Facture créée avec succès");
+        await fetchInvoices();
+      } else {
+        toast.error(result.error ?? "Erreur lors de la création de la facture");
+      }
+    } catch {
+      toast.error("Erreur lors de la création de la facture");
+    } finally {
+      setGenerating(null);
+    }
+  }, [commande.id, fetchInvoices]);
+
+  const handleDownloadInvoice = useCallback(async (invoice: InvoiceWithCommande) => {
+    try {
+      const resp = await fetch(`/api/invoices/${invoice.id}/pdf`);
+      if (!resp.ok) {
+        const err = await resp.json();
+        toast.error(err.error ?? "Erreur de téléchargement");
+        return;
+      }
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${invoice.number}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Erreur de téléchargement");
+    }
+  }, []);
 
   const handlePaymentChange = useCallback(() => {
     router.refresh();
@@ -615,6 +695,62 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
               </div>
             </motion.div>
 
+            {/* ─── INVOICES / QUOTES HISTORY ─── */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
+              className="rounded-2xl border border-border bg-card shadow-soft p-5"
+            >
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="size-7 rounded-lg bg-foreground/[0.04] flex items-center justify-center">
+                  <FileText className="size-3.5 text-foreground/70" strokeWidth={1.8} />
+                </div>
+                <h4 className="font-display text-sm font-semibold text-foreground">Devis & Factures</h4>
+                <span className="text-xs text-foreground/50 ml-auto">{invoices.length} document{invoices.length > 1 ? "s" : ""}</span>
+              </div>
+              {invoicesLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="size-5 animate-spin text-foreground/40" strokeWidth={1.8} />
+                </div>
+              ) : invoices.length === 0 ? (
+                <div className="text-xs text-foreground/50 italic py-3">Aucun document généré</div>
+              ) : (
+                <div className="space-y-2">
+                  {invoices.map((inv) => {
+                    const typeLabel = inv.type === "DEVIS" ? "Devis" : "Facture";
+                    return (
+                      <div
+                        key={inv.id}
+                        className="flex items-center justify-between gap-3 rounded-xl bg-foreground/[0.02] border border-border/30 p-3"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-foreground truncate">{inv.number}</span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${inv.status === "DRAFT" ? "bg-amber-50 text-amber-700" : inv.status === "SENT" ? "bg-blue-50 text-blue-700" : inv.status === "VIEWED" ? "bg-purple-50 text-purple-700" : inv.status === "ACCEPTED" ? "bg-emerald-50 text-emerald-700" : inv.status === "PAID" ? "bg-green-50 text-green-700" : inv.status === "OVERDUE" ? "bg-red-50 text-red-700" : inv.status === "REJECTED" ? "bg-rose-50 text-rose-700" : "bg-gray-100 text-gray-500"}`}>
+                              {inv.status === "DRAFT" ? "Brouillon" : inv.status === "SENT" ? "Envoyé" : inv.status === "VIEWED" ? "Vu" : inv.status === "ACCEPTED" ? "Accepté" : inv.status === "PAID" ? "Payé" : inv.status === "OVERDUE" ? "En retard" : inv.status === "REJECTED" ? "Rejeté" : ""}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-foreground/50 mt-0.5">
+                            {typeLabel} · {new Date(inv.issueDate).toLocaleDateString("fr-FR")}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            onClick={() => handleDownloadInvoice(inv)}
+                            className="size-8 rounded-lg border border-border bg-white hover:bg-foreground/[0.02] text-foreground/60 hover:text-foreground transition-all flex items-center justify-center"
+                            title="Télécharger"
+                          >
+                            <Download className="size-3.5" strokeWidth={1.8} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+
           </div>
 
           {/* ─── STICKY SIDEBAR ─── */}
@@ -688,17 +824,19 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                     Ajouter un paiement
                   </button>
                   <button
-                    onClick={() => toast.info("Génération de devis — bientôt disponible")}
-                    className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl border border-border bg-white hover:bg-foreground/[0.02] text-xs font-medium text-foreground/70 hover:text-foreground transition-all"
+                    onClick={handleGenerateQuote}
+                    disabled={generating === "quote"}
+                    className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl border border-border bg-white hover:bg-foreground/[0.02] text-xs font-medium text-foreground/70 hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <FileDown className="size-3.5" strokeWidth={1.8} />
+                    {generating === "quote" ? <Loader2 className="size-3.5 animate-spin" strokeWidth={1.8} /> : <FileDown className="size-3.5" strokeWidth={1.8} />}
                     Générer un devis
                   </button>
                   <button
-                    onClick={() => toast.info("Génération de facture — bientôt disponible")}
-                    className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl border border-border bg-white hover:bg-foreground/[0.02] text-xs font-medium text-foreground/70 hover:text-foreground transition-all"
+                    onClick={handleGenerateInvoice}
+                    disabled={generating === "invoice"}
+                    className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl border border-border bg-white hover:bg-foreground/[0.02] text-xs font-medium text-foreground/70 hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Receipt className="size-3.5" strokeWidth={1.8} />
+                    {generating === "invoice" ? <Loader2 className="size-3.5 animate-spin" strokeWidth={1.8} /> : <Receipt className="size-3.5" strokeWidth={1.8} />}
                     Générer une facture
                   </button>
                   <button

@@ -1,5 +1,6 @@
 "use server"
 
+import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { recalculateCommandeBalances } from "@/features/financial/recalculate-commande-balances"
@@ -61,6 +62,9 @@ export async function deletePayment(paymentId: string) {
         paymentStatus: true,
       },
     })
+
+    revalidatePath("/dashboard/commandes")
+    revalidatePath("/dashboard")
 
     return {
       success: true as const,

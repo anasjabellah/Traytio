@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, MenuItem, UpdateMenuItemInput } from '@/features/menu-items/types';
 import { updateMenuItemSchema } from '@/features/menu-items/validations/update-menu-item-schema';
@@ -42,6 +43,8 @@ export async function updateMenuItem(
         imageUrl: true,
       },
     });
+
+    revalidatePath("/dashboard/menu-items")
 
     return {
       success: true,

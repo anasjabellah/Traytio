@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse } from '@/features/commandes/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
@@ -31,6 +32,9 @@ export async function deleteCommande(id: string): Promise<ActionResponse<void>> 
     await prisma.commande.delete({
       where: { id },
     });
+
+    revalidatePath("/dashboard/commandes")
+    revalidatePath("/dashboard")
 
     return { success: true };
   } catch (error: unknown) {

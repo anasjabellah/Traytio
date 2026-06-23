@@ -22,7 +22,7 @@ export async function recalculateCommandeBalances(
     const aggregate = await tx.payment.aggregate({
       where: {
         commandeId,
-        status: { not: "FAILED" },
+        status: { notIn: ["FAILED", "REFUNDED"] },
       },
       _sum: { amount: true },
     });

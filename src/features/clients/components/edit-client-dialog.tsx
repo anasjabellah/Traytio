@@ -30,7 +30,6 @@ export function EditClientDialog({ client, open, onOpenChange, onSuccess }: Edit
     try {
       const res = await getClientById(client.id);
       if (res.success && res.data) {
-        console.log('[EditClientDialog] fetched client data:', res.data);
         setFullClient(res.data);
       }
     } catch {

@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Menu, UpdateMenuInput } from '@/features/menus/types';
 import { updateMenuSchema } from '@/features/menus/validations/update-menu-schema';
@@ -55,6 +56,8 @@ export async function updateMenu(data: UpdateMenuInput): Promise<ActionResponse<
 
       return updated;
     });
+
+    revalidatePath("/dashboard/menus")
 
     return {
       success: true,

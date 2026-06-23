@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { ActionResponse } from "@/features/clients/types";
 import { getOrganizationId } from "@/lib/get-organization-id";
@@ -42,6 +43,8 @@ export async function deleteClient(id: string): Promise<ActionResponse<void>> {
     await prisma.client.delete({
       where: { id }
     });
+
+    revalidatePath("/dashboard/clients")
 
     return { success: true };
   } catch (error: any) {

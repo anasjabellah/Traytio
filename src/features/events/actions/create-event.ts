@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Event } from '@/features/events/types';
 import { createEventSchema } from '@/features/events/validations/create-event-schema';
@@ -82,6 +83,8 @@ export async function createEvent(data: Record<string, unknown>): Promise<Action
       createdAt: event.createdAt,
       updatedAt: event.updatedAt,
     };
+
+    revalidatePath("/dashboard/events")
 
     return { success: true, data: result };
   } catch (error: any) {

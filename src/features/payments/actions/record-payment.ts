@@ -5,6 +5,7 @@ import { getOrganizationId } from "@/lib/get-organization-id"
 import { recalculateCommandeBalances } from "@/features/financial/recalculate-commande-balances"
 import { recordPaymentSchema } from "@/features/payments/validations/payment-schemas"
 import type { PaymentMethod, CommandePaymentStatus } from "@prisma/client"
+import { revalidatePath } from "next/cache"
 
 export async function recordPayment(input: unknown) {
   try {
@@ -16,29 +17,35 @@ export async function recordPayment(input: unknown) {
     const data = parsed.data
     const organizationId = await getOrganizationId()
 
+    // Verify commande exists and belongs to organization before transaction
     const commande = await prisma.commande.findFirst({
       where: { id: data.commandeId, organizationId },
-      select: {
-        id: true,
-        totalAmount: true,
-        remainingAmount: true,
-        number: true,
-      },
+      select: { id: true },
     })
 
     if (!commande) {
       return { success: false as const, error: "Commande introuvable ou accès refusé" }
     }
 
-    const remaining = Number(commande.remainingAmount)
-    if (data.amount > remaining) {
-      return {
-        success: false as const,
-        error: `Le montant (${data.amount.toLocaleString("fr-FR")} MAD) dépasse le solde restant (${remaining.toLocaleString("fr-FR")} MAD)`,
-      }
-    }
-
     const result = await prisma.$transaction(async (tx) => {
+      // Fresh read inside transaction to minimize race window
+      const freshCommande = await tx.commande.findUnique({
+        where: { id: data.commandeId },
+        select: { remainingAmount: true },
+      })
+
+      if (!freshCommande) {
+        return { success: false as const, error: "Commande introuvable" }
+      }
+
+      const remaining = Number(freshCommande.remainingAmount)
+      if (data.amount > remaining) {
+        return {
+          success: false as const,
+          error: `Le montant (${data.amount.toLocaleString("fr-FR")} MAD) dépasse le solde restant (${remaining.toLocaleString("fr-FR")} MAD)`,
+        }
+      }
+
       const payment = await tx.payment.create({
         data: {
           organizationId,
@@ -62,9 +69,14 @@ export async function recordPayment(input: unknown) {
         },
       })
 
-      return { payment }
+      return { success: true as const, payment }
     })
 
+    if (!result.success) {
+      return result
+    }
+
+    // Re-fetch updated values
     const updated = await prisma.commande.findFirst({
       where: { id: data.commandeId, organizationId },
       select: {
@@ -73,6 +85,9 @@ export async function recordPayment(input: unknown) {
         paymentStatus: true,
       },
     })
+
+    revalidatePath("/dashboard/commandes")
+    revalidatePath("/dashboard")
 
     return {
       success: true as const,

@@ -107,9 +107,6 @@ export function useCommandeForm() {
       const pack = (rawMenus as any[]).find((m: any) => m.id === selectedPack);
       if (!pack) return [];
       const items = ((pack as any).items ?? []) as any[];
-      if (typeof window !== "undefined") {
-        console.log("[commande-form] mode: MENU_ITEMS | selectedMenuId:", selectedPack, "| count:", items.length);
-      }
       return items.map((i: any) => {
         const cat = CATEGORY_MAP[i.category] ?? "Extras";
         return {
@@ -125,9 +122,6 @@ export function useCommandeForm() {
     }
 
     if (!allMenuItems || !Array.isArray(allMenuItems)) return [];
-    if (typeof window !== "undefined") {
-      console.log("[commande-form] mode: ALL_ITEMS | selectedMenuId: null | count:", allMenuItems.length);
-    }
     return allMenuItems.map((i: any) => {
       const cat = CATEGORY_MAP[i.category] ?? "Extras";
       return {

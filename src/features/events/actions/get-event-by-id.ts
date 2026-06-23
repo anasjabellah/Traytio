@@ -36,8 +36,8 @@ export const getEventById = cache(async (id: string): Promise<ActionResponse<Eve
 
     const [clientData, commandes] = await Promise.all([
       eventData.clientId
-        ? prisma.client.findUnique({
-            where: { id: eventData.clientId },
+        ? prisma.client.findFirst({
+            where: { id: eventData.clientId, organizationId },
             select: { id: true, name: true, email: true, phone: true },
           })
         : Promise.resolve(null),
