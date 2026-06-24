@@ -4,10 +4,12 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Menu, PaginatedMenus, GetMenusParams } from '@/features/menus/types';
 import { MENU_DEFAULT_PAGE_SIZE } from '@/features/menus/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 
 export async function getMenus(params: GetMenusParams): Promise<ActionResponse<PaginatedMenus>> {
   try {
     const organizationId = await getOrganizationId();
+    await assertCan('menus', 'read');
     const { search, page = 1, limit = MENU_DEFAULT_PAGE_SIZE, sortBy = 'createdAt', sortOrder = 'desc' } = params;
     const skip = (page - 1) * limit;
 

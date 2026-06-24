@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { ActionResponse } from "@/features/clients/types";
 import { getOrganizationId } from "@/lib/get-organization-id";
+import { assertCan } from "@/lib/assert-role";
 
 export async function deleteClient(id: string): Promise<ActionResponse<void>> {
   try {
     const organizationId = await getOrganizationId();
+    await assertCan('clients', 'delete');
 
     // Verify client belongs to organization
     const client = await prisma.client.findFirst({

@@ -2,10 +2,12 @@
 
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
+import { assertCan } from "@/lib/assert-role"
 
 export async function getCommandeClients(search?: string) {
   try {
     const organizationId = await getOrganizationId()
+    await assertCan('clients', 'read')
     const where: Record<string, unknown> = { organizationId }
     if (search) {
       where.OR = [

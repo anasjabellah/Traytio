@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Menu, UpdateMenuInput } from '@/features/menus/types';
 import { updateMenuSchema } from '@/features/menus/validations/update-menu-schema';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 
 export async function updateMenu(data: UpdateMenuInput): Promise<ActionResponse<Menu>> {
   try {
@@ -14,6 +15,7 @@ export async function updateMenu(data: UpdateMenuInput): Promise<ActionResponse<
     }
     const validData = parsed.data;
     const organizationId = await getOrganizationId();
+    await assertCan('menus', 'update');
     const { id, menuItems, ...rest } = validData;
 
     const menu = await prisma.$transaction(async (tx) => {

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
+import { assertCan } from "@/lib/assert-role"
 import { updateInvoiceStatusSchema } from "@/features/invoices/validations/invoice-schemas"
 import type { ActionResponse, Invoice, InvoiceWithCommande } from "@/features/invoices/types"
 
@@ -23,6 +24,7 @@ async function generateInvoiceNumber(type: "DEVIS" | "FACTURE"): Promise<string>
 export async function createQuoteFromCommande(commandeId: string): Promise<ActionResponse<InvoiceWithCommande>> {
   try {
     const organizationId = await getOrganizationId()
+    await assertCan('invoices', 'create')
 
     const commande = await prisma.commande.findFirst({
       where: { id: commandeId, organizationId },
@@ -77,6 +79,7 @@ export async function createQuoteFromCommande(commandeId: string): Promise<Actio
 export async function createInvoiceFromCommande(commandeId: string): Promise<ActionResponse<InvoiceWithCommande>> {
   try {
     const organizationId = await getOrganizationId()
+    await assertCan('invoices', 'create')
 
     const commande = await prisma.commande.findFirst({
       where: { id: commandeId, organizationId },
@@ -131,6 +134,7 @@ export async function createInvoiceFromCommande(commandeId: string): Promise<Act
 export async function getInvoiceById(id: string): Promise<ActionResponse<InvoiceWithCommande>> {
   try {
     const organizationId = await getOrganizationId()
+    await assertCan('invoices', 'read')
 
     const invoice = await prisma.invoice.findFirst({
       where: { id, organizationId },
@@ -174,6 +178,7 @@ export async function getInvoices(params: {
 }): Promise<ActionResponse<PaginatedResult<InvoiceWithCommande>>> {
   try {
     const organizationId = await getOrganizationId()
+    await assertCan('invoices', 'read')
     const { commandeId, type, search, page = 1, limit = 20 } = params
     const skip = (page - 1) * limit
 
@@ -232,6 +237,7 @@ export async function updateInvoiceStatus(
     }
 
     const organizationId = await getOrganizationId()
+    await assertCan('invoices', 'update')
 
     const existing = await prisma.invoice.findFirst({
       where: { id, organizationId },
@@ -267,6 +273,7 @@ export async function updateInvoiceStatus(
 export async function convertQuoteToInvoice(quoteId: string): Promise<ActionResponse<InvoiceWithCommande>> {
   try {
     const organizationId = await getOrganizationId()
+    await assertCan('invoices', 'create')
 
     const quote = await prisma.invoice.findFirst({
       where: { id: quoteId, organizationId, type: "DEVIS" },

@@ -10,6 +10,7 @@ import {
   Hourglass, TrendingUp, AlertTriangle, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRole } from "@/hooks/use-role";
 import { EditEventDialog } from "@/features/events/components/edit-event-dialog";
 import { DeleteEventDialog } from "@/features/events/components/delete-event-dialog";
 import type { EventDetail } from "@/features/events/types";
@@ -58,6 +59,7 @@ const COMMANDE_STATUS_STYLES: Record<string, string> = {
 };
 
 export default function EventDetailView({ event }: { event: EventDetail }) {
+  const { can } = useRole();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -162,24 +164,28 @@ export default function EventDetailView({ event }: { event: EventDetail }) {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-10 rounded-xl border-border shadow-soft"
-              onClick={() => setEditOpen(true)}
-              title="Modifier"
-            >
-              <Pencil className="size-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-10 rounded-xl border-border shadow-soft text-muted-foreground hover:text-red-600 hover:border-red-200 hover:bg-red-50"
-              onClick={() => setDeleteOpen(true)}
-              title="Supprimer"
-            >
-              <Trash2 className="size-4" />
-            </Button>
+            {can('events', 'update') && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-10 rounded-xl border-border shadow-soft"
+                onClick={() => setEditOpen(true)}
+                title="Modifier"
+              >
+                <Pencil className="size-4" />
+              </Button>
+            )}
+            {can('events', 'delete') && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-10 rounded-xl border-border shadow-soft text-muted-foreground hover:text-red-600 hover:border-red-200 hover:bg-red-50"
+                onClick={() => setDeleteOpen(true)}
+                title="Supprimer"
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            )}
           </div>
         </motion.div>
 

@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 export type ConflictEventInfo = {
   id: string;
   name: string;
@@ -37,6 +38,7 @@ export async function checkEventConflicts(
 ): Promise<{ success: boolean; data?: ConflictCheckResult; error?: string }> {
   try {
     const orgId = await getOrganizationId();
+    await assertCan('events', 'read');
 
     const newStart = new Date(startDate);
     const newEnd = endDate ? new Date(endDate) : null;

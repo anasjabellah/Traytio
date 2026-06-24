@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 
 export type ActivityItem = {
   id: string;
@@ -14,6 +15,7 @@ export type ActivityItem = {
 
 export async function getClientActivity(): Promise<ActivityItem[]> {
   const organizationId = await getOrganizationId();
+  await assertCan('clients', 'read');
 
   const [newClients, recentCommandes, recentEvents, recentPayments, updatedClients] = await Promise.all([
     prisma.client.findMany({

@@ -4,10 +4,12 @@ import { prisma } from "@/lib/prisma";
 import type { ActionResponse, ClientWithStats, GetClientsParams, PaginatedClients } from "@/features/clients/types";
 import { CLIENT_DEFAULT_PAGE_SIZE } from "@/features/clients/constants";
 import { getOrganizationId } from "@/lib/get-organization-id";
+import { assertCan } from "@/lib/assert-role";
 
 export async function getClients(params: GetClientsParams): Promise<ActionResponse<PaginatedClients>> {
   try {
     const organizationId = await getOrganizationId();
+    await assertCan('clients', 'read');
     const { search, page = 1, limit = CLIENT_DEFAULT_PAGE_SIZE, sortBy = 'createdAt', sortOrder = 'desc' } = params;
 
     const skip = (page - 1) * limit;

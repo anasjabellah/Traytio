@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
+import { assertCan } from "@/lib/assert-role"
 
 export type PdfSettings = {
   logo: string | null
@@ -28,6 +29,7 @@ export type PdfSettings = {
 export async function getPdfSettings(): Promise<{ success: boolean; data?: PdfSettings; error?: string }> {
   try {
     const organizationId = await getOrganizationId()
+    await assertCan('invoices', 'settings')
     const org = await prisma.organization.findUnique({
       where: { id: organizationId },
       select: {
@@ -88,6 +90,7 @@ export async function getPdfSettings(): Promise<{ success: boolean; data?: PdfSe
 export async function updatePdfSettings(data: Partial<PdfSettings>): Promise<{ success: boolean; error?: string }> {
   try {
     const organizationId = await getOrganizationId()
+    await assertCan('invoices', 'settings')
     await prisma.organization.update({
       where: { id: organizationId },
       data: {

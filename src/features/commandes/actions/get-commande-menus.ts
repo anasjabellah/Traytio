@@ -2,10 +2,12 @@
 
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
+import { assertCan } from "@/lib/assert-role"
 
 export async function getCommandeMenus() {
   try {
     const organizationId = await getOrganizationId()
+    await assertCan('menus', 'read')
 
     const menus = await prisma.menu.findMany({
       where: { organizationId, isActive: true },

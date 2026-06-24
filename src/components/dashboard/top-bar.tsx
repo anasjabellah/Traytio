@@ -5,12 +5,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Search, Bell, CheckCheck, AlertTriangle, Clock } from "lucide-react";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useRole } from "@/hooks/use-role";
+import { RoleBadge } from "@/components/ui/role-badge";
 
 export function TopBar() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotificationStore();
+  const { role, can } = useRole();
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -59,16 +62,17 @@ export function TopBar() {
 
         <nav className="hidden md:flex items-center gap-1 ml-6 text-sm">
           {([
-            ["Dashboard", "/dashboard"],
-            ["Commandes", "/dashboard/commandes"],
-            ["Clients", "/dashboard/clients"],
-            ["Événements", "/dashboard/events"],
-            ["Packs", "/dashboard/menus"],
-            ["Menu Items", "/dashboard/menu-items"],
-            ["Calendrier", "/dashboard/calendar"],
-            ["Factures", "/dashboard/invoices"],
-            ["Paiements", "/dashboard/payments"],
-          ] as const).map(([label, href]) => {
+            ["Dashboard", "/dashboard", 'dashboard' as const, 'view' as const],
+            ["Commandes", "/dashboard/commandes", 'commandes' as const, 'read' as const],
+            ["Clients", "/dashboard/clients", 'clients' as const, 'read' as const],
+            ["Événements", "/dashboard/events", 'events' as const, 'read' as const],
+            ["Packs", "/dashboard/menus", 'menus' as const, 'read' as const],
+            ["Menu Items", "/dashboard/menu-items", 'menu-items' as const, 'read' as const],
+            ["Calendrier", "/dashboard/calendar", null, null],
+            ["Factures", "/dashboard/invoices", 'invoices' as const, 'read' as const],
+            ["Paiements", "/dashboard/payments", 'payments' as const, 'read' as const],
+            ["Équipe", "/dashboard/settings/team", 'team' as const, 'view' as const],
+          ] as const).filter(([, , module, action]) => !module || (action && can(module, action))).map(([label, href]) => {
             const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
             return (
               <Link
@@ -157,6 +161,11 @@ export function TopBar() {
               </div>
             )}
           </div>
+          {role && (
+            <div className="hidden md:flex items-center">
+              <RoleBadge role={role} />
+            </div>
+          )}
           <div className="size-9 rounded-full bg-gradient-charcoal text-white flex items-center justify-center text-xs font-medium shadow-soft">
             AN
           </div>

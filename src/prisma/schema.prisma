@@ -56,6 +56,7 @@ model Organization {
   stockItems  StockItem[]
   teamMembers TeamMember[]
   menuItems   MenuItem[]
+  invitations Invitation[]
 
   @@map("organizations")
 }
@@ -72,7 +73,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  organizations UserOrganization[]
+  organizations    UserOrganization[]
+  createdCommandes Commande[]
 
   @@map("users")
 }
@@ -88,6 +90,7 @@ model UserOrganization {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([userId, organizationId])
+  @@index([organizationId])
   @@map("user_organizations")
 }
 
@@ -199,6 +202,7 @@ model MenuMenuItem {
 model Commande {
   id              String                @id @default(cuid())
   organizationId  String
+  createdById     String?
   clientId        String
   eventId         String?
   number          String                @unique // e.g., CMD-2024-001
@@ -238,6 +242,7 @@ model Commande {
   updatedAt       DateTime              @updatedAt
 
   // Relations
+  createdBy    User?                @relation(fields: [createdById], references: [id], onDelete: SetNull)
   organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   client       Client               @relation(fields: [clientId], references: [id], onDelete: Restrict)
   event        Event?               @relation(fields: [eventId], references: [id], onDelete: SetNull)
@@ -431,7 +436,26 @@ model MenuItem {
   @@map("menu_items")
 }
 
-// ==================== TEAM MEMBER MODEL ====================
+// ==================== INVITATION MODEL ====================
+
+model Invitation {
+  id             String   @id @default(cuid())
+  email          String
+  role           OrgRole  @default(MEMBER)
+  token          String   @unique
+  organizationId String
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([organizationId])
+  @@index([email])
+  @@map("invitations")
+}
+
+// ==================== TEAM MEMBER MODEL (deprecated) ====================
 
 model TeamMember {
   id             String   @id @default(cuid())

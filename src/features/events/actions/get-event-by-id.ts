@@ -4,10 +4,12 @@ import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, EventDetail } from '@/features/events/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 
 export const getEventById = cache(async (id: string): Promise<ActionResponse<EventDetail>> => {
   try {
     const organizationId = await getOrganizationId();
+    await assertCan('events', 'read');
 
     const eventData = await prisma.event.findUnique({
       where: { id, organizationId },

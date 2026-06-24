@@ -3,6 +3,7 @@
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
+import { assertCan } from "@/lib/assert-role"
 import { revalidatePath } from "next/cache"
 
 const createAttachmentSchema = z.object({
@@ -25,6 +26,7 @@ export async function createCommandeAttachment(
     }
 
     const organizationId = await getOrganizationId()
+    await assertCan('commandes', 'update')
     const commande = await prisma.commande.findFirst({
       where: { id: commandeId, organizationId },
       select: { id: true },

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse, MenuItem, UpdateMenuItemInput } from '@/features/menu-items/types';
 import { updateMenuItemSchema } from '@/features/menu-items/validations/update-menu-item-schema';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 
 export async function updateMenuItem(
   data: UpdateMenuItemInput,
@@ -16,6 +17,7 @@ export async function updateMenuItem(
     }
     const validData = parsed.data;
     const organizationId = await getOrganizationId();
+    await assertCan('menu-items', 'update');
     const { id, ...rest } = validData;
 
     const item = await prisma.menuItem.update({

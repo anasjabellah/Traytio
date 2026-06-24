@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
+import { assertCan } from "@/lib/assert-role"
 import { recalculateCommandeBalances } from "@/features/financial/recalculate-commande-balances"
 import { recordPaymentSchema } from "@/features/payments/validations/payment-schemas"
 import type { PaymentMethod, CommandePaymentStatus } from "@prisma/client"
@@ -16,6 +17,7 @@ export async function recordPayment(input: unknown) {
 
     const data = parsed.data
     const organizationId = await getOrganizationId()
+    await assertCan('payments', 'create')
 
     // Verify commande exists and belongs to organization before transaction
     const commande = await prisma.commande.findFirst({

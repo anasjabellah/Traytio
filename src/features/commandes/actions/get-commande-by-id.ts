@@ -3,10 +3,12 @@
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, CommandeWithDetails } from '@/features/commandes/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 
 export async function getCommandeById(id: string): Promise<ActionResponse<CommandeWithDetails>> {
   try {
     const organizationId = await getOrganizationId();
+    await assertCan('commandes', 'read');
 
     const commande = await prisma.commande.findFirst({
       where: { id, organizationId },

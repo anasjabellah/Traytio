@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
+import { assertCan } from "@/lib/assert-role"
 import type { Prisma } from "@prisma/client"
 
 export type PaymentWithCommande = {
@@ -45,6 +46,7 @@ export async function getPayments(params?: {
   status?: string
 }): Promise<{ data: PaymentWithCommande[]; stats: PaymentStats }> {
   const organizationId = await getOrganizationId()
+  await assertCan('payments', 'read')
 
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)

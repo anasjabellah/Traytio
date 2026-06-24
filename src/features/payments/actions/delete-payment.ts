@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
+import { assertCan } from "@/lib/assert-role"
 import { recalculateCommandeBalances } from "@/features/financial/recalculate-commande-balances"
 import type { CommandePaymentStatus } from "@prisma/client"
 
@@ -13,6 +14,7 @@ export async function deletePayment(paymentId: string) {
     }
 
     const organizationId = await getOrganizationId()
+    await assertCan('payments', 'delete')
 
     const payment = await prisma.payment.findFirst({
       where: { id: paymentId, organizationId },

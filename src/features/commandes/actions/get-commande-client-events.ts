@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
+import { assertCan } from "@/lib/assert-role"
 
 export type ClientEventSummary = {
   id: string;
@@ -21,6 +22,7 @@ export type ClientEventSummary = {
 export async function getCommandeClientEvents(clientId: string) {
   try {
     const organizationId = await getOrganizationId()
+    await assertCan('events', 'read')
 
     const events = await prisma.event.findMany({
       where: { organizationId, clientId },

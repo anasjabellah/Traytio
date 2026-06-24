@@ -10,6 +10,7 @@ import {
   TrendingUp, ChefHat, Wine, Cake, Flower2, Box,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRole } from "@/hooks/use-role";
 import { EditMenuDialog } from "@/features/menus/components/edit-menu-dialog";
 import { DeleteMenuDialog } from "@/features/menus/components/delete-menu-dialog";
 import type { Menu } from "@/features/menus/types";
@@ -17,6 +18,7 @@ import { formatCurrency } from "@/lib/utils";
 import { CATEGORY_LABELS, CATEGORY_BADGE_COLORS, CATEGORY_EMOJIS, CATEGORY_ACCENT } from "@/features/menus/constants";
 
 export default function MenuDetailView({ menu }: { menu: Menu }) {
+  const { can } = useRole();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -102,24 +104,28 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-10 rounded-xl border-border shadow-soft"
-              onClick={() => setEditOpen(true)}
-              title="Modifier"
-            >
-              <Pencil className="size-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-10 rounded-xl border-border shadow-soft text-muted-foreground hover:text-red-600 hover:border-red-200 hover:bg-red-50"
-              onClick={() => setDeleteOpen(true)}
-              title="Supprimer"
-            >
-              <Trash2 className="size-4" />
-            </Button>
+            {can('menus', 'update') && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-10 rounded-xl border-border shadow-soft"
+                onClick={() => setEditOpen(true)}
+                title="Modifier"
+              >
+                <Pencil className="size-4" />
+              </Button>
+            )}
+            {can('menus', 'delete') && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-10 rounded-xl border-border shadow-soft text-muted-foreground hover:text-red-600 hover:border-red-200 hover:bg-red-50"
+                onClick={() => setDeleteOpen(true)}
+                title="Supprimer"
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            )}
           </div>
         </motion.div>
 

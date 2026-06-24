@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import { getInvoices, updateInvoiceStatus } from "@/features/invoices/actions/invoice-actions"
 import type { InvoiceWithCommande } from "@/features/invoices/types"
 import { Search, Download, FileText, Sparkles, RefreshCw, ChevronLeft, ChevronRight, Receipt, Settings } from "lucide-react"
+import { PageGuard } from "@/components/ui/page-guard"
 
 const mad = (n: number) =>
   new Intl.NumberFormat("fr-MA", { style: "currency", currency: "MAD", maximumFractionDigits: 2 }).format(n)
@@ -71,6 +72,14 @@ function SkeletonRows() {
 }
 
 export default function InvoicesPage() {
+  return (
+    <PageGuard module="invoices" action="read">
+      <InvoicesPageContent />
+    </PageGuard>
+  )
+}
+
+function InvoicesPageContent() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()

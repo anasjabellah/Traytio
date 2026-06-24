@@ -4,12 +4,14 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse, GetMenuItemsParams, PaginatedMenuItems } from '@/features/menu-items/types';
 import { MENU_DEFAULT_PAGE_SIZE } from '@/features/menus/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 
 export async function getMenuItems(
   params: GetMenuItemsParams,
 ): Promise<ActionResponse<PaginatedMenuItems>> {
   try {
     const organizationId = await getOrganizationId();
+    await assertCan('menu-items', 'read');
     const {
       search,
       page = 1,

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Event } from '@/features/events/types';
 import { createEventSchema } from '@/features/events/validations/create-event-schema';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 export async function createEvent(data: Record<string, unknown>): Promise<ActionResponse<Event>> {
   try {
     const parsed = createEventSchema.safeParse(data);
@@ -16,6 +17,7 @@ export async function createEvent(data: Record<string, unknown>): Promise<Action
     const validData = parsed.data;
 
     const organizationId = await getOrganizationId();
+    await assertCan('events', 'create');
 
     let endDate = validData.endDate;
     if (endDate && validData.startDate) {

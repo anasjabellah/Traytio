@@ -10,6 +10,7 @@ import {
   TrendingUp, Sparkles, RefreshCw, ArrowUpRight,
 } from "lucide-react"
 import { getPayments, type PaymentWithCommande, type PaymentStats } from "@/features/payments/actions/get-payments"
+import { PageGuard } from "@/components/ui/page-guard"
 
 const mad = (n: number) =>
   new Intl.NumberFormat("fr-MA", { style: "currency", currency: "MAD", maximumFractionDigits: 0 }).format(n)
@@ -51,6 +52,14 @@ const METHOD_FILTERS = ["", "CASH", "CARD", "TRANSFER", "CHECK", "OTHER"] as con
 const STATUS_FILTERS = ["", "COMPLETED", "PENDING", "FAILED", "REFUNDED"] as const
 
 export default function PaymentsPage() {
+  return (
+    <PageGuard module="payments" action="read">
+      <PaymentsPageContent />
+    </PageGuard>
+  )
+}
+
+function PaymentsPageContent() {
   const router = useRouter()
   const [payments, setPayments] = useState<PaymentWithCommande[]>([])
   const [stats, setStats] = useState<PaymentStats | null>(null)

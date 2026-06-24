@@ -5,10 +5,12 @@ import { prisma } from "@/lib/prisma";
 import type { ActionResponse, Client } from "@/features/clients/types";
 import { createClientSchema } from "@/features/clients/validations/create-client-schema";
 import { getOrganizationId } from "@/lib/get-organization-id";
+import { assertCan } from "@/lib/assert-role";
 
 export async function createClient(input: unknown): Promise<ActionResponse<Client>> {
   try {
     const organizationId = await getOrganizationId();
+    await assertCan('clients', 'create');
 
     // Validate input with safeParse
     const result = createClientSchema.safeParse(input);

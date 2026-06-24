@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
+import { assertCan } from "@/lib/assert-role"
 
 export type OrgInfo = {
   id: string;
@@ -16,6 +17,7 @@ export type OrgInfo = {
 export async function getOrganizationInfo(): Promise<OrgInfo | null> {
   try {
     const organizationId = await getOrganizationId()
+    await assertCan('settings', 'read')
     const org = await prisma.organization.findUnique({
       where: { id: organizationId },
       select: { id: true, name: true, address: true, city: true, country: true, phone: true, email: true },

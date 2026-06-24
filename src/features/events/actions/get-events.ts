@@ -5,11 +5,13 @@ import type { Prisma } from '@prisma/client';
 import type { ActionResponse, Event, PaginatedEvents, GetEventsParams } from '@/features/events/types';
 import { EVENT_DEFAULT_PAGE_SIZE } from '@/features/events/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 import { computeHealthScore } from '@/features/events/types';
 
 export async function getEvents(params: GetEventsParams): Promise<ActionResponse<PaginatedEvents>> {
   try {
     const organizationId = await getOrganizationId();
+    await assertCan('events', 'read');
 
     const { search, page = 1, limit = EVENT_DEFAULT_PAGE_SIZE, sortBy = 'createdAt', sortOrder = 'desc' } = params;
 

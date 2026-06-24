@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 
 export type ClientStats = {
   totalClients: number;
@@ -17,6 +18,7 @@ export type ClientStats = {
 
 export async function getClientStats(): Promise<ClientStats> {
   const organizationId = await getOrganizationId();
+  await assertCan('clients', 'read');
 
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);

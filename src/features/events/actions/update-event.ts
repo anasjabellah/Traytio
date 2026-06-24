@@ -5,10 +5,12 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Event } from '@/features/events/types';
 import { updateEventSchema } from '@/features/events/validations/update-event-schema';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 
 export async function updateEvent(data: Record<string, unknown>): Promise<ActionResponse<Event>> {
   try {
     const organizationId = await getOrganizationId();
+    await assertCan('events', 'update');
 
     const parsed = updateEventSchema.safeParse(data);
     if (!parsed.success) {

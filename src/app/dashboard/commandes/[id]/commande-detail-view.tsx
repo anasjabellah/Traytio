@@ -4,6 +4,7 @@ import { useMemo, useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useRole } from "@/hooks/use-role";
 import {
   ArrowLeft, Pencil, Trash2, Calendar, MapPin, Users, Wallet,
   Sparkles, FileText, PartyPopper, CheckCircle2,
@@ -87,6 +88,7 @@ const NOTE_TABS = ["Internes", "Client", "Générales"] as const;
 
 export default function CommandeDetailView({ commande }: { commande: CommandeWithDetails }) {
   const router = useRouter();
+  const { can } = useRole();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [addPaymentOpen, setAddPaymentOpen] = useState(false);
   const [depositAmount, setDepositAmount] = useState<number | undefined>(undefined);
@@ -304,13 +306,17 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                   PDF
                 </a>
               )}
-              <Link href={`/dashboard/commandes/${commande.id}/edit`} className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg border border-border bg-white/60 hover:bg-white text-xs font-medium text-foreground/70 hover:text-foreground transition-all">
-                <Pencil className="size-3.5" strokeWidth={1.8} />
-                Modifier
-              </Link>
-              <button onClick={() => setDeleteOpen(true)} className="size-9 rounded-lg border border-border bg-white/60 hover:bg-white text-foreground/50 hover:text-red-600 transition-all flex items-center justify-center">
-                <Trash2 className="size-3.5" strokeWidth={1.8} />
-              </button>
+              {can('commandes', 'update') && (
+                <Link href={`/dashboard/commandes/${commande.id}/edit`} className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg border border-border bg-white/60 hover:bg-white text-xs font-medium text-foreground/70 hover:text-foreground transition-all">
+                  <Pencil className="size-3.5" strokeWidth={1.8} />
+                  Modifier
+                </Link>
+              )}
+              {can('commandes', 'delete') && (
+                <button onClick={() => setDeleteOpen(true)} className="size-9 rounded-lg border border-border bg-white/60 hover:bg-white text-foreground/50 hover:text-red-600 transition-all flex items-center justify-center">
+                  <Trash2 className="size-3.5" strokeWidth={1.8} />
+                </button>
+              )}
             </div>
           </div>
 
@@ -785,7 +791,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                           </div>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
-                          {inv.type === "DEVIS" && inv.status !== "REJECTED" && (
+                          {can('invoices', 'create') && inv.type === "DEVIS" && inv.status !== "REJECTED" && (
                             <button
                               onClick={() => handleConvertToInvoice(inv.id)}
                               className="size-8 rounded-lg border border-border bg-white hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 text-foreground/60 transition-all flex items-center justify-center"
@@ -874,29 +880,35 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
               <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
                 <span className="text-[10px] uppercase tracking-[0.1em] text-foreground/50 font-semibold block mb-3">Actions</span>
                 <div className="space-y-2">
-                  <button
-                    onClick={handleAddPaymentOpen}
-                    className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl bg-[var(--gold-deep)] hover:bg-[var(--gold-deep)]/90 text-white text-xs font-semibold transition-all shadow-sm"
-                  >
-                    <Plus className="size-3.5" strokeWidth={2.5} />
-                    Ajouter un paiement
-                  </button>
-                  <button
-                    onClick={handleGenerateQuote}
-                    disabled={generating === "quote"}
-                    className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl border border-border bg-white hover:bg-foreground/[0.02] text-xs font-medium text-foreground/70 hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {generating === "quote" ? <Loader2 className="size-3.5 animate-spin" strokeWidth={1.8} /> : <FileDown className="size-3.5" strokeWidth={1.8} />}
-                    Générer un devis
-                  </button>
-                  <button
-                    onClick={handleGenerateInvoice}
-                    disabled={generating === "invoice"}
-                    className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl border border-border bg-white hover:bg-foreground/[0.02] text-xs font-medium text-foreground/70 hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {generating === "invoice" ? <Loader2 className="size-3.5 animate-spin" strokeWidth={1.8} /> : <Receipt className="size-3.5" strokeWidth={1.8} />}
-                    Générer une facture
-                  </button>
+                  {can('payments', 'create') && (
+                    <button
+                      onClick={handleAddPaymentOpen}
+                      className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl bg-[var(--gold-deep)] hover:bg-[var(--gold-deep)]/90 text-white text-xs font-semibold transition-all shadow-sm"
+                    >
+                      <Plus className="size-3.5" strokeWidth={2.5} />
+                      Ajouter un paiement
+                    </button>
+                  )}
+                  {can('invoices', 'create') && (
+                    <button
+                      onClick={handleGenerateQuote}
+                      disabled={generating === "quote"}
+                      className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl border border-border bg-white hover:bg-foreground/[0.02] text-xs font-medium text-foreground/70 hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {generating === "quote" ? <Loader2 className="size-3.5 animate-spin" strokeWidth={1.8} /> : <FileDown className="size-3.5" strokeWidth={1.8} />}
+                      Générer un devis
+                    </button>
+                  )}
+                  {can('invoices', 'create') && (
+                    <button
+                      onClick={handleGenerateInvoice}
+                      disabled={generating === "invoice"}
+                      className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl border border-border bg-white hover:bg-foreground/[0.02] text-xs font-medium text-foreground/70 hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {generating === "invoice" ? <Loader2 className="size-3.5 animate-spin" strokeWidth={1.8} /> : <Receipt className="size-3.5" strokeWidth={1.8} />}
+                      Générer une facture
+                    </button>
+                  )}
                   <button
                     onClick={() => toast.info("Envoi WhatsApp — bientôt disponible")}
                     className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl border border-border bg-white hover:bg-foreground/[0.02] text-xs font-medium text-foreground/70 hover:text-foreground transition-all"

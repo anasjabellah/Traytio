@@ -9,6 +9,7 @@ import {
 import { toast } from "sonner"
 import { getPdfSettings, updatePdfSettings, type PdfSettings } from "@/features/invoices/actions/pdf-settings-actions"
 import { PdfPreview } from "./pdf-preview"
+import { PageGuard } from "@/components/ui/page-guard"
 
 const FONT_OPTIONS = [
   { value: "DM Sans", label: "DM Sans" },
@@ -17,6 +18,14 @@ const FONT_OPTIONS = [
 ]
 
 export default function PdfSettingsPage() {
+  return (
+    <PageGuard module="invoices" action="settings">
+      <PdfSettingsPageContent />
+    </PageGuard>
+  )
+}
+
+function PdfSettingsPageContent() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(true)

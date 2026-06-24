@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 
 export type CommandeStats = {
   currentMonth: {
@@ -28,6 +29,7 @@ export type CommandeStats = {
 
 export async function getCommandeStats(): Promise<CommandeStats> {
   const organizationId = await getOrganizationId();
+  await assertCan('commandes', 'read');
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);

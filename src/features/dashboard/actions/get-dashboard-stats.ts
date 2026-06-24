@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 import type { CommandeStatus } from '@prisma/client';
 import type { DashboardData } from '@/features/dashboard/types';
 
@@ -17,6 +18,7 @@ export async function getDashboardData(): Promise<{
 }> {
   try {
     const organizationId = await getOrganizationId();
+    await assertCan('dashboard', 'view');
     const now = new Date();
     const currentYear = now.getFullYear();
     const startOfYear = new Date(currentYear, 0, 1);

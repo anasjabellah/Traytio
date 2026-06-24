@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 import { createCommandeSchema } from '@/features/commandes/validations/create-commande-schema';
 import { recalculateCommandeBalances } from '@/features/financial/recalculate-commande-balances';
 import type { ActionResponse } from '@/features/commandes/types';
@@ -25,6 +26,8 @@ export async function updateCommande(id: string, input: unknown): Promise<Action
     if (!existing) {
       return { success: false, error: 'Commande not found or access denied' };
     }
+
+    await assertCan('commandes', 'update', existing.createdById ?? undefined);
 
     // ── Resolve eventId ──────────────────────────────────────────────
     // 1. If eventId was provided, update the linked Event with new data.

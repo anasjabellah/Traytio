@@ -3,10 +3,12 @@
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, MenuItem } from '@/features/menu-items/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 
 export async function getMenuItemById(id: string): Promise<ActionResponse<MenuItem>> {
   try {
     const organizationId = await getOrganizationId();
+    await assertCan('menu-items', 'read');
     const item = await prisma.menuItem.findFirst({
       where: { id, organizationId },
       select: {

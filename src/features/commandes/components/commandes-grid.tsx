@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Eye, Pencil, Trash2, Calendar, Users, MapPin, ArrowUpRight } from 'lucide-react';
+import { useRole } from '@/hooks/use-role';
 import { COMMANDE_STATUS_LABELS, COMMANDE_STATUS_STYLES } from '@/features/commandes/constants';
 import type { Commande } from '@/features/commandes/types';
 
@@ -26,6 +27,7 @@ interface CommandesGridProps {
 }
 
 export function CommandesGrid({ data, loading, onView, onEdit, onDelete }: CommandesGridProps) {
+  const { can } = useRole();
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -129,20 +131,24 @@ export function CommandesGrid({ data, loading, onView, onEdit, onDelete }: Comma
               >
                 <Eye className="size-3.5" strokeWidth={1.8} />
               </button>
-              <button
-                className="size-7 rounded-md hover:bg-muted/50 transition-all flex items-center justify-center text-muted-foreground/40 hover:text-foreground"
-                title="Modifier"
-                onClick={(e) => { e.stopPropagation(); onEdit(cmd); }}
-              >
-                <Pencil className="size-3.5" strokeWidth={1.8} />
-              </button>
-              <button
-                className="size-7 rounded-md hover:bg-muted/50 transition-all flex items-center justify-center text-muted-foreground/40 hover:text-red-600"
-                title="Supprimer"
-                onClick={(e) => { e.stopPropagation(); onDelete(cmd); }}
-              >
-                <Trash2 className="size-3.5" strokeWidth={1.8} />
-              </button>
+              {can('commandes', 'update') && (
+                <button
+                  className="size-7 rounded-md hover:bg-muted/50 transition-all flex items-center justify-center text-muted-foreground/40 hover:text-foreground"
+                  title="Modifier"
+                  onClick={(e) => { e.stopPropagation(); onEdit(cmd); }}
+                >
+                  <Pencil className="size-3.5" strokeWidth={1.8} />
+                </button>
+              )}
+              {can('commandes', 'delete') && (
+                <button
+                  className="size-7 rounded-md hover:bg-muted/50 transition-all flex items-center justify-center text-muted-foreground/40 hover:text-red-600"
+                  title="Supprimer"
+                  onClick={(e) => { e.stopPropagation(); onDelete(cmd); }}
+                >
+                  <Trash2 className="size-3.5" strokeWidth={1.8} />
+                </button>
+              )}
             </div>
           </motion.div>
         );

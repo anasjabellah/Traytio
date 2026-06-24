@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
 import { Webhook } from 'svix'
+import { OrgRole } from '@prisma/client'
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
@@ -36,7 +37,10 @@ export async function POST(req: Request) {
     try {
       const { id, email_addresses, first_name, last_name } = evt.data
       const email = email_addresses?.[0]?.email_address ?? ''
-      const name = `${first_name ?? ''} ${last_name ?? ''}`.trim() || email
+      const displayName = `${first_name ?? ''} ${last_name ?? ''}`.trim()
+      const orgName = displayName.length > 0
+        ? `${displayName}'s Organisation`
+        : 'Mon Organisation'
 
       const user = await prisma.user.create({
         data: {
@@ -49,7 +53,7 @@ export async function POST(req: Request) {
 
       const org = await prisma.organization.create({
         data: {
-          name: `${name}'s Organisation`,
+          name: orgName,
           slug: `org-${id.slice(0, 8)}-${Date.now()}`,
           email,
         }
@@ -59,7 +63,7 @@ export async function POST(req: Request) {
         data: {
           userId: user.id,
           organizationId: org.id,
-          role: 'OWNER',
+          role: OrgRole.OWNER,
         }
       })
     } catch (err) {

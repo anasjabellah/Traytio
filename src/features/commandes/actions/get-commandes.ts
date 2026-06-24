@@ -5,6 +5,7 @@ import type { Prisma, CommandeStatus } from '@prisma/client';
 import type { ActionResponse, Commande, GetCommandesParams, PaginatedCommandes } from '@/features/commandes/types';
 import { COMMANDE_DEFAULT_PAGE_SIZE } from '@/features/commandes/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 
 export async function getCommandes(params: GetCommandesParams): Promise<ActionResponse<PaginatedCommandes>> {
   try {
@@ -12,6 +13,7 @@ export async function getCommandes(params: GetCommandesParams): Promise<ActionRe
     let organizationId: string;
     try {
       organizationId = await getOrganizationId();
+      await assertCan('commandes', 'read');
       console.log('[getCommandes] auth success', { organizationId, timestamp: new Date().toISOString() });
     } catch (authErr) {
       console.log('[getCommandes] auth FAILED', { error: authErr instanceof Error ? authErr.message : authErr, timestamp: new Date().toISOString() });

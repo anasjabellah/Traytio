@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse, MenuItem, CreateMenuItemInput } from '@/features/menu-items/types';
 import { createMenuItemSchema } from '@/features/menu-items/validations/create-menu-item-schema';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 
 export async function createMenuItem(
   data: CreateMenuItemInput,
@@ -16,6 +17,7 @@ export async function createMenuItem(
     }
     const validData = parsed.data;
     const organizationId = await getOrganizationId();
+    await assertCan('menu-items', 'create');
 
     const item = await prisma.menuItem.create({
       data: {

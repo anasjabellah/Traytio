@@ -4,6 +4,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import {
   Eye, Pencil, Trash2, Users, FileText, Calendar, ChevronRight,
 } from 'lucide-react';
+import { useRole } from '@/hooks/use-role';
 import { COMMANDE_STATUS_LABELS, EVENT_STATUS_LABELS } from '@/features/dashboard/constants';
 import type { Commande } from '@/features/commandes/types';
 
@@ -79,6 +80,7 @@ function ActionIcons({ cmd, onView, onEdit, onDelete }: {
   cmd: Commande; onView: (c: Commande) => void;
   onEdit: (c: Commande) => void; onDelete: (c: Commande) => void;
 }) {
+  const { can } = useRole();
   return (
     <div className="flex items-center gap-0.5">
       <button
@@ -88,27 +90,33 @@ function ActionIcons({ cmd, onView, onEdit, onDelete }: {
       >
         <Eye className="size-4 shrink-0" strokeWidth={1.8} />
       </button>
-      <button
-        onClick={() => onEdit(cmd)}
-        title="Modifier"
-        className="p-1.5 rounded-md hover:bg-muted/30 transition-all text-muted-foreground/40 hover:text-[var(--gold-deep)]"
-      >
-        <Pencil className="size-4 shrink-0" strokeWidth={1.8} />
-      </button>
-      <button
-        onClick={() => onView(cmd)}
-        title="Devis"
-        className="p-1.5 rounded-md hover:bg-muted/30 transition-all text-muted-foreground/40 hover:text-[var(--gold-deep)]"
-      >
-        <FileText className="size-4 shrink-0" strokeWidth={1.8} />
-      </button>
-      <button
-        onClick={() => onDelete(cmd)}
-        title="Supprimer"
-        className="p-1.5 rounded-md hover:bg-red-50/50 transition-all text-muted-foreground/40 hover:text-red-500"
-      >
-        <Trash2 className="size-4 shrink-0" strokeWidth={1.8} />
-      </button>
+      {can('commandes', 'update') && (
+        <button
+          onClick={() => onEdit(cmd)}
+          title="Modifier"
+          className="p-1.5 rounded-md hover:bg-muted/30 transition-all text-muted-foreground/40 hover:text-[var(--gold-deep)]"
+        >
+          <Pencil className="size-4 shrink-0" strokeWidth={1.8} />
+        </button>
+      )}
+      {can('invoices', 'create') && (
+        <button
+          onClick={() => onView(cmd)}
+          title="Devis"
+          className="p-1.5 rounded-md hover:bg-muted/30 transition-all text-muted-foreground/40 hover:text-[var(--gold-deep)]"
+        >
+          <FileText className="size-4 shrink-0" strokeWidth={1.8} />
+        </button>
+      )}
+      {can('commandes', 'delete') && (
+        <button
+          onClick={() => onDelete(cmd)}
+          title="Supprimer"
+          className="p-1.5 rounded-md hover:bg-red-50/50 transition-all text-muted-foreground/40 hover:text-red-500"
+        >
+          <Trash2 className="size-4 shrink-0" strokeWidth={1.8} />
+        </button>
+      )}
     </div>
   );
 }

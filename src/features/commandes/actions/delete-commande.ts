@@ -4,10 +4,12 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse } from '@/features/commandes/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 
 export async function deleteCommande(id: string): Promise<ActionResponse<void>> {
   try {
     const organizationId = await getOrganizationId();
+    await assertCan('commandes', 'delete');
 
     const commande = await prisma.commande.findFirst({
       where: { id, organizationId },

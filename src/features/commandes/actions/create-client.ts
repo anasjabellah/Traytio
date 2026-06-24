@@ -3,6 +3,7 @@
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
+import { assertCan } from "@/lib/assert-role"
 import { revalidatePath } from "next/cache"
 
 const createCommandesClientSchema = z.object({
@@ -22,6 +23,7 @@ export async function createClient(input: unknown) {
 
     const data = parsed.data
     const organizationId = await getOrganizationId()
+    await assertCan('clients', 'create')
 
     const client = await prisma.client.create({
       data: {

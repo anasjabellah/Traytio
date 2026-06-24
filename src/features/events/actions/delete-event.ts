@@ -4,10 +4,12 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse } from '@/features/events/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 
 export async function deleteEvent(id: string): Promise<ActionResponse<void>> {
   try {
     const organizationId = await getOrganizationId();
+    await assertCan('events', 'delete');
 
     await prisma.event.delete({
       where: { id, organizationId }

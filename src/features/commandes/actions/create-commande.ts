@@ -2,16 +2,16 @@
 
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
-import { getOrganizationId } from "@/lib/get-organization-id"
+import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { createCommandeSchema } from "@/features/commandes/validations/create-commande-schema"
 import { recalculateCommandeBalances } from "@/features/financial/recalculate-commande-balances"
 import type { CommandeStatus, EventType, EventStatus, DiscountType } from "@prisma/client";
 
 export async function generateCommandeNumber(): Promise<string> {
-  const organizationId = await getOrganizationId()
+  const membership = await getCurrentMembership()
   const year = new Date().getFullYear()
   const count = await prisma.commande.count({
-    where: { organizationId, createdAt: { gte: new Date(`${year}-01-01`) } },
+    where: { organizationId: membership.organizationId, createdAt: { gte: new Date(`${year}-01-01`) } },
   })
   return `CMD-${year}-${String(count + 1).padStart(3, "0")}`
 }
@@ -24,7 +24,9 @@ export async function createCommande(input: unknown) {
     }
 
     const data = parsed.data
-    const organizationId = await getOrganizationId()
+    const membership = await getCurrentMembership()
+    await assertCan('commandes', 'create')
+    const organizationId = membership.organizationId
 
     // ── Resolve eventId ──────────────────────────────────────────────
     // If eventId was provided (user selected an existing event), use it.
@@ -60,6 +62,7 @@ export async function createCommande(input: unknown) {
       const cmd = await tx.commande.create({
         data: {
           organizationId,
+          createdById: membership.userId,
           clientId: data.clientId,
           number: data.number,
           eventId: resolvedEventId,
