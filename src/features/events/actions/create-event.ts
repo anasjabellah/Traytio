@@ -87,6 +87,7 @@ export async function createEvent(data: Record<string, unknown>): Promise<Action
     };
 
     revalidatePath("/dashboard/events")
+    revalidatePath("/dashboard/calendar")
 
     return { success: true, data: result };
   } catch (error: any) {

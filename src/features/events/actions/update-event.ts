@@ -103,6 +103,7 @@ export async function updateEvent(data: Record<string, unknown>): Promise<Action
 
     revalidatePath("/dashboard/events")
     revalidatePath("/dashboard/commandes")
+    revalidatePath("/dashboard/calendar")
 
     return { success: true, data: result };
   } catch (error: any) {

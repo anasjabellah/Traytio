@@ -6,9 +6,10 @@ import { EyeToggle } from '@/components/privacy-mode';
 import type { Event } from '@/features/events/types';
 
 export function EventsHeader({
-  total, events, onCalendar, onCreate,
+  total, events, onCalendar, onCreate, title, subtitle,
 }: {
   total: number; events: Event[]; onCalendar: () => void; onCreate: () => void;
+  title?: string; subtitle?: string;
 }) {
   return (
     <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
@@ -18,10 +19,10 @@ export function EventsHeader({
           <span>Gestion des événements • {total} au total</span>
         </div>
         <h1 className="font-display text-5xl lg:text-6xl text-gradient-charcoal leading-[1.05]">
-          Événements
+          {title || 'Événements'}
         </h1>
         <p className="mt-3 text-muted-foreground max-w-xl">
-          Créez, planifiez et suivez l&apos;ensemble de vos événements traiteur en un coup d&apos;œil.
+          {subtitle || 'Créez, planifiez et suivez l\'ensemble de vos événements traiteur en un coup d\'œil.'}
         </p>
       </div>
 

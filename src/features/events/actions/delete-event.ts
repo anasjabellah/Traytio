@@ -16,6 +16,7 @@ export async function deleteEvent(id: string): Promise<ActionResponse<void>> {
     });
 
     revalidatePath("/dashboard/events")
+    revalidatePath("/dashboard/calendar")
 
     return { success: true, data: undefined };
   } catch (error: any) {

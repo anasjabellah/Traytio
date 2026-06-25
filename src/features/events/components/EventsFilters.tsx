@@ -18,7 +18,8 @@ export function EventsFilters({
   viewMode, onViewModeChange,
   showFilters, onToggleFilters,
   onRefresh, onResetFilters,
-  filteredCount,
+  filteredCount, searchMaxWidth,
+  hideViewToggle,
 }: {
   searchQuery: string;
   onSearchChange: (v: string) => void;
@@ -44,6 +45,8 @@ export function EventsFilters({
   onRefresh: () => void;
   onResetFilters: () => void;
   filteredCount: number;
+  searchMaxWidth?: string;
+  hideViewToggle?: boolean;
 }) {
   const statusKeys = Object.keys(STATUS_LABELS);
 
@@ -51,7 +54,7 @@ export function EventsFilters({
     <>
       {/* Search + Filters + View toggle */}
       <div className="mt-8 flex flex-col lg:flex-row lg:items-center gap-3">
-        <div className="flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft flex-1 max-w-[400px] transition-all focus-within:border-gold focus-within:ring-1 focus-within:ring-gold/30">
+        <div className={`flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft flex-1 ${searchMaxWidth || 'max-w-[400px]'} transition-all focus-within:border-gold focus-within:ring-1 focus-within:ring-gold/30`}>
           <Search className="size-4 text-muted-foreground shrink-0" />
           <input
             value={searchQuery}
@@ -66,7 +69,7 @@ export function EventsFilters({
           )}
         </div>
 
-        <div className="flex items-center gap-3 ml-auto">
+        <div className="flex items-center gap-4 ml-auto">
           <Button
             variant={showFilters ? 'default' : 'outline'}
             size="sm"
@@ -83,28 +86,30 @@ export function EventsFilters({
           >
             <RefreshCw className="size-3.5" />
           </button>
-          <div className="flex p-0.5 rounded-xl bg-foreground/[0.04] border border-border">
-            <button
-              onClick={() => onViewModeChange('table')}
-              className={`h-10 px-4 rounded-[10px] text-sm font-medium transition-all ${
-                viewMode === 'table'
-                  ? 'bg-foreground text-background shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Table
-            </button>
-            <button
-              onClick={() => onViewModeChange('calendar')}
-              className={`h-10 px-4 rounded-[10px] text-sm font-medium transition-all ${
-                viewMode === 'calendar'
-                  ? 'bg-foreground text-background shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Calendrier
-            </button>
-          </div>
+          {!hideViewToggle && (
+            <div className="flex p-0.5 rounded-xl bg-foreground/[0.04] border border-border">
+              <button
+                onClick={() => onViewModeChange('table')}
+                className={`h-10 px-4 rounded-[10px] text-sm font-medium transition-all ${
+                  viewMode === 'table'
+                    ? 'bg-foreground text-background shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Table
+              </button>
+              <button
+                onClick={() => onViewModeChange('calendar')}
+                className={`h-10 px-4 rounded-[10px] text-sm font-medium transition-all ${
+                  viewMode === 'calendar'
+                    ? 'bg-foreground text-background shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Calendrier
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

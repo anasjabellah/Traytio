@@ -16,9 +16,10 @@ type CreateEventDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: (event: Event) => void;
+  defaultValues?: Record<string, unknown>;
 };
 
-export function CreateEventDialog({ open, onOpenChange, onSuccess }: CreateEventDialogProps) {
+export function CreateEventDialog({ open, onOpenChange, onSuccess, defaultValues }: CreateEventDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCreate = async (values: any) => {
@@ -53,7 +54,7 @@ export function CreateEventDialog({ open, onOpenChange, onSuccess }: CreateEvent
 
         {/* SCROLLABLE CONTENT */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
-          <EventForm mode="create" onSubmit={handleCreate} isLoading={isSubmitting} />
+          <EventForm mode="create" onSubmit={handleCreate} isLoading={isSubmitting} defaultValues={defaultValues as any} />
         </div>
 
         {/* FIXED FOOTER */}
