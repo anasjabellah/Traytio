@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { PrivacyModeProvider } from '@/components/privacy-mode';
 import { useDashboardData } from '@/features/dashboard/hooks/use-dashboard-data';
+import { useRevenueAnalytics } from '@/features/dashboard/hooks/use-revenue-analytics';
 import { DashboardHeader } from '@/features/dashboard/components/DashboardHeader';
 import { KpiGrid } from '@/features/dashboard/components/DashboardStats';
 import { RevenueChart } from '@/features/dashboard/components/RevenueChart';
@@ -58,6 +59,7 @@ function Dashboard() {
 }
 
 function DashboardContent({ data }: { data: DashboardData }) {
+  const { data: revenueData } = useRevenueAnalytics();
   const KPIS = useMemo(() => [
     { label: "Chiffre d'affaires", value: data.revenue, prefix: "MAD", delta: data.health.monthlyGrowth, trend: data.health.monthlyGrowth >= 0 ? "up" as const : "down" as const, spark: data.perfRevenue, icon: Wallet, accent: true, sensitive: true },
     { label: "Commandes actives", value: data.activeCommandes, delta: 0, trend: "up" as const, spark: data.perfPayments, icon: Receipt, sensitive: true },
@@ -72,14 +74,18 @@ function DashboardContent({ data }: { data: DashboardData }) {
       <div className="col-span-12 xl:col-span-9 space-y-6">
         <KpiGrid kpis={KPIS} />
         <RevenueChart
-          weekData={data.revenueWeek}
-          weekLabels={data.revenueWeekLabels}
-          monthData={data.revenueMonth}
-          monthLabels={data.revenueMonthLabels}
-          yearData={data.revenueYear}
-          yearLabels={data.revenueYearLabels}
-          total={data.revenue}
-          growth={data.health.monthlyGrowth}
+          weekData={revenueData?.weekData ?? []}
+          weekLabels={revenueData?.weekLabels ?? []}
+          weekTotal={revenueData?.weekTotal ?? 0}
+          weekGrowth={revenueData?.weekGrowth ?? 0}
+          monthData={revenueData?.monthData ?? []}
+          monthLabels={revenueData?.monthLabels ?? []}
+          monthTotal={revenueData?.monthTotal ?? 0}
+          monthGrowth={revenueData?.monthGrowth ?? 0}
+          yearData={revenueData?.yearData ?? []}
+          yearLabels={revenueData?.yearLabels ?? []}
+          yearTotal={revenueData?.yearTotal ?? 0}
+          yearGrowth={revenueData?.yearGrowth ?? 0}
         />
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className="lg:col-span-3"><RecentCommandes commandes={data.recentCommandes} /></div>
@@ -96,7 +102,6 @@ function DashboardContent({ data }: { data: DashboardData }) {
 
       <DashboardSidebar
         todayEvents={data.todayEvents}
-        alerts={data.alerts}
         activity={data.activity}
         quickStats={data.quickStats}
       />

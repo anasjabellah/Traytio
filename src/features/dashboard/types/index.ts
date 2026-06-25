@@ -6,12 +6,6 @@ export type DashboardData = {
   activeCommandes: number;
   paymentsReceived: number;
   pendingDeposits: number;
-  revenueWeek: number[];
-  revenueWeekLabels: string[];
-  revenueMonth: number[];
-  revenueMonthLabels: string[];
-  revenueYear: number[];
-  revenueYearLabels: string[];
   recentCommandes: Array<{
     id: string; number: string; clientName: string;
     date: Date; total: number; status: string;
@@ -22,10 +16,6 @@ export type DashboardData = {
   }>;
   todayEvents: Array<{
     id: string; name: string; startDate: Date; guestCount: number | null;
-  }>;
-  alerts: Array<{
-    type: 'warn' | 'info' | 'danger';
-    title: string; text: string;
   }>;
   activity: Array<{
     who: string; action: string; target: string; time: string; financial: boolean;

@@ -7,17 +7,20 @@ import { usePrivacyMode, SensitiveValue } from '@/components/privacy-mode';
 import { mad } from '@/features/dashboard/constants';
 
 export const RevenueChart = memo(function RevenueChart({
-  weekData, weekLabels, monthData, monthLabels, yearData, yearLabels, total, growth,
+  weekData, weekLabels, weekTotal, weekGrowth,
+  monthData, monthLabels, monthTotal, monthGrowth,
+  yearData, yearLabels, yearTotal, yearGrowth,
 }: {
-  weekData: number[]; weekLabels: string[];
-  monthData: number[]; monthLabels: string[];
-  yearData: number[]; yearLabels: string[];
-  total: number; growth: number;
+  weekData: number[]; weekLabels: string[]; weekTotal: number; weekGrowth: number;
+  monthData: number[]; monthLabels: string[]; monthTotal: number; monthGrowth: number;
+  yearData: number[]; yearLabels: string[]; yearTotal: number; yearGrowth: number;
 }) {
   const { isPrivacyMode } = usePrivacyMode();
-  const [range, setRange] = useState<"Semaine" | "Mois" | "Ann\u00e9e">("Ann\u00e9e");
+  const [range, setRange] = useState<"Semaine" | "Mois" | "Ann\u00e9e">("Semaine");
   const data = range === "Semaine" ? weekData : range === "Mois" ? monthData : yearData;
   const labels = range === "Semaine" ? weekLabels : range === "Mois" ? monthLabels : yearLabels;
+  const displayTotal = range === "Semaine" ? weekTotal : range === "Mois" ? monthTotal : yearTotal;
+  const displayGrowth = range === "Semaine" ? weekGrowth : range === "Mois" ? monthGrowth : yearGrowth;
   const [hover, setHover] = useState<number | null>(null);
   const [w, h, padX, padY] = [800, 260, 28, 24];
 
@@ -47,11 +50,11 @@ export const RevenueChart = memo(function RevenueChart({
           <div className="text-xs uppercase tracking-wider text-muted-foreground">&Eacute;volution du chiffre d'affaires</div>
           <div className="mt-2 flex items-baseline gap-3">
             <div className="font-display text-4xl tabular-nums">
-              <SensitiveValue hidden={isPrivacyMode} className="text-gradient-charcoal">{mad(total)}</SensitiveValue>
+              <SensitiveValue hidden={isPrivacyMode} className="text-gradient-charcoal">{mad(displayTotal)}</SensitiveValue>
             </div>
-            <span className={`text-xs font-medium px-2 py-1 rounded-md inline-flex items-center gap-1 ${growth >= 0 ? "text-emerald-700 bg-emerald-50" : "text-rose-700 bg-rose-50"}`}>
-              {growth >= 0 ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
-              <SensitiveValue hidden={isPrivacyMode}>{growth >= 0 ? "+" : ""}{growth}%</SensitiveValue>
+            <span className={`text-xs font-medium px-2 py-1 rounded-md inline-flex items-center gap-1 ${displayGrowth >= 0 ? "text-emerald-700 bg-emerald-50" : "text-rose-700 bg-rose-50"}`}>
+              {displayGrowth >= 0 ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+              <SensitiveValue hidden={isPrivacyMode}>{displayGrowth >= 0 ? "+" : ""}{displayGrowth}%</SensitiveValue>
             </span>
           </div>
         </div>

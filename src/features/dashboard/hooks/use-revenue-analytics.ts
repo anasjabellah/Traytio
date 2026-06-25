@@ -1,18 +1,34 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback, startTransition } from 'react';
-import { getDashboardData } from '@/features/dashboard/actions/get-dashboard-stats';
-import type { DashboardData } from '@/features/dashboard/types';
+import { getRevenueAnalytics } from '@/features/dashboard/actions/get-revenue-analytics';
 
-export function useDashboardData() {
-  const [data, setData] = useState<DashboardData | null>(null);
+type RevenueData = {
+  totalRevenue: number;
+  growth: number;
+  weekData: number[];
+  weekLabels: string[];
+  weekTotal: number;
+  weekGrowth: number;
+  monthData: number[];
+  monthLabels: string[];
+  monthTotal: number;
+  monthGrowth: number;
+  yearData: number[];
+  yearLabels: string[];
+  yearTotal: number;
+  yearGrowth: number;
+};
+
+export function useRevenueAnalytics() {
+  const [data, setData] = useState<RevenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     startTransition(() => { setLoading(true); setError(null); });
     try {
-      const res = await getDashboardData();
+      const res = await getRevenueAnalytics();
       if (res.success && res.data) {
         startTransition(() => { setData(res.data!); });
       } else {

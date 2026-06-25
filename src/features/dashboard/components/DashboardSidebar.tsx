@@ -3,8 +3,7 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
 import {
-  AlertTriangle, Clock, CircleDot, CheckCircle2,
-  TrendingUp, Users,
+  CircleDot, CheckCircle2,
 } from 'lucide-react';
 import { usePrivacyMode, SensitiveValue } from '@/components/privacy-mode';
 import { mad } from '@/features/dashboard/constants';
@@ -15,14 +14,14 @@ export const TodayEventsWidget = memo(function TodayEventsWidget({ events }: { e
     <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Aujourd'hui</div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Aujourd&rsquo;hui</div>
           <h3 className="font-display text-xl mt-1">Programme du jour</h3>
         </div>
         <span className="text-xs text-muted-foreground">{events.length}</span>
       </div>
       {events.length === 0 ? (
         <div className="py-6 text-center text-xs text-muted-foreground">
-          Aucun &eacute;v&eacute;nement programm&eacute; aujourd'hui
+          Aucun &eacute;v&eacute;nement programm&eacute; aujourd&rsquo;hui
         </div>
       ) : (
         <div className="space-y-1">
@@ -44,48 +43,6 @@ export const TodayEventsWidget = memo(function TodayEventsWidget({ events }: { e
           })}
         </div>
       )}
-    </div>
-  );
-});
-
-export const AlertsWidget = memo(function AlertsWidget({ alerts }: { alerts: DashboardData['alerts'] }) {
-  const { isPrivacyMode } = usePrivacyMode();
-  return (
-    <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Vigilance</div>
-          <h3 className="font-display text-xl mt-1">Alertes</h3>
-        </div>
-        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700">{alerts.length}</span>
-      </div>
-      <div className="space-y-2">
-        {alerts.length === 0 && (
-          <div className="py-6 text-center text-xs text-muted-foreground">
-            Aucune alerte
-          </div>
-        )}
-        {alerts.map((a, i) => {
-          const Icon = a.type === "danger" ? AlertTriangle : a.type === "warn" ? Clock : AlertTriangle;
-          const tone =
-            a.type === "danger" ? "bg-rose-50/60 border-rose-200/60 text-rose-900" :
-              a.type === "warn" ? "bg-amber-50/60 border-amber-200/60 text-amber-900" :
-                "bg-blue-50/60 border-blue-200/60 text-blue-900";
-          return (
-            <motion.div key={i}
-              initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-              className={`rounded-xl border p-3 flex items-start gap-3 ${tone}`}>
-              <Icon className="size-4 mt-0.5 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium">{a.title}</div>
-                <div className="text-xs opacity-80 truncate">
-                  {a.type === 'warn' ? <SensitiveValue hidden={isPrivacyMode}>{a.text}</SensitiveValue> : a.text}
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
     </div>
   );
 });
@@ -170,10 +127,9 @@ export const QuickStatsWidget = memo(function QuickStatsWidget({ stats }: { stat
 });
 
 export function DashboardSidebar({
-  todayEvents, alerts, activity, quickStats,
+  todayEvents, activity, quickStats,
 }: {
   todayEvents: DashboardData['todayEvents'];
-  alerts: DashboardData['alerts'];
   activity: DashboardData['activity'];
   quickStats: DashboardData['quickStats'];
 }) {
@@ -181,7 +137,6 @@ export function DashboardSidebar({
     <aside className="col-span-12 xl:col-span-3 space-y-6">
       <div className="xl:sticky xl:top-24 space-y-6">
         <TodayEventsWidget events={todayEvents} />
-        <AlertsWidget alerts={alerts} />
         <ActivityFeedWidget activity={activity} />
         <QuickStatsWidget stats={quickStats} />
       </div>

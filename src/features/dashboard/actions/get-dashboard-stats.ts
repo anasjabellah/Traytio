@@ -7,9 +7,7 @@ import type { CommandeStatus } from '@prisma/client';
 import type { DashboardData } from '@/features/dashboard/types';
 
 const COMMANDE_ACTIVE_STATUSES: CommandeStatus[] = ['QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'READY'];
-const COMMANDE_REVENUE_STATUSES = { notIn: ['DRAFT', 'CANCELLED'] as CommandeStatus[] };
-
-const MONTH_NAMES = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+const COMMANDE_REVENUE_STATUSES = { notIn: ['CANCELLED'] as CommandeStatus[] };
 
 export async function getDashboardData(): Promise<{
   success: boolean;
@@ -26,7 +24,6 @@ export async function getDashboardData(): Promise<{
     const startOfNextMonth = new Date(currentYear, now.getMonth() + 1, 1);
     const startOfToday = new Date(currentYear, now.getMonth(), now.getDate());
     const endOfToday = new Date(currentYear, now.getMonth(), now.getDate() + 1);
-    const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 
     // Last 8 months for perf charts
     const last8Months: { key: string; start: Date }[] = [];
@@ -49,7 +46,6 @@ export async function getDashboardData(): Promise<{
       todayEventsDb,
       commandesForChart,
       eventsForStats,
-      depositsAlert,
       topItemAgg,
       bestClient,
       recentActivities,
@@ -110,11 +106,6 @@ export async function getDashboardData(): Promise<{
         where: { organizationId, createdAt: { gte: startOfYear } },
         select: { budget: true, guestCount: true, status: true, createdAt: true },
       }),
-      prisma.commande.findMany({
-        where: { organizationId, remainingAmount: { gt: 0 }, status: { in: ['CONFIRMED', 'IN_PROGRESS'] } },
-        take: 3,
-        select: { remainingAmount: true, client: { select: { name: true } }, number: true },
-      }),
       prisma.commandeItem.groupBy({
         by: ['name'],
         where: { commande: { organizationId } },
@@ -155,79 +146,14 @@ export async function getDashboardData(): Promise<{
       `,
     ]);
 
-    // Compute conflict map from upcoming + today events instead of fetching all events
-    const conflictCandidates = [...upcoming, ...todayEventsDb];
-    const conflictMap = new Map<string, string[]>();
-    for (const e of conflictCandidates) {
-      const d = new Date(e.startDate).toLocaleDateString('fr-FR');
-      if (!conflictMap.has(d)) conflictMap.set(d, []);
-      conflictMap.get(d)!.push(e.name);
-    }
-
-    // Revenue chart: daily and monthly aggregation
-    const dailyMap: Record<string, number> = {};
+    // Revenue chart: monthly aggregation
     const monthlyMap: Record<string, number> = {};
     const paidMonthlyMap: Record<string, number> = {};
     for (const cmd of commandesForChart) {
       const d = new Date(cmd.createdAt);
-      const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      dailyMap[dayKey] = (dailyMap[dayKey] || 0) + Number(cmd.totalAmount);
       monthlyMap[monthKey] = (monthlyMap[monthKey] || 0) + Number(cmd.totalAmount);
       paidMonthlyMap[monthKey] = (paidMonthlyMap[monthKey] || 0) + Number(cmd.paidAmount);
-    }
-
-    // Semaine (last 7 days)
-    const revenueWeek: number[] = [];
-    const revenueWeekLabels: string[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(currentYear, now.getMonth(), now.getDate() - i);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      revenueWeek.push(Math.round(dailyMap[key] || 0));
-      revenueWeekLabels.push(d.toLocaleDateString('fr-FR', { weekday: 'short' }));
-    }
-
-    // Mois (last 30 days)
-    const revenueMonth: number[] = [];
-    const revenueMonthLabels: string[] = [];
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(currentYear, now.getMonth(), now.getDate() - i);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      revenueMonth.push(Math.round(dailyMap[key] || 0));
-      revenueMonthLabels.push(String(d.getDate()));
-    }
-
-    // Année (monthly)
-    const sortedMonths = Object.entries(monthlyMap).sort(([a], [b]) => a.localeCompare(b));
-    const revenueYear = sortedMonths.map(([, v]) => Math.round(v));
-    const revenueYearLabels = sortedMonths.map(([m]) => {
-      const parts = m.split('-');
-      return MONTH_NAMES[parseInt(parts[1]) - 1];
-    });
-
-    // Alerts
-    const alerts: DashboardData['alerts'] = [];
-
-    for (const d of depositsAlert) {
-      alerts.push({
-        type: 'warn',
-        title: 'Acompte en retard',
-        text: `${d.client?.name || 'Client'} — ${Number(d.remainingAmount).toLocaleString('fr-FR')} MAD`,
-      });
-    }
-
-    const eventsIn3Days = upcoming.filter((e) => {
-      const d = new Date(e.startDate);
-      return d <= threeDaysFromNow && d > now;
-    });
-    for (const e of eventsIn3Days) {
-      alerts.push({ type: 'info', title: 'Événement dans 3 jours', text: e.name });
-    }
-
-    for (const [date, names] of conflictMap) {
-      if (names.length >= 2) {
-        alerts.push({ type: 'danger', title: 'Conflit de planning', text: `${date} — ${names.length} événements` });
-      }
     }
 
     // Activity feed
@@ -328,12 +254,6 @@ export async function getDashboardData(): Promise<{
         activeCommandes: activeCommandesCount,
         paymentsReceived: Math.round(Number(paymentsAgg._sum?.paidAmount || 0)),
         pendingDeposits: Math.round(Number(pendingAgg._sum.remainingAmount || 0)),
-        revenueWeek,
-        revenueWeekLabels,
-        revenueMonth,
-        revenueMonthLabels,
-        revenueYear,
-        revenueYearLabels,
         recentCommandes: recentCommandes.map((c) => ({
           id: c.id,
           number: c.number || c.id.slice(0, 8),
@@ -356,7 +276,6 @@ export async function getDashboardData(): Promise<{
           startDate: e.startDate,
           guestCount: e.guestCount,
         })),
-        alerts,
         activity,
         health: {
           avgEventValue,
@@ -374,8 +293,8 @@ export async function getDashboardData(): Promise<{
         perfPayments,
       },
     };
-  } catch (error: any) {
-    return { success: false, error: error.message || 'An error occurred' };
+  } catch (error: unknown) {
+    return { success: false, error: error instanceof Error ? error.message : 'An error occurred' };
   }
 }
 
