@@ -3,6 +3,8 @@ export type DashboardData = {
   totalBudget: number;
   activeClients: number;
   eventsThisMonth: number;
+  confirmedEvents: number;
+  completedEvents: number;
   activeCommandes: number;
   paymentsReceived: number;
   pendingDeposits: number;

@@ -1,7 +1,8 @@
 ﻿'use client';
 
 import { memo } from 'react';
-import { KpiCard, type KpiCardProps } from '@/shared/components/kpi-card';
+import { KpiCard } from '@/shared/components/kpi-card';
+import type { KpiCardProps } from '@/shared/components/kpi-card';
 
 export const KpiGrid = memo(function KpiGrid({ kpis }: { kpis: KpiCardProps[] }) {
   return (

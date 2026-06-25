@@ -86,6 +86,10 @@ export type KpiCardProps = {
   accent?: boolean;
   delay?: number;
   sensitive?: boolean;
+  /** Secondary info rendered below the value (e.g. "6 confirmés · 3 à venir"). */
+  secondary?: React.ReactNode;
+  /** Collection rate 0-100 shown as a thin progress bar. */
+  progress?: number;
 };
 
 export function KpiCard({
@@ -99,6 +103,8 @@ export function KpiCard({
   accent = false,
   delay = 0,
   sensitive = false,
+  secondary,
+  progress,
 }: KpiCardProps) {
   const counted = useCounter(value, 1400);
   const display = prefix
@@ -107,6 +113,7 @@ export function KpiCard({
   const up = trend === 'up';
   const { isPrivacyMode } = usePrivacyMode();
   const sparkId = `kpi-${label.normalize('NFD').replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '-').toLowerCase()}`;
+  const hasExtraContent = !!secondary || progress !== undefined;
 
   return (
     <motion.div
@@ -148,7 +155,25 @@ export function KpiCard({
           <Icon className="size-5" />
         </div>
       </div>
-      <div className="mt-4 flex items-end justify-between gap-3">
+
+      {secondary && (
+        <div className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
+          {secondary}
+        </div>
+      )}
+
+      {progress !== undefined && (
+        <div className="mt-2 h-[3px] rounded-full bg-foreground/[0.06] overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${Math.min(progress, 100)}%` }}
+            transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
+            className="h-full rounded-full bg-gradient-gold"
+          />
+        </div>
+      )}
+
+      <div className={`flex items-end justify-between gap-3 ${hasExtraContent ? 'mt-3' : 'mt-4'}`}>
         <div
           className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md ${
             up

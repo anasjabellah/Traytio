@@ -38,6 +38,8 @@ export async function getDashboardData(): Promise<{
       budgetAgg,
       clientCount,
       eventsThisMonthCount,
+      confirmedEventsCount,
+      completedEventsCount,
       activeCommandesCount,
       paymentsAgg,
       pendingAgg,
@@ -63,6 +65,12 @@ export async function getDashboardData(): Promise<{
       prisma.client.count({ where: { organizationId } }),
       prisma.event.count({
         where: { organizationId, startDate: { gte: startOfMonth, lt: startOfNextMonth } },
+      }),
+      prisma.event.count({
+        where: { organizationId, status: 'CONFIRMED' },
+      }),
+      prisma.event.count({
+        where: { organizationId, status: 'COMPLETED' },
       }),
       prisma.commande.count({
         where: { organizationId, status: { in: COMMANDE_ACTIVE_STATUSES } },
@@ -251,6 +259,8 @@ export async function getDashboardData(): Promise<{
         totalBudget: Math.round(Number(budgetAgg._sum.budget || 0)),
         activeClients: clientCount,
         eventsThisMonth: eventsThisMonthCount,
+        confirmedEvents: confirmedEventsCount,
+        completedEvents: completedEventsCount,
         activeCommandes: activeCommandesCount,
         paymentsReceived: Math.round(Number(paymentsAgg._sum?.paidAmount || 0)),
         pendingDeposits: Math.round(Number(pendingAgg._sum.remainingAmount || 0)),

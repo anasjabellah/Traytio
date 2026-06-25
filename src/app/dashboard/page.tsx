@@ -19,6 +19,7 @@ import { QuickActions } from '@/features/dashboard/components/QuickActions';
 import { PerformanceCharts } from '@/features/dashboard/components/PerformanceCharts';
 import { DashboardSidebar } from '@/features/dashboard/components/DashboardSidebar';
 import { DashboardSkeleton, DashboardError } from '@/features/dashboard/components/DashboardStates';
+import { calcGrowth } from '@/features/dashboard/lib/calc-growth';
 import type { DashboardData } from '@/features/dashboard/types';
 
 export default function Page() {
@@ -60,14 +61,76 @@ function Dashboard() {
 
 function DashboardContent({ data }: { data: DashboardData }) {
   const { data: revenueData } = useRevenueAnalytics();
+  const eventsDelta = calcGrowth(data.perfEvents);
+  const clientsDelta = calcGrowth(data.perfClients);
+  const paymentsDelta = calcGrowth(data.perfPayments);
+  const collectionRate = data.revenue > 0 ? Math.round((data.paymentsReceived / data.revenue) * 100) : 0;
+  const eventsTotal = data.confirmedEvents + data.completedEvents;
+  const newClientsMonth = data.perfClients[data.perfClients.length - 1] ?? 0;
+
   const KPIS = useMemo(() => [
-    { label: "Chiffre d'affaires", value: data.revenue, prefix: "MAD", delta: data.health.monthlyGrowth, trend: data.health.monthlyGrowth >= 0 ? "up" as const : "down" as const, spark: data.perfRevenue, icon: Wallet, accent: true, sensitive: true },
-    { label: "Commandes actives", value: data.activeCommandes, delta: 0, trend: "up" as const, spark: data.perfPayments, icon: Receipt, sensitive: true },
-    { label: "\u00c9v\u00e9nements \u00e0 venir", value: data.upcomingEvents.length, delta: 0, trend: "up" as const, spark: data.perfEvents, icon: PartyPopper, sensitive: true },
-    { label: "Clients actifs", value: data.activeClients, delta: 0, trend: "up" as const, spark: data.perfClients, icon: Users, sensitive: true },
-    { label: "Acomptes en attente", value: data.pendingDeposits, prefix: "MAD", delta: 0, trend: "down" as const, spark: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, data.pendingDeposits > 0 ? 5 : 1], icon: Clock, sensitive: true },
-    { label: "Paiements encaiss\u00e9s", value: data.paymentsReceived, prefix: "MAD", delta: 0, trend: "up" as const, spark: data.perfPayments, icon: Banknote, sensitive: true },
-  ], [data]);
+    {
+      label: "Chiffre d'affaires",
+      value: data.revenue,
+      prefix: "MAD",
+      delta: data.health.monthlyGrowth,
+      trend: data.health.monthlyGrowth >= 0 ? ("up" as const) : ("down" as const),
+      spark: data.perfRevenue,
+      icon: Wallet,
+      sensitive: true,
+    },
+    {
+      label: "Commandes actives",
+      value: data.activeCommandes,
+      delta: 0,
+      trend: "up" as const,
+      spark: data.perfRevenue,
+      icon: Receipt,
+      sensitive: true,
+    },
+    {
+      label: "\u00c9v\u00e9nements",
+      value: eventsTotal,
+      delta: eventsDelta,
+      trend: eventsDelta >= 0 ? ("up" as const) : ("down" as const),
+      spark: data.perfEvents,
+      icon: PartyPopper,
+      secondary: `${data.confirmedEvents} confirm\u00e9s \u00b7 ${data.upcomingEvents.length} \u00e0 venir \u00b7 ${data.completedEvents} termin\u00e9s`,
+      sensitive: true,
+    },
+    {
+      label: "Clients actifs",
+      value: data.activeClients,
+      delta: clientsDelta,
+      trend: clientsDelta >= 0 ? ("up" as const) : ("down" as const),
+      spark: data.perfClients,
+      icon: Users,
+      secondary: `${newClientsMonth} nouveau${newClientsMonth > 1 ? "x" : ""} ce mois-ci`,
+      sensitive: true,
+    },
+    {
+      label: "Acomptes en attente",
+      value: data.pendingDeposits,
+      prefix: "MAD",
+      delta: 0,
+      trend: "down" as const,
+      spark: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, data.pendingDeposits > 0 ? 5 : 1],
+      icon: Clock,
+      sensitive: true,
+    },
+    {
+      label: "Paiements encaiss\u00e9s",
+      value: data.paymentsReceived,
+      prefix: "MAD",
+      delta: paymentsDelta,
+      trend: paymentsDelta >= 0 ? ("up" as const) : ("down" as const),
+      spark: data.perfPayments,
+      icon: Banknote,
+      secondary: `${collectionRate}% du CA encaiss\u00e9`,
+      progress: collectionRate,
+      sensitive: true,
+    },
+  ], [data, eventsTotal, eventsDelta, clientsDelta, paymentsDelta, collectionRate, newClientsMonth]);
 
   return (
     <div className="mt-8 grid grid-cols-12 gap-6">
@@ -97,7 +160,17 @@ function DashboardContent({ data }: { data: DashboardData }) {
           <BusinessHealth health={data.health} />
         </div>
         <QuickActions />
-        <PerformanceCharts perfRevenue={data.perfRevenue} perfEvents={data.perfEvents} perfClients={data.perfClients} />
+        <PerformanceCharts
+          perfRevenue={data.perfRevenue}
+          perfEvents={data.perfEvents}
+          perfClients={data.perfClients}
+          perfPayments={data.perfPayments}
+          totalRevenue={data.revenue}
+          confirmedEvents={data.confirmedEvents}
+          upcomingEventsCount={data.upcomingEvents.length}
+          activeClients={data.activeClients}
+          paymentsReceived={data.paymentsReceived}
+        />
       </div>
 
       <DashboardSidebar
