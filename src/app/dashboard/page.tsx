@@ -6,7 +6,6 @@ import {
 } from "lucide-react";
 import { PrivacyModeProvider } from '@/components/privacy-mode';
 import { useDashboardData } from '@/features/dashboard/hooks/use-dashboard-data';
-import { useRevenueAnalytics } from '@/features/dashboard/hooks/use-revenue-analytics';
 import { DashboardHeader } from '@/features/dashboard/components/DashboardHeader';
 import { KpiGrid } from '@/features/dashboard/components/DashboardStats';
 import { RevenueChart } from '@/features/dashboard/components/RevenueChart';
@@ -60,13 +59,11 @@ function Dashboard() {
 }
 
 function DashboardContent({ data }: { data: DashboardData }) {
-  const { data: revenueData } = useRevenueAnalytics();
+  const ra = data.revenueAnalytics;
   const eventsDelta = calcGrowth(data.perfEvents);
   const clientsDelta = calcGrowth(data.perfClients);
   const paymentsDelta = calcGrowth(data.perfPayments);
-  const collectionRate = data.revenue > 0 ? Math.round((data.paymentsReceived / data.revenue) * 100) : 0;
   const eventsTotal = data.confirmedEvents + data.completedEvents;
-  const newClientsMonth = data.perfClients[data.perfClients.length - 1] ?? 0;
 
   const KPIS = useMemo(() => [
     {
@@ -95,7 +92,6 @@ function DashboardContent({ data }: { data: DashboardData }) {
       trend: eventsDelta >= 0 ? ("up" as const) : ("down" as const),
       spark: data.perfEvents,
       icon: PartyPopper,
-      secondary: `${data.confirmedEvents} confirm\u00e9s \u00b7 ${data.upcomingEvents.length} \u00e0 venir \u00b7 ${data.completedEvents} termin\u00e9s`,
       sensitive: true,
     },
     {
@@ -105,7 +101,6 @@ function DashboardContent({ data }: { data: DashboardData }) {
       trend: clientsDelta >= 0 ? ("up" as const) : ("down" as const),
       spark: data.perfClients,
       icon: Users,
-      secondary: `${newClientsMonth} nouveau${newClientsMonth > 1 ? "x" : ""} ce mois-ci`,
       sensitive: true,
     },
     {
@@ -126,29 +121,27 @@ function DashboardContent({ data }: { data: DashboardData }) {
       trend: paymentsDelta >= 0 ? ("up" as const) : ("down" as const),
       spark: data.perfPayments,
       icon: Banknote,
-      secondary: `${collectionRate}% du CA encaiss\u00e9`,
-      progress: collectionRate,
       sensitive: true,
     },
-  ], [data, eventsTotal, eventsDelta, clientsDelta, paymentsDelta, collectionRate, newClientsMonth]);
+  ], [data, eventsTotal, eventsDelta, clientsDelta, paymentsDelta]);
 
   return (
     <div className="mt-8 grid grid-cols-12 gap-6">
       <div className="col-span-12 xl:col-span-9 space-y-6">
         <KpiGrid kpis={KPIS} />
         <RevenueChart
-          weekData={revenueData?.weekData ?? []}
-          weekLabels={revenueData?.weekLabels ?? []}
-          weekTotal={revenueData?.weekTotal ?? 0}
-          weekGrowth={revenueData?.weekGrowth ?? 0}
-          monthData={revenueData?.monthData ?? []}
-          monthLabels={revenueData?.monthLabels ?? []}
-          monthTotal={revenueData?.monthTotal ?? 0}
-          monthGrowth={revenueData?.monthGrowth ?? 0}
-          yearData={revenueData?.yearData ?? []}
-          yearLabels={revenueData?.yearLabels ?? []}
-          yearTotal={revenueData?.yearTotal ?? 0}
-          yearGrowth={revenueData?.yearGrowth ?? 0}
+          weekData={ra.weekData}
+          weekLabels={ra.weekLabels}
+          weekTotal={ra.weekTotal}
+          weekGrowth={ra.weekGrowth}
+          monthData={ra.monthData}
+          monthLabels={ra.monthLabels}
+          monthTotal={ra.monthTotal}
+          monthGrowth={ra.monthGrowth}
+          yearData={ra.yearData}
+          yearLabels={ra.yearLabels}
+          yearTotal={ra.yearTotal}
+          yearGrowth={ra.yearGrowth}
         />
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className="lg:col-span-3"><RecentCommandes commandes={data.recentCommandes} /></div>

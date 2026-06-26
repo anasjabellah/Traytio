@@ -2,7 +2,6 @@ export type DashboardData = {
   revenue: number;
   totalBudget: number;
   activeClients: number;
-  eventsThisMonth: number;
   confirmedEvents: number;
   completedEvents: number;
   activeCommandes: number;
@@ -35,6 +34,20 @@ export type DashboardData = {
     avgBudget: number;
     avgGuests: number;
     completionRate: number;
+  };
+  revenueAnalytics: {
+    weekData: number[];
+    weekLabels: string[];
+    weekTotal: number;
+    weekGrowth: number;
+    monthData: number[];
+    monthLabels: string[];
+    monthTotal: number;
+    monthGrowth: number;
+    yearData: number[];
+    yearLabels: string[];
+    yearTotal: number;
+    yearGrowth: number;
   };
   perfRevenue: number[];
   perfEvents: number[];
