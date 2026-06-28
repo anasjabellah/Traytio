@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,8 +8,8 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { updateClient } from '@/features/clients/actions/update-client';
-import { getClientById } from '@/features/clients/actions/get-client-by-id';
-import type { Client, ClientWithStats } from '@/features/clients/types';
+import type { Client } from '@/features/clients/types';
+import type { UpdateClientInput } from '@/features/clients/validations/update-client-schema';
 import { ClientForm } from './client-form';
 
 type EditClientDialogProps = {
@@ -21,33 +21,24 @@ type EditClientDialogProps = {
 
 export function EditClientDialog({ client, open, onOpenChange, onSuccess }: EditClientDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [fullClient, setFullClient] = useState<ClientWithStats | null>(null);
-  const [isLoadingClient, setIsLoadingClient] = useState(false);
 
-  const fetchClient = useCallback(async () => {
-    if (!client?.id) return;
-    setIsLoadingClient(true);
-    try {
-      const res = await getClientById(client.id);
-      if (res.success && res.data) {
-        setFullClient(res.data);
-      }
-    } catch {
-      // fallback: use whatever was passed
-    } finally {
-      setIsLoadingClient(false);
-    }
-  }, [client?.id]);
+  const defaultValues = useMemo(
+    () => ({
+      id: client.id,
+      name: client.name,
+      email: client.email ?? undefined,
+      phone: client.phone ?? undefined,
+      address: client.address ?? undefined,
+      city: client.city ?? undefined,
+      postalCode: client.postalCode ?? undefined,
+      company: client.company ?? undefined,
+      siret: client.siret ?? undefined,
+      notes: client.notes ?? undefined,
+    }),
+    [client.id, client.name, client.email, client.phone, client.address, client.city, client.postalCode, client.company, client.siret, client.notes],
+  );
 
-  useEffect(() => {
-    if (open && client?.id) {
-      fetchClient();
-    } else {
-      setFullClient(null);
-    }
-  }, [open, client?.id, fetchClient]);
-
-  const handleUpdate = async (values: any) => {
+  const handleUpdate = async (values: UpdateClientInput) => {
     setIsSubmitting(true);
     try {
       const response = await updateClient(client.id, values);
@@ -58,30 +49,12 @@ export function EditClientDialog({ client, open, onOpenChange, onSuccess }: Edit
       } else {
         toast.error(response.error || "Erreur lors de la mise à jour du client");
       }
-    } catch (err: any) {
-      toast.error(err.message || "Erreur inattendue");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erreur inattendue");
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const defaultValues = useMemo(
-    () => fullClient
-      ? {
-          id: fullClient.id,
-          name: fullClient.name,
-          email: fullClient.email ?? undefined,
-          phone: fullClient.phone ?? undefined,
-          address: fullClient.address ?? undefined,
-          city: fullClient.city ?? undefined,
-          postalCode: fullClient.postalCode ?? undefined,
-          company: fullClient.company ?? undefined,
-          siret: fullClient.siret ?? undefined,
-          notes: fullClient.notes ?? undefined,
-        }
-      : undefined,
-    [fullClient],
-  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -97,18 +70,12 @@ export function EditClientDialog({ client, open, onOpenChange, onSuccess }: Edit
 
         {/* SCROLLABLE CONTENT */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
-          {isLoadingClient || !defaultValues ? (
-            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-              Chargement...
-            </div>
-          ) : (
-            <ClientForm
-              mode="edit"
-              defaultValues={defaultValues}
-              onSubmit={handleUpdate}
-              isLoading={isSubmitting}
-            />
-          )}
+          <ClientForm
+            mode="edit"
+            defaultValues={defaultValues}
+            onSubmit={handleUpdate}
+            isLoading={isSubmitting}
+          />
         </div>
 
         {/* FIXED FOOTER */}
@@ -123,7 +90,7 @@ export function EditClientDialog({ client, open, onOpenChange, onSuccess }: Edit
           <button
             type="submit"
             form="client-form"
-            disabled={isSubmitting || isLoadingClient || !defaultValues}
+            disabled={isSubmitting}
             className="px-5 py-2 rounded-[0.75rem] bg-[#C9A96E] hover:bg-[#b8975e] text-white text-sm font-medium transition-colors disabled:opacity-50"
           >
             {isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications'}

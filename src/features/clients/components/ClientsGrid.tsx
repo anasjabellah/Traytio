@@ -4,18 +4,22 @@ import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Clock, Users, Wallet, Crown } from 'lucide-react';
 import { ClientsTable } from '@/features/clients/components/clients-table';
 import { NoClientsEmptyState, NoResultsEmptyState } from '@/features/clients/components/ClientEmptyStates';
+import { Pagination } from '@/components/ui/pagination';
 import type { ClientWithStats } from '@/features/clients/types';
-import type { ClientStats } from '@/features/clients/actions/get-client-stats';
+import type { ClientStats } from '@/features/clients/actions/get-clients-page';
 
 const mad = (n: number) =>
   new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(n);
 
-function ClientsTableSection({ clients, isLoading, onView, onEdit, onDelete }: {
+function ClientsTableSection({ clients, isLoading, onView, onEdit, onDelete, pagination, onPageChange, onLimitChange }: {
   clients: ClientWithStats[];
   isLoading: boolean;
   onView: (c: ClientWithStats) => void;
   onEdit: (c: ClientWithStats) => void;
   onDelete: (c: ClientWithStats) => void;
+  pagination: { page: number; totalPages: number; total: number; limit: number };
+  onPageChange: (page: number) => void;
+  onLimitChange: (limit: number) => void;
 }) {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft">
@@ -27,6 +31,15 @@ function ClientsTableSection({ clients, isLoading, onView, onEdit, onDelete }: {
         <span className="text-xs text-muted-foreground/60">{clients.length} r&eacute;sultat{clients.length > 1 ? 's' : ''}</span>
       </div>
       <ClientsTable data={clients} loading={isLoading} onView={onView} onEdit={onEdit} onDelete={onDelete} />
+      <Pagination
+        page={pagination.page}
+        totalPages={pagination.totalPages}
+        total={pagination.total}
+        limit={pagination.limit}
+        onPageChange={onPageChange}
+        onLimitChange={onLimitChange}
+        itemLabel="client"
+      />
     </div>
   );
 }
@@ -316,6 +329,7 @@ export function ClientsGrid({
   onView, onEdit, onDelete,
   recentClients, stats, totalRevenue, avgValue, activePct, totalCommandes,
   hasNoClients, hasNoResults, searchQuery, onClearSearch, onAdd,
+  pagination, onPageChange, onLimitChange,
 }: {
   viewMode: 'table' | 'cards';
   filteredClients: ClientWithStats[];
@@ -334,6 +348,9 @@ export function ClientsGrid({
   searchQuery: string;
   onClearSearch: () => void;
   onAdd: () => void;
+  pagination: { page: number; totalPages: number; total: number; limit: number };
+  onPageChange: (page: number) => void;
+  onLimitChange: (limit: number) => void;
 }) {
   return (
     <div className="flex-1 min-w-0 space-y-6">
@@ -350,6 +367,9 @@ export function ClientsGrid({
               onView={onView}
               onEdit={onEdit}
               onDelete={onDelete}
+              pagination={pagination}
+              onPageChange={onPageChange}
+              onLimitChange={onLimitChange}
             />
           ) : (
             <ClientCardsView clients={filteredClients} isLoading={isLoading} onView={onView} />

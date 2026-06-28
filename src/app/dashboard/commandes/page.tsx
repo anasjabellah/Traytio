@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { KpiCard } from '@/shared/components/kpi-card';
 import {
-  Search, X, Plus, ChevronLeft, ChevronRight, TrendingUp,
+  Search, X, Plus, TrendingUp,
   Calendar, CheckCircle2, Wallet, Receipt, ArrowUpRight,
   ShoppingBag, Users, Sparkles, SlidersHorizontal, RefreshCw, Tag,
 } from 'lucide-react';
@@ -16,9 +16,9 @@ import { CommandesGrid } from '@/features/commandes/components/commandes-grid';
 import { CommandesCalendar } from '@/features/commandes/components/commandes-calendar';
 import { ViewSwitcher, type ViewMode } from '@/features/commandes/components/view-switcher';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
+import { Pagination } from '@/components/ui/pagination';
 import { deleteCommande } from '@/features/commandes/actions/delete-commande';
 import { toast } from 'sonner';
-import { getCommandeStats, type CommandeStats } from '@/features/commandes/actions/get-commande-stats';
 import { COMMANDE_STATUS_LABELS, COMMANDE_STATUS_STYLES } from '@/features/commandes/constants';
 import type { Commande } from '@/features/commandes/types';
 
@@ -42,6 +42,7 @@ export default function CommandesPage() {
   const {
     commandes, isLoading, pagination,
     handleSearch, handlePageChange, refresh,
+    dbStats,
   } = useCommandes();
   const [deleteTarget, setDeleteTarget] = useState<Commande | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -49,14 +50,14 @@ export default function CommandesPage() {
   const [showEventTypeFilters, setShowEventTypeFilters] = useState(false);
   const [eventTypeFilter, setEventTypeFilter] = useState<string | null>(null);
   const [selectedStatuses, setSelectedStatuses] = useState<Set<string>>(new Set());
-  const [dbStats, setDbStats] = useState<CommandeStats | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
 
+  const searchMounted = useRef(false);
   useEffect(() => {
-    getCommandeStats().then(setDbStats);
-  }, []);
-
-  useEffect(() => {
+    if (!searchMounted.current) {
+      searchMounted.current = true;
+      return;
+    }
     const timer = setTimeout(() => handleSearch(localSearch), 300);
     return () => clearTimeout(timer);
   }, [localSearch, handleSearch]);
@@ -396,42 +397,14 @@ export default function CommandesPage() {
                   onDelete={setDeleteTarget}
                 />
 
-                {pagination.totalPages > 1 && (
-                  <div className="flex items-center justify-between px-6 py-4 border-t border-border/10">
-                    <span className="text-xs text-muted-foreground">
-                      Page {pagination.page} sur {pagination.totalPages}
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => handlePageChange(pagination.page - 1)}
-                        disabled={pagination.page <= 1}
-                        className="size-8 rounded-lg border border-border flex items-center justify-center hover:bg-muted/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                      >
-                        <ChevronLeft className="size-3.5" />
-                      </button>
-                      {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((p) => (
-                        <button
-                          key={p}
-                          onClick={() => handlePageChange(p)}
-                          className={`size-8 rounded-lg text-xs font-medium transition-colors ${
-                            p === pagination.page
-                              ? 'bg-foreground text-background'
-                              : 'border border-border hover:bg-muted/50'
-                          }`}
-                        >
-                          {p}
-                        </button>
-                      ))}
-                      <button
-                        onClick={() => handlePageChange(pagination.page + 1)}
-                        disabled={pagination.page >= pagination.totalPages}
-                        className="size-8 rounded-lg border border-border flex items-center justify-center hover:bg-muted/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                      >
-                        <ChevronRight className="size-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                )}
+                  <Pagination
+                    page={pagination.page}
+                    totalPages={pagination.totalPages}
+                    total={pagination.total}
+                    limit={pagination.limit}
+                    onPageChange={handlePageChange}
+                    itemLabel="commande"
+                  />
               </motion.div>
             )}
 

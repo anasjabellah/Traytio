@@ -10,7 +10,7 @@ export const SORT_OPTIONS = [
   { value: 'lastOrderAt' as const, label: 'Dernière activité' },
 ];
 
-export function useClientsFilters(clients: ClientWithStats[]) {
+export function useClientsFilters(clients: ClientWithStats[] = []) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('createdAt');
   const [showFilters, setShowFilters] = useState(false);

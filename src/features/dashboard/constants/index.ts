@@ -1,9 +1,7 @@
 ﻿import { Plus, UserPlus, Utensils, PartyPopper, CalendarIcon } from 'lucide-react';
 import type { ComponentType } from 'react';
-import { formatMAD } from '@/shared/components/kpi-card';
 
-/** @deprecated Use `formatMAD` from `@/shared/components/kpi-card` instead. */
-export const mad = formatMAD;
+export { formatMAD as mad } from '@/shared/components/kpi-card';
 
 export const STATUS_STYLES: Record<string, string> = {
   "Confirm\u00e9e": "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50",
@@ -30,20 +28,6 @@ export const EVENT_STATUS_STYLES: Record<string, string> = {
   COMPLETED: "bg-emerald-800 text-white ring-1 ring-emerald-900/50",
   CANCELLED: "bg-red-50 text-red-700 ring-1 ring-red-200/50",
 };
-
-export const CALENDAR_DAYS = Array.from({ length: 35 }, (_, i) => i - 1);
-
-export const CALENDAR_EVENTS: Record<number, "booked" | "busy" | "warning"> = {
-  3: "booked", 7: "booked", 12: "busy", 14: "busy", 18: "booked",
-  22: "warning", 28: "booked",
-};
-
-export const PERF_COLORS = [
-  "oklch(0.65 0.13 78)",
-  "oklch(0.45 0.05 240)",
-  "oklch(0.55 0.12 160)",
-  "oklch(0.50 0.10 20)",
-];
 
 type ActionConfig = {
   label: string;

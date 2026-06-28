@@ -8,8 +8,6 @@ import type { DashboardData } from '@/features/dashboard/types';
 
 const COMMANDE_ACTIVE_STATUSES: CommandeStatus[] = ['QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'READY'];
 const COMMANDE_REVENUE_STATUSES = { notIn: ['CANCELLED'] as CommandeStatus[] };
-const MONTH_NAMES = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-
 export async function getDashboardData(): Promise<{
   success: boolean;
   data?: DashboardData;
@@ -22,7 +20,6 @@ export async function getDashboardData(): Promise<{
     const currentYear = now.getFullYear();
     const startOfYear = new Date(currentYear, 0, 1);
     const startOfMonth = new Date(currentYear, now.getMonth(), 1);
-    const startOfNextMonth = new Date(currentYear, now.getMonth() + 1, 1);
     const startOfToday = new Date(currentYear, now.getMonth(), now.getDate());
     const endOfToday = new Date(currentYear, now.getMonth(), now.getDate() + 1);
     const twentyFourMonthsAgo = new Date(currentYear, now.getMonth() - 23, 1);
@@ -38,19 +35,14 @@ export async function getDashboardData(): Promise<{
     const [
       revenueAgg,
       allRevenueData,
-      budgetAgg,
       clientCount,
-      eventStatusCounts,
       activeCommandesCount,
       pendingAgg,
       recentCommandes,
-      upcoming,
-      todayEventsDb,
-      eventsForStats,
       topItemAgg,
       bestClient,
       recentActivities,
-      eventCountsRaw,
+      allEvents,
       clientCountsRaw,
     ] = await Promise.all([
       // All-time revenue/payments aggregate (lightweight, no row data)
@@ -63,17 +55,7 @@ export async function getDashboardData(): Promise<{
         where: { organizationId, status: COMMANDE_REVENUE_STATUSES, createdAt: { gte: twentyFourMonthsAgo } },
         select: { totalAmount: true, paidAmount: true, createdAt: true },
       }),
-      prisma.event.aggregate({
-        where: { organizationId },
-        _sum: { budget: true },
-      }),
       prisma.client.count({ where: { organizationId } }),
-      // Single groupBy — replaces confirmedEventsCount + completedEventsCount
-      prisma.event.groupBy({
-        by: ['status'],
-        where: { organizationId, status: { in: ['CONFIRMED', 'COMPLETED'] } },
-        _count: { id: true },
-      }),
       prisma.commande.count({
         where: { organizationId, status: { in: COMMANDE_ACTIVE_STATUSES } },
       }),
@@ -89,24 +71,6 @@ export async function getDashboardData(): Promise<{
           id: true, number: true, createdAt: true, totalAmount: true, status: true,
           client: { select: { name: true } },
         },
-      }),
-      prisma.event.findMany({
-        where: { organizationId, startDate: { gt: now } },
-        orderBy: { startDate: 'asc' },
-        take: 3,
-        select: {
-          id: true, name: true, startDate: true, guestCount: true, status: true,
-          client: { select: { name: true } },
-        },
-      }),
-      prisma.event.findMany({
-        where: { organizationId, startDate: { gte: startOfToday, lt: endOfToday } },
-        orderBy: { startDate: 'asc' },
-        select: { id: true, name: true, startDate: true, guestCount: true },
-      }),
-      prisma.event.findMany({
-        where: { organizationId, createdAt: { gte: startOfYear } },
-        select: { budget: true, guestCount: true, status: true, createdAt: true },
       }),
       prisma.commandeItem.groupBy({
         by: ['name'],
@@ -126,12 +90,16 @@ export async function getDashboardData(): Promise<{
         take: 5,
         select: { id: true, action: true, description: true, createdAt: true },
       }),
-      prisma.$queryRaw<Array<{ month: Date; count: bigint }>>`
-        SELECT DATE_TRUNC('month', "createdAt") AS month, COUNT(*)::int AS count
-        FROM "events"
-        WHERE "organizationId" = ${organizationId} AND "createdAt" >= ${eightMonthsAgo}
-        GROUP BY 1 ORDER BY 1
-      `,
+      // Single query replaces: budgetAgg, eventStatusCounts, upcoming,
+      // todayEventsDb, eventsForStats, eventCountsRaw
+      prisma.event.findMany({
+        where: { organizationId },
+        select: {
+          id: true, name: true, startDate: true, guestCount: true,
+          status: true, createdAt: true, budget: true,
+          client: { select: { name: true } },
+        },
+      }),
       prisma.$queryRaw<Array<{ month: Date; count: bigint }>>`
         SELECT DATE_TRUNC('month', "createdAt") AS month, COUNT(*)::int AS count
         FROM "clients"
@@ -160,82 +128,39 @@ export async function getDashboardData(): Promise<{
     const totalRevenue = Math.round(Number(revenueAgg._sum?.totalAmount || 0));
     const paymentsReceived = Math.round(Number(revenueAgg._sum?.paidAmount || 0));
 
-    // ── Revenue analytics (formerly getRevenueAnalytics) ──
-    const fmtDay = (d: Date) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const fmtMonth = (d: Date) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-
-    function buildDayPeriod(days: number, labelFn: (d: Date) => string) {
-      const data: number[] = [];
-      const labels: string[] = [];
-      let current = 0;
-      let previous = 0;
-      for (let i = days * 2 - 1; i >= 0; i--) {
-        const d = new Date(now);
-        d.setDate(d.getDate() - i);
-        const key = fmtDay(d);
-        const val = dailyMap.get(key) || 0;
-        if (i >= days) previous += val;
-        else current += val;
-        if (i < days) {
-          data.push(Math.round(val));
-          labels.push(labelFn(d));
-        }
+    // ── Revenue analytics (week pre-computed; month/year computed lazily on client) ──
+    const weekData: number[] = [];
+    const weekLabels: string[] = [];
+    let weekCurrent = 0;
+    let weekPrevious = 0;
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const val = dailyMap.get(dayKey) || 0;
+      if (i >= 7) weekPrevious += val;
+      else weekCurrent += val;
+      if (i < 7) {
+        weekData.push(Math.round(val));
+        weekLabels.push(d.toLocaleDateString('fr-FR', { weekday: 'short' }));
       }
-      return { data, labels, current: Math.round(current), previous: Math.round(previous) };
     }
+    const weekGrowth = weekPrevious === 0 && weekCurrent === 0 ? 0
+      : weekPrevious === 0 ? 100
+      : Math.round(((weekCurrent - weekPrevious) / weekPrevious) * 100);
 
-    function buildMonthPeriod(months: number) {
-      const data: number[] = [];
-      const labels: string[] = [];
-      let current = 0;
-      let previous = 0;
-      for (let i = months * 2 - 1; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const key = fmtMonth(d);
-        const val = monthlyMap.get(key) || 0;
-        if (i >= months) previous += val;
-        else current += val;
-        if (i < months) {
-          data.push(Math.round(val));
-          labels.push(MONTH_NAMES[d.getMonth()]);
-        }
-      }
-      return { data, labels, current: Math.round(current), previous: Math.round(previous) };
-    }
-
-    const calcGrowth = (current: number, previous: number): number => {
-      if (previous === 0 && current === 0) return 0;
-      if (previous === 0) return 100;
-      return Math.round(((current - previous) / previous) * 100);
-    };
-
-    const week = buildDayPeriod(7, (d) => d.toLocaleDateString('fr-FR', { weekday: 'short' }));
-    const month = buildDayPeriod(30, (d) => String(d.getDate()));
-    const year = buildMonthPeriod(12);
-
-    const revenueAnalytics: DashboardData['revenueAnalytics'] = {
-      weekData: week.data,
-      weekLabels: week.labels,
-      weekTotal: week.current,
-      weekGrowth: calcGrowth(week.current, week.previous),
-      monthData: month.data,
-      monthLabels: month.labels,
-      monthTotal: month.current,
-      monthGrowth: calcGrowth(month.current, month.previous),
-      yearData: year.data,
-      yearLabels: year.labels,
-      yearTotal: year.current,
-      yearGrowth: calcGrowth(year.current, year.previous),
+    const revenueMaps: DashboardData['revenueMaps'] = {
+      daily: Object.fromEntries(dailyMap),
+      monthly: Object.fromEntries(monthlyMap),
+      paidMonthly: Object.fromEntries(paidMonthlyMap),
     };
 
     // ── Current-year subset for business health ──
     const yearRevenueData = allRevenueData.filter((c) => new Date(c.createdAt) >= startOfYear);
 
-    // ── Event status counts from groupBy ──
-    const confirmedEventsCount = eventStatusCounts.find((e) => e.status === 'CONFIRMED')?._count.id ?? 0;
-    const completedEventsCount = eventStatusCounts.find((e) => e.status === 'COMPLETED')?._count.id ?? 0;
+    // ── Event status counts from allEvents ──
+    const confirmedEventsCount = allEvents.filter((e) => e.status === 'CONFIRMED').length;
+    const completedEventsCount = allEvents.filter((e) => e.status === 'COMPLETED').length;
 
     // ── Activity feed ──
     const activity: DashboardData['activity'] = [];
@@ -288,19 +213,20 @@ export async function getDashboardData(): Promise<{
         ? Math.round(((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
         : 0;
 
-    // ── Quick stats ──
-    const totalQuickEvents = eventsForStats.length;
-    const eventsWithBudget = eventsForStats.filter((e) => e.budget);
+    // ── Quick stats (current-year subset) ──
+    const currentYearEvents = allEvents.filter((e) => new Date(e.createdAt) >= startOfYear);
+    const totalQuickEvents = currentYearEvents.length;
+    const eventsWithBudget = currentYearEvents.filter((e) => e.budget);
     const avgBudget =
       eventsWithBudget.length > 0
         ? Math.round(eventsWithBudget.reduce((s, e) => s + Number(e.budget), 0) / eventsWithBudget.length)
         : 0;
-    const eventsWithGuests = eventsForStats.filter((e) => e.guestCount);
+    const eventsWithGuests = currentYearEvents.filter((e) => e.guestCount);
     const avgGuests =
       eventsWithGuests.length > 0
         ? Math.round(eventsWithGuests.reduce((s, e) => s + (e.guestCount || 0), 0) / eventsWithGuests.length)
         : 0;
-    const compEventsFiltered = eventsForStats.filter((e) => e.status === 'COMPLETED').length;
+    const compEventsFiltered = currentYearEvents.filter((e) => e.status === 'COMPLETED').length;
     const completionRate = totalQuickEvents > 0 ? Math.round((compEventsFiltered / totalQuickEvents) * 100) : 0;
 
     // ── Performance charts ──
@@ -308,9 +234,12 @@ export async function getDashboardData(): Promise<{
     const perfPayments = last8Months.map(({ key }) => Math.round(paidMonthlyMap.get(key) ?? 0));
 
     const eventCountMap = new Map<string, number>();
-    for (const row of (eventCountsRaw as Array<{ month: Date; count: bigint }>)) {
-      const d = new Date(row.month);
-      eventCountMap.set(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, Number(row.count));
+    for (const e of allEvents) {
+      const d = new Date(e.createdAt);
+      if (d >= eightMonthsAgo) {
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        eventCountMap.set(key, (eventCountMap.get(key) || 0) + 1);
+      }
     }
 
     const clientCountMap = new Map<string, number>();
@@ -324,7 +253,7 @@ export async function getDashboardData(): Promise<{
       success: true,
       data: {
         revenue: totalRevenue,
-        totalBudget: Math.round(Number(budgetAgg._sum.budget || 0)),
+        totalBudget: Math.round(allEvents.reduce((s, e) => s + Number(e.budget || 0), 0)),
         activeClients: clientCount,
         confirmedEvents: confirmedEventsCount,
         completedEvents: completedEventsCount,
@@ -339,20 +268,26 @@ export async function getDashboardData(): Promise<{
           total: Number(c.totalAmount),
           status: c.status,
         })),
-        upcomingEvents: upcoming.map((e) => ({
-          id: e.id,
-          name: e.name,
-          clientName: e.client?.name || null,
-          startDate: e.startDate,
-          guestCount: e.guestCount,
-          status: e.status,
-        })),
-        todayEvents: todayEventsDb.map((e) => ({
-          id: e.id,
-          name: e.name,
-          startDate: e.startDate,
-          guestCount: e.guestCount,
-        })),
+        upcomingEvents: allEvents
+          .filter((e) => new Date(e.startDate) > now)
+          .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+          .slice(0, 3)
+          .map((e) => ({
+            id: e.id,
+            name: e.name,
+            clientName: e.client?.name || null,
+            startDate: e.startDate,
+            guestCount: e.guestCount,
+            status: e.status,
+          })),
+        todayEvents: allEvents
+          .filter((e) => new Date(e.startDate) >= startOfToday && new Date(e.startDate) < endOfToday)
+          .map((e) => ({
+            id: e.id,
+            name: e.name,
+            startDate: e.startDate,
+            guestCount: e.guestCount,
+          })),
         activity,
         health: {
           avgEventValue,
@@ -364,7 +299,8 @@ export async function getDashboardData(): Promise<{
           monthlyGrowth,
         },
         quickStats: { avgBudget, avgGuests, completionRate },
-        revenueAnalytics,
+        revenueMaps,
+        weekAnalytics: { weekData, weekLabels, weekTotal: Math.round(weekCurrent), weekGrowth },
         perfRevenue,
         perfEvents: last8Months.map(({ key }) => eventCountMap.get(key) ?? 0),
         perfClients: clientCountsPerMonth,

@@ -5,8 +5,7 @@ import {
   UserPlus, Pencil, ShoppingCart, Calendar, CreditCard,
   Clock, CheckCircle2, TrendingUp,
 } from 'lucide-react';
-import type { ClientStats } from '@/features/clients/actions/get-client-stats';
-import type { ActivityItem } from '@/features/clients/actions/get-client-activity';
+import type { ClientStats, ActivityItem } from '@/features/clients/actions/get-clients-page';
 
 const mad = (n: number) =>
   new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(n);

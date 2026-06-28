@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { getCommandes } from '@/features/commandes/actions/get-commandes';
-import type { Commande, PaginatedCommandes } from '@/features/commandes/types';
+import { useState, useEffect, useCallback, useRef, startTransition } from 'react';
+import { getCommandesPage } from '@/features/commandes/actions/get-commandes-page';
+import type { Commande } from '@/features/commandes/types';
+import type { CommandeStats } from '@/features/commandes/actions/get-commandes-page';
 
 type Pagination = {
   page: number;
@@ -15,6 +16,9 @@ export function useCommandes(initialLimit = 10) {
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [dbStats, setDbStats] = useState<CommandeStats | null>(null);
+
+  const fetchingRef = useRef(false);
 
   const [search, setSearch] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
@@ -25,9 +29,9 @@ export function useCommandes(initialLimit = 10) {
     totalPages: 0,
   });
 
-  console.log('[useCommandes] hook mounted', { initialLimit, timestamp: new Date().toISOString() });
-
   const fetch = useCallback(async () => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
     setIsLoading(true);
     setError(null);
     const params = {
@@ -36,32 +40,38 @@ export function useCommandes(initialLimit = 10) {
       page: pagination.page,
       limit: pagination.limit,
     };
-    console.log('[useCommandes] calling getCommandes()', { params, timestamp: new Date().toISOString() });
     try {
-      const resp = await getCommandes(params);
-      console.log('[useCommandes] getCommandes() returned', { success: resp.success, data: resp.data ? { total: resp.data.total, dataLength: resp.data.data?.length } : null, error: resp.error, timestamp: new Date().toISOString() });
+      const resp = await getCommandesPage(params);
       if (resp.success && resp.data) {
-        const data = resp.data as PaginatedCommandes;
-        setCommandes(data.data);
+        if (resp.data.commandes.length === 0 && resp.data.page > 1) {
+          setPagination(prev => ({
+            ...prev,
+            total: resp.data!.total,
+            totalPages: resp.data!.totalPages,
+            page: prev.page - 1,
+          }));
+          return;
+        }
+        setCommandes(resp.data.commandes);
+        setDbStats(resp.data.stats);
         setPagination(prev => ({
           ...prev,
-          total: data.total,
-          totalPages: data.totalPages,
+          total: resp.data!.total,
+          totalPages: resp.data!.totalPages,
         }));
       } else {
         setError(resp.error ?? 'Failed to load commandes');
       }
-    } catch (e: any) {
-      console.log('[useCommandes] getCommandes() threw', { error: e.message, timestamp: new Date().toISOString() });
-      setError(e.message ?? 'Unexpected error');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Unexpected error');
     } finally {
+      fetchingRef.current = false;
       setIsLoading(false);
     }
   }, [search, statusFilter, pagination.page, pagination.limit]);
 
   useEffect(() => {
-    console.log('[useCommandes] effect firing fetch()', { timestamp: new Date().toISOString() });
-    fetch();
+    startTransition(() => { fetch(); });
   }, [fetch]);
 
   const handleSearch = useCallback((q: string) => {
@@ -83,15 +93,8 @@ export function useCommandes(initialLimit = 10) {
   };
 
   return {
-    commandes,
-    isLoading,
-    error,
-    pagination,
-    search,
-    statusFilter,
-    handleSearch,
-    handleStatusFilter,
-    handlePageChange,
-    refresh,
+    commandes, isLoading, error, pagination, search, statusFilter,
+    handleSearch, handleStatusFilter, handlePageChange, refresh,
+    dbStats,
   } as const;
 }

@@ -1,33 +1,27 @@
 ﻿'use client';
 
-import { useState, useEffect, useCallback, startTransition } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getDashboardData } from '@/features/dashboard/actions/get-dashboard-stats';
 import type { DashboardData } from '@/features/dashboard/types';
 
+export const DASHBOARD_QUERY_KEY = ['dashboard'] as const;
+
 export function useDashboardData() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchData = useCallback(async () => {
-    startTransition(() => { setLoading(true); setError(null); });
-    try {
+  const query = useQuery<DashboardData>({
+    queryKey: DASHBOARD_QUERY_KEY,
+    queryFn: async () => {
       const res = await getDashboardData();
-      if (res.success && res.data) {
-        startTransition(() => { setData(res.data!); });
-      } else {
-        startTransition(() => { setError(res.error || 'Erreur de chargement'); });
-      }
-    } catch (err) {
-      startTransition(() => { setError(err instanceof Error ? err.message : 'Erreur de chargement'); });
-    } finally {
-      startTransition(() => { setLoading(false); });
-    }
-  }, []);
+      if (res.success && res.data) return res.data;
+      throw new Error(res.error || 'Erreur de chargement');
+    },
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  return { data, loading, error, refresh: fetchData };
+  return {
+    data: query.data ?? null,
+    loading: query.isLoading,
+    error: query.error?.message ?? null,
+    refresh: () => query.refetch(),
+  };
 }

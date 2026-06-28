@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useClients } from '@/features/clients/hooks/use-clients';
 import { useClientForm } from '@/features/clients/hooks/use-client-form';
 import { useClientsFilters } from '@/features/clients/hooks/use-clients-filters';
-import { useClientsStats } from '@/features/clients/hooks/use-clients-stats';
 import { ClientsHeader } from '@/features/clients/components/ClientsHeader';
 import { ClientsStats } from '@/features/clients/components/ClientsStats';
 import { ClientsToolbar } from '@/features/clients/components/ClientsToolbar';
@@ -19,29 +18,47 @@ import type { ClientWithStats, Client } from '@/features/clients/types';
 
 export default function ClientsPage() {
   const router = useRouter();
-  const { clients, isLoading, pagination, handleSearch, refresh } = useClients();
-  const {
-    isCreateOpen, isEditOpen, isDeleteOpen, selectedClient,
-    openCreate, openEdit, openDelete, closeAll,
-  } = useClientForm();
-
   const {
     searchQuery, setSearchQuery,
     sortBy, setSortBy,
     showFilters, setShowFilters,
     viewMode, setViewMode,
-    filteredClients,
-  } = useClientsFilters(clients);
+  } = useClientsFilters();
 
   const {
-    stats, activities,
+    clients, isLoading, pagination, stats, activity,
+    handleSearch, handlePageChange, handleLimitChange, refresh,
     totalRevenue, avgValue, activePct, totalCommandes,
     KPIS, recentClients, topCity,
-  } = useClientsStats(clients, pagination.total);
+  } = useClients(undefined, sortBy);
+
+  const filteredClients = useMemo(() => {
+    let result = clients;
+    if (sortBy === 'totalSpent') result = [...result].sort((a, b) => Number(b.totalSpent) - Number(a.totalSpent));
+    else if (sortBy === 'name') result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+    else if (sortBy === 'lastOrderAt') {
+      result = [...result].sort((a, b) => {
+        if (!a.lastOrderAt) return 1;
+        if (!b.lastOrderAt) return -1;
+        return new Date(b.lastOrderAt).getTime() - new Date(a.lastOrderAt).getTime();
+      });
+    }
+    return result;
+  }, [clients, sortBy]);
+
+  const {
+    isCreateOpen, isEditOpen, isDeleteOpen, selectedClient,
+    openCreate, openEdit, openDelete, closeAll,
+  } = useClientForm();
 
   const { isPrivacyMode } = usePrivacyMode();
 
+  const searchMounted = useRef(false);
   useEffect(() => {
+    if (!searchMounted.current) {
+      searchMounted.current = true;
+      return;
+    }
     const timer = setTimeout(() => handleSearch(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery, handleSearch]);
@@ -102,9 +119,12 @@ export default function ClientsPage() {
             searchQuery={searchQuery}
             onClearSearch={() => setSearchQuery('')}
             onAdd={openCreate}
+            pagination={pagination}
+            onPageChange={handlePageChange}
+            onLimitChange={handleLimitChange}
           />
           <ClientsSidebar
-            activities={activities}
+            activities={activity}
             stats={stats}
             avgValue={avgValue}
             activePct={activePct}

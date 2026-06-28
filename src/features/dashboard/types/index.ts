@@ -35,19 +35,16 @@ export type DashboardData = {
     avgGuests: number;
     completionRate: number;
   };
-  revenueAnalytics: {
+  revenueMaps: {
+    daily: Record<string, number>;
+    monthly: Record<string, number>;
+    paidMonthly: Record<string, number>;
+  };
+  weekAnalytics: {
     weekData: number[];
     weekLabels: string[];
     weekTotal: number;
     weekGrowth: number;
-    monthData: number[];
-    monthLabels: string[];
-    monthTotal: number;
-    monthGrowth: number;
-    yearData: number[];
-    yearLabels: string[];
-    yearTotal: number;
-    yearGrowth: number;
   };
   perfRevenue: number[];
   perfEvents: number[];

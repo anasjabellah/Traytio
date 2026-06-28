@@ -59,7 +59,6 @@ function Dashboard() {
 }
 
 function DashboardContent({ data }: { data: DashboardData }) {
-  const ra = data.revenueAnalytics;
   const eventsDelta = calcGrowth(data.perfEvents);
   const clientsDelta = calcGrowth(data.perfClients);
   const paymentsDelta = calcGrowth(data.perfPayments);
@@ -130,18 +129,11 @@ function DashboardContent({ data }: { data: DashboardData }) {
       <div className="col-span-12 xl:col-span-9 space-y-6">
         <KpiGrid kpis={KPIS} />
         <RevenueChart
-          weekData={ra.weekData}
-          weekLabels={ra.weekLabels}
-          weekTotal={ra.weekTotal}
-          weekGrowth={ra.weekGrowth}
-          monthData={ra.monthData}
-          monthLabels={ra.monthLabels}
-          monthTotal={ra.monthTotal}
-          monthGrowth={ra.monthGrowth}
-          yearData={ra.yearData}
-          yearLabels={ra.yearLabels}
-          yearTotal={ra.yearTotal}
-          yearGrowth={ra.yearGrowth}
+          weekData={data.weekAnalytics.weekData}
+          weekLabels={data.weekAnalytics.weekLabels}
+          weekTotal={data.weekAnalytics.weekTotal}
+          weekGrowth={data.weekAnalytics.weekGrowth}
+          revenueMaps={data.revenueMaps}
         />
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className="lg:col-span-3"><RecentCommandes commandes={data.recentCommandes} /></div>

@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { motion } from "framer-motion"
 import { getInvoices, updateInvoiceStatus } from "@/features/invoices/actions/invoice-actions"
 import type { InvoiceWithCommande } from "@/features/invoices/types"
-import { Search, Download, FileText, Sparkles, RefreshCw, ChevronLeft, ChevronRight, Receipt, Settings } from "lucide-react"
+import { Search, Download, FileText, Sparkles, RefreshCw, Receipt, Settings } from "lucide-react"
 import { PageGuard } from "@/components/ui/page-guard"
+import { Pagination } from "@/components/ui/pagination"
 
 const mad = (n: number) =>
   new Intl.NumberFormat("fr-MA", { style: "currency", currency: "MAD", maximumFractionDigits: 2 }).format(n)
@@ -31,20 +32,6 @@ const TYPE_FILTERS = [
   { value: "DEVIS", label: "Devis" },
   { value: "FACTURE", label: "Factures" },
 ]
-
-const PAGE_SIZES = [10, 25, 50, 100]
-
-function getPageWindow(current: number, total: number): (number | "ellipsis")[] {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
-  const pages: (number | "ellipsis")[] = [1]
-  if (current > 4) pages.push("ellipsis")
-  const start = Math.max(2, current - 2)
-  const end = Math.min(total - 1, current + 2)
-  for (let i = start; i <= end; i++) pages.push(i)
-  if (current < total - 3) pages.push("ellipsis")
-  pages.push(total)
-  return pages
-}
 
 function SkeletonRows() {
   return (
@@ -204,10 +191,6 @@ function InvoicesPageContent() {
       refetch()
     }
   }, [refetch])
-
-  const pageWindow = useMemo(() => getPageWindow(page, totalPages), [page, totalPages])
-  const startItem = total === 0 ? 0 : (page - 1) * limit + 1
-  const endItem = Math.min(page * limit, total)
 
   return (
     <div className="min-h-screen bg-[var(--surface-soft)] text-foreground">
@@ -396,71 +379,16 @@ function InvoicesPageContent() {
                 </table>
               </div>
 
-              <div className="px-6 py-4 border-t border-border/10 bg-card/50">
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <div className="text-xs text-muted-foreground shrink-0">
-                    {startItem}–{endItem} sur {total} document{total > 1 ? "s" : ""}
-                  </div>
-
-                  <div className="flex items-center justify-center flex-1">
-                    {totalPages > 1 && (
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => handlePageChange(page - 1)}
-                          disabled={page <= 1 || loading}
-                          className="h-7 px-2.5 rounded-md border border-border flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                        >
-                          <ChevronLeft className="size-3.5" />
-                          <span className="hidden sm:inline">Précédent</span>
-                        </button>
-
-                        {pageWindow.map((p, i) =>
-                          p === "ellipsis" ? (
-                            <span key={`e-${i}`} className="w-6 h-7 flex items-center justify-center text-xs text-muted-foreground/30 select-none">
-                              …
-                            </span>
-                          ) : (
-                            <button
-                              key={p}
-                              onClick={() => handlePageChange(p)}
-                              disabled={loading}
-                              className={`min-w-[28px] h-7 rounded-md text-xs font-medium transition-all ${
-                                p === page
-                                  ? "bg-foreground text-background shadow-sm"
-                                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                              } disabled:cursor-not-allowed`}
-                            >
-                              {p}
-                            </button>
-                          )
-                        )}
-
-                        <button
-                          onClick={() => handlePageChange(page + 1)}
-                          disabled={page >= totalPages || loading}
-                          className="h-7 px-2.5 rounded-md border border-border flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                        >
-                          <span className="hidden sm:inline">Suivant</span>
-                          <ChevronRight className="size-3.5" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
-                    <span>Lignes par page:</span>
-                    <select
-                      value={limit}
-                      onChange={(e) => handleLimitChange(Number(e.target.value))}
-                      className="text-xs bg-transparent border border-border rounded-md px-2 py-1 text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-[var(--gold-deep)]/30"
-                    >
-                      {PAGE_SIZES.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                limit={limit}
+                onPageChange={handlePageChange}
+                onLimitChange={handleLimitChange}
+                itemLabel="document"
+                loading={loading}
+              />
             </>
           )}
         </motion.div>

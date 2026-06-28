@@ -55,22 +55,6 @@ export type UpdateClientInput = Partial<CreateClientInput> & {
   id: string;
 };
 
-export type GetClientsParams = {
-  search?: string;
-  page?: number;
-  limit?: number;
-  sortBy?: 'name' | 'createdAt' | 'totalSpent' | 'lastOrderAt';
-  sortOrder?: 'asc' | 'desc';
-};
-
-export type PaginatedClients = {
-  data: ClientWithStats[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-};
-
 export type ActionResponse<T = void> = {
   success: boolean;
   data?: T;

@@ -1,7 +1,7 @@
 'use client'
 
 import { useUser } from '@clerk/nextjs'
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { PERMISSIONS, type Module, type Action } from '@/lib/permissions'
 import type { OrgRole } from '@prisma/client'
 
@@ -10,36 +10,27 @@ type RoleResponse = {
   organizationId: string
 }
 
+const ROLE_QUERY_KEY = 'user-role'
+
 export function useRole() {
   const { user, isLoaded } = useUser()
-  const [role, setRole] = useState<OrgRole | null>(null)
-  const [organizationId, setOrganizationId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-
   const userId = user?.id ?? null
 
-  useEffect(() => {
-    if (!isLoaded) return
+  const { data, isPending } = useQuery({
+    queryKey: [ROLE_QUERY_KEY, userId],
+    queryFn: async () => {
+      const res = await fetch('/api/user-role')
+      if (!res.ok) throw new Error('Unauthorized')
+      return res.json() as Promise<RoleResponse>
+    },
+    enabled: isLoaded && !!userId,
+    staleTime: Infinity,
+    retry: false,
+  })
 
-    if (!userId) {
-      setRole(null)
-      setOrganizationId(null)
-      setLoading(false)
-      return
-    }
-
-    fetch('/api/user-role')
-      .then(r => r.json())
-      .then((data: RoleResponse) => {
-        setRole(data.role)
-        setOrganizationId(data.organizationId)
-      })
-      .catch(() => {
-        setRole(null)
-        setOrganizationId(null)
-      })
-      .finally(() => setLoading(false))
-  }, [isLoaded, userId])
+  const role = data?.role ?? null
+  const organizationId = data?.organizationId ?? null
+  const loading = !isLoaded || (!!userId && isPending)
 
   const can = (module: Module, action: Action): boolean => {
     if (!role) return false
