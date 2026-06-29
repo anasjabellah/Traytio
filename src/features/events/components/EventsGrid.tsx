@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { PartyPopper, Users, CheckCircle2, Calendar as CalendarIcon } from 'lucide-react';
 import { EventsTable } from '@/features/events/components/events-table';
+import { Pagination } from '@/components/ui/pagination';
 import { usePrivacyMode, SensitiveValue } from '@/components/privacy-mode';
 import { STATUS_LABELS, STATUS_COLORS } from '@/features/events/types';
 import { formatCurrency } from '@/lib/utils';
@@ -11,12 +12,15 @@ import type { Event } from '@/features/events/types';
 const mad = (n: number) =>
   new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(n);
 
-function EventsTableSection({ events, isLoading, statusFilter, onEdit, onDelete }: {
+function EventsTableSection({ events, isLoading, statusFilter, onEdit, onDelete, pagination, onPageChange, onLimitChange }: {
   events: Event[];
   isLoading: boolean;
   statusFilter: string | null;
   onEdit: (e: Event) => void;
   onDelete: (e: Event) => void;
+  pagination: { page: number; totalPages: number; total: number; limit: number };
+  onPageChange: (page: number) => void;
+  onLimitChange: (limit: number) => void;
 }) {
   const { isPrivacyMode } = usePrivacyMode();
   const displayEvents = statusFilter ? events.filter(e => e.status === statusFilter) : events;
@@ -31,6 +35,15 @@ function EventsTableSection({ events, isLoading, statusFilter, onEdit, onDelete 
         <span className="text-xs text-muted-foreground/60">{displayEvents.length} résultat{displayEvents.length > 1 ? 's' : ''}</span>
       </div>
       <EventsTable data={displayEvents} loading={isLoading} onEdit={onEdit} onDelete={onDelete} isPrivacyMode={isPrivacyMode} />
+      <Pagination
+        page={pagination.page}
+        totalPages={pagination.totalPages}
+        total={pagination.total}
+        limit={pagination.limit}
+        onPageChange={onPageChange}
+        onLimitChange={onLimitChange}
+        itemLabel="événement"
+      />
     </div>
   );
 }
@@ -134,7 +147,7 @@ function EventAnalytics({ events }: { events: Event[] }) {
 }
 
 export function EventsGrid({
-  events, isLoading, statusFilter, onEdit, onDelete, upcomingSorted, allEvents,
+  events, isLoading, statusFilter, onEdit, onDelete, upcomingSorted, pagination, onPageChange, onLimitChange,
 }: {
   events: Event[];
   isLoading: boolean;
@@ -142,7 +155,9 @@ export function EventsGrid({
   onEdit: (e: Event) => void;
   onDelete: (e: Event) => void;
   upcomingSorted: Event[];
-  allEvents: Event[];
+  pagination: { page: number; totalPages: number; total: number; limit: number };
+  onPageChange: (page: number) => void;
+  onLimitChange: (limit: number) => void;
 }) {
   return (
     <div className="col-span-12 xl:col-span-9 space-y-6">
@@ -152,11 +167,14 @@ export function EventsGrid({
         statusFilter={statusFilter}
         onEdit={onEdit}
         onDelete={onDelete}
+        pagination={pagination}
+        onPageChange={onPageChange}
+        onLimitChange={onLimitChange}
       />
       {upcomingSorted.length > 0 && (
         <UpcomingEventsSection events={upcomingSorted} />
       )}
-      <EventAnalytics events={allEvents} />
+      <EventAnalytics events={events} />
     </div>
   );
 }

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import type { Event } from '@/features/events/types';
+import type { FilterParams } from '@/features/events/hooks/use-events';
 
-export function useEventsFilters(events: Event[]) {
+export function useEventsFilters() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
@@ -13,19 +13,17 @@ export function useEventsFilters(events: Event[]) {
   const [budgetMin, setBudgetMin] = useState('');
   const [budgetMax, setBudgetMax] = useState('');
 
-  const filteredEvents = useMemo(() => {
-    let result = events;
-    if (statusFilter) result = result.filter(e => e.status === statusFilter);
-    if (typeFilter) result = result.filter(e => e.type === typeFilter);
-    if (paymentFilter) result = result.filter(e => e.paymentStatus === paymentFilter);
-    if (dateFrom) result = result.filter(e => new Date(e.startDate) >= new Date(dateFrom));
-    if (dateTo) result = result.filter(e => new Date(e.startDate) <= new Date(dateTo));
-    if (budgetMin) result = result.filter(e => Number(e.budget ?? 0) >= Number(budgetMin));
-    if (budgetMax) result = result.filter(e => Number(e.budget ?? 0) <= Number(budgetMax));
-    return result;
-  }, [events, statusFilter, typeFilter, paymentFilter, dateFrom, dateTo, budgetMin, budgetMax]);
+  const filterParams: FilterParams = useMemo(() => ({
+    ...(statusFilter ? { status: statusFilter } : {}),
+    ...(typeFilter ? { type: typeFilter } : {}),
+    ...(dateFrom ? { dateFrom } : {}),
+    ...(dateTo ? { dateTo } : {}),
+    ...(budgetMin ? { budgetMin } : {}),
+    ...(budgetMax ? { budgetMax } : {}),
+  }), [statusFilter, typeFilter, dateFrom, dateTo, budgetMin, budgetMax]);
 
   const resetFilters = () => {
+    setSearchQuery('');
     setStatusFilter(null);
     setTypeFilter(null);
     setPaymentFilter(null);
@@ -44,7 +42,7 @@ export function useEventsFilters(events: Event[]) {
     dateTo, setDateTo,
     budgetMin, setBudgetMin,
     budgetMax, setBudgetMax,
-    filteredEvents,
+    filterParams,
     resetFilters,
   };
 }

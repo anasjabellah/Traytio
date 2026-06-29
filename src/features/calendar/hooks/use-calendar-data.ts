@@ -18,49 +18,55 @@ export type CalendarStats = {
   totalPaid: number
 }
 
-function getDefaultMonthRange() {
-  const now = new Date()
-  const start = new Date(now.getFullYear(), now.getMonth(), 1)
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-  return {
-    from: start.toLocaleDateString('en-CA'),
-    to: end.toLocaleDateString('en-CA'),
-  }
-}
-
 export function useCalendarData() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<CalendarFilters>({})
-  const [dateRange, setDateRange] = useState<{ from: string; to: string } | null>(getDefaultMonthRange)
+  const [dateRange, setDateRange] = useState<{ from: string; to: string } | null>(null)
+  const [everHadEvents, setEverHadEvents] = useState(false)
   const mounted = useRef(false)
-
-
+  const fetchingRef = useRef(false)
+  const lastFetchedKey = useRef('')
 
   const fetchEvents = useCallback(
     async (from: string, to: string, currentFilters: CalendarFilters) => {
+      const key = `${from}|${to}|${JSON.stringify(currentFilters)}`
+      if (key === lastFetchedKey.current) return
+      if (fetchingRef.current) return
+      fetchingRef.current = true
+      lastFetchedKey.current = key
       setLoading(true)
       setError(null)
 
-      const result = await getEvents({
-        dateFrom: from,
-        dateTo: to,
-        limit: 500,
-        status: currentFilters.status as Event['status'],
-        type: currentFilters.type as Event['type'],
-        search: currentFilters.search,
-      })
+      try {
+        const result = await getEvents({
+          dateFrom: from,
+          dateTo: to,
+          limit: 500,
+          status: currentFilters.status as Event['status'],
+          type: currentFilters.type as Event['type'],
+          search: currentFilters.search,
+        })
 
-      if (!mounted.current) return
+        if (!mounted.current) return
 
-      if (result.success && result.data) {
-        setEvents(result.data.data)
-      } else {
-        setError(result.error || 'Erreur lors du chargement')
-        setEvents([])
+        if (result.success && result.data) {
+          setEvents(result.data.data)
+          if (result.data.data.length > 0) setEverHadEvents(true)
+        } else {
+          setError(result.error || 'Erreur lors du chargement')
+          setEvents([])
+        }
+      } catch {
+        if (mounted.current) {
+          setError('Erreur lors du chargement')
+          setEvents([])
+        }
+      } finally {
+        fetchingRef.current = false
+        setLoading(false)
       }
-      setLoading(false)
     },
     [],
   )
@@ -80,11 +86,14 @@ export function useCalendarData() {
 
   useEffect(() => {
     const handleFocus = () => {
-      if (dateRange) fetchEvents(dateRange.from, dateRange.to, filters)
+      if (dateRange) {
+        lastFetchedKey.current = ''
+        fetchEvents(dateRange.from, dateRange.to, filters)
+      }
     }
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
-  }, [dateRange, filters, fetchEvents])
+  }, [dateRange?.from, dateRange?.to, filters.status, filters.type, filters.search, fetchEvents])
 
   const appliedFilters = useMemo(() => {
     return events.filter((e) => {
@@ -133,6 +142,7 @@ export function useCalendarData() {
 
   const refresh = useCallback(() => {
     if (dateRange) {
+      lastFetchedKey.current = ''
       fetchEvents(dateRange.from, dateRange.to, filters)
     }
   }, [dateRange, filters, fetchEvents])
@@ -148,5 +158,6 @@ export function useCalendarData() {
     dateRange,
     setDateRange,
     refresh,
+    everHadEvents,
   }
 }

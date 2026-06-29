@@ -484,3 +484,12 @@
     transform: translateY(-12px);
   }
 }
+
+/* === scrollbar-hide utility (premium, preserves scrolling) === */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

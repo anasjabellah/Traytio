@@ -41,8 +41,8 @@ function ActivitySection({ activities }: { activities: ActivityItem[] }) {
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
-      <div className="flex items-center justify-between mb-4">
+    <div className="rounded-2xl border border-border bg-card shadow-soft p-5 h-[460px] flex flex-col">
+      <div className="flex items-center justify-between mb-4 shrink-0">
         <div>
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Activit&eacute;</div>
           <h3 className="font-display text-xl mt-1">Fil d&apos;activit&eacute;</h3>
@@ -53,7 +53,7 @@ function ActivitySection({ activities }: { activities: ActivityItem[] }) {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="py-10 flex flex-col items-center gap-3 text-center"
+          className="flex-1 flex flex-col items-center justify-center gap-3 text-center"
         >
           <div className="size-14 rounded-full bg-foreground/[0.03] flex items-center justify-center">
             <Clock className="size-7 text-muted-foreground/30" strokeWidth={1.2} />
@@ -66,36 +66,46 @@ function ActivitySection({ activities }: { activities: ActivityItem[] }) {
           </div>
         </motion.div>
       ) : (
-        <div className="relative">
-          <div className="absolute left-[15px] top-2 bottom-2 w-px bg-border/60" />
-          <div className="space-y-0">
-            {activities.map((a, i) => {
-              const Icon = getIcon(a.type);
-              const color = getColor(a.type);
-              return (
-                <motion.div
-                  key={a.id}
-                  initial={{ opacity: 0, x: -6 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.04 }}
-                  className="relative flex items-start gap-3 pb-4 last:pb-0"
-                >
-                  <div className={`relative z-10 size-8 rounded-lg ${color} flex items-center justify-center shrink-0`}>
-                    <Icon className="size-3.5" strokeWidth={2} />
-                  </div>
-                  <div className="flex-1 min-w-0 pt-0.5">
-                    <div className="text-xs leading-snug text-foreground/80">{a.description}</div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[10px] text-muted-foreground/50">{a.clientName}</span>
-                      <span className="size-0.5 rounded-full bg-muted-foreground/30" />
-                      <span className="text-[10px] text-muted-foreground/40">{formatTime(a.createdAt)}</span>
+        <>
+          <div
+            className="relative flex-1 overflow-y-auto scroll-smooth scrollbar-hide"
+          >
+            <div className="absolute left-[15px] top-2 bottom-2 w-px bg-border/60" />
+            <div className="space-y-0">
+              {activities.map((a, i) => {
+                const Icon = getIcon(a.type);
+                const color = getColor(a.type);
+                return (
+                  <motion.div
+                    key={a.id}
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className="relative flex items-start gap-3 pb-4 last:pb-0"
+                  >
+                    <div className={`relative z-10 size-8 rounded-lg ${color} flex items-center justify-center shrink-0`}>
+                      <Icon className="size-3.5" strokeWidth={2} />
                     </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+                    <div className="flex-1 min-w-0 pt-0.5">
+                      <div className="text-xs leading-snug text-foreground/80">{a.description}</div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[10px] text-muted-foreground/50">{a.clientName}</span>
+                        <span className="size-0.5 rounded-full bg-muted-foreground/30" />
+                        <span className="text-[10px] text-muted-foreground/40">{formatTime(a.createdAt)}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
-        </div>
+          <a
+            href="/dashboard/activity"
+            className="block text-center text-xs font-medium text-muted-foreground hover:text-foreground pt-3 mt-3 border-t border-border/50 shrink-0 transition-colors"
+          >
+            Voir tout
+          </a>
+        </>
       )}
     </div>
   );

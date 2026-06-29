@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { PrivacyModeProvider } from '@/components/privacy-mode';
 import { useEvents } from '@/features/events/hooks/use-events';
 import { useEventForm } from '@/features/events/hooks/use-event-form';
 import { useEventsFilters } from '@/features/events/hooks/use-events-filters';
-import { useEventsStats } from '@/features/events/hooks/use-events-stats';
+import { EVENT_DEFAULT_PAGE_SIZE } from '@/features/events/constants';
 import { EventsHeader } from '@/features/events/components/EventsHeader';
 import { EventsStats } from '@/features/events/components/EventsStats';
 import { EventsFilters } from '@/features/events/components/EventsFilters';
@@ -21,12 +21,6 @@ import type { ViewMode } from '@/features/events/constants';
 
 export default function EventsPage() {
   const router = useRouter();
-  const { events, isLoading, pagination, handleSearch, refresh } = useEvents();
-  const { isCreateOpen, isEditOpen, isDeleteOpen, selectedEvent, openCreate, openEdit, openDelete, closeAll } = useEventForm();
-
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
-  const [showFilters, setShowFilters] = useState(false);
-
   const {
     searchQuery, setSearchQuery,
     statusFilter, setStatusFilter,
@@ -36,16 +30,30 @@ export default function EventsPage() {
     dateTo, setDateTo,
     budgetMin, setBudgetMin,
     budgetMax, setBudgetMax,
-    filteredEvents,
+    filterParams,
     resetFilters,
-  } = useEventsFilters(events);
+  } = useEventsFilters();
+  const { isCreateOpen, isEditOpen, isDeleteOpen, selectedEvent, openCreate, openEdit, openDelete, closeAll } = useEventForm();
 
   const {
-    KPIS, todayEvents, upcomingSorted, STATS_EVENTS,
-    totalBudget,
-  } = useEventsStats(events);
+    events, isLoading, pagination, handleSearch, handlePageChange, handleLimitChange, refresh,
+    KPIS, todayEvents, upcomingSorted, STATS_EVENTS, totalBudget,
+  } = useEvents(EVENT_DEFAULT_PAGE_SIZE, filterParams);
 
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [showFilters, setShowFilters] = useState(false);
+
+  const displayEvents = useMemo(() => {
+    if (!paymentFilter) return events;
+    return events.filter(e => e.paymentStatus === paymentFilter);
+  }, [events, paymentFilter]);
+
+  const searchMounted = useRef(false);
   useEffect(() => {
+    if (!searchMounted.current) {
+      searchMounted.current = true;
+      return;
+    }
     const timer = setTimeout(() => handleSearch(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery, handleSearch]);
@@ -71,7 +79,7 @@ export default function EventsPage() {
           <EventsFilters
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
-            onClearSearch={() => setSearchQuery('')}
+            onClearSearch={() => { setSearchQuery(''); handleSearch(''); }}
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
             typeFilter={typeFilter}
@@ -92,12 +100,12 @@ export default function EventsPage() {
             onToggleFilters={() => setShowFilters((s) => !s)}
             onRefresh={refresh}
             onResetFilters={resetFilters}
-            filteredCount={filteredEvents.length}
+            filteredCount={displayEvents.length}
           />
 
           {viewMode === 'calendar' ? (
             <EventsCalendar
-              events={filteredEvents}
+              events={displayEvents}
               isLoading={isLoading}
               onView={handleView}
               onEdit={openEdit}
@@ -105,13 +113,15 @@ export default function EventsPage() {
           ) : (
             <div className="mt-8 grid grid-cols-12 gap-6">
               <EventsGrid
-                events={filteredEvents}
+                events={displayEvents}
                 isLoading={isLoading}
                 statusFilter={statusFilter}
                 onEdit={openEdit}
                 onDelete={openDelete}
                 upcomingSorted={upcomingSorted}
-                allEvents={events}
+                pagination={pagination}
+                onPageChange={handlePageChange}
+                onLimitChange={handleLimitChange}
               />
               <EventsSidebar
                 todayEvents={todayEvents}

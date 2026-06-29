@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useCallback, useRef, useState, useEffect } from 'react'
+import { useMemo, useCallback, useRef, useState, useEffect, memo } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
@@ -13,6 +13,7 @@ import type { EventResizeDoneArg } from '@fullcalendar/interaction'
 import type { Event } from '@/features/events/types'
 import { TYPE_BAR, TYPE_BAR_HOVER, TYPE_ACCENT } from '@/features/events/constants'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { WeekAgendaView } from './WeekAgendaView'
 
 const VIEWS = [
   { key: 'dayGridMonth', label: 'Mois' },
@@ -49,7 +50,7 @@ function fmtTime(d: string | Date) {
   return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 
-export function CalendarView({
+export const CalendarView = memo(function CalendarView({
   events,
   onDatesSet,
   onEventClick,
@@ -74,18 +75,26 @@ export function CalendarView({
   const today = useMemo(() => new Date(), [])
   const [viewInfo, setViewInfo] = useState({ title: '', month: today.getMonth(), year: today.getFullYear(), viewType: 'dayGridMonth' })
   const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const [weekDate, setWeekDate] = useState<Date | null>(null)
+  const lastDatesSetKey = useRef('')
 
   const handleDatesSet = useCallback(
     (arg: DatesSetArg) => {
+      const key = `${arg.startStr}|${arg.endStr}|${arg.view.type}`
+      if (key === lastDatesSetKey.current) return
+      lastDatesSetKey.current = key
+
       if (calendarRef.current) {
         const d = calendarRef.current.getApi().getDate()
         if (d) {
-          setViewInfo({
-            title: arg.view.title,
-            month: d.getMonth(),
-            year: d.getFullYear(),
-            viewType: arg.view.type,
-          })
+          const month = d.getMonth()
+          const year = d.getFullYear()
+          const viewType = arg.view.type
+          setViewInfo((prev) =>
+            prev.month === month && prev.year === year && prev.viewType === viewType && prev.title === arg.view.title
+              ? prev
+              : { title: arg.view.title, month, year, viewType },
+          )
         }
       }
       onDatesSet(arg)
@@ -113,8 +122,10 @@ export function CalendarView({
     calendarRef.current?.getApi().today()
   }, [])
 
-  const handleViewChange = useCallback((view: string) => {
-    calendarRef.current?.getApi().changeView(view)
+  const handleViewChange = useCallback((view: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    const api = calendarRef.current?.getApi()
+    if (api) api.changeView(view)
   }, [])
 
   const eventById = useMemo(() => {
@@ -122,6 +133,25 @@ export function CalendarView({
     for (const e of events) map.set(e.id, e)
     return map
   }, [events])
+
+  function getWeekStart(date: Date): Date {
+    const d = new Date(date)
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7))
+    d.setHours(0, 0, 0, 0)
+    return d
+  }
+
+  function formatWeekTitle(monday: Date): string {
+    const sunday = new Date(monday)
+    sunday.setDate(sunday.getDate() + 6)
+    const fmtMonth = (d: Date) => d.toLocaleDateString('fr-FR', { month: 'long' })
+    const fmtDay = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric' })
+    const year = monday.getFullYear()
+    if (monday.getMonth() === sunday.getMonth()) {
+      return `${fmtDay(monday)} - ${fmtDay(sunday)} ${fmtMonth(monday)} ${year}`
+    }
+    return `${fmtDay(monday)} ${fmtMonth(monday)} - ${fmtDay(sunday)} ${fmtMonth(sunday)} ${year}`
+  }
 
   const eventsCountByDate = useMemo(() => {
     const map = new Map<string, number>()
@@ -367,6 +397,21 @@ export function CalendarView({
     },
   }), [])
 
+  const fcEvents = useMemo(
+    () => events.map((event) => ({
+      id: event.id,
+      title: event.name,
+      start: event.startDate instanceof Date ? event.startDate.toISOString() : event.startDate,
+      end: event.endDate instanceof Date ? event.endDate.toISOString() : undefined,
+      allDay: false,
+      backgroundColor: 'transparent',
+      borderColor: 'transparent',
+      textColor: 'inherit',
+      classNames: ['fc-event-custom'],
+    })),
+    [events],
+  )
+
   // Keyboard shortcuts for calendar navigation
   const [shortcutsHelpOpen, setShortcutsHelpOpen] = useState(false)
   useEffect(() => {
@@ -396,15 +441,6 @@ export function CalendarView({
 
   return (
     <div className="relative">
-      {loading && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-card/60 backdrop-blur-[1px] rounded-2xl">
-          <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
-            <div className="size-4 rounded-full border-2 border-gold border-t-transparent animate-spin" />
-            Chargement...
-          </div>
-        </div>
-      )}
-
       <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
         {/* Custom header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-5 pt-5 pb-3">
@@ -445,7 +481,7 @@ export function CalendarView({
               {VIEWS.map((v) => (
                 <button
                   key={v.key}
-                  onClick={() => handleViewChange(v.key)}
+                  onClick={(e) => handleViewChange(v.key, e)}
                   aria-label={`Vue ${v.label}`}
                   aria-pressed={viewInfo.viewType === v.key}
                   className={`h-7 px-3 rounded-[7px] text-xs font-medium transition-all focus:outline-none focus:ring-2 focus:ring-gold/40 focus:ring-offset-1 ${
@@ -480,17 +516,7 @@ export function CalendarView({
             locale={frLocale}
             firstDay={1}
             headerToolbar={false}
-            events={events.map((event) => ({
-              id: event.id,
-              title: event.name,
-              start: event.startDate instanceof Date ? event.startDate.toISOString() : event.startDate,
-              end: event.endDate instanceof Date ? event.endDate.toISOString() : undefined,
-              allDay: false,
-              backgroundColor: 'transparent',
-              borderColor: 'transparent',
-              textColor: 'inherit',
-              classNames: ['fc-event-custom'],
-            }))}
+            events={fcEvents}
             datesSet={handleDatesSet}
             eventClick={(info) => {
               const event = eventById.get(info.event.id)
@@ -550,4 +576,4 @@ export function CalendarView({
       )}
     </div>
   )
-}
+})

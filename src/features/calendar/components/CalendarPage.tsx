@@ -23,7 +23,7 @@ import type { Event } from '@/features/events/types'
 export function CalendarPage() {
   const router = useRouter()
   const {
-    events, allEvents, loading, error, stats, filters, setFilters, setDateRange, refresh,
+    events, allEvents, loading, error, stats, filters, setFilters, setDateRange, refresh, everHadEvents,
   } = useCalendarData()
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
@@ -279,7 +279,7 @@ export function CalendarPage() {
             transition={{ duration: 0.35, delay: 0.15 }}
             className="mt-10"
           >
-            {events.length === 0 && !loading ? (
+            {events.length === 0 && !loading && (!everHadEvents || filters.status || filters.type || filters.search) ? (
               <div className="flex flex-col items-center justify-center min-h-[420px] text-center rounded-2xl border border-border bg-card shadow-soft">
                 <div className="size-20 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/60 border border-amber-200/60 flex items-center justify-center mb-5 shadow-sm">
                   <Calendar className="size-8 text-amber-400" strokeWidth={1.5} />
