@@ -6,17 +6,19 @@ import { menusColumns } from './menus-columns';
 import { Menu } from '@/features/menus/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Pagination } from '@/components/ui/pagination';
 
 interface MenusTableProps {
   data: Menu[];
   loading: boolean;
   onEdit: (menu: Menu) => void;
   onDelete: (menu: Menu) => void;
-  pagination: { page: number; totalPages: number };
+  pagination: { page: number; totalPages: number; total: number; limit: number };
   handlePageChange: (page: number) => void;
+  handleLimitChange: (limit: number) => void;
 }
 
-export function MenusTable({ data, loading, onEdit, onDelete, pagination, handlePageChange }: MenusTableProps) {
+export function MenusTable({ data, loading, onEdit, onDelete, pagination, handlePageChange, handleLimitChange }: MenusTableProps) {
   const columns = useMemo(() => menusColumns(onEdit, onDelete), []);
 
   const table = useReactTable({
@@ -75,27 +77,15 @@ export function MenusTable({ data, loading, onEdit, onDelete, pagination, handle
           ))}
         </TableBody>
       </Table>
-      {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4 mt-4 pb-4">
-          <button
-            onClick={() => handlePageChange(pagination.page - 1)}
-            disabled={pagination.page <= 1}
-            className="px-4 py-2 rounded-xl bg-gradient-charcoal text-white text-sm font-medium disabled:opacity-40 transition-opacity"
-          >
-            Previous
-          </button>
-          <span className="text-xs text-muted-foreground tabular-nums">
-            Page {pagination.page} / {pagination.totalPages}
-          </span>
-          <button
-            onClick={() => handlePageChange(pagination.page + 1)}
-            disabled={pagination.page >= pagination.totalPages}
-            className="px-4 py-2 rounded-xl bg-gradient-charcoal text-white text-sm font-medium disabled:opacity-40 transition-opacity"
-          >
-            Next
-          </button>
-        </div>
-      )}
+      <Pagination
+        page={pagination.page}
+        totalPages={pagination.totalPages}
+        total={pagination.total}
+        limit={pagination.limit}
+        onPageChange={handlePageChange}
+        onLimitChange={handleLimitChange}
+        itemLabel="menu"
+      />
     </>
   );
 }

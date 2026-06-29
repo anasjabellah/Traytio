@@ -9,7 +9,9 @@ import {
   Search, X, Plus, Wallet, CreditCard, Landmark, Ban, Receipt,
   TrendingUp, Sparkles, RefreshCw, ArrowUpRight,
 } from "lucide-react"
-import { getPayments, type PaymentWithCommande, type PaymentStats } from "@/features/payments/actions/get-payments"
+import { usePayments } from "@/features/payments/hooks/use-payments"
+import { Pagination } from "@/components/ui/pagination"
+import type { PaymentWithCommande, PaymentStats } from "@/features/payments/types"
 import { PageGuard } from "@/components/ui/page-guard"
 
 const mad = (n: number) =>
@@ -61,40 +63,20 @@ export default function PaymentsPage() {
 
 function PaymentsPageContent() {
   const router = useRouter()
-  const [payments, setPayments] = useState<PaymentWithCommande[]>([])
-  const [stats, setStats] = useState<PaymentStats | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const [localSearch, setLocalSearch] = useState("")
   const [methodFilter, setMethodFilter] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
 
-  const loadPayments = async () => {
-    setIsLoading(true)
-    try {
-      const result = await getPayments({
-        search: localSearch || undefined,
-        method: methodFilter || undefined,
-        status: statusFilter || undefined,
-      })
-      setPayments(result.data)
-      setStats(result.stats)
-    } catch {
-      // silent
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const { payments, stats, isLoading, error, pagination, handleSearch, handlePageChange, handleLimitChange, refresh } = usePayments(
+    undefined,
+    methodFilter || undefined,
+    statusFilter || undefined,
+  )
 
   useEffect(() => {
-    loadPayments()
-  }, [methodFilter, statusFilter])
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (localSearch !== undefined) loadPayments()
-    }, 300)
+    const timer = setTimeout(() => handleSearch(localSearch), 300)
     return () => clearTimeout(timer)
-  }, [localSearch])
+  }, [localSearch, handleSearch])
 
   const kpiCards = useMemo(() => {
     if (!stats) return []
@@ -231,7 +213,7 @@ function PaymentsPageContent() {
               </select>
 
               <button
-                onClick={loadPayments}
+                onClick={refresh}
                 className="size-11 rounded-xl border border-border bg-card shadow-soft text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-all flex items-center justify-center"
                 title="Actualiser"
               >
@@ -253,7 +235,7 @@ function PaymentsPageContent() {
               <h3 className="font-display text-xl mt-0.5">Tous les paiements</h3>
             </div>
             <span className="text-xs text-muted-foreground/60">
-              {isLoading ? "…" : `${payments.length} paiement${payments.length > 1 ? "s" : ""}`}
+              {isLoading ? "…" : `${pagination.total} paiement${pagination.total > 1 ? "s" : ""}`}
             </span>
           </div>
 
@@ -274,85 +256,98 @@ function PaymentsPageContent() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-y border-border/30">
-                    <th className="text-left px-6 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Montant</th>
-                    <th className="text-left px-6 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Méthode</th>
-                    <th className="text-left px-6 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Statut</th>
-                    <th className="text-left px-6 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Commande</th>
-                    <th className="text-left px-6 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Référence</th>
-                    <th className="text-left px-6 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Date</th>
-                    <th className="w-10" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.map((payment) => {
-                    const Icon = METHOD_ICONS[payment.method] ?? Ban
-                    return (
-                      <tr
-                        key={payment.id}
-                        className="border-b border-border/10 last:border-0 transition-colors hover:bg-foreground/[0.02]"
-                      >
-                        <td className="px-6 py-4">
-                          <span className="text-sm font-semibold tabular-nums text-foreground">
-                            {mad(payment.amount)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <div className="size-7 rounded-md bg-emerald-50 flex items-center justify-center">
-                              <Icon className="size-3.5 text-emerald-600" strokeWidth={1.8} />
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-y border-border/30">
+                      <th className="text-left px-6 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Montant</th>
+                      <th className="text-left px-6 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Méthode</th>
+                      <th className="text-left px-6 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Statut</th>
+                      <th className="text-left px-6 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Commande</th>
+                      <th className="text-left px-6 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Référence</th>
+                      <th className="text-left px-6 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Date</th>
+                      <th className="w-10" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.map((payment) => {
+                      const Icon = METHOD_ICONS[payment.method] ?? Ban
+                      return (
+                        <tr
+                          key={payment.id}
+                          className="border-b border-border/10 last:border-0 transition-colors hover:bg-foreground/[0.02]"
+                        >
+                          <td className="px-6 py-4">
+                            <span className="text-sm font-semibold tabular-nums text-foreground">
+                              {mad(payment.amount)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <div className="size-7 rounded-md bg-emerald-50 flex items-center justify-center">
+                                <Icon className="size-3.5 text-emerald-600" strokeWidth={1.8} />
+                              </div>
+                              <span className="text-sm text-foreground/80">
+                                {METHOD_LABELS[payment.method] ?? payment.method}
+                              </span>
                             </div>
-                            <span className="text-sm text-foreground/80">
-                              {METHOD_LABELS[payment.method] ?? payment.method}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`text-[11px] px-2 py-1 rounded-full font-semibold ${STATUS_STYLES[payment.status] ?? "bg-gray-100 text-gray-500"}`}>
+                              {STATUS_LABELS[payment.status] ?? payment.status}
                             </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`text-[11px] px-2 py-1 rounded-full font-semibold ${STATUS_STYLES[payment.status] ?? "bg-gray-100 text-gray-500"}`}>
-                            {STATUS_LABELS[payment.status] ?? payment.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <Link
-                            href={`/dashboard/commandes/${payment.commande.id}`}
-                            className="flex items-center gap-1.5 text-sm text-foreground/80 hover:text-[var(--gold-deep)] transition-colors group"
-                          >
-                            <span className="font-medium">{payment.commande.number}</span>
-                            {payment.commande.clientName && (
-                              <>
-                                <span className="text-muted-foreground/30 mx-0.5">—</span>
-                                <span className="text-muted-foreground/60 text-xs">{payment.commande.clientName}</span>
-                              </>
+                          </td>
+                          <td className="px-6 py-4">
+                            <Link
+                              href={`/dashboard/commandes/${payment.commande.id}`}
+                              className="flex items-center gap-1.5 text-sm text-foreground/80 hover:text-[var(--gold-deep)] transition-colors group"
+                            >
+                              <span className="font-medium">{payment.commande.number}</span>
+                              {payment.commande.clientName && (
+                                <>
+                                  <span className="text-muted-foreground/30 mx-0.5">—</span>
+                                  <span className="text-muted-foreground/60 text-xs">{payment.commande.clientName}</span>
+                                </>
+                              )}
+                              <ArrowUpRight className="size-3 text-muted-foreground/30 group-hover:text-[var(--gold-deep)] transition-colors shrink-0" />
+                            </Link>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-foreground/60">
+                              {payment.reference || "—"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-foreground/60 tabular-nums">
+                              {formatDate(payment.createdAt)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            {payment.notes && (
+                              <span className="text-[11px] text-muted-foreground/50 italic" title={payment.notes}>
+                                {payment.notes.length > 30 ? payment.notes.slice(0, 30) + "…" : payment.notes}
+                              </span>
                             )}
-                            <ArrowUpRight className="size-3 text-muted-foreground/30 group-hover:text-[var(--gold-deep)] transition-colors shrink-0" />
-                          </Link>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-foreground/60">
-                            {payment.reference || "—"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-foreground/60 tabular-nums">
-                            {formatDate(payment.createdAt)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          {payment.notes && (
-                            <span className="text-[11px] text-muted-foreground/50 italic" title={payment.notes}>
-                              {payment.notes.length > 30 ? payment.notes.slice(0, 30) + "…" : payment.notes}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {pagination.totalPages > 1 && (
+                <Pagination
+                  page={pagination.page}
+                  totalPages={pagination.totalPages}
+                  total={pagination.total}
+                  limit={pagination.limit}
+                  onPageChange={handlePageChange}
+                  onLimitChange={handleLimitChange}
+                  itemLabel="paiement"
+                />
+              )}
+            </>
           )}
         </motion.div>
 

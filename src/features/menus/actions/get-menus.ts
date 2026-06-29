@@ -10,12 +10,18 @@ export async function getMenus(params: GetMenusParams): Promise<ActionResponse<P
   try {
     const organizationId = await getOrganizationId();
     await assertCan('menus', 'read');
-    const { search, page = 1, limit = MENU_DEFAULT_PAGE_SIZE, sortBy = 'createdAt', sortOrder = 'desc' } = params;
+    const { search, page = 1, limit = MENU_DEFAULT_PAGE_SIZE, sortBy = 'createdAt', sortOrder = 'desc', category, isActive } = params;
     const skip = (page - 1) * limit;
 
     const where: any = { organizationId };
     if (search) {
       where.OR = [{ name: { contains: search, mode: 'insensitive' } }];
+    }
+    if (category) {
+      where.category = category;
+    }
+    if (isActive !== undefined) {
+      where.isActive = isActive;
     }
 
     const total = await prisma.menu.count({ where });

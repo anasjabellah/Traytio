@@ -1,5 +1,7 @@
 import type { MenuItemCategory } from './types';
 
+export const MENU_ITEM_DEFAULT_PAGE_SIZE = 10;
+
 export const CATEGORY_LABELS: Record<MenuItemCategory, string> = {
   FOOD: 'Food',
   DRINKS: 'Drinks',

@@ -55,6 +55,8 @@ export type GetMenusParams = {
   limit?: number;
   sortBy?: 'name' | 'createdAt' | 'pricePerPerson' | 'minPersons';
   sortOrder?: 'asc' | 'desc';
+  category?: string;
+  isActive?: boolean;
 };
 
 export type PaginatedMenus = {

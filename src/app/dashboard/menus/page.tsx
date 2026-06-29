@@ -21,6 +21,7 @@ import { MenusTable } from '@/features/menus/components/menus-table';
 import { CreateMenuDialog } from '@/features/menus/components/create-menu-dialog';
 import { EditMenuDialog } from '@/features/menus/components/edit-menu-dialog';
 import { DeleteMenuDialog } from '@/features/menus/components/delete-menu-dialog';
+import { Pagination } from '@/components/ui/pagination';
 import type { Menu, MenuCategory } from '@/features/menus/types';
 import { CATEGORY_LABELS, CATEGORY_BADGE_COLORS } from '@/features/menus/constants';
 import { formatCurrency } from '@/lib/utils';
@@ -90,40 +91,33 @@ type ViewMode = 'grid' | 'table';
 type StatusFilter = 'all' | 'active' | 'inactive';
 
 export default function MenusPage() {
-  const { menus, isLoading, error, pagination, handleSearch, handlePageChange, refresh } = useMenus();
-  const {
-    isCreateOpen, isEditOpen, isDeleteOpen, selectedMenu,
-    openCreate, openEdit, openDelete, closeAll,
-  } = useMenuForm();
-
   const [query, setQuery] = useState('');
   const [catFilter, setCatFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [view, setView] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(true);
 
+  const { menus, isLoading, error, pagination, handleSearch, handlePageChange, handleLimitChange, refresh } = useMenus(
+    undefined,
+    catFilter !== 'ALL' ? catFilter : undefined,
+    statusFilter === 'all' ? undefined : statusFilter === 'active',
+  );
+  const {
+    isCreateOpen, isEditOpen, isDeleteOpen, selectedMenu,
+    openCreate, openEdit, openDelete, closeAll,
+  } = useMenuForm();
+
   useEffect(() => {
     const timer = setTimeout(() => handleSearch(query), 300);
     return () => clearTimeout(timer);
   }, [query, handleSearch]);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return menus.filter((m) => {
-      if (catFilter !== 'ALL' && m.category !== catFilter) return false;
-      if (statusFilter === 'active' && !m.isActive) return false;
-      if (statusFilter === 'inactive' && m.isActive) return false;
-      if (!q) return true;
-      return [m.name, m.category, m.description || ''].some((s) => s.toLowerCase().includes(q));
-    });
-  }, [menus, query, catFilter, statusFilter]);
-
   const kpis = useMemo(() => {
-    const total = menus.length;
+    const total = pagination.total;
     const active = menus.filter((m) => m.isActive).length;
     const byCat = (c: MenuCategory) => menus.filter((m) => m.category === c).length;
     return { total, active, WEDDING: byCat('WEDDING'), CORPORATE: byCat('CORPORATE') };
-  }, [menus]);
+  }, [menus, pagination.total]);
 
   const mostComplete = useMemo(() =>
     [...menus].sort((a, b) => (b.menuItems?.length ?? 0) - (a.menuItems?.length ?? 0))[0],
@@ -134,7 +128,7 @@ export default function MenusPage() {
   const handleDelete = useCallback((menu: Menu) => openDelete(menu), [openDelete]);
 
   const isSearching = query.length > 0;
-  const hasNoResults = !isLoading && isSearching && filtered.length === 0;
+  const hasNoResults = !isLoading && isSearching && menus.length === 0;
   const hasNoItems = !isLoading && !isSearching && menus.length === 0;
 
   return (
@@ -243,7 +237,7 @@ export default function MenusPage() {
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-4 border-t border-border/60 pt-3 text-xs text-muted-foreground">
                   <div className="ml-auto flex items-center gap-2">
-                    <span>{filtered.length} résultat{filtered.length > 1 ? 's' : ''}</span>
+                    <span>{pagination.total} résultat{pagination.total > 1 ? 's' : ''}</span>
                     <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => { setCatFilter('ALL'); setStatusFilter('all'); setQuery(''); }}>
                       <X className="size-3" /> Réinitialiser
                     </Button>
@@ -264,7 +258,20 @@ export default function MenusPage() {
             ) : hasNoResults ? (
               <NoResultsEmpty query={query} onClear={() => setQuery('')} />
             ) : view === 'grid' ? (
-              <GridView menus={filtered} loading={isLoading} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} />
+              <div className="space-y-6">
+                <GridView menus={menus} loading={isLoading} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} />
+                {pagination.totalPages > 1 && (
+                  <Pagination
+                    page={pagination.page}
+                    totalPages={pagination.totalPages}
+                    total={pagination.total}
+                    limit={pagination.limit}
+                    onPageChange={handlePageChange}
+                    onLimitChange={handleLimitChange}
+                    itemLabel="menu"
+                  />
+                )}
+              </div>
             ) : (
               <div className="rounded-2xl border border-border bg-card shadow-soft">
                 <div className="flex items-center justify-between px-6 pt-5 pb-3">
@@ -272,9 +279,9 @@ export default function MenusPage() {
                     <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Liste</div>
                     <h3 className="font-display text-xl mt-0.5">Tous les menus</h3>
                   </div>
-                  <span className="text-xs text-muted-foreground/60">{filtered.length} résultat{filtered.length > 1 ? 's' : ''}</span>
+                  <span className="text-xs text-muted-foreground/60">{pagination.total} résultat{pagination.total > 1 ? 's' : ''}</span>
                 </div>
-                <MenusTable data={filtered} loading={isLoading} onEdit={handleEdit} onDelete={handleDelete} pagination={pagination} handlePageChange={handlePageChange} />
+                <MenusTable data={menus} loading={isLoading} onEdit={handleEdit} onDelete={handleDelete} pagination={pagination} handlePageChange={handlePageChange} handleLimitChange={handleLimitChange} />
               </div>
             )}
           </div>

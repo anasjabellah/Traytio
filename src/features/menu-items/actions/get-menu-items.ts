@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, GetMenuItemsParams, PaginatedMenuItems } from '@/features/menu-items/types';
-import { MENU_DEFAULT_PAGE_SIZE } from '@/features/menus/constants';
+import { MENU_ITEM_DEFAULT_PAGE_SIZE } from '@/features/menu-items/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 
@@ -15,7 +15,7 @@ export async function getMenuItems(
     const {
       search,
       page = 1,
-      limit = MENU_DEFAULT_PAGE_SIZE,
+      limit = MENU_ITEM_DEFAULT_PAGE_SIZE,
       sortBy = 'createdAt',
       sortOrder = 'desc',
     } = params;
@@ -27,6 +27,9 @@ export async function getMenuItems(
     }
     if (params.category && params.category !== 'ALL') {
       where.category = params.category;
+    }
+    if (params.isActive !== undefined) {
+      where.isActive = params.isActive;
     }
 
     const total = await prisma.menuItem.count({ where });

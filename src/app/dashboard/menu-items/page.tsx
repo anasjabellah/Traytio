@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { useMenuItems } from '@/features/menu-items/hooks/use-menu-items';
 import { useMenuItemForm } from '@/features/menu-items/hooks/use-menu-item-form';
 import { MenuItemsTable } from '@/features/menu-items/components/menu-items-table';
+import { Pagination } from '@/components/ui/pagination';
 import { CreateMenuItemDialog } from '@/features/menu-items/components/create-menu-item-dialog';
 import { EditMenuItemDialog } from '@/features/menu-items/components/edit-menu-item-dialog';
 import { DeleteMenuItemDialog } from '@/features/menu-items/components/delete-menu-item-dialog';
@@ -85,12 +86,6 @@ type ViewMode = 'grid' | 'table';
 type StatusFilter = 'all' | 'active' | 'inactive';
 
 export default function MenuItemsPage() {
-  const { items, isLoading, error, pagination, handleSearch, refresh } = useMenuItems();
-  const {
-    isCreateOpen, isEditOpen, isDeleteOpen, selectedItem,
-    openCreate, openEdit, openDelete, openDuplicate, openArchive, closeAll,
-  } = useMenuItemForm();
-
   const [query, setQuery] = useState('');
   const [catFilter, setCatFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -98,27 +93,30 @@ export default function MenuItemsPage() {
   const [view, setView] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(true);
 
+  const { items, isLoading, error, pagination, handleSearch, handlePageChange, handleLimitChange, refresh } = useMenuItems(
+    undefined,
+    catFilter !== 'ALL' ? catFilter : undefined,
+    statusFilter === 'all' ? undefined : statusFilter === 'active',
+  );
+  const {
+    isCreateOpen, isEditOpen, isDeleteOpen, selectedItem,
+    openCreate, openEdit, openDelete, openDuplicate, openArchive, closeAll,
+  } = useMenuItemForm();
+
   useEffect(() => {
     const timer = setTimeout(() => handleSearch(query), 300);
     return () => clearTimeout(timer);
   }, [query, handleSearch]);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return items.filter((it) => {
-      if (catFilter !== 'ALL' && it.category !== catFilter) return false;
-      if (statusFilter === 'active' && !it.isActive) return false;
-      if (statusFilter === 'inactive' && it.isActive) return false;
-      if (Number(it.unitPrice) > priceMax) return false;
-      if (!q) return true;
-      return [it.name, it.category, it.notes || ''].some((s) => s.toLowerCase().includes(q));
-    });
-  }, [items, query, catFilter, statusFilter, priceMax]);
+  const priceFiltered = useMemo(() => {
+    if (priceMax >= 15000) return items;
+    return items.filter((it) => Number(it.unitPrice) <= priceMax);
+  }, [items, priceMax]);
 
   const kpis = useMemo(() => {
     const byCat = (g: string) => items.filter((i) => CAT_GROUP[i.category] === g).length;
     return {
-      total: items.length,
+      total: pagination.total,
       food: byCat('Food'),
       drinks: byCat('Drinks'),
       desserts: byCat('Desserts'),
@@ -127,7 +125,7 @@ export default function MenuItemsPage() {
       active: items.filter((i) => i.isActive).length,
       inactive: items.filter((i) => !i.isActive).length,
     };
-  }, [items]);
+  }, [items, pagination.total]);
 
   const handleView = useCallback((item: MenuItem) => { window.location.href = `/dashboard/menu-items/${item.id}`; }, []);
   const handleEdit = useCallback((item: MenuItem) => openEdit(item), [openEdit]);
@@ -136,7 +134,7 @@ export default function MenuItemsPage() {
   const handleArchive = useCallback((item: MenuItem) => { openArchive(item).then(() => refresh()); }, [openArchive, refresh]);
 
   const isSearching = query.length > 0;
-  const hasNoResults = !isLoading && isSearching && filtered.length === 0;
+  const hasNoResults = !isLoading && isSearching && items.length === 0;
   const hasNoItems = !isLoading && !isSearching && items.length === 0;
 
   const fillPct = ((priceMax - 50) / (15000 - 50)) * 100;
@@ -310,7 +308,7 @@ export default function MenuItemsPage() {
                     <span className="tabular-nums text-foreground min-w-[80px]">{dh(priceMax)}</span>
                   </div>
                   <div className="ml-auto flex items-center gap-2">
-                    <span>{filtered.length} résultat{filtered.length > 1 ? 's' : ''}</span>
+                    <span>{pagination.total} résultat{pagination.total > 1 ? 's' : ''}</span>
                     <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => { setCatFilter('ALL'); setStatusFilter('all'); setQuery(''); setPriceMax(15000); }}>
                       <X className="size-3" /> Réinitialiser
                     </Button>
@@ -331,7 +329,20 @@ export default function MenuItemsPage() {
             ) : hasNoResults ? (
               <NoResultsEmpty query={query} onClear={() => setQuery('')} />
             ) : view === 'grid' ? (
-              <GridView items={filtered} loading={isLoading} onView={handleView} onEdit={handleEdit} onDuplicate={handleDuplicate} onArchive={handleArchive} onDelete={handleDelete} />
+              <div className="space-y-6">
+                <GridView items={priceFiltered} loading={isLoading} onView={handleView} onEdit={handleEdit} onDuplicate={handleDuplicate} onArchive={handleArchive} onDelete={handleDelete} />
+                {pagination.totalPages > 1 && (
+                  <Pagination
+                    page={pagination.page}
+                    totalPages={pagination.totalPages}
+                    total={pagination.total}
+                    limit={pagination.limit}
+                    onPageChange={handlePageChange}
+                    onLimitChange={handleLimitChange}
+                    itemLabel="article"
+                  />
+                )}
+              </div>
             ) : (
               <div className="rounded-2xl border border-border bg-card shadow-soft">
                 <div className="flex items-center justify-between px-6 pt-5 pb-3">
@@ -339,9 +350,9 @@ export default function MenuItemsPage() {
                     <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Liste</div>
                     <h3 className="font-display text-xl mt-0.5">Tous les articles</h3>
                   </div>
-                  <span className="text-xs text-muted-foreground/60">{filtered.length} résultat{filtered.length > 1 ? 's' : ''}</span>
+                  <span className="text-xs text-muted-foreground/60">{pagination.total} résultat{pagination.total > 1 ? 's' : ''}</span>
                 </div>
-                <MenuItemsTable data={filtered} loading={isLoading} onEdit={handleEdit} onDelete={handleDelete} onDuplicate={handleDuplicate} onArchive={handleArchive} />
+                <MenuItemsTable data={priceFiltered} loading={isLoading} onEdit={handleEdit} onDelete={handleDelete} onDuplicate={handleDuplicate} onArchive={handleArchive} pagination={pagination} handlePageChange={handlePageChange} handleLimitChange={handleLimitChange} />
               </div>
             )}
           </div>

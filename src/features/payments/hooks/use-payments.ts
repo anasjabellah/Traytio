@@ -1,15 +1,16 @@
-// src/features/menu-items/hooks/use-menu-items.ts
+// src/features/payments/hooks/use-payments.ts
 'use client';
 
 import { useState, useEffect, useCallback, useRef, startTransition } from 'react';
-import { getMenuItems } from '@/features/menu-items/actions/get-menu-items';
-import { MENU_ITEM_DEFAULT_PAGE_SIZE } from '@/features/menu-items/constants';
-import type { MenuItem } from '@/features/menu-items/types';
+import { getPayments } from '@/features/payments/actions/get-payments';
+import { PAYMENT_DEFAULT_PAGE_SIZE } from '@/features/payments/constants';
+import type { PaymentWithCommande, PaymentStats } from '@/features/payments/types';
 
 type Pagination = { page: number; limit: number; total: number; totalPages: number };
 
-export function useMenuItems(initialLimit = MENU_ITEM_DEFAULT_PAGE_SIZE, category?: string, isActive?: boolean) {
-  const [items, setItems] = useState<MenuItem[]>([]);
+export function usePayments(initialLimit = PAYMENT_DEFAULT_PAGE_SIZE, method?: string, status?: string) {
+  const [payments, setPayments] = useState<PaymentWithCommande[]>([]);
+  const [stats, setStats] = useState<PaymentStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -27,23 +28,24 @@ export function useMenuItems(initialLimit = MENU_ITEM_DEFAULT_PAGE_SIZE, categor
     setIsLoading(true);
     setError(null);
     try {
-      const resp = await getMenuItems({
+      const result = await getPayments({
         search: search || undefined,
-        category: category,
-        isActive: isActive,
+        method,
+        status,
         page: pagination.page,
         limit: pagination.limit,
       });
-      if (resp.success && resp.data) {
-        const d = resp.data;
+      if (result.success && result.data) {
+        const d = result.data;
         if (d.data.length === 0 && d.page > 1) {
           setPagination(prev => ({ ...prev, total: d.total, totalPages: d.totalPages, page: prev.page - 1 }));
           return;
         }
-        setItems(d.data);
+        setPayments(d.data);
+        setStats(d.stats);
         setPagination(prev => ({ ...prev, total: d.total, totalPages: d.totalPages }));
       } else {
-        setError(resp.error ?? 'Erreur');
+        setError(result.error ?? 'Erreur');
       }
     } catch (e: any) {
       setError(e.message ?? 'Erreur inattendue');
@@ -51,7 +53,7 @@ export function useMenuItems(initialLimit = MENU_ITEM_DEFAULT_PAGE_SIZE, categor
       setIsLoading(false);
       fetchingRef.current = false;
     }
-  }, [search, pagination.page, pagination.limit, category, isActive]);
+  }, [search, pagination.page, pagination.limit, method, status]);
 
   useEffect(() => {
     startTransition(() => { fetch(); });
@@ -72,7 +74,7 @@ export function useMenuItems(initialLimit = MENU_ITEM_DEFAULT_PAGE_SIZE, categor
   }, [fetch]);
 
   return {
-    items, isLoading, error, pagination,
+    payments, stats, isLoading, error, pagination,
     handleSearch, handlePageChange, handleLimitChange, refresh,
   };
 }

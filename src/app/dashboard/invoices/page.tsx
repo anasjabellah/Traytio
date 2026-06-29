@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef, startTransition } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { motion } from "framer-motion"
 import { getInvoices, updateInvoiceStatus } from "@/features/invoices/actions/invoice-actions"
@@ -99,29 +99,35 @@ function InvoicesPageContent() {
     router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
   }, [router, pathname, searchParams])
 
-  useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      try {
-        const result = await getInvoices({
-          type: typeFilter ? (typeFilter as "DEVIS" | "FACTURE") : undefined,
-          search: search || undefined,
-          page,
-          limit,
-        })
-        if (mounted && result.success && result.data) {
-          setInvoices(result.data.data)
-          setTotal(result.data.total)
-          setTotalPages(result.data.totalPages)
-        }
-      } catch {
-        // silent
-      } finally {
-        if (mounted) setLoading(false)
+  const fetchingRef = useRef(false)
+
+  const refetch = useCallback(async () => {
+    if (fetchingRef.current) return
+    fetchingRef.current = true
+    setLoading(true)
+    try {
+      const result = await getInvoices({
+        type: typeFilter ? (typeFilter as "DEVIS" | "FACTURE") : undefined,
+        search: search || undefined,
+        page,
+        limit,
+      })
+      if (result.success && result.data) {
+        setInvoices(result.data.data)
+        setTotal(result.data.total)
+        setTotalPages(result.data.totalPages)
       }
-    })()
-    return () => { mounted = false }
+    } catch {
+      // silent
+    } finally {
+      setLoading(false)
+      fetchingRef.current = false
+    }
   }, [page, limit, typeFilter, search])
+
+  useEffect(() => {
+    startTransition(() => { refetch() })
+  }, [refetch])
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value)
@@ -141,24 +147,8 @@ function InvoicesPageContent() {
     updateUrl({ limit: newLimit !== 10 ? String(newLimit) : undefined, page: undefined })
   }, [updateUrl])
 
-  const refetch = useCallback(() => {
-    setLoading(true)
-    getInvoices({
-      type: typeFilter ? (typeFilter as "DEVIS" | "FACTURE") : undefined,
-      search: search || undefined,
-      page,
-      limit,
-    }).then((result) => {
-      if (result.success && result.data) {
-        setInvoices(result.data.data)
-        setTotal(result.data.total)
-        setTotalPages(result.data.totalPages)
-      }
-      setLoading(false)
-    }).catch(() => setLoading(false))
-  }, [page, limit, typeFilter, search])
-
   const handleRefresh = useCallback(() => {
+    fetchingRef.current = false
     refetch()
   }, [refetch])
 
@@ -188,6 +178,7 @@ function InvoicesPageContent() {
   const handleStatusChange = useCallback(async (id: string, status: string) => {
     const result = await updateInvoiceStatus(id, status)
     if (result.success) {
+      fetchingRef.current = false
       refetch()
     }
   }, [refetch])
