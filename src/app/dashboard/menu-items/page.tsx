@@ -221,8 +221,8 @@ export default function MenuItemsPage() {
               <Settings2 className="size-4" /> Filtres
             </Button>
             <Button variant="outline" size="sm" className="h-10 rounded-lg border-border bg-background/60 backdrop-blur gap-2" onClick={() => {
-              const csv = items.map(i => `${i.name},${i.category},${Number(i.unitPrice)},${i.isActive ? 'Actif' : 'Masqué'},${new Date(i.updatedAt).toISOString()}`).join('\n');
-              const blob = new Blob(['Nom,Catégorie,Prix,Statut,Mise à jour\n' + csv], { type: 'text/csv;charset=utf-8;' });
+              const csv = items.map(i => `${i.name};${i.category};${Number(i.unitPrice)};${i.isActive ? 'Actif' : 'Masqué'};${new Date(i.updatedAt).toISOString()}`).join('\n');
+              const blob = new Blob(['\uFEFFNom;Catégorie;Prix;Statut;Mise à jour\n' + csv], { type: 'text/csv;charset=utf-8;' });
               const url = URL.createObjectURL(blob);
               const a = document.createElement('a'); a.href = url; a.download = 'menu-items.csv'; a.click();
               URL.revokeObjectURL(url);

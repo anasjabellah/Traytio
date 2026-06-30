@@ -160,8 +160,8 @@ export default function MenusPage() {
               <Settings2 className="size-4" /> Filtres
             </Button>
             <Button variant="outline" size="sm" className="h-10 rounded-lg border-border bg-background/60 backdrop-blur gap-2" onClick={() => {
-              const csv = menus.map(m => `${m.name},${m.category},${Number(m.pricePerPerson)},${m.isActive ? 'Actif' : 'Masqué'},${new Date(m.updatedAt).toISOString()}`).join('\n');
-              const blob = new Blob(['Nom,Catégorie,Prix,Statut,Mise à jour\n' + csv], { type: 'text/csv;charset=utf-8;' });
+              const csv = menus.map(m => `${m.name};${m.category};${Number(m.pricePerPerson)};${m.isActive ? 'Actif' : 'Masqué'};${new Date(m.updatedAt).toISOString()}`).join('\n');
+              const blob = new Blob(['\uFEFFNom;Catégorie;Prix;Statut;Mise à jour\n' + csv], { type: 'text/csv;charset=utf-8;' });
               const url = URL.createObjectURL(blob);
               const a = document.createElement('a'); a.href = url; a.download = 'menus.csv'; a.click();
               URL.revokeObjectURL(url);

@@ -31,9 +31,9 @@ export function ClientsHeader({ clients, total, onCreate }: {
           className="h-10 rounded-lg border-border bg-background/60 backdrop-blur"
           onClick={() => {
             const csv = clients.map(c =>
-              `${c.name},${c.company || ''},${c.email || ''},${c.phone || ''},${c.city || ''},${Number(c.totalSpent)}`
+              `${c.name};${c.company || ''};${c.email || ''};${c.phone || ''};${c.city || ''};${Number(c.totalSpent)}`
             ).join('\n');
-            const blob = new Blob(['Nom,Compagnie,Email,Téléphone,Ville,Total dépensé\n' + csv], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob(['\uFEFFNom;Compagnie;Email;Téléphone;Ville;Total dépensé\n' + csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
