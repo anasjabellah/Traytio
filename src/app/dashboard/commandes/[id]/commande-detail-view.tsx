@@ -97,6 +97,9 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
   const [invoices, setInvoices] = useState<InvoiceWithCommande[]>([]);
   const [invoicesLoading, setInvoicesLoading] = useState(true);
   const [generating, setGenerating] = useState<"quote" | "invoice" | null>(null);
+  const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null);
+  const [convertingInvoice, setConvertingInvoice] = useState<string | null>(null);
+  const [updatingInvoiceStatus, setUpdatingInvoiceStatus] = useState<string | null>(null);
 
   const fetchInvoices = useCallback(async () => {
     try {
@@ -151,6 +154,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
   }, [commande.id, fetchInvoices]);
 
   const handleDownloadInvoice = useCallback(async (invoice: InvoiceWithCommande) => {
+    setDownloadingInvoice(invoice.id);
     try {
       const resp = await fetch(`/api/invoices/${invoice.id}/pdf`);
       if (!resp.ok) {
@@ -169,10 +173,13 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
       URL.revokeObjectURL(url);
     } catch {
       toast.error("Erreur de téléchargement");
+    } finally {
+      setDownloadingInvoice(null);
     }
   }, []);
 
   const handleUpdateInvoiceStatus = useCallback(async (invoiceId: string, newStatus: string) => {
+    setUpdatingInvoiceStatus(invoiceId);
     try {
       const result = await updateInvoiceStatus(invoiceId, newStatus);
       if (result.success) {
@@ -183,10 +190,13 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
       }
     } catch {
       toast.error("Erreur de mise à jour");
+    } finally {
+      setUpdatingInvoiceStatus(null);
     }
   }, [fetchInvoices]);
 
   const handleConvertToInvoice = useCallback(async (quoteId: string) => {
+    setConvertingInvoice(quoteId);
     try {
       const result = await convertQuoteToInvoice(quoteId);
       if (result.success) {
@@ -197,6 +207,8 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
       }
     } catch {
       toast.error("Erreur de conversion");
+    } finally {
+      setConvertingInvoice(null);
     }
   }, [fetchInvoices]);
 
@@ -782,7 +794,9 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                             <select
                               value={inv.status}
                               onChange={(e) => handleUpdateInvoiceStatus(inv.id, e.target.value)}
-                              className="text-[11px] rounded-md border border-border/50 bg-white px-2 py-1 text-foreground/70 focus:outline-none focus:ring-1 focus:ring-[var(--gold-deep)]"
+                              disabled={updatingInvoiceStatus === inv.id}
+                              className="text-[11px] rounded-md border border-border/50 bg-white px-2 py-1 text-foreground/70 focus:outline-none focus:ring-1 focus:ring-[var(--gold-deep)] disabled:opacity-50 disabled:cursor-not-allowed"
+                              aria-busy={updatingInvoiceStatus === inv.id}
                             >
                               {Object.entries(statusLabels).map(([key, label]) => (
                                 <option key={key} value={key}>{label}</option>
@@ -794,18 +808,22 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                           {can('invoices', 'create') && inv.type === "DEVIS" && inv.status !== "REJECTED" && (
                             <button
                               onClick={() => handleConvertToInvoice(inv.id)}
-                              className="size-8 rounded-lg border border-border bg-white hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 text-foreground/60 transition-all flex items-center justify-center"
+                              disabled={convertingInvoice === inv.id}
+                              className="size-8 rounded-lg border border-border bg-white hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 text-foreground/60 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                               title="Convertir en facture"
+                              aria-busy={convertingInvoice === inv.id}
                             >
-                              <Receipt className="size-3.5" strokeWidth={1.8} />
+                              {convertingInvoice === inv.id ? <Loader2 className="size-3.5 animate-spin" strokeWidth={1.8} /> : <Receipt className="size-3.5" strokeWidth={1.8} />}
                             </button>
                           )}
                           <button
                             onClick={() => handleDownloadInvoice(inv)}
-                            className="size-8 rounded-lg border border-border bg-white hover:bg-foreground/[0.02] text-foreground/60 hover:text-foreground transition-all flex items-center justify-center"
+                            disabled={downloadingInvoice === inv.id}
+                            className="size-8 rounded-lg border border-border bg-white hover:bg-foreground/[0.02] text-foreground/60 hover:text-foreground transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Télécharger"
+                            aria-busy={downloadingInvoice === inv.id}
                           >
-                            <Download className="size-3.5" strokeWidth={1.8} />
+                            {downloadingInvoice === inv.id ? <Loader2 className="size-3.5 animate-spin" strokeWidth={1.8} /> : <Download className="size-3.5" strokeWidth={1.8} />}
                           </button>
                         </div>
                       </div>

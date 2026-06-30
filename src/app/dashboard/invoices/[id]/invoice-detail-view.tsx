@@ -7,7 +7,7 @@ import type { InvoiceWithCommande } from "@/features/invoices/types"
 import {
   ArrowLeft, Download, Share2, Mail, Edit3, ChevronDown,
   FileText, Receipt, RefreshCw, Calendar, User, Hash,
-  FileInput, Copy, Send, Trash2, MoreHorizontal,
+  FileInput, Copy, Send, Trash2, MoreHorizontal, Loader2,
 } from "lucide-react"
 
 const mad = (n: number) =>
@@ -30,6 +30,7 @@ export default function InvoiceDetailView({ invoice }: { invoice: InvoiceWithCom
   const [status, setStatus] = useState(invoice.status)
   const [updating, setUpdating] = useState(false)
   const [showStatusDropdown, setShowStatusDropdown] = useState(false)
+  const [downloading, setDownloading] = useState(false)
 
   const handleStatusChange = useCallback(async (newStatus: string) => {
     setUpdating(true)
@@ -46,6 +47,7 @@ export default function InvoiceDetailView({ invoice }: { invoice: InvoiceWithCom
   }, [invoice.id])
 
   const handleDownload = useCallback(async () => {
+    setDownloading(true)
     try {
       const resp = await fetch(`/api/invoices/${invoice.id}/pdf`)
       if (!resp.ok) return
@@ -59,6 +61,8 @@ export default function InvoiceDetailView({ invoice }: { invoice: InvoiceWithCom
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch {
+    } finally {
+      setDownloading(false)
     }
   }, [invoice.id, invoice.number])
 
@@ -128,9 +132,11 @@ export default function InvoiceDetailView({ invoice }: { invoice: InvoiceWithCom
 
               <div className="flex items-center gap-2 flex-wrap">
                 <ActionButton
-                  icon={<Download className="size-3.5" strokeWidth={1.8} />}
-                  label="Télécharger"
+                  icon={downloading ? <Loader2 className="size-3.5 animate-spin" strokeWidth={1.8} /> : <Download className="size-3.5" strokeWidth={1.8} />}
+                  label={downloading ? "Téléchargement..." : "Télécharger"}
                   onClick={handleDownload}
+                  disabled={downloading}
+                  aria-busy={downloading}
                 />
                 <ActionButton
                   icon={<Send className="size-3.5" strokeWidth={1.8} />}
@@ -410,14 +416,14 @@ export default function InvoiceDetailView({ invoice }: { invoice: InvoiceWithCom
 }
 
 function ActionButton({
-  icon, label, onClick, disabled, title, variant,
+  icon, label, onClick, disabled, title, variant, 'aria-busy': ariaBusy,
 }: {
-  icon: React.ReactNode; label: string; onClick?: () => void; disabled?: boolean; title?: string; variant?: "danger"
+  icon: React.ReactNode; label: string; onClick?: () => void; disabled?: boolean; title?: string; variant?: "danger"; 'aria-busy'?: boolean
 }) {
   const base = "inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium transition-all border"
   if (disabled) {
     return (
-      <button disabled title={title} className={`${base} border-border text-muted-foreground/40 cursor-not-allowed`}>
+      <button disabled title={title} className={`${base} border-border text-muted-foreground/40 cursor-not-allowed`} aria-busy={ariaBusy} aria-disabled={disabled}>
         {icon}{label}
       </button>
     )

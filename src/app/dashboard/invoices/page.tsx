@@ -5,7 +5,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { motion } from "framer-motion"
 import { getInvoices, updateInvoiceStatus } from "@/features/invoices/actions/invoice-actions"
 import type { InvoiceWithCommande } from "@/features/invoices/types"
-import { Search, Download, FileText, Sparkles, RefreshCw, Receipt, Settings } from "lucide-react"
+import { Search, Download, FileText, Sparkles, RefreshCw, Receipt, Settings, Loader2 } from "lucide-react"
 import { PageGuard } from "@/components/ui/page-guard"
 import { Pagination } from "@/components/ui/pagination"
 
@@ -81,6 +81,8 @@ function InvoicesPageContent() {
   const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [search, setSearch] = useState(searchParam)
+  const [downloading, setDownloading] = useState<string | null>(null)
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
 
   const typeFilter = TYPE_FILTERS.some((f) => f.value === typeParam) ? typeParam : ""
   const limit = [10, 25, 50, 100].includes(limitParam) ? limitParam : 10
@@ -158,6 +160,7 @@ function InvoicesPageContent() {
 
   const handleDownload = useCallback(async (e: React.MouseEvent, invoice: InvoiceWithCommande) => {
     e.stopPropagation()
+    setDownloading(invoice.id)
     try {
       const resp = await fetch(`/api/invoices/${invoice.id}/pdf`)
       if (!resp.ok) return
@@ -172,15 +175,19 @@ function InvoicesPageContent() {
       URL.revokeObjectURL(url)
     } catch {
       // silent
+    } finally {
+      setDownloading(null)
     }
   }, [])
 
   const handleStatusChange = useCallback(async (id: string, status: string) => {
+    setUpdatingStatus(id)
     const result = await updateInvoiceStatus(id, status)
     if (result.success) {
       fetchingRef.current = false
       refetch()
     }
+    setUpdatingStatus(null)
   }, [refetch])
 
   return (
@@ -340,7 +347,9 @@ function InvoicesPageContent() {
                             value={inv.status}
                             onClick={(e) => e.stopPropagation()}
                             onChange={(e) => handleStatusChange(inv.id, e.target.value)}
-                            className={`text-[11px] px-2 py-1 rounded-full font-semibold border-0 cursor-pointer ${STATUS_COLORS[inv.status] ?? "bg-gray-100 text-gray-500"}`}
+                            disabled={updatingStatus === inv.id}
+                            className={`text-[11px] px-2 py-1 rounded-full font-semibold border-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${STATUS_COLORS[inv.status] ?? "bg-gray-100 text-gray-500"}`}
+                            aria-busy={updatingStatus === inv.id}
                           >
                             {Object.entries(STATUS_LABELS).map(([key, label]) => (
                               <option key={key} value={key}>{label}</option>
@@ -357,10 +366,12 @@ function InvoicesPageContent() {
                           <div className="flex items-center justify-center gap-1">
                             <button
                               onClick={(e) => handleDownload(e, inv)}
-                              className="size-8 rounded-lg border border-border bg-white hover:bg-foreground/[0.02] text-foreground/60 hover:text-foreground transition-all flex items-center justify-center"
+                              disabled={downloading === inv.id}
+                              className="size-8 rounded-lg border border-border bg-white hover:bg-foreground/[0.02] text-foreground/60 hover:text-foreground transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                               title="Télécharger"
+                              aria-busy={downloading === inv.id}
                             >
-                              <Download className="size-3.5" strokeWidth={1.8} />
+                              {downloading === inv.id ? <Loader2 className="size-3.5 animate-spin" strokeWidth={1.8} /> : <Download className="size-3.5" strokeWidth={1.8} />}
                             </button>
                           </div>
                         </td>

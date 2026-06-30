@@ -82,6 +82,7 @@ export function ReportModal({ open, onOpenChange }: { open: boolean; onOpenChang
   const [eventType, setEventType] = useState('');
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<ReportData | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const handleGenerate = useCallback(async () => {
     const range = preset === 'custom' ? { dateFrom: customFrom, dateTo: customTo } : getDateRange(preset);
@@ -104,31 +105,36 @@ export function ReportModal({ open, onOpenChange }: { open: boolean; onOpenChang
 
   const handleDownloadCSV = useCallback(() => {
     if (!report) return;
-    const header = 'Numéro;Statut;Client;Événement;Type;Date événement;Invites;Total;Payé;Restant;Créé le';
-    const rows = report.rows.map((r) =>
-      [
-        r.number,
-        r.status,
-        r.clientName,
-        r.eventName ?? '',
-        r.eventType ?? '',
-        r.eventDate ? new Date(r.eventDate).toLocaleDateString('fr-FR') : '',
-        r.guestCount ?? '',
-        r.totalAmount,
-        r.paidAmount,
-        r.remainingAmount,
-        new Date(r.createdAt).toLocaleDateString('fr-FR'),
-      ].join(';'),
-    );
-    const csv = '\uFEFF' + header + '\n' + rows.join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `rapport-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Rapport téléchargé (CSV)');
+    setExporting(true);
+    // Use setTimeout to let the UI update with the loading state before the sync CSV build
+    setTimeout(() => {
+      const header = 'Numéro;Statut;Client;Événement;Type;Date événement;Invites;Total;Payé;Restant;Créé le';
+      const rows = report.rows.map((r) =>
+        [
+          r.number,
+          r.status,
+          r.clientName,
+          r.eventName ?? '',
+          r.eventType ?? '',
+          r.eventDate ? new Date(r.eventDate).toLocaleDateString('fr-FR') : '',
+          r.guestCount ?? '',
+          r.totalAmount,
+          r.paidAmount,
+          r.remainingAmount,
+          new Date(r.createdAt).toLocaleDateString('fr-FR'),
+        ].join(';'),
+      );
+      const csv = '\uFEFF' + header + '\n' + rows.join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `rapport-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setExporting(false);
+      toast.success('Rapport téléchargé (CSV)');
+    }, 50);
   }, [report]);
 
   const reset = useCallback(() => {
@@ -315,9 +321,11 @@ export function ReportModal({ open, onOpenChange }: { open: boolean; onOpenChang
                   onClick={handleDownloadCSV}
                   className="w-full h-10 rounded-xl gap-2 border-border/60"
                   variant="outline"
+                  disabled={exporting}
+                  aria-busy={exporting}
                 >
-                  <Download className="size-4" strokeWidth={2} />
-                  Télécharger le rapport (CSV)
+                  {exporting ? <Loader2 className="size-4 animate-spin" strokeWidth={2} /> : <Download className="size-4" strokeWidth={2} />}
+                  {exporting ? "Exportation..." : "Télécharger le rapport (CSV)"}
                 </Button>
               </motion.div>
             )}

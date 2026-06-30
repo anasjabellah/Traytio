@@ -1,5 +1,5 @@
 import { DetailSkeleton } from '@/components/ui/skeletons'
 
-export default function EventDetailLoading() {
+export default function InvoiceDetailLoading() {
   return <DetailSkeleton />
 }
