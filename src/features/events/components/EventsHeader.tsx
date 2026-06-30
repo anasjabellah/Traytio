@@ -1,14 +1,14 @@
 'use client';
 
-import { Sparkles, Plus, Calendar as CalendarIcon, FileText } from 'lucide-react';
+import { Sparkles, Plus, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EyeToggle } from '@/components/privacy-mode';
 import type { Event } from '@/features/events/types';
 
 export function EventsHeader({
-  total, events, onCalendar, onCreate, title, subtitle,
+  total, events, onCreate, title, subtitle,
 }: {
-  total: number; events: Event[]; onCalendar: () => void; onCreate: () => void;
+  total: number; events: Event[]; onCreate: () => void;
   title?: string; subtitle?: string;
 }) {
   return (
@@ -27,12 +27,9 @@ export function EventsHeader({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button variant="outline" className="h-10 rounded-lg border-border bg-background/60 backdrop-blur" onClick={onCalendar}>
-          <CalendarIcon className="size-4" /> Calendrier
-        </Button>
         <Button variant="outline" className="h-10 rounded-lg border-border bg-background/60 backdrop-blur" onClick={() => {
-          const csv = events.map(e => `${e.name},${e.status},${new Date(e.startDate).toISOString()},${e.guestCount ?? 0},${Number(e.budget ?? 0)},${e.paymentStatus ?? ''}`).join('\n');
-          const blob = new Blob(['Nom,Statut,Date,Invites,Budget,Paiement\n' + csv], { type: 'text/csv' });
+          const csv = events.map(e => `${e.name};${e.status};${new Date(e.startDate).toISOString()};${e.guestCount ?? 0};${Number(e.budget ?? 0)};${e.paymentStatus ?? ''}`).join('\n');
+          const blob = new Blob(['\uFEFFNom;Statut;Date;Invites;Budget;Paiement\n' + csv], { type: 'text/csv' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a'); a.href = url; a.download = 'evenements.csv'; a.click();
           URL.revokeObjectURL(url);

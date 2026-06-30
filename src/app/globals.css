@@ -226,8 +226,6 @@
     text-rendering: optimizeLegibility;
 
     font-feature-settings: "ss01", "cv11";
-
-    overflow-x: hidden;
   }
 
   h1,

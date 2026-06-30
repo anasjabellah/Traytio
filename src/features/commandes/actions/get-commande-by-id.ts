@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, CommandeWithDetails } from '@/features/commandes/types';
+import { serializeCommande, serializeCommandeItem, serializePaymentSummary } from '@/features/commandes/lib/serialize-commande';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 
@@ -52,39 +53,34 @@ export async function getCommandeById(id: string): Promise<ActionResponse<Comman
     }
 
     const result: CommandeWithDetails = {
-      ...commande,
-      totalAmount: Number(commande.totalAmount),
-      acompteAmount: Number(commande.acompteAmount),
-      paidAmount: Number(commande.paidAmount),
-      remainingAmount: Number(commande.remainingAmount),
+      ...serializeCommande(commande as Parameters<typeof serializeCommande>[0]),
       paymentStatus: commande.paymentStatus,
-      pricePerPerson: commande.pricePerPerson ? Number(commande.pricePerPerson) : null,
-      transportFees: commande.transportFees ? Number(commande.transportFees) : null,
-      deliveryFees: commande.deliveryFees ? Number(commande.deliveryFees) : null,
-      equipmentFees: commande.equipmentFees ? Number(commande.equipmentFees) : null,
-      discountValue: commande.discountValue ? Number(commande.discountValue) : null,
-      discountAmount: commande.discountAmount ? Number(commande.discountAmount) : null,
-      taxRate: commande.taxRate ? Number(commande.taxRate) : null,
-      taxLabel: commande.taxLabel ?? null,
-      taxAmount: commande.taxAmount ? Number(commande.taxAmount) : null,
-      clientBudget: commande.clientBudget ? Number(commande.clientBudget) : null,
-      clientName: commande.client?.name ?? null,
-      clientPhone: commande.client?.phone ?? null,
-      eventName: commande.event?.name ?? null,
-      eventStatus: commande.event?.status ?? null,
-      event: commande.event ? {
-        ...commande.event,
-        budget: commande.event.budget ? Number(commande.event.budget) : null,
+      client: commande.client ? {
+        id: commande.client.id,
+        name: commande.client.name,
+        email: commande.client.email,
+        phone: commande.client.phone,
       } : null,
-      items: commande.items.map((i) => ({
-        ...i,
-        unitPrice: Number(i.unitPrice),
-        totalPrice: Number(i.totalPrice),
-      })),
-      payments: (commande.payments ?? []).map((p) => ({
-        ...p,
-        amount: Number(p.amount),
-      })),
+      event: commande.event ? {
+        id: commande.event.id,
+        name: commande.event.name,
+        type: commande.event.type,
+        startDate: commande.event.startDate,
+        endDate: commande.event.endDate,
+        status: commande.event.status,
+        guestCount: commande.event.guestCount,
+        location: commande.event.location,
+        budget: commande.event.budget ? Number(commande.event.budget) : null,
+        contactPerson: commande.event.contactPerson,
+        contactPhone: commande.event.contactPhone,
+        notes: commande.event.notes,
+      } : null,
+      menu: commande.menu ? { id: commande.menu.id, name: commande.menu.name } : null,
+      items: commande.items.map(serializeCommandeItem),
+      tasks: commande.tasks,
+      attachments: commande.attachments,
+      activities: commande.activities,
+      payments: (commande.payments ?? []).map(serializePaymentSummary),
     };
 
     return { success: true, data: result };

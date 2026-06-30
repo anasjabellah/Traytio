@@ -9,16 +9,17 @@ interface ViewSwitcherProps {
   onChange: (mode: ViewMode) => void;
 }
 
-const VIEWS: { value: ViewMode; label: string; icon: typeof Table2 }[] = [
+const ALL_VIEWS: { value: ViewMode; label: string; icon: typeof Table2 }[] = [
   { value: 'table', label: 'Table', icon: Table2 },
   { value: 'grid', label: 'Grille', icon: LayoutGrid },
   { value: 'calendar', label: 'Calendrier', icon: CalendarDays },
 ];
 
 export function ViewSwitcher({ value, onChange }: ViewSwitcherProps) {
+  const views = ALL_VIEWS;
   return (
     <div className="flex items-center rounded-xl border border-border bg-card shadow-soft p-0.5 gap-0.5">
-      {VIEWS.map((v) => {
+      {views.map((v) => {
         const Icon = v.icon;
         const active = value === v.value;
         return (

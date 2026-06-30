@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { createCommandeSchema } from "@/features/commandes/validations/create-commande-schema"
 import { recalculateCommandeBalances } from "@/features/financial/recalculate-commande-balances"
+import { serializeCommande, serializeCommandeItem } from "@/features/commandes/lib/serialize-commande"
 import type { CommandeStatus, EventType, EventStatus, DiscountType } from "@prisma/client";
 
 export async function generateCommandeNumber(): Promise<string> {
@@ -108,23 +109,8 @@ export async function createCommande(input: unknown) {
     })
 
     const serialized = {
-      ...commande,
-      totalAmount: Number(commande.totalAmount),
-      acompteAmount: Number(commande.acompteAmount),
-      paidAmount: Number(commande.paidAmount),
-      remainingAmount: Number(commande.remainingAmount),
-      clientBudget: commande.clientBudget ? Number(commande.clientBudget) : null,
-      discountAmount: commande.discountAmount ? Number(commande.discountAmount) : null,
-      discountValue: commande.discountValue ? Number(commande.discountValue) : null,
-      pricePerPerson: commande.pricePerPerson ? Number(commande.pricePerPerson) : null,
-      transportFees: commande.transportFees ? Number(commande.transportFees) : null,
-      deliveryFees: commande.deliveryFees ? Number(commande.deliveryFees) : null,
-      equipmentFees: commande.equipmentFees ? Number(commande.equipmentFees) : null,
-      items: (commande.items ?? []).map((item: any) => ({
-        ...item,
-        unitPrice: Number(item.unitPrice),
-        totalPrice: Number(item.totalPrice),
-      })),
+      ...serializeCommande(commande as Parameters<typeof serializeCommande>[0]),
+      items: (commande.items ?? []).map(serializeCommandeItem),
     }
 
     revalidatePath("/dashboard/commandes")

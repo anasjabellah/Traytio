@@ -67,9 +67,9 @@ export function CommandesTable({ data, loading, onView, onEdit, onDelete }: Comm
 
   if (data.length === 0) {
     return (
-      <div className="rounded-xl border border-border/20 bg-card shadow-sm py-24 flex flex-col items-center gap-6">
-        <div className="size-14 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/60 border border-amber-200/50 flex items-center justify-center shadow-sm">
-          <ShoppingBag className="size-6 text-amber-500/60" strokeWidth={1.5} />
+      <div className="rounded-xl border border-border/20 bg-card shadow-sm py-24 flex flex-col items-center gap-6 px-4">
+        <div className="size-14 rounded-2xl bg-gradient-to-br from-[var(--gold-soft)]/20 to-[var(--gold-soft)]/10 border border-[var(--gold-soft)]/40 flex items-center justify-center shadow-sm">
+          <ShoppingBag className="size-6 text-[var(--gold-deep)]/60" strokeWidth={1.5} />
         </div>
         <div className="text-center max-w-[260px]">
           <p className="text-base font-semibold text-foreground">Aucune commande</p>
@@ -91,8 +91,8 @@ export function CommandesTable({ data, loading, onView, onEdit, onDelete }: Comm
   const rowModel = table.getRowModel();
 
   return (
-    <div className="rounded-xl border border-border/20 bg-card shadow-sm">
-      <Table className="w-full">
+    <div className="overflow-x-auto rounded-xl border border-border/20 bg-card shadow-sm">
+      <Table className="w-full min-w-[800px]">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="border-b border-border/10">
@@ -100,7 +100,7 @@ export function CommandesTable({ data, loading, onView, onEdit, onDelete }: Comm
                 <TableHead
                   key={header.id}
                   style={{ width: COL_WIDTHS[header.id] || 'auto' }}
-                  className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground font-semibold px-4 py-3 whitespace-nowrap select-none"
+                  className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground font-semibold px-4 py-3 whitespace-nowrap select-none sticky top-0 bg-card z-10"
                 >
                   {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                 </TableHead>

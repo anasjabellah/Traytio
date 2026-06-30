@@ -84,17 +84,22 @@ export function useCommandes(initialLimit = 10) {
     setPagination(prev => ({ ...prev, page: 1 }));
   }, []);
 
-  const handlePageChange = (newPage: number) => {
-    setPagination(prev => ({ ...prev, page: newPage }));
-  };
+  const handleLimitChange = useCallback((newLimit: number) => {
+    setPagination(prev => ({ ...prev, limit: newLimit, page: 1 }));
+  }, []);
 
-  const refresh = () => {
+  const handlePageChange = useCallback((newPage: number) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+  }, []);
+
+  const refresh = useCallback(() => {
+    fetchingRef.current = false;
     fetch();
-  };
+  }, [fetch]);
 
   return {
     commandes, isLoading, error, pagination, search, statusFilter,
-    handleSearch, handleStatusFilter, handlePageChange, refresh,
+    handleSearch, handleStatusFilter, handlePageChange, handleLimitChange, refresh,
     dbStats,
   } as const;
 }

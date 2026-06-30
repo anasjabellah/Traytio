@@ -132,11 +132,11 @@ export function KpiCard({
         <div className="pointer-events-none absolute -top-16 -right-16 size-44 rounded-full bg-gradient-gold opacity-20 blur-2xl" />
       )}
       <div className="flex items-start justify-between">
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="text-xs uppercase tracking-wider text-muted-foreground">
             {label}
           </div>
-          <div className="mt-3 font-display text-4xl tabular-nums">
+          <div className="mt-3 font-display text-lg sm:text-xl lg:text-2xl xl:text-lg tabular-nums">
             <SensitiveValue
               hidden={sensitive && isPrivacyMode}
               className="text-gradient-charcoal"
@@ -146,7 +146,7 @@ export function KpiCard({
           </div>
         </div>
         <div
-          className={`size-10 rounded-xl flex items-center justify-center ${
+          className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${
             accent
               ? 'bg-gradient-gold text-[var(--gold-foreground)]'
               : 'bg-foreground/[0.04] text-foreground'

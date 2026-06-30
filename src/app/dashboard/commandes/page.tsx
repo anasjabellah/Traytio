@@ -41,7 +41,7 @@ export default function CommandesPage() {
   const router = useRouter();
   const {
     commandes, isLoading, pagination,
-    handleSearch, handlePageChange, refresh,
+    handleSearch, handlePageChange, handleLimitChange, refresh,
     dbStats,
   } = useCommandes();
   const [deleteTarget, setDeleteTarget] = useState<Commande | null>(null);
@@ -50,7 +50,13 @@ export default function CommandesPage() {
   const [showEventTypeFilters, setShowEventTypeFilters] = useState(false);
   const [eventTypeFilter, setEventTypeFilter] = useState<string | null>(null);
   const [selectedStatuses, setSelectedStatuses] = useState<Set<string>>(new Set());
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [viewMode, setViewMode] = useState<ViewMode>(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches ? 'grid' : 'table'
+  );
+
+  const handleViewChange = useCallback((mode: ViewMode) => {
+    setViewMode(mode);
+  }, []);
 
   const searchMounted = useRef(false);
   useEffect(() => {
@@ -213,7 +219,7 @@ export default function CommandesPage() {
       <div className="pointer-events-none fixed inset-0 bg-gradient-mesh opacity-60" />
       <div className="pointer-events-none fixed inset-x-0 top-0 h-[420px] bg-radiance" />
 
-      <div className="relative mx-auto max-w-[1480px] px-6 py-8 lg:px-10">
+      <div className="relative mx-auto max-w-[1480px] px-4 sm:px-6 lg:px-10 py-6 sm:py-8">
 
         {/* ═══ HERO SECTION ═══ */}
         <motion.div
@@ -239,7 +245,7 @@ export default function CommandesPage() {
             </div>
             <Link
               href="/dashboard/commandes/new"
-              className="inline-flex items-center gap-2 bg-foreground hover:opacity-90 text-background rounded-xl px-5 py-2.5 text-sm font-medium transition-all shadow-sm shrink-0"
+              className="inline-flex items-center justify-center gap-2 bg-foreground hover:opacity-90 text-background rounded-xl px-5 py-2.5 text-sm font-medium transition-all shadow-sm shrink-0 w-full sm:w-auto"
             >
               <Plus className="size-4" strokeWidth={1.8} />
               Nouvelle commande
@@ -248,7 +254,7 @@ export default function CommandesPage() {
         </motion.div>
 
         {/* ═══ KPI CARDS ═══ */}
-        <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-3">
           {stats.map((k, i) => (
             <KpiCard key={k.label} {...k} delay={i * 0.05} />
           ))}
@@ -263,7 +269,7 @@ export default function CommandesPage() {
         >
           {/* Search row */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft flex-1 max-w-md transition-all focus-within:border-[var(--gold-deep)] focus-within:ring-1 focus-within:ring-[var(--gold-deep)]/20">
+            <div className="flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft flex-1 w-full sm:max-w-md transition-all focus-within:border-[var(--gold-deep)] focus-within:ring-1 focus-within:ring-[var(--gold-deep)]/20">
               <Search size={18} strokeWidth={1.8} className="text-muted-foreground shrink-0" />
               <input
                 value={localSearch}
@@ -278,7 +284,7 @@ export default function CommandesPage() {
               )}
             </div>
 
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
               <button
                 onClick={() => setShowEventTypeFilters(prev => !prev)}
                 className={`h-11 px-4 rounded-xl border text-sm font-medium transition-all flex items-center gap-2 ${
@@ -288,7 +294,7 @@ export default function CommandesPage() {
                 }`}
               >
                 <SlidersHorizontal className="size-[18px]" strokeWidth={1.8} />
-                Filtres
+                <span className="hidden sm:inline">Filtres</span>
                 {activeFilterCount > 0 && (
                   <span className="size-5 rounded-full bg-[var(--gold-deep)] text-white text-[10px] font-bold flex items-center justify-center">
                     {activeFilterCount}
@@ -304,7 +310,7 @@ export default function CommandesPage() {
                 <RefreshCw className={`size-[18px] ${isLoading ? 'animate-spin' : ''}`} strokeWidth={1.8} />
               </button>
 
-              <ViewSwitcher value={viewMode} onChange={setViewMode} />
+              <ViewSwitcher value={viewMode} onChange={handleViewChange} />
             </div>
           </div>
 
@@ -366,11 +372,11 @@ export default function CommandesPage() {
         </motion.div>
 
         {/* ═══ MAIN CONTENT ═══ */}
-        <div className="flex flex-col xl:flex-row gap-6">
+        <div className="flex flex-col xl:flex-row gap-4 sm:gap-6">
 
           {/* PRIMARY COLUMN */}
-          <div className={viewMode === 'calendar' ? 'flex-1' : 'flex-1 xl:w-[73%]'}>
-
+          <div className={viewMode === 'calendar' ? 'flex-1 min-w-0' : 'flex-1 xl:w-[73%] min-w-0'}>
+ 
             {/* TABLE VIEW */}
             {viewMode === 'table' && (
               <motion.div
@@ -378,9 +384,9 @@ export default function CommandesPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
-                className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden"
+                className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden min-w-0 w-full"
               >
-                <div className="flex items-center justify-between px-6 pt-5 pb-3">
+                <div className="flex items-center justify-between px-4 sm:px-6 pt-5 pb-3">
                   <div>
                     <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Liste</div>
                     <h3 className="font-display text-xl mt-0.5">Toutes les commandes</h3>
@@ -396,15 +402,17 @@ export default function CommandesPage() {
                   onEdit={handleEdit}
                   onDelete={setDeleteTarget}
                 />
-
+                <div className="px-4 sm:px-6 pb-5">
                   <Pagination
                     page={pagination.page}
                     totalPages={pagination.totalPages}
                     total={pagination.total}
                     limit={pagination.limit}
                     onPageChange={handlePageChange}
+                    onLimitChange={handleLimitChange}
                     itemLabel="commande"
                   />
+                </div>
               </motion.div>
             )}
 
@@ -415,6 +423,7 @@ export default function CommandesPage() {
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] as const }}
+                className="min-w-0 w-full"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -517,7 +526,7 @@ export default function CommandesPage() {
                 className="rounded-2xl border border-border bg-card shadow-soft p-5"
               >
                 <div className="flex items-center gap-2 mb-4">
-                  <Wallet className="size-4 text-amber-600" strokeWidth={1.8} />
+                  <Wallet className="size-4 text-[var(--gold-deep)]" strokeWidth={1.8} />
                   <h4 className="font-display text-base">Paiements en attente</h4>
                 </div>
                 {pendingPayments.length === 0 ? (
@@ -536,13 +545,13 @@ export default function CommandesPage() {
                           className="w-full group hover:bg-muted/40 rounded-xl p-2.5 -mx-2.5 transition-colors text-left"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="size-9 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
-                              <Receipt className="size-4 text-amber-600" />
+                            <div className="size-9 rounded-lg bg-[var(--gold-soft)]/20 flex items-center justify-center shrink-0">
+                              <Receipt className="size-4 text-[var(--gold-deep)]" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="text-sm font-medium truncate">{cmd.number}</div>
                               <div className="text-[11px] text-muted-foreground/60 mt-0.5">
-                                Restant : <span className="font-semibold text-amber-700">{mad(remainingAmt)}</span>
+                                Restant : <span className="font-semibold text-[var(--gold-deep)]">{mad(remainingAmt)}</span>
                                 <span className="text-muted-foreground/30 mx-1">·</span>
                                 Payé : {mad(paid)}
                               </div>
@@ -551,9 +560,9 @@ export default function CommandesPage() {
                               {COMMANDE_STATUS_LABELS[cmd.status] || cmd.status}
                             </div>
                           </div>
-                          <div className="mt-2 h-1.5 w-full rounded-full bg-amber-100/60 overflow-hidden">
+                          <div className="mt-2 h-1.5 w-full rounded-full bg-[var(--gold-soft)]/30 overflow-hidden">
                             <div
-                              className="h-full rounded-full bg-amber-500 transition-all"
+                              className="h-full rounded-full bg-[var(--gold-deep)] transition-all"
                               style={{ width: `${Math.min(pct, 100)}%` }}
                             />
                           </div>
@@ -569,10 +578,10 @@ export default function CommandesPage() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-16 mb-6 flex items-center justify-between text-xs text-muted-foreground">
+        <footer className="mt-12 sm:mt-16 mb-4 sm:mb-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground/60 text-center sm:text-left px-2">
           <div className="flex items-center gap-2">
             <span className="inline-block size-1.5 rounded-full bg-emerald-500" />
-            Tous les services opérationnels
+            <span>Tous les services opérationnels</span>
           </div>
           <div>© TUR — Suite traiteur premium</div>
         </footer>

@@ -17,10 +17,10 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
 };
 
 const CLIENT_COLORS = [
-  'bg-amber-100 text-amber-800', 'bg-emerald-100 text-emerald-800',
+  'bg-[var(--gold-soft)]/30 text-[var(--gold-deep)]', 'bg-emerald-100 text-emerald-800',
   'bg-blue-100 text-blue-800', 'bg-violet-100 text-violet-800',
   'bg-rose-100 text-rose-800', 'bg-cyan-100 text-cyan-800',
-  'bg-orange-100 text-orange-800', 'bg-indigo-100 text-indigo-800',
+  'bg-indigo-100 text-indigo-800', 'bg-stone-100 text-stone-800',
 ];
 
 const STATUS_DOT_COLORS: Record<string, string> = {
@@ -133,8 +133,8 @@ export const commandesColumns = (
       const cmd = row.original;
       return (
         <div className="flex items-center gap-2.5">
-          <div className="size-7 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100/60 border border-amber-200/50 flex items-center justify-center shrink-0">
-            <ChevronRight className="size-3 text-amber-500/60" strokeWidth={2.5} />
+          <div className="size-7 rounded-lg bg-gradient-to-br from-[var(--gold-soft)]/20 to-[var(--gold-soft)]/10 border border-[var(--gold-soft)]/40 flex items-center justify-center shrink-0">
+            <ChevronRight className="size-3 text-[var(--gold-deep)]/60" strokeWidth={2.5} />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-foreground tracking-tight">{cmd.number}</span>
@@ -176,7 +176,7 @@ export const commandesColumns = (
           </span>
           {cmd.eventType && (
             <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-              <span className="size-1 rounded-full bg-amber-400/60 shrink-0" />
+              <span className="size-1 rounded-full bg-[var(--gold-deep)]/60 shrink-0" />
               {EVENT_TYPE_LABELS[cmd.eventType] ?? cmd.eventType}
             </span>
           )}
@@ -222,7 +222,7 @@ export const commandesColumns = (
     cell: ({ row }) => {
       const amount = Number(row.getValue('totalAmount'));
       return (
-        <span className="text-sm font-bold tabular-nums text-amber-700 tracking-tight">
+        <span className="text-sm font-bold tabular-nums text-[var(--gold-deep)] tracking-tight">
           {amount > 0 ? mad(amount) : '—'}
         </span>
       );

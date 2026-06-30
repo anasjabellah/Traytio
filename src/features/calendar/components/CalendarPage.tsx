@@ -231,7 +231,6 @@ export function CalendarPage() {
             <EventsHeader
               total={allEvents.length}
               events={allEvents}
-              onCalendar={() => router.push('/dashboard/events')}
               onCreate={() => { setCreateDefaults(undefined); setCreateOpen(true) }}
               title="Calendrier"
               subtitle="Planifiez, visualisez et gérez tous vos événements en un seul endroit."

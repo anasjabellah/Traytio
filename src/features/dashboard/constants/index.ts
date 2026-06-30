@@ -37,7 +37,7 @@ type ActionConfig = {
 };
 
 export const ACTIONS: ActionConfig[] = [
-  { label: "Nouvelle commande", icon: Plus, to: "/nouvelle-commande", primary: true },
+  { label: "Nouvelle commande", icon: Plus, to: "/dashboard/commandes/new", primary: true },
   { label: "Nouveau client", icon: UserPlus, to: "/dashboard/clients" },
   { label: "Nouveau menu", icon: Utensils, to: "/dashboard/menus" },
   { label: "\u00c9v\u00e9nements", icon: PartyPopper, to: "/dashboard/events" },

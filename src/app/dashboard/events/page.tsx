@@ -70,7 +70,6 @@ export default function EventsPage() {
           <EventsHeader
             total={pagination.total}
             events={events}
-            onCalendar={() => setViewMode('calendar')}
             onCreate={openCreate}
           />
 

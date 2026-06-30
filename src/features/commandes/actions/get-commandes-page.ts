@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import type { Prisma, CommandeStatus } from '@prisma/client';
 import type { ActionResponse, Commande, GetCommandesParams } from '@/features/commandes/types';
+import { serializeCommande } from '@/features/commandes/lib/serialize-commande';
 import { COMMANDE_DEFAULT_PAGE_SIZE } from '@/features/commandes/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
@@ -133,29 +134,7 @@ export async function getCommandesPage(params: GetCommandesParams): Promise<Acti
     };
 
     // ── Map commandes ──
-    const result: Commande[] = commandes.map((c) => ({
-      id: c.id, organizationId: c.organizationId, clientId: c.clientId, eventId: c.eventId,
-      number: c.number, status: c.status, eventType: c.eventType, eventDate: c.eventDate,
-      guestCount: c.guestCount, location: c.location, menuId: c.menuId, menuName: c.menuName,
-      pricePerPerson: c.pricePerPerson ? Number(c.pricePerPerson) : null,
-      totalAmount: Number(c.totalAmount), acomptePercent: c.acomptePercent,
-      acompteAmount: Number(c.acompteAmount), paidAmount: Number(c.paidAmount),
-      remainingAmount: Number(c.remainingAmount), notes: c.notes,
-      transportFees: c.transportFees ? Number(c.transportFees) : null,
-      deliveryFees: c.deliveryFees ? Number(c.deliveryFees) : null,
-      equipmentFees: c.equipmentFees ? Number(c.equipmentFees) : null,
-      discountType: c.discountType, discountValue: c.discountValue ? Number(c.discountValue) : null,
-      discountAmount: c.discountAmount ? Number(c.discountAmount) : null,
-      taxRate: c.taxRate ? Number(c.taxRate) : null, taxLabel: c.taxLabel ?? null,
-      taxAmount: c.taxAmount ? Number(c.taxAmount) : null,
-      clientBudget: c.clientBudget ? Number(c.clientBudget) : null,
-      contactName: c.contactName, contactPhone: c.contactPhone,
-      internalNotes: c.internalNotes, clientNotes: c.clientNotes,
-      pdfUrl: c.pdfUrl, sentAt: c.sentAt, sentVia: c.sentVia,
-      createdAt: c.createdAt, updatedAt: c.updatedAt,
-      clientName: c.client?.name ?? null, clientPhone: c.client?.phone ?? null,
-      eventName: c.event?.name ?? null, eventStatus: c.event?.status ?? null,
-    }));
+    const result: Commande[] = commandes.map(serializeCommande);
 
     const totalPages = Math.ceil(total / limit);
 
