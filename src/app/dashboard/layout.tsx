@@ -1,16 +1,14 @@
-"use client";
+import { auth } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
+import DashboardLayoutClient from './layout-client'
 
-import { TopBar } from "@/components/dashboard/top-bar";
-
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
-  return (
-    <>
-      <TopBar />
-      {children}
-    </>
-  );
+  const { userId } = await auth()
+  if (!userId) redirect('/sign-in')
+
+  return <DashboardLayoutClient>{children}</DashboardLayoutClient>
 }

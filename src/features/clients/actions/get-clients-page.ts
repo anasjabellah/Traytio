@@ -75,7 +75,7 @@ export async function getClientsPage(params: GetClientsPageParams): Promise<Acti
     const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const clientSelect = {
-      id: true, name: true, email: true, phone: true, city: true,
+      id: true, organizationId: true, name: true, email: true, phone: true, city: true,
       totalSpent: true, lastOrderAt: true, createdAt: true, company: true,
       _count: { select: { commandes: true, events: true } },
     } satisfies Prisma.ClientSelect;
@@ -163,7 +163,7 @@ export async function getClientsPage(params: GetClientsPageParams): Promise<Acti
     // ── Map clients with stats ──
     const clientWithStats: ClientWithStats[] = clients.map((client) => ({
       id: client.id,
-      organizationId: '',
+      organizationId: client.organizationId,
       name: client.name,
       email: client.email,
       phone: client.phone,

@@ -77,13 +77,6 @@ export async function inviteMember(input: { email: string; role: OrgRole }) {
     const toAddress = email
     const subject = `Vous êtes invité à rejoindre ${orgName} sur TUR`
 
-    console.log("[inviteMember] === SENDING EMAIL ===")
-    console.log("[inviteMember] RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY)
-    console.log("[inviteMember] from:", fromAddress)
-    console.log("[inviteMember] to:", toAddress)
-    console.log("[inviteMember] subject:", subject)
-    console.log("[inviteMember] emailHtml length:", emailHtml.length)
-
     const result = await resend.emails.send({
       from: fromAddress,
       to: toAddress,
@@ -91,36 +84,17 @@ export async function inviteMember(input: { email: string; role: OrgRole }) {
       html: emailHtml,
     })
 
-    console.log("[inviteMember] === RESEND RESULT ===")
-    console.log("[inviteMember] FULL RESULT:", JSON.stringify(result, null, 2))
-
     const { error: resendError, data: resendData } = result
 
     if (resendError) {
-      console.error("[inviteMember] === RESEND ERROR ===")
-      console.error("[inviteMember] ERROR OBJECT:", resendError)
-      console.error("[inviteMember] ERROR NAME:", (resendError as { name?: string }).name)
-      console.error("[inviteMember] ERROR MESSAGE:", (resendError as { message?: string }).message)
-      console.error("[inviteMember] ERROR STATUS:", (resendError as { statusCode?: number }).statusCode)
-      try {
-        console.error("[inviteMember] ERROR STRINGIFIED:", JSON.stringify(resendError, null, 2))
-      } catch {
-        console.error("[inviteMember] ERROR (non-serializable)")
-      }
-      if (typeof resendError === "object" && resendError !== null) {
-        for (const key of Object.keys(resendError as object)) {
-          console.error(`[inviteMember] ERROR.${key}:`, (resendError as Record<string, unknown>)[key])
-        }
-      }
-      console.error("[inviteMember] DATA:", resendData)
+      const message = typeof resendError === 'object' && resendError !== null
+        ? (resendError as { message?: string }).message ?? 'Unknown Resend error'
+        : String(resendError)
+      console.error("[inviteMember] Resend send failed:", message)
 
       await prisma.invitation.delete({ where: { id: invitation.id } })
       return { success: false, error: "Impossible d'envoyer l'email d'invitation. Veuillez réessayer." }
     }
-
-    console.log("[inviteMember] === EMAIL SENT SUCCESSFULLY ===")
-    console.log("[inviteMember] RESEND DATA:", JSON.stringify(resendData, null, 2))
-    console.log("[inviteMember] Invitation sent to", email, "for org", membership.organizationId)
 
     revalidatePath("/dashboard/settings/team")
     return { success: true }

@@ -6,9 +6,6 @@ import { PERMISSIONS } from "@/lib/permissions"
 
 export async function getTeam() {
   try {
-    console.log("[getTeam] invitation model:", typeof prisma.invitation)
-    console.log("[getTeam] userOrganization model:", typeof prisma.userOrganization)
-
     const membership = await getCurrentMembership()
 
     const allowed = PERMISSIONS.team?.view
