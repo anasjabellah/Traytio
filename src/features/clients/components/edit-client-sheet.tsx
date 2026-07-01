@@ -51,7 +51,7 @@ export function EditClientSheet({ open, onOpenChange, client, onSuccess }: EditC
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[400px] sm:w-[540px]">
+      <SheetContent side="right" className="w-full sm:w-[540px]">
         <SheetHeader>
           <SheetTitle>Modifier le client</SheetTitle>
           <SheetDescription>Modifiez les informations du client ci‑dessous.</SheetDescription>

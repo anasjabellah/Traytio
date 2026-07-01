@@ -265,7 +265,7 @@ export function TopBar() {
           {/* Offscreen measurement container — mirrors nav items without affecting layout */}
           <div
             ref={measureRef}
-            className="flex items-center gap-0.5 pointer-events-none invisible absolute top-0 left-0"
+            className="flex items-center gap-0.5 pointer-events-none invisible fixed top-0 left-0"
             aria-hidden="true"
           >
             {visibleItems.map(([label]) => (

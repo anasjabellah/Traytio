@@ -809,7 +809,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                             <button
                               onClick={() => handleConvertToInvoice(inv.id)}
                               disabled={convertingInvoice === inv.id}
-                              className="size-8 rounded-lg border border-border bg-white hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 text-foreground/60 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:size-8 rounded-lg border border-border bg-white hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 text-foreground/60 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                               title="Convertir en facture"
                               aria-busy={convertingInvoice === inv.id}
                             >
@@ -819,7 +819,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                           <button
                             onClick={() => handleDownloadInvoice(inv)}
                             disabled={downloadingInvoice === inv.id}
-                            className="size-8 rounded-lg border border-border bg-white hover:bg-foreground/[0.02] text-foreground/60 hover:text-foreground transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:size-8 rounded-lg border border-border bg-white hover:bg-foreground/[0.02] text-foreground/60 hover:text-foreground transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Télécharger"
                             aria-busy={downloadingInvoice === inv.id}
                           >

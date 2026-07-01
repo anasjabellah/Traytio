@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { useMenuItems } from '@/features/menu-items/hooks/use-menu-items';
 import { useMenuItemForm } from '@/features/menu-items/hooks/use-menu-item-form';
 import { MenuItemsTable } from '@/features/menu-items/components/menu-items-table';
+import { MenuItemCard } from '@/features/menu-items/components/MenuItemCard';
 import { Pagination } from '@/components/ui/pagination';
 import { CreateMenuItemDialog } from '@/features/menu-items/components/create-menu-item-dialog';
 import { EditMenuItemDialog } from '@/features/menu-items/components/edit-menu-item-dialog';
@@ -329,7 +330,7 @@ export default function MenuItemsPage() {
             ) : hasNoResults ? (
               <NoResultsEmpty query={query} onClear={() => setQuery('')} />
             ) : view === 'grid' ? (
-              <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
                 <GridView items={priceFiltered} loading={isLoading} onView={handleView} onEdit={handleEdit} onDuplicate={handleDuplicate} onArchive={handleArchive} onDelete={handleDelete} />
                 {pagination.totalPages > 1 && (
                   <Pagination
@@ -344,16 +345,41 @@ export default function MenuItemsPage() {
                 )}
               </div>
             ) : (
-              <div className="rounded-2xl border border-border bg-card shadow-soft">
-                <div className="flex items-center justify-between px-6 pt-5 pb-3">
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Liste</div>
-                    <h3 className="font-display text-xl mt-0.5">Tous les articles</h3>
+              <>
+                <div className="hidden md:block rounded-2xl border border-border bg-card shadow-soft">
+                  <div className="flex items-center justify-between px-6 pt-5 pb-3">
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Liste</div>
+                      <h3 className="font-display text-xl mt-0.5">Tous les articles</h3>
+                    </div>
+                    <span className="text-xs text-muted-foreground/60">{pagination.total} résultat{pagination.total > 1 ? 's' : ''}</span>
                   </div>
-                  <span className="text-xs text-muted-foreground/60">{pagination.total} résultat{pagination.total > 1 ? 's' : ''}</span>
+                  <MenuItemsTable data={priceFiltered} loading={isLoading} onEdit={handleEdit} onDelete={handleDelete} onDuplicate={handleDuplicate} onArchive={handleArchive} pagination={pagination} handlePageChange={handlePageChange} handleLimitChange={handleLimitChange} />
                 </div>
-                <MenuItemsTable data={priceFiltered} loading={isLoading} onEdit={handleEdit} onDelete={handleDelete} onDuplicate={handleDuplicate} onArchive={handleArchive} pagination={pagination} handlePageChange={handlePageChange} handleLimitChange={handleLimitChange} />
-              </div>
+
+                <div className="md:hidden space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-display text-xl">Tous les articles</h3>
+                    <span className="text-xs text-muted-foreground/60">{pagination.total} résultat{pagination.total > 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="space-y-3">
+                    {priceFiltered.map((item, i) => (
+                      <MenuItemCard key={item.id} item={item} index={i} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} onDuplicate={handleDuplicate} onArchive={handleArchive} />
+                    ))}
+                  </div>
+                  {pagination.totalPages > 1 && (
+                    <Pagination
+                      page={pagination.page}
+                      totalPages={pagination.totalPages}
+                      total={pagination.total}
+                      limit={pagination.limit}
+                      onPageChange={handlePageChange}
+                      onLimitChange={handleLimitChange}
+                      itemLabel="article"
+                    />
+                  )}
+                </div>
+              </>
             )}
           </div>
 

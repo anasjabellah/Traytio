@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import { getInvoices, updateInvoiceStatus } from "@/features/invoices/actions/invoice-actions"
 import type { InvoiceWithCommande } from "@/features/invoices/types"
 import { Search, Download, FileText, Sparkles, RefreshCw, Receipt, Settings, Loader2 } from "lucide-react"
+import { InvoiceCard } from "@/features/invoices/components/InvoiceCard"
 import { PageGuard } from "@/components/ui/page-guard"
 import { Pagination } from "@/components/ui/pagination"
 
@@ -208,8 +209,8 @@ function InvoicesPageContent() {
           </div>
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <h1 className="font-display text-4xl lg:text-5xl text-gradient-charcoal leading-[1.05]">
-                Devis & Factures
+              <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl text-gradient-charcoal leading-[1.05]">
+                Devis &amp; Factures
               </h1>
               <p className="text-sm text-muted-foreground mt-1.5">
                 {total} document{total > 1 ? "s" : ""}
@@ -225,7 +226,7 @@ function InvoicesPageContent() {
           className="mb-6"
         >
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft flex-1 max-w-md transition-all focus-within:border-[var(--gold-deep)] focus-within:ring-1 focus-within:ring-[var(--gold-deep)]/20">
+            <div className="flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft w-full sm:flex-1 transition-all focus-within:border-[var(--gold-deep)] focus-within:ring-1 focus-within:ring-[var(--gold-deep)]/20">
               <Search size={18} strokeWidth={1.8} className="text-muted-foreground shrink-0" />
               <input
                 value={search}
@@ -234,12 +235,12 @@ function InvoicesPageContent() {
                 className="flex-1 bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground/50"
               />
             </div>
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
               {TYPE_FILTERS.map((f) => (
                 <button
                   key={f.value}
                   onClick={() => handleTypeFilter(f.value)}
-                  className={`px-4 py-2 rounded-xl text-xs font-medium transition-all border ${
+                  className={`h-11 px-4 rounded-xl text-xs font-medium transition-all border ${
                     typeFilter === f.value
                       ? "border-[var(--gold-deep)] bg-[var(--gold-soft)]/20 text-[var(--gold-deep)]"
                       : "border-border bg-card shadow-soft text-muted-foreground hover:text-foreground"
@@ -253,11 +254,11 @@ function InvoicesPageContent() {
                 className="h-11 px-3 rounded-xl border border-border bg-card shadow-soft text-muted-foreground hover:text-foreground transition-all flex items-center gap-1.5 text-xs font-medium"
               >
                 <Settings className="size-[15px]" strokeWidth={1.8} />
-                Paramètres
+                <span className="hidden sm:inline">Paramètres</span>
               </button>
               <button
                 onClick={handleRefresh}
-                className="size-11 rounded-xl border border-border bg-card shadow-soft text-muted-foreground hover:text-foreground transition-all flex items-center justify-center"
+                className="size-11 min-w-[44px] min-h-[44px] rounded-xl border border-border bg-card shadow-soft text-muted-foreground hover:text-foreground transition-all flex items-center justify-center"
               >
                 <RefreshCw className={`size-[18px] ${loading ? "animate-spin" : ""}`} strokeWidth={1.8} />
               </button>
@@ -269,128 +270,152 @@ function InvoicesPageContent() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
-          className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden"
         >
           {loading ? (
-            <SkeletonRows />
+            <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
+              <SkeletonRows />
+            </div>
           ) : invoices.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <FileText className="size-12 text-muted-foreground/20 mb-4" strokeWidth={1.2} />
-              <p className="text-sm text-muted-foreground/60 font-medium">
-                {search || typeFilter ? "Aucun document ne correspond à votre recherche" : "Aucun document trouvé"}
-              </p>
-              {(search || typeFilter) && (
-                <button
-                  onClick={() => {
-                    setSearch("")
-                    router.push(pathname)
-                  }}
-                  className="mt-4 px-4 py-2 rounded-xl text-xs font-medium border border-border bg-card shadow-soft text-muted-foreground hover:text-foreground transition-all"
-                >
-                  Réinitialiser les filtres
-                </button>
-              )}
+            <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <FileText className="size-12 text-muted-foreground/20 mb-4" strokeWidth={1.2} />
+                <p className="text-sm text-muted-foreground/60 font-medium">
+                  {search || typeFilter ? "Aucun document ne correspond à votre recherche" : "Aucun document trouvé"}
+                </p>
+                {(search || typeFilter) && (
+                  <button
+                    onClick={() => {
+                      setSearch("")
+                      router.push(pathname)
+                    }}
+                    className="mt-4 px-4 py-2 rounded-xl text-xs font-medium border border-border bg-card shadow-soft text-muted-foreground hover:text-foreground transition-all"
+                  >
+                    Réinitialiser les filtres
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border/20">
-                      <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-6 py-4">Document</th>
-                      <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Commande</th>
-                      <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Client</th>
-                      <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Date</th>
-                      <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Statut</th>
-                      <th className="text-right text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Montant</th>
-                      <th className="text-right text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Payé</th>
-                      <th className="text-center text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4 w-[120px]">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/5">
-                    {invoices.map((inv) => (
-                      <tr
-                        key={inv.id}
-                        onClick={() => handleRowClick(inv.id)}
-                        className="transition-colors hover:bg-foreground/[0.03] cursor-pointer"
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="size-8 rounded-lg bg-foreground/[0.04] flex items-center justify-center">
-                              {inv.type === "DEVIS" ? (
-                                <FileText className="size-4 text-blue-600" strokeWidth={1.8} />
-                              ) : (
-                                <Receipt className="size-4 text-[var(--gold-deep)]" strokeWidth={1.8} />
-                              )}
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium text-foreground">{inv.number}</div>
-                              <div className="text-[10px] text-foreground/50">
-                                {inv.type === "DEVIS" ? "Devis" : "Facture"}
+              <div className="hidden md:block rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border/20">
+                        <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-6 py-4">Document</th>
+                        <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Commande</th>
+                        <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Client</th>
+                        <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Date</th>
+                        <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Statut</th>
+                        <th className="text-right text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Montant</th>
+                        <th className="text-right text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Payé</th>
+                        <th className="text-center text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/5">
+                      {invoices.map((inv) => (
+                        <tr
+                          key={inv.id}
+                          onClick={() => handleRowClick(inv.id)}
+                          className="transition-colors hover:bg-foreground/[0.03] cursor-pointer"
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2.5">
+                              <div className="size-8 rounded-lg bg-foreground/[0.04] flex items-center justify-center">
+                                {inv.type === "DEVIS" ? (
+                                  <FileText className="size-4 text-blue-600" strokeWidth={1.8} />
+                                ) : (
+                                  <Receipt className="size-4 text-[var(--gold-deep)]" strokeWidth={1.8} />
+                                )}
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium text-foreground">{inv.number}</div>
+                                <div className="text-[10px] text-foreground/50">
+                                  {inv.type === "DEVIS" ? "Devis" : "Facture"}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4">
-                          <span className="text-sm text-foreground/70">{inv.commande?.number ?? "—"}</span>
-                        </td>
-                        <td className="px-4 py-4">
-                          <span className="text-sm text-foreground/70">{inv.commande?.client?.name ?? "—"}</span>
-                        </td>
-                        <td className="px-4 py-4">
-                          <span className="text-sm text-foreground/70">
-                            {new Date(inv.issueDate).toLocaleDateString("fr-FR")}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4">
-                          <select
-                            value={inv.status}
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) => handleStatusChange(inv.id, e.target.value)}
-                            disabled={updatingStatus === inv.id}
-                            className={`text-[11px] px-2 py-1 rounded-full font-semibold border-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${STATUS_COLORS[inv.status] ?? "bg-gray-100 text-gray-500"}`}
-                            aria-busy={updatingStatus === inv.id}
-                          >
-                            {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                              <option key={key} value={key}>{label}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-4 py-4 text-right">
-                          <span className="text-sm font-semibold tabular-nums text-foreground">{mad(inv.totalAmount)}</span>
-                        </td>
-                        <td className="px-4 py-4 text-right">
-                          <span className="text-sm tabular-nums text-emerald-600">{mad(inv.paidAmount)}</span>
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center justify-center gap-1">
-                            <button
-                              onClick={(e) => handleDownload(e, inv)}
-                              disabled={downloading === inv.id}
-                              className="size-8 rounded-lg border border-border bg-white hover:bg-foreground/[0.02] text-foreground/60 hover:text-foreground transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                              title="Télécharger"
-                              aria-busy={downloading === inv.id}
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className="text-sm text-foreground/70">{inv.commande?.number ?? "—"}</span>
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className="text-sm text-foreground/70">{inv.commande?.client?.name ?? "—"}</span>
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className="text-sm text-foreground/70">
+                              {new Date(inv.issueDate).toLocaleDateString("fr-FR")}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4">
+                            <select
+                              value={inv.status}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => handleStatusChange(inv.id, e.target.value)}
+                              disabled={updatingStatus === inv.id}
+                              className={`text-[11px] min-h-[44px] md:min-h-0 px-2 py-1 rounded-full font-semibold border-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${STATUS_COLORS[inv.status] ?? "bg-gray-100 text-gray-500"}`}
+                              aria-busy={updatingStatus === inv.id}
                             >
-                              {downloading === inv.id ? <Loader2 className="size-3.5 animate-spin" strokeWidth={1.8} /> : <Download className="size-3.5" strokeWidth={1.8} />}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                              {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                                <option key={key} value={key}>{label}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-4 py-4 text-right">
+                            <span className="text-sm font-semibold tabular-nums text-foreground">{mad(inv.totalAmount)}</span>
+                          </td>
+                          <td className="px-4 py-4 text-right">
+                            <span className="text-sm tabular-nums text-emerald-600">{mad(inv.paidAmount)}</span>
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={(e) => handleDownload(e, inv)}
+                                disabled={downloading === inv.id}
+                                className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:size-8 rounded-lg border border-border bg-white hover:bg-foreground/[0.02] text-foreground/60 hover:text-foreground transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Télécharger"
+                                aria-busy={downloading === inv.id}
+                              >
+                                {downloading === inv.id ? <Loader2 className="size-3.5 animate-spin" strokeWidth={1.8} /> : <Download className="size-3.5" strokeWidth={1.8} />}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  total={total}
+                  limit={limit}
+                  onPageChange={handlePageChange}
+                  onLimitChange={handleLimitChange}
+                  itemLabel="document"
+                  loading={loading}
+                />
               </div>
 
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                total={total}
-                limit={limit}
-                onPageChange={handlePageChange}
-                onLimitChange={handleLimitChange}
-                itemLabel="document"
-                loading={loading}
-              />
+              <div className="md:hidden space-y-3">
+                <div className="grid gap-3">
+                  {invoices.map((inv, index) => (
+                    <InvoiceCard key={inv.id} invoice={inv} index={index} onView={handleRowClick} onDownload={handleDownload} downloading={downloading} />
+                  ))}
+                </div>
+
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  total={total}
+                  limit={limit}
+                  onPageChange={handlePageChange}
+                  onLimitChange={handleLimitChange}
+                  itemLabel="document"
+                  loading={loading}
+                />
+              </div>
             </>
           )}
         </motion.div>

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { deleteCommande } from '@/features/commandes/actions/delete-commande';
+import { useInvalidateQueries } from '@/lib/invalidate-queries';
 import type { Commande } from '@/features/commandes/types';
 
 interface DeleteCommandeDialogProps {
@@ -16,6 +17,7 @@ interface DeleteCommandeDialogProps {
 export function DeleteCommandeDialog({ commande, open, onOpenChange, onSuccess }: DeleteCommandeDialogProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const invalidate = useInvalidateQueries();
 
   const handleDelete = async () => {
     setLoading(true);
@@ -23,6 +25,7 @@ export function DeleteCommandeDialog({ commande, open, onOpenChange, onSuccess }
     try {
       const resp = await deleteCommande(commande.id);
       if (resp.success) {
+        invalidate([["dashboard"]]);
         onSuccess();
         onOpenChange(false);
       } else {

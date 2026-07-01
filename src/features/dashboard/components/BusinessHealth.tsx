@@ -24,7 +24,7 @@ export const BusinessHealth = memo(function BusinessHealth({ health }: { health:
         <div className="text-xs uppercase tracking-wider text-muted-foreground">Analytics</div>
         <h3 className="font-display text-2xl mt-1">Sant&eacute; de l'activit&eacute;</h3>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {items.map((h, i) => (
           <motion.div key={h.label}
             initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04 }}

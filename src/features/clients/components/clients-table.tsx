@@ -93,7 +93,7 @@ export function ClientsTable({ data, loading, onView, onEdit, onDelete }: Client
   const rowModel = table.getRowModel();
 
   return (
-    <Table className="w-full table-fixed">
+    <Table className="w-full min-w-[900px] table-fixed">
       <TableHeader>
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id} className="border-b border-border/20 bg-muted/20">

@@ -114,20 +114,20 @@ export const menuItemsColumns = (
     cell: ({ row }) => {
       const item = row.original;
       return (
-        <div className="flex items-center justify-end gap-0.5">
-          <button className="grid h-7 w-7 place-items-center rounded-md bg-white text-gray-900 transition hover:bg-black hover:text-white" title="Voir" onClick={() => { window.location.href = `/dashboard/menu-items/${item.id}`; }}>
+        <div className="flex items-center justify-end gap-0.5 whitespace-nowrap">
+          <button className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 grid h-7 w-7 place-items-center rounded-md bg-white text-gray-900 transition hover:bg-black hover:text-white" title="Voir" onClick={() => { window.location.href = `/dashboard/menu-items/${item.id}`; }}>
             <Eye className="h-3.5 w-3.5" />
           </button>
-          <button className="grid h-7 w-7 place-items-center rounded-md bg-white text-gray-900 transition hover:bg-black hover:text-white" title="Modifier" onClick={() => onEdit(item)}>
+          <button className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 grid h-7 w-7 place-items-center rounded-md bg-white text-gray-900 transition hover:bg-black hover:text-white" title="Modifier" onClick={() => onEdit(item)}>
             <Pencil className="h-3.5 w-3.5" />
           </button>
-          <button className="grid h-7 w-7 place-items-center rounded-md bg-white text-gray-900 transition hover:bg-black hover:text-white" title="Dupliquer" onClick={() => onDuplicate(item)}>
+          <button className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 grid h-7 w-7 place-items-center rounded-md bg-white text-gray-900 transition hover:bg-black hover:text-white" title="Dupliquer" onClick={() => onDuplicate(item)}>
             <Copy className="h-3.5 w-3.5" />
           </button>
-          <button className="grid h-7 w-7 place-items-center rounded-md bg-white text-gray-900 transition hover:bg-black hover:text-white" title="Archiver" onClick={() => onArchive(item)}>
+          <button className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 grid h-7 w-7 place-items-center rounded-md bg-white text-gray-900 transition hover:bg-black hover:text-white" title="Archiver" onClick={() => onArchive(item)}>
             <Archive className="h-3.5 w-3.5" />
           </button>
-          <button className="grid h-7 w-7 place-items-center rounded-md bg-white text-gray-900 transition hover:bg-red-600 hover:text-white" title="Supprimer" onClick={() => onDelete(item)}>
+          <button className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 grid h-7 w-7 place-items-center rounded-md bg-white text-gray-900 transition hover:bg-red-600 hover:text-white" title="Supprimer" onClick={() => onDelete(item)}>
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>

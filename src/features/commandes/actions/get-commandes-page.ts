@@ -92,7 +92,7 @@ export async function getCommandesPage(params: GetCommandesParams): Promise<Acti
       event: { select: { name: true, status: true } },
     } satisfies Prisma.CommandeSelect;
 
-    const [total, commandes, statsRows] = await Promise.all([
+    const [total, commandes, currentGroups, prevGroups, currentUpcoming, prevUpcoming, sparklineRows] = await Promise.all([
       prisma.commande.count({ where }),
       prisma.commande.findMany({
         where,
@@ -101,41 +101,67 @@ export async function getCommandesPage(params: GetCommandesParams): Promise<Acti
         skip,
         take: limit,
       }),
+      // Current month stats: groupBy status (aggregated at DB level)
+      prisma.commande.groupBy({
+        by: ['status'],
+        where: { organizationId, createdAt: { gte: monthStart } },
+        _count: true,
+        _sum: { totalAmount: true, remainingAmount: true },
+      }),
+      // Previous month stats: groupBy status
+      prisma.commande.groupBy({
+        by: ['status'],
+        where: { organizationId, createdAt: { gte: prevMonthStart, lt: monthStart } },
+        _count: true,
+        _sum: { totalAmount: true, remainingAmount: true },
+      }),
+      // Current month upcoming count (eventDate filter, not groupable)
+      prisma.commande.count({
+        where: { organizationId, createdAt: { gte: monthStart }, eventDate: { gt: now }, status: { not: 'CANCELLED' } },
+      }),
+      // Previous month upcoming count
+      prisma.commande.count({
+        where: { organizationId, createdAt: { gte: prevMonthStart, lt: monthStart }, eventDate: { gt: now }, status: { not: 'CANCELLED' } },
+      }),
+      // Sparkline data: only current month, minimal fields
       prisma.commande.findMany({
-        where: { organizationId, createdAt: { gte: prevMonthStart } },
-        select: { status: true, totalAmount: true, remainingAmount: true, eventDate: true, createdAt: true },
+        where: { organizationId, createdAt: { gte: monthStart } },
+        select: { totalAmount: true, createdAt: true },
       }),
     ]);
 
-    // ── Stats ──
-    const currentRows = statsRows.filter((r) => r.createdAt >= monthStart);
-    const prevRows = statsRows.filter((r) => r.createdAt >= prevMonthStart && r.createdAt < monthStart);
+    type StatusAgg = { status: string; _count: number; _sum: { totalAmount: number | null; remainingAmount: number | null } };
 
-    const calcStats = (rows: typeof currentRows) => {
-      const total = rows.length;
-      const active = rows.filter((r) => r.status !== 'CANCELLED' && r.status !== 'DELIVERED' && r.status !== 'DRAFT').length;
-      const upcomingCount = rows.filter((r) => r.eventDate && new Date(r.eventDate) >= now && r.status !== 'CANCELLED').length;
-      const revenue = rows.reduce((s, r) => s + Number(r.totalAmount), 0);
-      const remaining = rows.reduce((s, r) => s + Number(r.remainingAmount), 0);
-      const nonDraft = rows.filter((r) => r.status !== 'DRAFT').length;
-      const converted = rows.filter((r) => r.status !== 'DRAFT' && r.status !== 'CANCELLED' && r.status !== 'QUOTED').length;
+    const calcStats = (groups: StatusAgg[], upcomingCount: number) => {
+      const total = groups.reduce((s, g) => s + g._count, 0);
+      const active = groups
+        .filter((g) => !['CANCELLED', 'DELIVERED', 'DRAFT'].includes(g.status))
+        .reduce((s, g) => s + g._count, 0);
+      const revenue = groups
+        .filter((g) => g.status !== 'CANCELLED')
+        .reduce((s, g) => s + Number(g._sum.totalAmount || 0), 0);
+      const remaining = groups.reduce((s, g) => s + Number(g._sum.remainingAmount || 0), 0);
+      const nonDraft = groups
+        .filter((g) => g.status !== 'DRAFT')
+        .reduce((s, g) => s + g._count, 0);
+      const converted = groups
+        .filter((g) => !['DRAFT', 'CANCELLED', 'QUOTED'].includes(g.status))
+        .reduce((s, g) => s + g._count, 0);
       const conversionRate = nonDraft > 0 ? Math.round((converted / nonDraft) * 100) : 0;
       return { total, active, upcomingCount, revenue, remaining, conversionRate };
     };
 
-    const buildSparkline = (rows: typeof currentRows): number[] => {
+    const buildSparkline = (): number[] => {
       const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
       const buckets = new Array(days).fill(0);
-      for (const r of rows) {
+      for (const r of sparklineRows) {
         const d = new Date(r.createdAt).getDate();
         buckets[d - 1] += Number(r.totalAmount);
       }
       return buckets;
     };
 
-    // ── Map commandes ──
     const result: Commande[] = commandes.map(serializeCommande);
-
     const totalPages = Math.ceil(total / limit);
 
     return {
@@ -147,9 +173,9 @@ export async function getCommandesPage(params: GetCommandesParams): Promise<Acti
         limit,
         totalPages,
         stats: {
-          currentMonth: calcStats(currentRows),
-          previousMonth: calcStats(prevRows),
-          sparklines: { revenue: buildSparkline(currentRows), total: [] },
+          currentMonth: calcStats(currentGroups as unknown as StatusAgg[], currentUpcoming),
+          previousMonth: calcStats(prevGroups as unknown as StatusAgg[], prevUpcoming),
+          sparklines: { revenue: buildSparkline(), total: [] },
         },
       },
     };

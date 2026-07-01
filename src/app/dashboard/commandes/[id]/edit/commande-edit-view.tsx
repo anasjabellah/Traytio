@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useInvalidateQueries } from "@/lib/invalidate-queries";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, StickyNote } from "lucide-react";
 import { NewClientPanel } from "@/features/commandes/components/new-client-panel";
@@ -24,6 +25,7 @@ import type { CommandeWithDetails } from "@/features/commandes/types";
 
 export default function CommandeEditView({ commande }: { commande: CommandeWithDetails }) {
   const router = useRouter();
+  const invalidate = useInvalidateQueries();
   const form = useEditCommandeForm(commande);
   const { state, derived, handlers, dateAvailable, packs, menuItems, clients, isClientsLoading, showEventForm, isSubmitting, handleSubmit } = form;
   const { client, showClientPanel, setShowClientPanel, eventName, setEventName, eventStatus, setEventStatus, eventType, setEventType, eventDate, setEventDate, startTime, setStartTime, endTime, setEndTime, location, setLocation, guests, setGuests, budget, setBudget, contactPerson, setContactPerson, contactPhone, setContactPhone, eventNotes, setEventNotes, selectedPack, setSelectedPack, selected, setSelected, openCats, setOpenCats, transport, setTransport, delivery, setDelivery, equipment, setEquipment, extraService, setExtraService, discountType, setDiscountType, discountValue, setDiscountValue, acompteAmount, setAcompteAmount, attachments, setAttachments, internalNotes, setInternalNotes, clientNotes, setClientNotes, tasks, setTasks } = state;
@@ -37,6 +39,7 @@ export default function CommandeEditView({ commande }: { commande: CommandeWithD
       } else {
         toast.success("Commande mise à jour avec succès");
       }
+      invalidate([["dashboard"]]);
       router.push(`/dashboard/commandes/${commande.id}`);
     } else {
       toast.error(result.error ?? "Erreur lors de la mise à jour de la commande");

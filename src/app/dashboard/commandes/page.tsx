@@ -50,12 +50,20 @@ export default function CommandesPage() {
   const [showEventTypeFilters, setShowEventTypeFilters] = useState(false);
   const [eventTypeFilter, setEventTypeFilter] = useState<string | null>(null);
   const [selectedStatuses, setSelectedStatuses] = useState<Set<string>>(new Set());
-  const [viewMode, setViewMode] = useState<ViewMode>(() =>
-    typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches ? 'grid' : 'table'
-  );
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('commandes-view');
+    if (saved === 'table' || saved === 'grid' || saved === 'calendar') {
+      setViewMode(saved);
+    } else if (window.matchMedia('(max-width: 1023px)').matches) {
+      setViewMode('grid');
+    }
+  }, []);
 
   const handleViewChange = useCallback((mode: ViewMode) => {
     setViewMode(mode);
+    localStorage.setItem('commandes-view', mode);
   }, []);
 
   const searchMounted = useRef(false);
@@ -265,11 +273,11 @@ export default function CommandesPage() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.14, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
-          className="mt-8 mb-4 space-y-3"
+          className="mt-8 mb-6 space-y-3"
         >
           {/* Search row */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft flex-1 w-full sm:max-w-md transition-all focus-within:border-[var(--gold-deep)] focus-within:ring-1 focus-within:ring-[var(--gold-deep)]/20">
+            <div className="flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft w-full sm:flex-1 transition-all focus-within:border-[var(--gold-deep)] focus-within:ring-1 focus-within:ring-[var(--gold-deep)]/20">
               <Search size={18} strokeWidth={1.8} className="text-muted-foreground shrink-0" />
               <input
                 value={localSearch}
@@ -284,38 +292,41 @@ export default function CommandesPage() {
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
-              <button
-                onClick={() => setShowEventTypeFilters(prev => !prev)}
-                className={`h-11 px-4 rounded-xl border text-sm font-medium transition-all flex items-center gap-2 ${
-                  showEventTypeFilters || activeFilterCount > 0
-                    ? 'border-[var(--gold-deep)] bg-[var(--gold-soft)]/10 text-[var(--gold-deep)]'
-                    : 'border-border bg-card shadow-soft text-muted-foreground hover:text-foreground hover:bg-foreground/5'
-                }`}
-              >
-                <SlidersHorizontal className="size-[18px]" strokeWidth={1.8} />
-                <span className="hidden sm:inline">Filtres</span>
-                {activeFilterCount > 0 && (
-                  <span className="size-5 rounded-full bg-[var(--gold-deep)] text-white text-[10px] font-bold flex items-center justify-center">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:ml-auto w-full sm:w-auto">
+              <div className="sm:order-last inline-flex">
+                <ViewSwitcher value={viewMode} onChange={handleViewChange} />
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  onClick={() => setShowEventTypeFilters(prev => !prev)}
+                  className={`flex-1 sm:flex-none h-11 px-4 rounded-xl border text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                    showEventTypeFilters || activeFilterCount > 0
+                      ? 'border-[var(--gold-deep)] bg-[var(--gold-soft)]/10 text-[var(--gold-deep)]'
+                      : 'border-border bg-card shadow-soft text-muted-foreground hover:text-foreground hover:bg-foreground/5'
+                  }`}
+                >
+                  <SlidersHorizontal className="size-[18px]" strokeWidth={1.8} />
+                  <span className="hidden sm:inline">Filtres</span>
+                  {activeFilterCount > 0 && (
+                    <span className="size-5 rounded-full bg-[var(--gold-deep)] text-white text-[10px] font-bold flex items-center justify-center">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
 
-              <button
-                onClick={refresh}
-                className="size-11 rounded-xl border border-border bg-card shadow-soft text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-all flex items-center justify-center"
-                title="Actualiser"
-              >
-                <RefreshCw className={`size-[18px] ${isLoading ? 'animate-spin' : ''}`} strokeWidth={1.8} />
-              </button>
-
-              <ViewSwitcher value={viewMode} onChange={handleViewChange} />
+                <button
+                  onClick={refresh}
+                  className="size-11 min-w-[44px] min-h-[44px] rounded-xl border border-border bg-card shadow-soft text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-all flex items-center justify-center"
+                  title="Actualiser"
+                >
+                  <RefreshCw className={`size-[18px] ${isLoading ? 'animate-spin' : ''}`} strokeWidth={1.8} />
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Status filter chips */}
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedStatuses(new Set())}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
@@ -351,7 +362,7 @@ export default function CommandesPage() {
                 transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] as const }}
                 className="overflow-hidden"
               >
-                <div className="flex flex-wrap gap-1.5 pt-1">
+                <div className="flex flex-wrap gap-2 pt-1">
                   {EVENT_TYPE_CHIPS.map(key => (
                     <button
                       key={key}

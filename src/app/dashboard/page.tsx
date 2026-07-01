@@ -125,8 +125,8 @@ function DashboardContent({ data }: { data: DashboardData }) {
   ], [data, eventsTotal, eventsDelta, clientsDelta, paymentsDelta]);
 
   return (
-    <div className="mt-8 grid grid-cols-12 gap-6">
-      <div className="col-span-12 xl:col-span-9 space-y-6">
+      <div className="mt-8 grid grid-cols-12 gap-6">
+        <div className="col-span-12 lg:col-span-9 space-y-6">
         <KpiGrid kpis={KPIS} />
         <RevenueChart
           weekData={data.weekAnalytics.weekData}

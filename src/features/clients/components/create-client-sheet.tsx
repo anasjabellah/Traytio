@@ -35,7 +35,7 @@ export function CreateClientSheet({ open, onOpenChange, onSuccess }: CreateClien
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[400px] sm:w-[540px]">
+      <SheetContent side="right" className="w-full sm:w-[540px]">
         <SheetHeader>
           <SheetTitle>Créer un nouveau client</SheetTitle>
           <SheetDescription>Entrez les informations du client pour le créer dans le système.</SheetDescription>

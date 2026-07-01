@@ -49,7 +49,7 @@ export const PaymentsCard = memo(function PaymentsCard({ paid, pending, remainin
         ))}
       </div>
 
-      <Button variant="outline" className="mt-6 w-full h-9 rounded-lg">
+      <Button variant="outline" className="mt-6 w-full min-h-[44px] md:h-9 rounded-lg">
         Relancer les paiements <ArrowUpRight className="size-3.5" />
       </Button>
     </div>

@@ -25,6 +25,7 @@ import { cancelInvitation } from "@/features/team/actions/cancel-invitation"
 import { toast } from "sonner"
 import type { OrgRole } from "@prisma/client"
 import type { TeamMember } from "@/features/team/types"
+import { TeamMemberCard } from "@/features/team/components/TeamMemberCard"
 
 const ROLE_OPTIONS: { value: OrgRole; label: string }[] = [
   { value: "ADMIN", label: "Administrateur" },
@@ -178,26 +179,26 @@ export default function TeamSettingsPage() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={refresh}
-                className="size-11 rounded-xl border border-border bg-background/60 backdrop-blur text-muted-foreground hover:text-foreground transition-all flex items-center justify-center"
-                title="Actualiser"
-              >
-                <RefreshCw className={`size-[18px] ${isLoading ? "animate-spin" : ""}`} strokeWidth={1.8} />
-              </button>
               {can("team", "invite") && (
                 <Button
                   onClick={() => setInviteOpen(true)}
-                  className="h-11 rounded-lg bg-gradient-charcoal text-white shadow-lift hover:opacity-95 gap-2 px-4"
+                  className="h-11 min-h-[44px] rounded-lg bg-gradient-charcoal text-white shadow-lift hover:opacity-95 gap-2 px-4"
                 >
                   <UserPlus className="size-4" /> Inviter un membre
                 </Button>
               )}
+              <button
+                onClick={refresh}
+                className="size-11 min-w-[44px] min-h-[44px] rounded-xl border border-border bg-background/60 backdrop-blur text-muted-foreground hover:text-foreground transition-all flex items-center justify-center"
+                title="Actualiser"
+              >
+                <RefreshCw className={`size-[18px] ${isLoading ? "animate-spin" : ""}`} strokeWidth={1.8} />
+              </button>
             </div>
           </div>
 
           {/* KPI Cards */}
-          <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
             {TEAM_KPI_DEFS.map((def, i) => (
               <KpiCard
                 key={def.key}
@@ -215,7 +216,7 @@ export default function TeamSettingsPage() {
           {/* Toolbar */}
           <div className="mt-8 rounded-2xl border border-border/60 bg-card/80 p-3 shadow-soft backdrop-blur">
             <div className="flex flex-wrap items-center gap-3">
-              <div className="relative flex-1 min-w-[220px]">
+              <div className="relative w-full min-w-0 sm:flex-1 sm:min-w-[220px]">
                 <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={query}
@@ -227,7 +228,7 @@ export default function TeamSettingsPage() {
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="h-11 px-3 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--gold-deep)]/20"
+                className="flex-1 sm:flex-none min-w-0 h-11 px-3 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--gold-deep)]/20"
               >
                 <option value="">Tous les rôles</option>
                 <option value="OWNER">Propriétaire</option>
@@ -274,52 +275,83 @@ export default function TeamSettingsPage() {
               ) : hasNoResults ? (
                 <NoResultsEmpty query={query}                 onClear={() => { setQuery(""); setRoleFilter(""); }} />
               ) : (
-                <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
-                  <div className="flex items-center justify-between px-6 pt-5 pb-3">
-                    <div>
-                      <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Effectif</div>
-                      <h3 className="font-display text-xl mt-0.5">Tous les membres</h3>
+                <>
+                  <div className="hidden md:block rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
+                    <div className="flex items-center justify-between px-6 pt-5 pb-3">
+                      <div>
+                        <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Effectif</div>
+                        <h3 className="font-display text-xl mt-0.5">Tous les membres</h3>
+                      </div>
+                      <span className="text-xs text-muted-foreground/60">{filteredMembers.length} membre{filteredMembers.length > 1 ? 's' : ''}</span>
                     </div>
-                    <span className="text-xs text-muted-foreground/60">{filteredMembers.length} membre{filteredMembers.length > 1 ? 's' : ''}</span>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-y border-border/30">
+                            <th className="text-left px-6 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Membre</th>
+                            <th className="text-left px-4 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Rôle</th>
+                            <th className="text-left px-4 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Statut</th>
+                            <th className="text-left px-4 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Arrivée</th>
+                            <th className="w-[180px]" />
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/10">
+                          {filteredMembers.map((member, idx) => (
+                            <TeamRow
+                              key={member.id}
+                              member={member}
+                              idx={idx}
+                              currentRole={currentRole}
+                              changingRole={changingRole}
+                              canManage={canManage}
+                              can={can}
+                              onRoleChange={handleChangeRole}
+                              onRemove={(m) => setConfirmDialog({
+                                type: "remove",
+                                memberId: m.id,
+                                label: `${m.user.firstName ?? ""} ${m.user.lastName ?? ""}`.trim() || m.user.email,
+                              })}
+                              onTransfer={(m) => setConfirmDialog({
+                                type: "transfer",
+                                memberId: m.id,
+                                label: `${m.user.firstName ?? ""} ${m.user.lastName ?? ""}`.trim() || m.user.email,
+                              })}
+                            />
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-y border-border/30">
-                          <th className="text-left px-6 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Membre</th>
-                          <th className="text-left px-4 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Rôle</th>
-                          <th className="text-left px-4 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Statut</th>
-                          <th className="text-left px-4 py-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground/50 font-semibold">Arrivée</th>
-                          <th className="w-[180px]" />
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border/10">
-                        {filteredMembers.map((member, idx) => (
-                          <TeamRow
-                            key={member.id}
-                            member={member}
-                            idx={idx}
-                            currentRole={currentRole}
-                            changingRole={changingRole}
-                            canManage={canManage}
-                            can={can}
-                            onRoleChange={handleChangeRole}
-                            onRemove={(m) => setConfirmDialog({
-                              type: "remove",
-                              memberId: m.id,
-                              label: `${m.user.firstName ?? ""} ${m.user.lastName ?? ""}`.trim() || m.user.email,
-                            })}
-                            onTransfer={(m) => setConfirmDialog({
-                              type: "transfer",
-                              memberId: m.id,
-                              label: `${m.user.firstName ?? ""} ${m.user.lastName ?? ""}`.trim() || m.user.email,
-                            })}
-                          />
-                        ))}
-                      </tbody>
-                    </table>
+
+                  <div className="md:hidden space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-display text-xl">Tous les membres</h3>
+                      <span className="text-xs text-muted-foreground/60">{filteredMembers.length} membre{filteredMembers.length > 1 ? 's' : ''}</span>
+                    </div>
+                    {filteredMembers.map((member, idx) => (
+                      <TeamMemberCard
+                        key={member.id}
+                        member={member}
+                        idx={idx}
+                        currentRole={currentRole}
+                        changingRole={changingRole}
+                        canManage={canManage}
+                        can={can}
+                        onRoleChange={handleChangeRole}
+                        onRemove={(m) => setConfirmDialog({
+                          type: "remove",
+                          memberId: m.id,
+                          label: `${m.user.firstName ?? ""} ${m.user.lastName ?? ""}`.trim() || m.user.email,
+                        })}
+                        onTransfer={(m) => setConfirmDialog({
+                          type: "transfer",
+                          memberId: m.id,
+                          label: `${m.user.firstName ?? ""} ${m.user.lastName ?? ""}`.trim() || m.user.email,
+                        })}
+                      />
+                    ))}
                   </div>
-                </div>
+                </>
               )}
             </div>
 
@@ -456,7 +488,7 @@ export default function TeamSettingsPage() {
                 <h2 className="font-display text-lg font-semibold">Inviter un membre</h2>
                 <button
                   onClick={() => setInviteOpen(false)}
-                  className="size-8 rounded-lg hover:bg-muted/50 flex items-center justify-center text-muted-foreground/50 hover:text-foreground transition-all"
+                  className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:size-8 rounded-lg hover:bg-muted/50 flex items-center justify-center text-muted-foreground/50 hover:text-foreground transition-all"
                 >
                   <X className="size-4" strokeWidth={1.8} />
                 </button>
@@ -657,7 +689,7 @@ function TeamRow({
           {!isOwner && currentRole === "OWNER" && member.role === "ADMIN" && (
             <button
               onClick={() => onTransfer(member)}
-              className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-border bg-white text-xs font-medium text-muted-foreground/60 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 transition-all"
+              className="inline-flex items-center gap-1 min-h-[44px] md:min-h-0 md:h-8 px-2.5 rounded-lg border border-border bg-white text-xs font-medium text-muted-foreground/60 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 transition-all"
               title="Transférer la propriété"
             >
               <Crown className="size-3" strokeWidth={1.8} />
@@ -667,7 +699,7 @@ function TeamRow({
           {can("team", "remove") && canManage(member.role) && !isOwner && (
             <button
               onClick={() => onRemove(member)}
-              className="size-8 rounded-lg border border-border bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-muted-foreground/50 transition-all flex items-center justify-center"
+              className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:size-8 rounded-lg border border-border bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-muted-foreground/50 transition-all flex items-center justify-center"
               title="Supprimer"
             >
               <Trash2 className="size-3.5" strokeWidth={1.8} />
@@ -684,7 +716,7 @@ function TeamRow({
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-      className="grid place-items-center rounded-3xl border border-dashed border-border bg-card/60 p-16 text-center"
+      className="grid place-items-center rounded-3xl border border-dashed border-border bg-card/60 py-12 px-6 sm:p-16 text-center"
     >
       <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[var(--gold-soft)]">
         <Users className="h-7 w-7 text-[var(--gold-deep)]" />

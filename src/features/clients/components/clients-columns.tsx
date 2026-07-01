@@ -31,10 +31,10 @@ function ActivityCell({ lastOrderAt, createdAt }: { lastOrderAt: Date | null | u
   const now = new Date();
   const diff = now.getTime() - new Date(date).getTime();
   const days = Math.floor(diff / 86400000);
-  if (days === 0) return <span className="text-sm font-medium text-emerald-600">Aujourd&apos;hui</span>;
-  if (days === 1) return <span className="text-sm text-muted-foreground/70">Hier</span>;
-  if (days < 7) return <span className="text-sm text-muted-foreground/70">Il y a {days} jours</span>;
-  return <span className="text-sm text-muted-foreground/50">{new Date(date).toLocaleDateString('fr-FR')}</span>;
+  if (days === 0) return <span className="text-sm font-medium text-emerald-600 whitespace-nowrap">Aujourd&apos;hui</span>;
+  if (days === 1) return <span className="text-sm text-muted-foreground/70 whitespace-nowrap">Hier</span>;
+  if (days < 7) return <span className="text-sm text-muted-foreground/70 whitespace-nowrap">Il y a {days} jours</span>;
+  return <span className="text-sm text-muted-foreground/50 whitespace-nowrap">{new Date(date).toLocaleDateString('fr-FR')}</span>;
 }
 
 export const clientsColumns = (
@@ -132,9 +132,9 @@ export const clientsColumns = (
     size: 90,
     cell: ({ row }) => {
       const c = row.original;
-      const b = 'size-7 rounded-md hover:bg-muted/50 transition-all flex items-center justify-center text-muted-foreground/40 hover:text-foreground';
+      const b = 'min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:size-7 rounded-md hover:bg-muted/50 transition-all flex items-center justify-center text-muted-foreground/40 hover:text-foreground';
       return (
-        <div className="flex items-center justify-center gap-3" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-center gap-3 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
           <button className={b} title="Voir" onClick={() => onView(c)}>
             <Eye className="size-3.5" strokeWidth={1.8} />
           </button>

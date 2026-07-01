@@ -27,7 +27,7 @@ export function ViewSwitcher({ value, onChange }: ViewSwitcherProps) {
             key={v.value}
             onClick={() => onChange(v.value)}
             className={`
-              flex items-center justify-center gap-2 px-3.5 py-3 text-xs font-medium rounded-lg transition-all duration-200
+              flex items-center justify-center gap-2 px-3.5 py-2 min-h-[44px] min-w-[44px] text-xs font-medium rounded-lg transition-all duration-200
               ${active
                 ? 'bg-foreground text-background shadow-sm'
                 : 'text-muted-foreground/70 hover:text-foreground hover:bg-muted/40'

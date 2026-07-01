@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useInvalidateQueries } from "@/lib/invalidate-queries";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, StickyNote, Plus } from "lucide-react";
 import { useCommandeForm } from "@/features/commandes/hooks/use-commande-form";
@@ -24,6 +25,7 @@ import { ActionBar } from "@/features/commandes/components/action-bar";
 
 function NouvelleCommandePage() {
   const router = useRouter();
+  const invalidate = useInvalidateQueries();
   const form = useCommandeForm();
   const { state, derived, handlers, dateAvailable, packs, menuItems, clients, isClientsLoading, selectedEvent, showEventForm, clientEvents, clientEventsLoading, isSubmitting, handleSubmit } = form;
   const { client, showClientPanel, setShowClientPanel, eventName, setEventName, eventStatus, setEventStatus, eventType, setEventType, eventDate, setEventDate, startTime, setStartTime, endTime, setEndTime, location, setLocation, guests, setGuests, budget, setBudget, contactPerson, setContactPerson, contactPhone, setContactPhone, eventNotes, setEventNotes, selectedPack, setSelectedPack, selected, setSelected, openCats, setOpenCats, transport, setTransport, delivery, setDelivery, equipment, setEquipment, extraService, setExtraService, discountType, setDiscountType, discountValue, setDiscountValue, acompteAmount, setAcompteAmount, attachments, setAttachments, internalNotes, setInternalNotes, clientNotes, setClientNotes, tasks, setTasks } = state;
@@ -37,6 +39,7 @@ function NouvelleCommandePage() {
       } else {
         toast.success("Commande créée avec succès");
       }
+      invalidate([["dashboard"]]);
       router.push(`/dashboard/commandes/${result.data.id}`);
     } else {
       toast.error(result.error ?? "Erreur lors de la création de la commande");

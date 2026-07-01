@@ -104,7 +104,7 @@ export const RevenueChart = memo(function RevenueChart({
       initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
       className="rounded-2xl border border-border bg-card shadow-soft p-6"
     >
-      <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Évolution du chiffre d&rsquo;affaires</div>
           <div className="mt-2 flex items-baseline gap-3">

@@ -15,7 +15,7 @@ export const menusColumns = (
     cell: ({ row }) => (
       <a
         href={`/dashboard/menus/${row.original.id}`}
-        className="font-medium hover:underline cursor-pointer"
+        className="font-medium hover:underline cursor-pointer truncate inline-block max-w-[220px] align-top"
       >
         {row.original.name}
       </a>
@@ -103,24 +103,24 @@ export const menusColumns = (
     cell: ({ row }) => {
       const menu = row.original;
       return (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 whitespace-nowrap">
           <button
             onClick={() => { window.location.href = `/dashboard/menus/${menu.id}`; }}
-            className="grid h-8 w-8 place-items-center rounded-lg bg-white text-gray-900 shadow-soft backdrop-blur transition hover:bg-black hover:text-white"
+            className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 grid h-8 w-8 place-items-center rounded-lg bg-white text-gray-900 shadow-soft backdrop-blur transition hover:bg-black hover:text-white"
             title="Voir"
           >
             <Eye className="size-3.5" />
           </button>
           <button
             onClick={() => onEdit(menu)}
-            className="grid h-8 w-8 place-items-center rounded-lg bg-white text-gray-900 shadow-soft backdrop-blur transition hover:bg-black hover:text-white"
+            className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 grid h-8 w-8 place-items-center rounded-lg bg-white text-gray-900 shadow-soft backdrop-blur transition hover:bg-black hover:text-white"
             title="Modifier"
           >
             <Pencil className="size-3.5" />
           </button>
           <button
             onClick={() => onDelete(menu)}
-            className="grid h-8 w-8 place-items-center rounded-lg bg-white text-gray-900 shadow-soft backdrop-blur transition hover:bg-red-600 hover:text-white"
+            className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 grid h-8 w-8 place-items-center rounded-lg bg-white text-gray-900 shadow-soft backdrop-blur transition hover:bg-red-600 hover:text-white"
             title="Supprimer"
           >
             <Trash2 className="size-3.5" />

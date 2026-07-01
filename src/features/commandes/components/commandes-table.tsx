@@ -92,7 +92,7 @@ export function CommandesTable({ data, loading, onView, onEdit, onDelete }: Comm
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border/20 bg-card shadow-sm">
-      <Table className="w-full min-w-[800px]">
+      <Table className="w-full min-w-[600px]">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="border-b border-border/10">

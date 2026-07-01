@@ -77,10 +77,10 @@ function ActionsCell({ event, onEdit, onDelete }: { event: Event; onEdit: (e: Ev
     ? `https://wa.me/${event.clientPhone.replace(/[^0-9]/g, '')}`
     : null;
 
-  const b = 'size-8 rounded-md hover:bg-muted/50 transition-all flex items-center justify-center text-muted-foreground/40 hover:text-foreground';
+  const b = 'min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:size-8 rounded-md hover:bg-muted/50 transition-all flex items-center justify-center text-muted-foreground/40 hover:text-foreground';
 
   return (
-    <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+    <div className="flex items-center gap-1.5 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
       <button className={b} title="Voir les détails" onClick={() => window.location.href = `/dashboard/events/${event.id}`}>
         <Eye className="h-4 w-4" strokeWidth={1.8} />
       </button>

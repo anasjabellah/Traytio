@@ -74,7 +74,7 @@ export function Pagination({
                     key={p}
                     onClick={() => onPageChange(p)}
                     disabled={loading}
-                    className={`min-w-[32px] sm:min-w-[28px] h-8 sm:h-7 rounded-lg sm:rounded-md text-xs font-medium transition-all ${
+                    className={`min-w-7 sm:min-w-[28px] h-7 sm:h-7 rounded-md sm:rounded-md text-xs font-medium transition-all ${
                       p === page
                         ? 'bg-foreground text-background shadow-sm'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'

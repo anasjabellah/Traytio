@@ -42,10 +42,10 @@ export function EventsTable({ data, loading, onEdit, onDelete, isPrivacyMode }: 
               <Skeleton className="h-3.5 w-32" />
               <Skeleton className="h-3 w-20" />
             </div>
-            <Skeleton className="h-3.5 w-20 hidden md:block" />
-            <Skeleton className="h-3.5 w-12 hidden md:block" />
-            <Skeleton className="h-3.5 w-10 hidden md:block" />
-            <Skeleton className="h-3.5 w-20 hidden md:block" />
+            <Skeleton className="h-3.5 w-20" />
+            <Skeleton className="h-3.5 w-12" />
+            <Skeleton className="h-3.5 w-10" />
+            <Skeleton className="h-3.5 w-20" />
             <Skeleton className="h-4 w-14" />
             <Skeleton className="h-4 w-14" />
             <Skeleton className="h-6 w-28" />

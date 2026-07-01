@@ -97,12 +97,12 @@ export default function ClientDetailView({ client }: { client: ClientWithStats }
           className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-10"
         >
           <div className="flex items-start gap-4">
-            <Link
-              href="/dashboard/clients"
-              className="mt-2 size-10 rounded-xl border border-border bg-card flex items-center justify-center hover:bg-foreground/[0.04] transition-colors shadow-soft shrink-0"
-            >
-              <ArrowLeft className="size-4 text-muted-foreground" />
-            </Link>
+              <Link
+                href="/dashboard/clients"
+                className="mt-2 min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:size-10 rounded-xl border border-border bg-card flex items-center justify-center hover:bg-foreground/[0.04] transition-colors shadow-soft shrink-0"
+              >
+                <ArrowLeft className="size-4 text-muted-foreground" />
+              </Link>
             <div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                 <Crown className="size-3 text-[var(--gold-deep)]" />
@@ -226,7 +226,7 @@ export default function ClientDetailView({ client }: { client: ClientWithStats }
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden"
+                className="rounded-2xl border border-border bg-card shadow-soft overflow-x-auto"
               >
                 <div className="p-6 pb-4">
                   <div className="flex items-center gap-2 mb-1">
@@ -234,7 +234,7 @@ export default function ClientDetailView({ client }: { client: ClientWithStats }
                     <h3 className="font-display text-xl">Dernières commandes</h3>
                   </div>
                 </div>
-                <div className="divide-y divide-border">
+                <div className="min-w-[500px] divide-y divide-border">
                   <div className="grid grid-cols-12 px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground bg-foreground/[0.02]">
                     <div className="col-span-4">Commande</div>
                     <div className="col-span-4 text-right">Montant</div>
@@ -267,7 +267,7 @@ export default function ClientDetailView({ client }: { client: ClientWithStats }
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden"
+                className="rounded-2xl border border-border bg-card shadow-soft overflow-x-auto"
               >
                 <div className="p-6 pb-4">
                   <div className="flex items-center gap-2 mb-1">
@@ -275,7 +275,7 @@ export default function ClientDetailView({ client }: { client: ClientWithStats }
                     <h3 className="font-display text-xl">Derniers événements</h3>
                   </div>
                 </div>
-                <div className="divide-y divide-border">
+                <div className="min-w-[500px] divide-y divide-border">
                   <div className="grid grid-cols-12 px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground bg-foreground/[0.02]">
                     <div className="col-span-5">Événement</div>
                     <div className="col-span-3">Type</div>

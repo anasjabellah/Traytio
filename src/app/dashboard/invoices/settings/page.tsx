@@ -133,19 +133,19 @@ function PdfSettingsPageContent() {
             <Sparkles className="size-3" strokeWidth={2} />
             Personnalisation
           </div>
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="font-display text-4xl lg:text-5xl text-gradient-charcoal leading-[1.05]">
+              <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl text-gradient-charcoal leading-[1.05]">
                 Paramètres PDF
               </h1>
               <p className="text-sm text-muted-foreground mt-1.5">
                 Personnalisez l&apos;apparence de vos devis et factures
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
               <button
                 onClick={() => router.push("/dashboard/invoices")}
-                className="h-10 px-4 rounded-xl border border-border bg-card shadow-soft text-sm text-muted-foreground hover:text-foreground transition-all flex items-center gap-2"
+                className="w-full sm:w-auto h-11 sm:h-10 px-4 rounded-xl border border-border bg-card shadow-soft text-sm text-muted-foreground hover:text-foreground transition-all flex items-center justify-center gap-2"
               >
                 <ArrowLeft className="size-4" strokeWidth={1.8} />
                 Retour
@@ -153,7 +153,7 @@ function PdfSettingsPageContent() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="h-10 px-5 rounded-xl bg-[var(--gold-deep)] text-white text-sm font-medium shadow-soft hover:brightness-110 transition-all flex items-center gap-2 disabled:opacity-50"
+                className="w-full sm:w-auto h-11 sm:h-10 px-5 rounded-xl bg-[var(--gold-deep)] text-white text-sm font-medium shadow-soft hover:brightness-110 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <Save className="size-4" strokeWidth={1.8} />
                 {saving ? "Enregistrement..." : "Enregistrer"}

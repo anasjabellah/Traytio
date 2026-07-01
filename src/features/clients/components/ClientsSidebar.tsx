@@ -68,7 +68,7 @@ function ActivitySection({ activities }: { activities: ActivityItem[] }) {
       ) : (
         <>
           <div
-            className="relative flex-1 overflow-y-auto scroll-smooth scrollbar-hide"
+            className="relative flex-1 min-h-0 overflow-y-auto scroll-smooth scrollbar-hide"
           >
             <div className="absolute left-[15px] top-2 bottom-2 w-px bg-border/60" />
             <div className="space-y-0">
@@ -208,7 +208,7 @@ export function ClientsSidebar({
   growthRate: number;
 }) {
   return (
-    <aside className="w-[320px] shrink-0 space-y-6">
+    <aside className="w-full xl:w-[320px] shrink-0 space-y-6">
       <div className="xl:sticky xl:top-24 space-y-6">
         <ActivitySection activities={activities} />
         <QuickStatsSection

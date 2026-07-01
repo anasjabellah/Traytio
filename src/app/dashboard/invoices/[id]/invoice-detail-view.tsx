@@ -169,7 +169,7 @@ export default function InvoiceDetailView({ invoice }: { invoice: InvoiceWithCom
                   <button
                     onClick={() => setShowStatusDropdown((v) => !v)}
                     disabled={updating}
-                    className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium transition-all border border-border hover:bg-muted/40 disabled:opacity-50 ${st.color.split(" ").slice(0, 3).join(" ")}`}
+                    className={`inline-flex items-center gap-1.5 min-h-[44px] md:min-h-0 md:h-8 px-3 rounded-lg text-xs font-medium transition-all border border-border hover:bg-muted/40 disabled:opacity-50 ${st.color.split(" ").slice(0, 3).join(" ")}`}
                   >
                     {updating
                       ? <RefreshCw className="size-3 animate-spin" strokeWidth={1.5} />
@@ -262,8 +262,8 @@ export default function InvoiceDetailView({ invoice }: { invoice: InvoiceWithCom
               {invoice.commande?.items && invoice.commande.items.length > 0 && (
                 <section>
                   <h2 className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground font-semibold mb-3">Articles</h2>
-                  <div className="bg-card border border-border rounded-xl overflow-hidden">
-                    <div className="max-h-[420px] overflow-y-auto">
+                  <div className="bg-card border border-border rounded-xl overflow-x-auto">
+                    <div className="max-h-[420px] overflow-y-auto min-w-[560px]">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-border/30 bg-muted/30 sticky top-0 z-10">
@@ -375,7 +375,7 @@ export default function InvoiceDetailView({ invoice }: { invoice: InvoiceWithCom
                     <h4 className="text-[11px] uppercase tracking-[0.06em] text-muted-foreground font-medium mb-2">Actions</h4>
                     <button
                       onClick={handleDownload}
-                      className="w-full inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-muted/40 transition-all"
+                      className="w-full inline-flex items-center justify-center gap-2 min-h-[44px] md:min-h-0 md:h-9 px-4 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-muted/40 transition-all"
                     >
                       <Download className="size-3.5" strokeWidth={1.8} />
                       Télécharger le PDF
@@ -383,7 +383,7 @@ export default function InvoiceDetailView({ invoice }: { invoice: InvoiceWithCom
                     <button
                       disabled
                       title="Bientôt disponible"
-                      className="w-full inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg border border-border text-xs font-medium text-foreground/40 cursor-not-allowed transition-all"
+                      className="w-full inline-flex items-center justify-center gap-2 min-h-[44px] md:min-h-0 md:h-9 px-4 rounded-lg border border-border text-xs font-medium text-foreground/40 cursor-not-allowed transition-all"
                     >
                       <Send className="size-3.5" strokeWidth={1.8} />
                       Envoyer par email
@@ -391,7 +391,7 @@ export default function InvoiceDetailView({ invoice }: { invoice: InvoiceWithCom
                     <button
                       disabled
                       title="Bientôt disponible"
-                      className="w-full inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg border border-red-500/20 text-xs font-medium text-red-500/50 cursor-not-allowed transition-all"
+                      className="w-full inline-flex items-center justify-center gap-2 min-h-[44px] md:min-h-0 md:h-9 px-4 rounded-lg border border-red-500/20 text-xs font-medium text-red-500/50 cursor-not-allowed transition-all"
                     >
                       <Trash2 className="size-3.5" strokeWidth={1.8} />
                       Supprimer
@@ -420,7 +420,7 @@ function ActionButton({
 }: {
   icon: React.ReactNode; label: string; onClick?: () => void; disabled?: boolean; title?: string; variant?: "danger"; 'aria-busy'?: boolean
 }) {
-  const base = "inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium transition-all border"
+  const base = "inline-flex items-center gap-1.5 min-h-[44px] md:min-h-0 md:h-8 px-3 rounded-lg text-xs font-medium transition-all border"
   if (disabled) {
     return (
       <button disabled title={title} className={`${base} border-border text-muted-foreground/40 cursor-not-allowed`} aria-busy={ariaBusy} aria-disabled={disabled}>

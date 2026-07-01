@@ -73,7 +73,7 @@ export default function ClientsPage() {
 
   return (
     <PrivacyModeProvider>
-    <div className="min-h-screen bg-[var(--surface-soft)] text-foreground">
+    <div className="min-h-[calc(100vh-64px)] bg-[var(--surface-soft)] text-foreground">
       <div className="pointer-events-none fixed inset-0 bg-gradient-mesh opacity-60" />
       <div className="pointer-events-none fixed inset-x-0 top-0 h-[420px] bg-radiance" />
 
@@ -100,7 +100,7 @@ export default function ClientsPage() {
         />
 
         {!isPrivacyMode && (
-        <div className="mt-8 flex gap-6">
+        <div className="mt-8 flex flex-col xl:flex-row gap-6">
           <ClientsGrid
             viewMode={viewMode}
             filteredClients={filteredClients}

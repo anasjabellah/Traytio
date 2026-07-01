@@ -94,7 +94,7 @@ const DayCell = memo(function DayCell({
       role="button"
       tabIndex={0}
       aria-label={`${day}`}
-      className={`relative aspect-square rounded-lg text-xs flex items-center justify-center cursor-pointer select-none outline-none transition-all duration-150
+      className={`relative aspect-square rounded-lg text-xs flex items-center justify-center cursor-pointer select-none outline-none transition-all duration-150 after:absolute after:-inset-1.5 after:content-['']
         ${isToday || isSelected
           ? 'bg-foreground text-background font-medium shadow-sm scale-[1.02]'
           : 'text-foreground hover:bg-foreground/[0.06] hover:ring-1 hover:ring-border/40 focus-visible:ring-2 focus-visible:ring-primary/40'
@@ -207,7 +207,7 @@ export const MiniCalendar = memo(function MiniCalendar() {
         <div className="flex items-center gap-0">
           <button
             onClick={prevMonth}
-            className="flex items-center justify-center size-9 rounded-lg hover:bg-foreground/[0.06] active:bg-foreground/[0.1] active:scale-95 text-muted-foreground hover:text-foreground transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="flex items-center justify-center size-11 md:size-9 rounded-lg hover:bg-foreground/[0.06] active:bg-foreground/[0.1] active:scale-95 text-muted-foreground hover:text-foreground transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             aria-label="Mois précédent"
           >
             <ChevronLeft className="size-4" />
@@ -219,7 +219,7 @@ export const MiniCalendar = memo(function MiniCalendar() {
 
           <button
             onClick={nextMonth}
-            className="flex items-center justify-center size-9 rounded-lg hover:bg-foreground/[0.06] active:bg-foreground/[0.1] active:scale-95 text-muted-foreground hover:text-foreground transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="flex items-center justify-center size-11 md:size-9 rounded-lg hover:bg-foreground/[0.06] active:bg-foreground/[0.1] active:scale-95 text-muted-foreground hover:text-foreground transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             aria-label="Mois suivant"
           >
             <ChevronRight className="size-4" />

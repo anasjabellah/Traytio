@@ -129,7 +129,7 @@ export function AddPaymentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex flex-col p-0 gap-0 overflow-hidden max-h-[85vh] max-w-[760px] sm:max-w-[760px] z-[60] rounded-2xl border-border shadow-lift">
+      <DialogContent className="flex flex-col p-0 gap-0 overflow-hidden max-h-[85vh] max-w-[calc(100%-2rem)] sm:max-w-[760px] z-[60] rounded-2xl border-border shadow-lift">
 
         {/* ─── HEADER ─── */}
         <div className="shrink-0 px-6 pt-6 pb-4 border-b border-border">

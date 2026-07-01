@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { useMenus } from '@/features/menus/hooks/use-menus';
 import { useMenuForm } from '@/features/menus/hooks/use-menu-form';
 import { MenusTable } from '@/features/menus/components/menus-table';
+import { MenuCard } from '@/features/menus/components/MenuCard';
 import { CreateMenuDialog } from '@/features/menus/components/create-menu-dialog';
 import { EditMenuDialog } from '@/features/menus/components/edit-menu-dialog';
 import { DeleteMenuDialog } from '@/features/menus/components/delete-menu-dialog';
@@ -258,7 +259,7 @@ export default function MenusPage() {
             ) : hasNoResults ? (
               <NoResultsEmpty query={query} onClear={() => setQuery('')} />
             ) : view === 'grid' ? (
-              <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
                 <GridView menus={menus} loading={isLoading} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} />
                 {pagination.totalPages > 1 && (
                   <Pagination
@@ -273,16 +274,41 @@ export default function MenusPage() {
                 )}
               </div>
             ) : (
-              <div className="rounded-2xl border border-border bg-card shadow-soft">
-                <div className="flex items-center justify-between px-6 pt-5 pb-3">
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Liste</div>
-                    <h3 className="font-display text-xl mt-0.5">Tous les menus</h3>
+              <>
+                <div className="hidden md:block rounded-2xl border border-border bg-card shadow-soft">
+                  <div className="flex items-center justify-between px-6 pt-5 pb-3">
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Liste</div>
+                      <h3 className="font-display text-xl mt-0.5">Tous les menus</h3>
+                    </div>
+                    <span className="text-xs text-muted-foreground/60">{pagination.total} résultat{pagination.total > 1 ? 's' : ''}</span>
                   </div>
-                  <span className="text-xs text-muted-foreground/60">{pagination.total} résultat{pagination.total > 1 ? 's' : ''}</span>
+                  <MenusTable data={menus} loading={isLoading} onEdit={handleEdit} onDelete={handleDelete} pagination={pagination} handlePageChange={handlePageChange} handleLimitChange={handleLimitChange} />
                 </div>
-                <MenusTable data={menus} loading={isLoading} onEdit={handleEdit} onDelete={handleDelete} pagination={pagination} handlePageChange={handlePageChange} handleLimitChange={handleLimitChange} />
-              </div>
+
+                <div className="md:hidden space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-display text-xl">Tous les menus</h3>
+                    <span className="text-xs text-muted-foreground/60">{pagination.total} résultat{pagination.total > 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="space-y-3">
+                    {menus.map((menu, i) => (
+                      <MenuCard key={menu.id} menu={menu} index={i} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} />
+                    ))}
+                  </div>
+                  {pagination.totalPages > 1 && (
+                    <Pagination
+                      page={pagination.page}
+                      totalPages={pagination.totalPages}
+                      total={pagination.total}
+                      limit={pagination.limit}
+                      onPageChange={handlePageChange}
+                      onLimitChange={handleLimitChange}
+                      itemLabel="menu"
+                    />
+                  )}
+                </div>
+              </>
             )}
           </div>
 

@@ -155,7 +155,7 @@ export const PerformanceCharts = memo(function PerformanceCharts({
               </span>
             </div>
 
-            <div className="font-display text-2xl font-semibold tabular-nums text-foreground leading-none">
+            <div className="font-display text-xl sm:text-2xl font-semibold tabular-nums text-foreground leading-none truncate">
               {c.value}
             </div>
 

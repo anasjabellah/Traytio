@@ -82,11 +82,11 @@ function ActionIcons({ cmd, onView, onEdit, onDelete }: {
 }) {
   const { can } = useRole();
   return (
-    <div className="flex items-center gap-0.5">
+    <div className="flex items-center gap-0.5 whitespace-nowrap">
       <button
         onClick={() => onView(cmd)}
         title="Voir"
-        className="p-1.5 rounded-md hover:bg-muted/30 transition-all text-muted-foreground/40 hover:text-[var(--gold-deep)]"
+        className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:p-1.5 rounded-md hover:bg-muted/30 transition-all text-muted-foreground/40 hover:text-[var(--gold-deep)]"
       >
         <Eye className="size-4 shrink-0" strokeWidth={1.8} />
       </button>
@@ -94,7 +94,7 @@ function ActionIcons({ cmd, onView, onEdit, onDelete }: {
         <button
           onClick={() => onEdit(cmd)}
           title="Modifier"
-          className="p-1.5 rounded-md hover:bg-muted/30 transition-all text-muted-foreground/40 hover:text-[var(--gold-deep)]"
+          className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:p-1.5 rounded-md hover:bg-muted/30 transition-all text-muted-foreground/40 hover:text-[var(--gold-deep)]"
         >
           <Pencil className="size-4 shrink-0" strokeWidth={1.8} />
         </button>
@@ -103,7 +103,7 @@ function ActionIcons({ cmd, onView, onEdit, onDelete }: {
         <button
           onClick={() => onView(cmd)}
           title="Devis"
-          className="p-1.5 rounded-md hover:bg-muted/30 transition-all text-muted-foreground/40 hover:text-[var(--gold-deep)]"
+          className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:p-1.5 rounded-md hover:bg-muted/30 transition-all text-muted-foreground/40 hover:text-[var(--gold-deep)]"
         >
           <FileText className="size-4 shrink-0" strokeWidth={1.8} />
         </button>
@@ -112,7 +112,7 @@ function ActionIcons({ cmd, onView, onEdit, onDelete }: {
         <button
           onClick={() => onDelete(cmd)}
           title="Supprimer"
-          className="p-1.5 rounded-md hover:bg-red-50/50 transition-all text-muted-foreground/40 hover:text-red-500"
+          className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:p-1.5 rounded-md hover:bg-red-50/50 transition-all text-muted-foreground/40 hover:text-red-500"
         >
           <Trash2 className="size-4 shrink-0" strokeWidth={1.8} />
         </button>
