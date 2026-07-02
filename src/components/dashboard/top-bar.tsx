@@ -9,9 +9,9 @@ import { useNotificationStore } from "@/stores/notification-store"
 import { useRole } from "@/hooks/use-role"
 import { RoleBadge } from "@/components/ui/role-badge"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
 import type { Module, Action } from "@/lib/permissions"
 import { cn } from "@/lib/utils"
+import { GlobalSearch } from "@/components/dashboard/GlobalSearch"
 
 type NavItem = [string, string, Module | null, Action | null]
 
@@ -107,7 +107,6 @@ export function TopBar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
   const userRef = useRef<HTMLDivElement>(null)
-  const searchInputRef = useRef<HTMLInputElement>(null)
   const pathname = usePathname()
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotificationStore()
   const { role, can } = useRole()
@@ -120,10 +119,15 @@ export function TopBar() {
   useClickOutside([userRef], () => setUserMenuOpen(false))
 
   useEffect(() => {
-    if (searchOpen && searchInputRef.current) {
-      setTimeout(() => searchInputRef.current?.focus(), 100)
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault()
+        setSearchOpen((v) => !v)
+      }
     }
-  }, [searchOpen])
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  }, [])
 
   useEffect(() => {
     startTransition(() => {
@@ -279,27 +283,27 @@ export function TopBar() {
         {/* Actions: Search + Notifications + Avatar — pushed to far right by nav's flex-1 */}
         <div className="flex items-center gap-2.5 md:gap-3 lg:gap-4 shrink-0">
           {/* Desktop search input */}
-          <div
-            className="hidden xl:flex items-center gap-2 px-3 h-9 rounded-lg border border-border bg-background/60 text-sm text-muted-foreground flex-1 min-w-0 max-w-[420px] transition-all focus-within:border-gold/50 focus-within:ring-1 focus-within:ring-gold/20"
-            tabIndex={0}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="hidden xl:flex items-center gap-2 px-3 h-9 rounded-lg border border-border bg-background/60 text-sm text-muted-foreground flex-1 min-w-0 max-w-[420px] transition-all hover:border-gold/50 hover:ring-1 hover:ring-gold/20 focus-within:border-gold/50 focus-within:ring-1 focus-within:ring-gold/20 cursor-pointer"
             role="search"
             aria-label="Rechercher"
           >
             <Search className="size-4 shrink-0" />
             <span className="truncate whitespace-nowrap">Rechercher...</span>
             <kbd className="ml-auto text-[10px] font-sans px-1.5 py-0.5 rounded border bg-muted/60 shrink-0">⌘K</kbd>
-          </div>
+          </button>
 
           {/* Tablet search input */}
-          <div
-            className="hidden md:flex xl:hidden items-center gap-2 px-3 h-9 rounded-lg border border-border bg-background/60 text-sm text-muted-foreground flex-1 min-w-0 max-w-[220px] lg:max-w-[320px] transition-all focus-within:border-gold/50 focus-within:ring-1 focus-within:ring-gold/20"
-            tabIndex={0}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="hidden md:flex xl:hidden items-center gap-2 px-3 h-9 rounded-lg border border-border bg-background/60 text-sm text-muted-foreground flex-1 min-w-0 max-w-[220px] lg:max-w-[320px] transition-all hover:border-gold/50 hover:ring-1 hover:ring-gold/20 focus-within:border-gold/50 focus-within:ring-1 focus-within:ring-gold/20 cursor-pointer"
             role="search"
             aria-label="Rechercher"
           >
             <Search className="size-4 shrink-0" />
             <span className="truncate whitespace-nowrap">Rechercher...</span>
-          </div>
+          </button>
 
           {/* Mobile search trigger */}
           <button
@@ -454,27 +458,8 @@ export function TopBar() {
         </div>
       </div>
 
-      {/* Mobile search dialog */}
-      <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
-        <DialogContent showCloseButton={false} className="sm:max-w-[480px] top-[12%] translate-y-0 p-0 gap-0">
-          <div className="flex items-center gap-3 px-4 h-14 border-b border-border/10">
-            <Search className="size-4 text-muted-foreground shrink-0" />
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Rechercher..."
-              className="flex-1 bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground/60"
-            />
-            <button
-              onClick={() => setSearchOpen(false)}
-              className="size-8 rounded-lg hover:bg-muted/30 flex items-center justify-center"
-              aria-label="Fermer"
-            >
-              <X className="size-4 text-muted-foreground" />
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Global Search */}
+      <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* Mobile drawer */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
