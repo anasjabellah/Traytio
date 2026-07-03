@@ -7,7 +7,7 @@ import { getCommandeClients } from "@/features/commandes/actions/get-commande-cl
 import { getCommandeMenus } from "@/features/commandes/actions/get-commande-menus";
 import { getCommandeAllMenuItems } from "@/features/commandes/actions/get-commande-all-menu-items";
 import { getCommandeClientEvents, type ClientEventSummary } from "@/features/commandes/actions/get-commande-client-events";
-import { generateCommandeNumber, createCommande } from "@/features/commandes/actions/create-commande";
+import { createCommande } from "@/features/commandes/actions/create-commande";
 import { createCommandeAttachment } from "@/features/commandes/actions/create-commande-attachment";
 import type { Client, MenuItemDisplay } from "@/features/commandes/types";
 
@@ -235,7 +235,6 @@ export function useCommandeForm() {
     if (!client) return { success: false as const, error: "Aucun client sélectionné" };
     setIsSubmitting(true);
     try {
-      const number = await generateCommandeNumber();
       const discountTypeDb = discountType === "percent" ? "PERCENTAGE" : "FIXED";
       const eventDateTime = eventDate && startTime ? `${eventDate}T${startTime}:00` : eventDate || null;
       const packName = selectedPack ? packs.find(p => p.id === selectedPack)?.name ?? null : null;
@@ -247,7 +246,6 @@ export function useCommandeForm() {
         menuItemId: s.id,
       }));
       const result = await createCommande({
-        number,
         clientId: client.id,
         eventName: eventName || null,
         eventStatus: eventStatus,

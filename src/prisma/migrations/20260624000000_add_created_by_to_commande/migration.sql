@@ -1,4 +1,4 @@
-﻿-- Add createdById column to commandes table
+-- Add createdById column to commandes table
 ALTER TABLE "commandes" ADD COLUMN "createdById" TEXT;
 
 -- Add index for creator lookup

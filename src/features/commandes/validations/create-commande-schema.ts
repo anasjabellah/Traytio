@@ -10,7 +10,7 @@ export const commandeItemSchema = z.object({
 });
 
 export const createCommandeSchema = z.object({
-  number: z.string().min(1),
+  number: z.string().min(1).optional(),
   clientId: z.string().min(1),
   eventId: z.string().nullable().optional(),
   eventName: z.string().nullable().optional(),

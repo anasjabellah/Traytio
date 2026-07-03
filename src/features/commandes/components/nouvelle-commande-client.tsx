@@ -4,7 +4,6 @@ import React, { useState, useMemo, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowLeft, ArrowRight, Check, X, Plus, Minus, Package, ShoppingCart, User, Calendar } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
-import { generateCommandeNumber } from "@/features/commandes/actions/create-commande"
 
 type ClientItem = { id: string; name: string; email: string | null; phone: string | null }
 type MenuItemData = {
@@ -154,8 +153,6 @@ export default function NouvelleCommandeClient({ clients, menuItems, menus }: Pr
   const handleCreate = async () => {
     setCreating(true)
     try {
-      const number = await generateCommandeNumber()
-
       // Build items payload
       const allItems = [
         ...packItems.map(i => ({
@@ -175,7 +172,6 @@ export default function NouvelleCommandeClient({ clients, menuItems, menus }: Pr
       ]
 
       const body = {
-        number,
         clientId: selectedClientId,
         eventType,
         eventDate: eventDate || null,

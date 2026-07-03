@@ -262,6 +262,15 @@ model Commande {
   @@map("commandes")
 }
 
+model CommandeNumberCounter {
+  organizationId String
+  year           Int
+  lastNumber     Int      @default(0)
+
+  @@id([organizationId, year])
+  @@map("commande_number_counters")
+}
+
 model CommandeItem {
   id         String  @id @default(cuid())
   commandeId String
