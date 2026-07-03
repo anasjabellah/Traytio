@@ -301,14 +301,14 @@ export default function CommandesPage() {
               <div className="flex items-center gap-1.5 sm:gap-2 w-auto">
                 <button
                   onClick={() => setShowEventTypeFilters(prev => !prev)}
-                  className={`flex-none h-11 px-2 sm:px-4 rounded-xl border text-sm font-medium transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
+                  className={`flex-none h-11 px-3 sm:px-4 rounded-xl border text-sm font-medium transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
                     showEventTypeFilters || activeFilterCount > 0
                       ? 'border-[var(--gold-deep)] bg-[var(--gold-soft)]/10 text-[var(--gold-deep)]'
                       : 'border-border bg-card shadow-soft text-muted-foreground hover:text-foreground hover:bg-foreground/5'
                   }`}
                 >
                   <SlidersHorizontal className="size-[18px]" strokeWidth={1.8} />
-                  <span className="hidden sm:inline">Filtres</span>
+                  <span className="inline">Filtres</span>
                   {activeFilterCount > 0 && (
                     <span className="size-5 rounded-full bg-[var(--gold-deep)] text-white text-[10px] font-bold flex items-center justify-center">
                       {activeFilterCount}
