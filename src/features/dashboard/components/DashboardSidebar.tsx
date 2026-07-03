@@ -49,6 +49,8 @@ export const TodayEventsWidget = memo(function TodayEventsWidget({ events }: { e
 
 export const ActivityFeedWidget = memo(function ActivityFeedWidget({ activity }: { activity: DashboardData['activity'] }) {
   const { isPrivacyMode } = usePrivacyMode();
+  const visible = activity.slice(0, 5);
+  const hasMore = activity.length > 5;
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
       <div className="flex items-center justify-between mb-4">
@@ -57,12 +59,12 @@ export const ActivityFeedWidget = memo(function ActivityFeedWidget({ activity }:
           <h3 className="font-display text-xl mt-1">Activit&eacute; r&eacute;cente</h3>
         </div>
       </div>
-      <div className="relative space-y-3">
+      <div className={`relative space-y-3${hasMore ? ' overflow-y-auto max-h-[240px] pr-1' : ''}`}>
         <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border" />
-        {activity.length === 0 && (
+        {visible.length === 0 && (
           <div className="py-6 text-center text-xs text-muted-foreground">Aucune activit&eacute; r&eacute;cente</div>
         )}
-        {activity.map((f, i) => (
+        {visible.map((f, i) => (
           <motion.div key={i}
             initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
             className="relative pl-6">

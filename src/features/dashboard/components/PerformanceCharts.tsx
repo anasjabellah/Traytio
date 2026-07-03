@@ -62,7 +62,6 @@ export const PerformanceCharts = memo(function PerformanceCharts({
     const paymentsGrowth = calcGrowth(perfPayments);
 
     const eventsTotal = perfEvents.reduce((s, v) => s + v, 0);
-    const collectionRate = totalRevenue > 0 ? Math.round((paymentsReceived / totalRevenue) * 100) : 0;
 
     const badge = (g: number) => {
       const up = g >= 0;
@@ -87,13 +86,7 @@ export const PerformanceCharts = memo(function PerformanceCharts({
         label: '\u00c9v\u00e9nements',
         value: eventsTotal.toLocaleString('fr-FR'),
         badge: badge(eventsGrowth),
-        secondary: (
-          <div className="text-[11px] text-muted-foreground leading-relaxed">
-            {confirmedEvents} confirm&eacute;{confirmedEvents > 1 ? 's' : ''}
-            <br />
-            {upcomingEventsCount} &agrave; venir
-          </div>
-        ),
+        secondary: null,
         progress: undefined,
         data: perfEvents,
       },
@@ -102,12 +95,7 @@ export const PerformanceCharts = memo(function PerformanceCharts({
         label: 'Clients',
         value: activeClients.toLocaleString('fr-FR'),
         badge: badge(clientsGrowth),
-        secondary: (
-          <div className="text-[11px] text-muted-foreground">
-            +{Math.max(0, (perfClients[perfClients.length - 1] ?? 0) - (perfClients[perfClients.length - 2] ?? 0))} nouveau
-            {Math.max(0, (perfClients[perfClients.length - 1] ?? 0) - (perfClients[perfClients.length - 2] ?? 0)) > 1 ? 'x' : ''}
-          </div>
-        ),
+        secondary: null,
         progress: undefined,
         data: perfClients,
       },
@@ -116,12 +104,8 @@ export const PerformanceCharts = memo(function PerformanceCharts({
         label: 'Paiements',
         value: mad(paymentsReceived),
         badge: badge(paymentsGrowth),
-        secondary: (
-          <div className="text-[11px] text-muted-foreground">
-            {collectionRate}% du CA encaiss&eacute;
-          </div>
-        ),
-        progress: collectionRate,
+        secondary: null,
+        progress: undefined,
         data: perfPayments,
       },
     ];

@@ -6,14 +6,17 @@ import { ArrowRight, ChevronRight } from 'lucide-react';
 import { usePrivacyMode, SensitiveValue } from '@/components/privacy-mode';
 import { STATUS_STYLES, COMMANDE_STATUS_LABELS, mad } from '@/features/dashboard/constants';
 import type { DashboardData } from '@/features/dashboard/types';
+import { useRouter } from 'next/navigation';
 
 function CommandeMobileRow({ c, i }: { c: DashboardData['recentCommandes'][0]; i: number }) {
   const { isPrivacyMode } = usePrivacyMode();
+  const router = useRouter();
   return (
     <motion.div
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.05 * i }}
+      onClick={() => router.push(`/dashboard/commandes/${c.id}`)}
       className="flex items-center justify-between px-4 py-3 hover:bg-foreground/[0.02] transition-colors group cursor-pointer border-b border-border last:border-b-0 min-h-[52px]"
     >
       <div className="flex flex-col gap-2 flex-1 min-w-0">
@@ -44,6 +47,7 @@ function CommandeMobileRow({ c, i }: { c: DashboardData['recentCommandes'][0]; i
 }
 
 export const RecentCommandes = memo(function RecentCommandes({ commandes }: { commandes: DashboardData['recentCommandes'] }) {
+  const router = useRouter();
   const { isPrivacyMode } = usePrivacyMode();
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
@@ -52,7 +56,7 @@ export const RecentCommandes = memo(function RecentCommandes({ commandes }: { co
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Activit&eacute;</div>
           <h3 className="font-display text-2xl mt-1">Commandes r&eacute;centes</h3>
         </div>
-        <button className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+        <button onClick={() => router.push('/dashboard/commandes')} className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
           Voir tout <ArrowRight className="size-3" />
         </button>
       </div>
@@ -73,6 +77,7 @@ export const RecentCommandes = memo(function RecentCommandes({ commandes }: { co
           {commandes.map((c, i) => (
             <motion.div key={c.id}
               initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}
+              onClick={() => router.push(`/dashboard/commandes/${c.id}`)}
               className="grid grid-cols-12 items-center px-6 py-4 hover:bg-foreground/[0.02] transition-colors group cursor-pointer">
               <div className="col-span-3 text-sm font-medium tabular-nums">{c.number}</div>
               <div className="col-span-3 flex items-center gap-2 text-sm truncate">
