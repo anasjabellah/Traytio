@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Calendar, Users, Eye, Pencil, Trash2, ArrowRight } from 'lucide-react';
+import { Calendar, Users, Eye, Pencil, Trash2, ArrowRight, Sparkles } from 'lucide-react';
 import { useRole } from '@/hooks/use-role';
 import { COMMANDE_STATUS_LABELS, COMMANDE_STATUS_STYLES } from '@/features/commandes/constants';
 import type { Commande } from '@/features/commandes/types';
@@ -40,16 +40,16 @@ export function OrderCard({ commande: cmd, index, onView, onEdit, onDelete }: Or
       transition={{ delay: index * 0.025, duration: 0.3, ease: [0.22, 1, 0.36, 1] as const }}
       className="group rounded-3xl border border-border/60 bg-card shadow-soft hover:shadow-lift transition-all"
     >
-      <div className="p-5 sm:p-6">
+      <div className="p-4 sm:p-5">
         {/* Header: order number + client + status badge */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="size-10 rounded-full bg-gradient-to-br from-[var(--gold-soft)]/20 to-[var(--gold-soft)]/10 border border-[var(--gold-soft)]/30 flex items-center justify-center shrink-0">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="size-9 rounded-full bg-gradient-to-br from-[var(--gold-soft)]/20 to-[var(--gold-soft)]/10 border border-[var(--gold-soft)]/30 flex items-center justify-center shrink-0">
               <ArrowRight className="size-4 text-[var(--gold-deep)]/60" strokeWidth={2} />
             </div>
             <div className="min-w-0">
-              <span className="text-2xl font-semibold text-foreground tracking-tight truncate block">{cmd.number}</span>
-              <span className="text-base text-muted-foreground truncate block mt-1">{cmd.clientName || 'Client inconnu'}</span>
+              <span className="text-xl font-semibold text-foreground tracking-tight truncate block">{cmd.number}</span>
+              <span className="text-sm text-muted-foreground truncate block mt-0.5">{cmd.clientName || 'Client inconnu'}</span>
             </div>
           </div>
           <span className={`text-[11px] px-3 py-1 rounded-full font-semibold shrink-0 ${COMMANDE_STATUS_STYLES[cmd.status] || ''}`}>
@@ -59,35 +59,38 @@ export function OrderCard({ commande: cmd, index, onView, onEdit, onDelete }: Or
 
         {/* Second row: event details */}
         {(cmd.eventName || cmd.eventDate || cmd.guestCount) && (
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-5 text-sm text-muted-foreground">
+          <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground w-full min-w-0">
             {cmd.eventName && (
-              <span className="truncate max-w-[160px]">{cmd.eventName}</span>
+              <span className="flex items-center gap-1.5 min-w-0 flex-1">
+                <Sparkles className="size-3.5 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />
+                <span className="truncate">{cmd.eventName}</span>
+              </span>
             )}
             {cmd.eventDate && (
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 min-w-0 flex-1">
                 <Calendar className="size-3.5 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />
-                {new Date(cmd.eventDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                <span className="truncate">{new Date(cmd.eventDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
               </span>
             )}
             {cmd.guestCount && (
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 min-w-0 flex-1">
                 <Users className="size-3.5 text-muted-foreground/40 shrink-0" strokeWidth={1.5} />
-                {cmd.guestCount} invités
+                <span className="truncate">{cmd.guestCount} invités</span>
               </span>
             )}
           </div>
         )}
 
         {/* Third row: total amount */}
-        <div className="mt-6">
-          <span className="text-xl font-bold tabular-nums text-[var(--gold-deep)] tracking-tight">
+        <div className="mt-3">
+          <span className="text-lg font-bold tabular-nums text-[var(--gold-deep)] tracking-tight">
             {total > 0 ? mad(total) : '—'}
           </span>
         </div>
       </div>
 
       {/* Bottom: action buttons */}
-      <div className="px-5 sm:px-6 pb-5 sm:pb-6 flex items-center gap-2">
+      <div className="px-4 sm:px-5 pb-4 sm:pb-5 flex items-center gap-1.5">
         <ActionBtn icon={Eye} label="Voir" onClick={() => onView(cmd)} hover="hover:text-[var(--gold-deep)] hover:border-[var(--gold-soft)]/50" />
         {can('commandes', 'update') && (
           <ActionBtn icon={Pencil} label="Modifier" onClick={() => onEdit(cmd)} />

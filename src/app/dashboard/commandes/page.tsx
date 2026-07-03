@@ -12,8 +12,10 @@ import {
 } from 'lucide-react';
 import { useCommandes } from '@/features/commandes/hooks/use-commandes';
 import { CommandesTable } from '@/features/commandes/components/commandes-table';
+import { MobileOrderCards } from '@/features/commandes/components/mobile-order-cards';
 import { CommandesGrid } from '@/features/commandes/components/commandes-grid';
 import { CommandesCalendar } from '@/features/commandes/components/commandes-calendar';
+import { MiniCalendar } from '@/features/dashboard/components/MiniCalendar';
 import { ViewSwitcher, type ViewMode } from '@/features/commandes/components/view-switcher';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { Pagination } from '@/components/ui/pagination';
@@ -292,14 +294,14 @@ export default function CommandesPage() {
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:ml-auto w-full sm:w-auto">
+            <div className="flex flex-row flex-nowrap items-center justify-between w-full gap-1.5 sm:gap-2 sm:ml-auto md:justify-end md:w-auto">
               <div className="sm:order-last inline-flex">
                 <ViewSwitcher value={viewMode} onChange={handleViewChange} />
               </div>
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="flex items-center gap-1.5 sm:gap-2 w-auto">
                 <button
                   onClick={() => setShowEventTypeFilters(prev => !prev)}
-                  className={`flex-1 sm:flex-none h-11 px-4 rounded-xl border text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                  className={`flex-none h-11 px-2 sm:px-4 rounded-xl border text-sm font-medium transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
                     showEventTypeFilters || activeFilterCount > 0
                       ? 'border-[var(--gold-deep)] bg-[var(--gold-soft)]/10 text-[var(--gold-deep)]'
                       : 'border-border bg-card shadow-soft text-muted-foreground hover:text-foreground hover:bg-foreground/5'
@@ -390,41 +392,77 @@ export default function CommandesPage() {
  
             {/* TABLE VIEW */}
             {viewMode === 'table' && (
-              <motion.div
-                key="table-view"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
-                className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden min-w-0 w-full"
-              >
-                <div className="flex items-center justify-between px-4 sm:px-6 pt-5 pb-3">
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Liste</div>
-                    <h3 className="font-display text-xl mt-0.5">Toutes les commandes</h3>
+              <>
+                {/* Desktop table (md+) */}
+                <div className="hidden md:block">
+                  <motion.div
+                    key="table-view"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
+                    className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden min-w-0 w-full"
+                  >
+                    <div className="flex items-center justify-between px-4 sm:px-6 pt-5 pb-3">
+                      <div>
+                        <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Liste</div>
+                        <h3 className="font-display text-xl mt-0.5">Toutes les commandes</h3>
+                      </div>
+                      <span className="text-xs text-muted-foreground/60">
+                        {isLoading ? '…' : `${filteredByEventType.length} résultat${filteredByEventType.length > 1 ? 's' : ''}`}
+                      </span>
+                    </div>
+                    <CommandesTable
+                      data={filteredByEventType}
+                      loading={isLoading}
+                      onView={handleView}
+                      onEdit={handleEdit}
+                      onDelete={setDeleteTarget}
+                    />
+                    <div className="px-4 sm:px-6 pb-5">
+                      <Pagination
+                        page={pagination.page}
+                        totalPages={pagination.totalPages}
+                        total={pagination.total}
+                        limit={pagination.limit}
+                        onPageChange={handlePageChange}
+                        onLimitChange={handleLimitChange}
+                        itemLabel="commande"
+                      />
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Mobile cards (<md) */}
+                <div className="md:hidden">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Liste</div>
+                      <h3 className="font-display text-xl mt-0.5">Toutes les commandes</h3>
+                    </div>
+                    <span className="text-xs text-muted-foreground/60">
+                      {isLoading ? '…' : `${filteredByEventType.length} résultat${filteredByEventType.length > 1 ? 's' : ''}`}
+                    </span>
                   </div>
-                  <span className="text-xs text-muted-foreground/60">
-                    {isLoading ? '…' : `${filteredByEventType.length} résultat${filteredByEventType.length > 1 ? 's' : ''}`}
-                  </span>
-                </div>
-                <CommandesTable
-                  data={filteredByEventType}
-                  loading={isLoading}
-                  onView={handleView}
-                  onEdit={handleEdit}
-                  onDelete={setDeleteTarget}
-                />
-                <div className="px-4 sm:px-6 pb-5">
-                  <Pagination
-                    page={pagination.page}
-                    totalPages={pagination.totalPages}
-                    total={pagination.total}
-                    limit={pagination.limit}
-                    onPageChange={handlePageChange}
-                    onLimitChange={handleLimitChange}
-                    itemLabel="commande"
+                  <MobileOrderCards
+                    data={filteredByEventType}
+                    loading={isLoading}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                    onDelete={setDeleteTarget}
                   />
+                  <div className="mt-4">
+                    <Pagination
+                      page={pagination.page}
+                      totalPages={pagination.totalPages}
+                      total={pagination.total}
+                      limit={pagination.limit}
+                      onPageChange={handlePageChange}
+                      onLimitChange={handleLimitChange}
+                      itemLabel="commande"
+                    />
+                  </div>
                 </div>
-              </motion.div>
+              </>
             )}
 
             {/* GRID VIEW */}
@@ -457,12 +495,19 @@ export default function CommandesPage() {
 
             {/* CALENDAR VIEW */}
             {viewMode === 'calendar' && (
-              <CommandesCalendar
-                data={filteredByEventType}
-                loading={isLoading}
-                onView={handleView}
-                onEdit={handleEdit}
-              />
+              <>
+                <div className="hidden md:block">
+                  <CommandesCalendar
+                    data={filteredByEventType}
+                    loading={isLoading}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                  />
+                </div>
+                <div className="md:hidden">
+                  <MiniCalendar />
+                </div>
+              </>
             )}
           </div>
 
