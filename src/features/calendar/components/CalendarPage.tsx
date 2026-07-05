@@ -10,6 +10,7 @@ import type { EventResizeDoneArg } from '@fullcalendar/interaction'
 import { PrivacyModeProvider } from '@/components/privacy-mode'
 import { useCalendarData } from '@/features/calendar/hooks/use-calendar-data'
 import { CalendarView } from '@/features/calendar/components/CalendarView'
+import { MiniCalendar } from '@/features/dashboard/components/MiniCalendar'
 import { EventDetailSheet } from '@/features/calendar/components/EventDetailSheet'
 import { EventsHeader } from '@/features/events/components/EventsHeader'
 import { EventsStats } from '@/features/events/components/EventsStats'
@@ -279,7 +280,7 @@ export function CalendarPage() {
             className="mt-10"
           >
             {events.length === 0 && !loading && (!everHadEvents || filters.status || filters.type || filters.search) ? (
-              <div className="flex flex-col items-center justify-center min-h-[420px] text-center rounded-2xl border border-border bg-card shadow-soft">
+              <div className="hidden md:flex flex-col items-center justify-center min-h-[420px] text-center rounded-2xl border border-border bg-card shadow-soft">
                 <div className="size-20 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/60 border border-amber-200/60 flex items-center justify-center mb-5 shadow-sm">
                   <Calendar className="size-8 text-amber-400" strokeWidth={1.5} />
                 </div>
@@ -313,24 +314,29 @@ export function CalendarPage() {
             ) : (
               <div className="relative">
                 {loading && (
-                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-card/60 backdrop-blur-[1px] rounded-2xl">
+                  <div className="hidden md:flex absolute inset-0 z-20 items-center justify-center bg-card/60 backdrop-blur-[1px] rounded-2xl">
                     <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
                       <div className="size-4 rounded-full border-2 border-gold border-t-transparent animate-spin" />
                       Mise à jour...
                     </div>
                   </div>
                 )}
-                <CalendarView
-                  events={events}
-                  onDatesSet={handleDatesSet}
-                  onEventClick={handleEventClick}
-                  onDateSelect={handleDateSelect}
-                  onEventRightClick={handleRightClick}
-                  loading={loading}
-                  thisMonthCount={stats.thisMonth}
-                  onEventDrop={handleEventDrop}
-                  onEventResize={handleEventResize}
-                />
+                <div className="hidden md:block">
+                  <CalendarView
+                    events={events}
+                    onDatesSet={handleDatesSet}
+                    onEventClick={handleEventClick}
+                    onDateSelect={handleDateSelect}
+                    onEventRightClick={handleRightClick}
+                    loading={loading}
+                    thisMonthCount={stats.thisMonth}
+                    onEventDrop={handleEventDrop}
+                    onEventResize={handleEventResize}
+                  />
+                </div>
+                <div className="block md:hidden">
+                  <MiniCalendar />
+                </div>
               </div>
             )}
           </motion.div>

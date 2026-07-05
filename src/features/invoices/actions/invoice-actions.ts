@@ -7,128 +7,161 @@ import { assertCan } from "@/lib/assert-role"
 import { updateInvoiceStatusSchema } from "@/features/invoices/validations/invoice-schemas"
 import type { ActionResponse, Invoice, InvoiceWithCommande } from "@/features/invoices/types"
 
-async function generateInvoiceNumber(type: "DEVIS" | "FACTURE"): Promise<string> {
-  const organizationId = await getOrganizationId()
+function isPrismaP2002(err: unknown): boolean {
+  return typeof err === 'object' && err !== null && 'code' in err && (err as { code: string }).code === 'P2002'
+}
+
+const MAX_NUMBER_RETRIES = 5
+
+const INVOICE_PREFIX: Record<string, string> = { DEVIS: "DEV", FACTURE: "FAC" }
+
+async function nextInvoiceNumber(organizationId: string, type: "DEVIS" | "FACTURE"): Promise<string> {
   const year = new Date().getFullYear()
-  const prefix = type === "DEVIS" ? "DEV" : "FAC"
-  const count = await prisma.invoice.count({
-    where: {
-      organizationId,
-      type,
-      issueDate: { gte: new Date(`${year}-01-01`) },
-    },
-  })
-  return `${prefix}-${year}-${String(count + 1).padStart(4, "0")}`
+  const prefix = INVOICE_PREFIX[type]
+  const result: Array<{ last_number: bigint }> = await prisma.$queryRaw`
+    INSERT INTO "invoice_number_counters" ("organizationId", "year", "type", "lastNumber")
+    VALUES (${organizationId}, ${year}, ${type}, 1)
+    ON CONFLICT ("organizationId", "year", "type")
+    DO UPDATE SET "lastNumber" = "invoice_number_counters"."lastNumber" + 1
+    RETURNING "lastNumber" AS last_number
+  `
+  const seqNumber = Number(result[0].last_number)
+  return `${prefix}-${year}-${String(seqNumber).padStart(4, "0")}`
 }
 
 export async function createQuoteFromCommande(commandeId: string): Promise<ActionResponse<InvoiceWithCommande>> {
-  try {
-    const organizationId = await getOrganizationId()
-    await assertCan('invoices', 'create')
+  const organizationId = await getOrganizationId()
+  await assertCan('invoices', 'create')
 
-    const commande = await prisma.commande.findFirst({
-      where: { id: commandeId, organizationId },
-      include: {
-        client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
-        event: { select: { name: true, startDate: true, location: true } },
-        items: true,
-      },
-    })
+  const commande = await prisma.commande.findFirst({
+    where: { id: commandeId, organizationId },
+    include: {
+      client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
+      event: { select: { name: true, startDate: true, location: true } },
+      items: true,
+    },
+  })
 
-    if (!commande) {
-      return { success: false, error: "Commande introuvable" }
-    }
-
-    const number = await generateInvoiceNumber("DEVIS")
-
-    const invoice = await prisma.invoice.create({
-      data: {
-        organizationId,
-        commandeId,
-        number,
-        type: "DEVIS",
-        status: "DRAFT",
-        issueDate: new Date(),
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        totalAmount: commande.totalAmount,
-        paidAmount: commande.paidAmount,
-        notes: commande.clientNotes,
-      },
-      include: {
-        commande: {
-          include: {
-            client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
-            event: { select: { name: true, startDate: true, location: true } },
-            items: true,
-          },
-        },
-      },
-    })
-
-    revalidatePath(`/dashboard/commandes/${commandeId}`)
-
-    return {
-      success: true,
-      data: serializeInvoice(invoice),
-    }
-  } catch (err: unknown) {
-    return { success: false, error: err instanceof Error ? err.message : "Erreur lors de la création du devis" }
+  if (!commande) {
+    return { success: false, error: "Commande introuvable" }
   }
+
+  // nextInvoiceNumber runs outside the transaction via prisma.$queryRaw
+  // (autocommit), so the counter increment survives any transaction rollback.
+  // The retry loop catches edge-case P2002 and fetches a fresh number.
+  let lastError: unknown = null
+  for (let attempt = 0; attempt < MAX_NUMBER_RETRIES; attempt++) {
+    try {
+      const number = await nextInvoiceNumber(organizationId, "DEVIS")
+
+      const invoice = await prisma.$transaction(async (tx) =>
+        tx.invoice.create({
+          data: {
+            organizationId,
+            commandeId,
+            number,
+            type: "DEVIS",
+            status: "DRAFT",
+            issueDate: new Date(),
+            dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            totalAmount: commande.totalAmount,
+            paidAmount: commande.paidAmount,
+            notes: commande.clientNotes,
+          },
+          include: {
+            commande: {
+              include: {
+                client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
+                event: { select: { name: true, startDate: true, location: true } },
+                items: true,
+              },
+            },
+          },
+        }),
+      )
+
+      revalidatePath(`/dashboard/commandes/${commandeId}`)
+
+      return {
+        success: true,
+        data: serializeInvoice(invoice),
+      }
+    } catch (err: unknown) {
+      lastError = err
+      if (isPrismaP2002(err)) {
+        continue
+      }
+      return { success: false, error: err instanceof Error ? err.message : "Erreur lors de la création du devis" }
+    }
+  }
+
+  return { success: false, error: lastError instanceof Error ? lastError.message : "Erreur lors de la création du devis après plusieurs tentatives" }
 }
 
 export async function createInvoiceFromCommande(commandeId: string): Promise<ActionResponse<InvoiceWithCommande>> {
-  try {
-    const organizationId = await getOrganizationId()
-    await assertCan('invoices', 'create')
+  const organizationId = await getOrganizationId()
+  await assertCan('invoices', 'create')
 
-    const commande = await prisma.commande.findFirst({
-      where: { id: commandeId, organizationId },
-      include: {
-        client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
-        event: { select: { name: true, startDate: true, location: true } },
-        items: true,
-      },
-    })
+  const commande = await prisma.commande.findFirst({
+    where: { id: commandeId, organizationId },
+    include: {
+      client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
+      event: { select: { name: true, startDate: true, location: true } },
+      items: true,
+    },
+  })
 
-    if (!commande) {
-      return { success: false, error: "Commande introuvable" }
-    }
-
-    const number = await generateInvoiceNumber("FACTURE")
-
-    const invoice = await prisma.invoice.create({
-      data: {
-        organizationId,
-        commandeId,
-        number,
-        type: "FACTURE",
-        status: "DRAFT",
-        issueDate: new Date(),
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        totalAmount: commande.totalAmount,
-        paidAmount: commande.paidAmount,
-        notes: commande.clientNotes,
-      },
-      include: {
-        commande: {
-          include: {
-            client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
-            event: { select: { name: true, startDate: true, location: true } },
-            items: true,
-          },
-        },
-      },
-    })
-
-    revalidatePath(`/dashboard/commandes/${commandeId}`)
-
-    return {
-      success: true,
-      data: serializeInvoice(invoice),
-    }
-  } catch (err: unknown) {
-    return { success: false, error: err instanceof Error ? err.message : "Erreur lors de la création de la facture" }
+  if (!commande) {
+    return { success: false, error: "Commande introuvable" }
   }
+
+  let lastError: unknown = null
+  for (let attempt = 0; attempt < MAX_NUMBER_RETRIES; attempt++) {
+    try {
+      const number = await nextInvoiceNumber(organizationId, "FACTURE")
+
+      const invoice = await prisma.$transaction(async (tx) =>
+        tx.invoice.create({
+          data: {
+            organizationId,
+            commandeId,
+            number,
+            type: "FACTURE",
+            status: "DRAFT",
+            issueDate: new Date(),
+            dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            totalAmount: commande.totalAmount,
+            paidAmount: commande.paidAmount,
+            notes: commande.clientNotes,
+          },
+          include: {
+            commande: {
+              include: {
+                client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
+                event: { select: { name: true, startDate: true, location: true } },
+                items: true,
+              },
+            },
+          },
+        }),
+      )
+
+      revalidatePath(`/dashboard/commandes/${commandeId}`)
+
+      return {
+        success: true,
+        data: serializeInvoice(invoice),
+      }
+    } catch (err: unknown) {
+      lastError = err
+      if (isPrismaP2002(err)) {
+        continue
+      }
+      return { success: false, error: err instanceof Error ? err.message : "Erreur lors de la création de la facture" }
+    }
+  }
+
+  return { success: false, error: lastError instanceof Error ? lastError.message : "Erreur lors de la création de la facture après plusieurs tentatives" }
 }
 
 export async function getInvoiceById(id: string): Promise<ActionResponse<InvoiceWithCommande>> {
@@ -271,67 +304,78 @@ export async function updateInvoiceStatus(
 }
 
 export async function convertQuoteToInvoice(quoteId: string): Promise<ActionResponse<InvoiceWithCommande>> {
-  try {
-    const organizationId = await getOrganizationId()
-    await assertCan('invoices', 'create')
+  const organizationId = await getOrganizationId()
+  await assertCan('invoices', 'create')
 
-    const quote = await prisma.invoice.findFirst({
-      where: { id: quoteId, organizationId, type: "DEVIS" },
-      include: {
-        commande: {
-          include: {
-            client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
-            event: { select: { name: true, startDate: true, location: true } },
-            items: true,
-          },
+  const quote = await prisma.invoice.findFirst({
+    where: { id: quoteId, organizationId, type: "DEVIS" },
+    include: {
+      commande: {
+        include: {
+          client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
+          event: { select: { name: true, startDate: true, location: true } },
+          items: true,
         },
       },
-    })
+    },
+  })
 
-    if (!quote) {
-      return { success: false, error: "Devis introuvable" }
-    }
-
-    if (!quote.commande) {
-      return { success: false, error: "Le devis n'est lié à aucune commande" }
-    }
-
-    const number = await generateInvoiceNumber("FACTURE")
-
-    const invoice = await prisma.invoice.create({
-      data: {
-        organizationId,
-        commandeId: quote.commandeId,
-        number,
-        type: "FACTURE",
-        status: "DRAFT",
-        issueDate: new Date(),
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        totalAmount: quote.totalAmount,
-        paidAmount: quote.paidAmount,
-        notes: quote.notes,
-      },
-      include: {
-        commande: {
-          include: {
-            client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
-            event: { select: { name: true, startDate: true, location: true } },
-            items: true,
-          },
-        },
-      },
-    })
-
-    revalidatePath(`/dashboard/commandes/${quote.commandeId}`)
-    revalidatePath("/dashboard/invoices")
-
-    return {
-      success: true,
-      data: serializeInvoice(invoice),
-    }
-  } catch (err: unknown) {
-    return { success: false, error: err instanceof Error ? err.message : "Erreur lors de la conversion du devis" }
+  if (!quote) {
+    return { success: false, error: "Devis introuvable" }
   }
+
+  if (!quote.commande) {
+    return { success: false, error: "Le devis n'est lié à aucune commande" }
+  }
+
+  let lastError: unknown = null
+  for (let attempt = 0; attempt < MAX_NUMBER_RETRIES; attempt++) {
+    try {
+      const number = await nextInvoiceNumber(organizationId, "FACTURE")
+
+      const invoice = await prisma.$transaction(async (tx) =>
+        tx.invoice.create({
+          data: {
+            organizationId,
+            commandeId: quote.commandeId,
+            number,
+            type: "FACTURE",
+            status: "DRAFT",
+            issueDate: new Date(),
+            dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            totalAmount: quote.totalAmount,
+            paidAmount: quote.paidAmount,
+            notes: quote.notes,
+          },
+          include: {
+            commande: {
+              include: {
+                client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
+                event: { select: { name: true, startDate: true, location: true } },
+                items: true,
+              },
+            },
+          },
+        }),
+      )
+
+      revalidatePath(`/dashboard/commandes/${quote.commandeId}`)
+      revalidatePath("/dashboard/invoices")
+
+      return {
+        success: true,
+        data: serializeInvoice(invoice),
+      }
+    } catch (err: unknown) {
+      lastError = err
+      if (isPrismaP2002(err)) {
+        continue
+      }
+      return { success: false, error: err instanceof Error ? err.message : "Erreur lors de la conversion du devis" }
+    }
+  }
+
+  return { success: false, error: lastError instanceof Error ? lastError.message : "Erreur lors de la conversion du devis après plusieurs tentatives" }
 }
 
 function serializeInvoice(invoice: unknown): InvoiceWithCommande {
