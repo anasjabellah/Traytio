@@ -13,7 +13,7 @@ import { ClientsSidebar } from '@/features/clients/components/ClientsSidebar';
 import { CreateClientDialog } from '@/features/clients/components/create-client-dialog';
 import { EditClientDialog } from '@/features/clients/components/edit-client-dialog';
 import { DeleteClientDialog } from '@/features/clients/components/delete-client-dialog';
-import { PrivacyModeProvider, usePrivacyMode } from '@/components/privacy-mode';
+import { PrivacyModeProvider } from '@/components/privacy-mode';
 import type { ClientWithStats, Client } from '@/features/clients/types';
 
 export default function ClientsPage() {
@@ -51,8 +51,6 @@ export default function ClientsPage() {
     openCreate, openEdit, openDelete, closeAll,
   } = useClientForm();
 
-  const { isPrivacyMode } = usePrivacyMode();
-
   const searchMounted = useRef(false);
   useEffect(() => {
     if (!searchMounted.current) {
@@ -84,7 +82,7 @@ export default function ClientsPage() {
           onCreate={openCreate}
         />
 
-        <ClientsStats kpis={KPIS} isPrivacyMode={isPrivacyMode} />
+        <ClientsStats kpis={KPIS} />
 
         <ClientsToolbar
           searchQuery={searchQuery}
@@ -99,7 +97,6 @@ export default function ClientsPage() {
           onRefresh={refresh}
         />
 
-        {!isPrivacyMode && (
         <div className="mt-8 flex flex-col xl:flex-row gap-6">
           <ClientsGrid
             viewMode={viewMode}
@@ -132,7 +129,6 @@ export default function ClientsPage() {
             growthRate={stats?.growthRate ?? 0}
           />
         </div>
-        )}
 
         <footer className="mt-16 mb-6 flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-2">

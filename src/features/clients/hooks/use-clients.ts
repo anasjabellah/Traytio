@@ -29,6 +29,7 @@ type KpiItem = {
   icon: React.ComponentType<{ className?: string }>;
   prefix?: string;
   accent?: boolean;
+  sensitive?: boolean;
 };
 
 export function useClients(initialLimit = CLIENT_DEFAULT_PAGE_SIZE, sortBy?: string) {
@@ -115,11 +116,11 @@ export function useClients(initialLimit = CLIENT_DEFAULT_PAGE_SIZE, sortBy?: str
   const totalCommandes = stats?.totalCommandes ?? 0;
 
   const KPIS: KpiItem[] = [
-    { label: "Total Clients", value: totalClients, delta: stats?.growthRate ?? 0, trend: (stats?.growthRate ?? 0) >= 0 ? 'up' : 'down', spark: SPARK_DEFAULTS.up, icon: Users, accent: true },
-    { label: "Clients Actifs", value: activeClientsCount, delta: activePct, trend: activePct >= 50 ? 'up' : 'down', spark: SPARK_DEFAULTS.steady, icon: CheckCircle2 },
-    { label: "Chiffre d'Affaires", value: totalRevenue, delta: stats ? Math.round((totalRevenue / Math.max(stats.totalRevenue || totalRevenue, 1)) * 100) : 0, trend: 'up', spark: SPARK_DEFAULTS.up, icon: Wallet, accent: true, prefix: 'MAD' },
-    { label: "Nouveaux (30j)", value: newClients30d, delta: stats ? Math.round((newClients30d / Math.max(stats.newClients30d || newClients30d, 1)) * 100) : 0, trend: newClients30d > 0 ? 'up' : 'down', spark: SPARK_DEFAULTS.up, icon: UserPlus },
-    { label: "Commandes", value: totalCommandes, delta: 0, trend: totalCommandes > 0 ? 'up' : 'down', spark: SPARK_DEFAULTS.up, icon: ShoppingCart },
+    { label: "Total Clients", value: totalClients, delta: stats?.growthRate ?? 0, trend: (stats?.growthRate ?? 0) >= 0 ? 'up' : 'down', spark: SPARK_DEFAULTS.up, icon: Users, accent: true, sensitive: true },
+    { label: "Clients Actifs", value: activeClientsCount, delta: activePct, trend: activePct >= 50 ? 'up' : 'down', spark: SPARK_DEFAULTS.steady, icon: CheckCircle2, sensitive: true },
+    { label: "Chiffre d'Affaires", value: totalRevenue, delta: stats ? Math.round((totalRevenue / Math.max(stats.totalRevenue || totalRevenue, 1)) * 100) : 0, trend: 'up', spark: SPARK_DEFAULTS.up, icon: Wallet, accent: true, prefix: 'MAD', sensitive: true },
+    { label: "Nouveaux (30j)", value: newClients30d, delta: stats ? Math.round((newClients30d / Math.max(stats.newClients30d || newClients30d, 1)) * 100) : 0, trend: newClients30d > 0 ? 'up' : 'down', spark: SPARK_DEFAULTS.up, icon: UserPlus, sensitive: true },
+    { label: "Commandes", value: totalCommandes, delta: 0, trend: totalCommandes > 0 ? 'up' : 'down', spark: SPARK_DEFAULTS.up, icon: ShoppingCart, sensitive: true },
   ];
 
   const recentClients = useMemo(() =>

@@ -5,6 +5,7 @@ import {
   UserPlus, Pencil, ShoppingCart, Calendar, CreditCard,
   Clock, CheckCircle2, TrendingUp,
 } from 'lucide-react';
+import { usePrivacyMode, SensitiveValue } from '@/components/privacy-mode';
 import type { ClientStats, ActivityItem } from '@/features/clients/actions/get-clients-page';
 
 const mad = (n: number) =>
@@ -118,6 +119,7 @@ function QuickStatsSection({ stats, avgValue, activePct, topCity, growthRate }: 
   topCity: string;
   growthRate: number;
 }) {
+  const { isPrivacyMode } = usePrivacyMode();
   const hasData = (stats?.totalClients ?? 0) > 0;
   const hasFinancialData = avgValue > 0;
 
@@ -156,11 +158,11 @@ function QuickStatsSection({ stats, avgValue, activePct, topCity, growthRate }: 
               <div key={i}>
                 <div className="flex items-center justify-between text-xs mb-1.5">
                   <span className="text-muted-foreground">{s.label}</span>
-                  <span className="font-medium tabular-nums">
+                  <SensitiveValue hidden={isPrivacyMode} as="span" className="font-medium tabular-nums">
                     {'isMoney' in s && s.isMoney ? mad(Math.round(s.value as number)) :
                      'suffix' in s ? `${Math.round(s.value as number)}${s.suffix}` :
                      s.value}
-                  </span>
+                  </SensitiveValue>
                 </div>
                 {'isMoney' in s && s.isMoney && stats && (
                   <div className="h-1.5 rounded-full bg-foreground/[0.05] overflow-hidden">

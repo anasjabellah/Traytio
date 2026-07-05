@@ -2,10 +2,8 @@
 
 import { KpiGrid, type KpiCardProps } from '@/shared/components/kpi-card';
 
-export function ClientsStats({ kpis, isPrivacyMode }: {
+export function ClientsStats({ kpis }: {
   kpis: KpiCardProps[];
-  isPrivacyMode: boolean;
 }) {
-  if (isPrivacyMode) return null;
   return <KpiGrid kpis={kpis} columns={5} />;
 }
