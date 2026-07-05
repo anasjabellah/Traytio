@@ -129,7 +129,7 @@ export const clientsColumns = (
   {
     id: 'actions',
     header: 'Actions',
-    size: 90,
+    size: 180,
     cell: ({ row }) => {
       const c = row.original;
       const b = 'min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:size-7 rounded-md hover:bg-muted/50 transition-all flex items-center justify-center text-muted-foreground/40 hover:text-foreground';

@@ -16,7 +16,7 @@ const COL_WIDTHS: Record<string, string> = {
   createdAt: '12%',
   totalSpent: '12%',
   activity: '12%',
-  actions: '100px',
+  actions: '180px',
 };
 
 const CENTERED = new Set(['actions']);
@@ -59,7 +59,7 @@ export function ClientsTable({ data, loading, onView, onEdit, onDelete }: Client
             <Skeleton className="h-3.5 w-[12%]" />
             <Skeleton className="h-3.5 w-[12%]" />
             <Skeleton className="h-3.5 w-[12%]" />
-            <Skeleton className="h-6 w-[100px]" />
+            <Skeleton className="h-6 w-[180px]" />
           </motion.div>
         ))}
       </div>
