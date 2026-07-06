@@ -122,7 +122,7 @@ export function EditMenuItemDialog({ item, open, onClose, onSuccess }: Props) {
               disabled={isSubmitting || isUploading}
               className="px-6 py-2.5 rounded-2xl bg-[var(--gold)] hover:brightness-90 active:brightness-75 text-white text-sm font-medium transition-all shadow-md disabled:opacity-50"
             >
-              {isSubmitting ? 'Enregistrement...' : 'Mettre à jour l\'article'}
+              {isUploading ? 'Téléchargement...' : isSubmitting ? 'Enregistrement...' : 'Mettre à jour l\'article'}
             </button>
           </div>
         </FormProvider>

@@ -97,6 +97,7 @@ function LivePreview() {
 
 export function CreateMenuItemDialog({ open, onOpenChange, onSuccess }: CreateMenuItemDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(createMenuItemSchema),
@@ -159,7 +160,7 @@ export function CreateMenuItemDialog({ open, onOpenChange, onSuccess }: CreateMe
           <div className="flex-1 overflow-y-auto px-8 py-6">
             <div className="flex gap-8">
               <div className="flex-1 min-w-0">
-                <MenuItemForm mode="create" onSubmit={handleCreate} isLoading={isSubmitting} />
+                <MenuItemForm mode="create" onSubmit={handleCreate} isLoading={isSubmitting} onUploadingChange={setIsUploading} />
               </div>
               <div className="hidden w-72 shrink-0 lg:block">
                 <LivePreview />
@@ -179,10 +180,10 @@ export function CreateMenuItemDialog({ open, onOpenChange, onSuccess }: CreateMe
             <button
               type="submit"
               form="menu-item-form"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploading}
               className="px-6 py-2.5 rounded-2xl bg-[var(--gold)] hover:brightness-90 active:brightness-75 text-white text-sm font-medium transition-all shadow-md disabled:opacity-50"
             >
-              {isSubmitting ? 'Création...' : "Créer l'article"}
+              {isUploading ? 'Téléchargement...' : isSubmitting ? 'Création...' : "Créer l'article"}
             </button>
           </div>
         </FormProvider>

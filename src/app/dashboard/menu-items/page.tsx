@@ -8,6 +8,7 @@ import {
   ChefHat, Wine, Cake, Flower2, Users, Box,
   Settings2, CheckCircle2, CircleDashed, ArrowUpRight,
   Crown, Trash2, BarChart3, Tag,
+  UtensilsCrossed, GlassWater, CakeSlice, BriefcaseBusiness, Music4, Package,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -81,6 +82,12 @@ const ITEM_ACCENT: Record<string, string> = {
   STAFF: 'from-stone-100 via-zinc-50 to-neutral-100',
   ENTERTAINMENT: 'from-violet-100 via-purple-50 to-fuchsia-50',
   EXTRAS: 'from-gray-100 via-zinc-50 to-stone-100',
+};
+
+const ITEM_ICON: Record<string, any> = {
+  FOOD: UtensilsCrossed, DRINKS: GlassWater, DESSERTS: CakeSlice,
+  DECORATION: Sparkles, STAFF: BriefcaseBusiness,
+  ENTERTAINMENT: Music4, EXTRAS: Package,
 };
 
 type ViewMode = 'grid' | 'table';
@@ -552,19 +559,19 @@ function Sidebar({ items, onView }: { items: MenuItem[]; onView: (i: MenuItem) =
     <aside className="space-y-4">
       <Panel title="Most Used" icon={TrendingUp}>
         {mostUsed.map((it) => (
-          <SidebarRow key={it.id} emoji={ITEM_EMOJI[it.category] || '📦'} accent={ITEM_ACCENT[it.category] || 'from-gray-100 to-gray-50'}
+          <SidebarRow key={it.id} icon={ITEM_ICON[it.category] || Package}
             name={it.name} sub={categoryLabels[it.category] || it.category} right={`${it.usageCount ?? 0}×`} onClick={() => onView(it)} />
         ))}
       </Panel>
       <Panel title="Most Profitable" icon={BarChart3} gold>
         {profitable.map((it) => (
-          <SidebarRow key={it.id} emoji={ITEM_EMOJI[it.category] || '📦'} accent={ITEM_ACCENT[it.category] || 'from-gray-100 to-gray-50'}
+          <SidebarRow key={it.id} icon={ITEM_ICON[it.category] || Package}
             name={it.name} sub={categoryLabels[it.category] || it.category} right={dh(Number(it.unitPrice) * (it.usageCount ?? 1))} onClick={() => onView(it)} />
         ))}
       </Panel>
       <Panel title="Recently Added" icon={Clock}>
         {recent.map((it) => (
-          <SidebarRow key={it.id} emoji={ITEM_EMOJI[it.category] || '📦'} accent={ITEM_ACCENT[it.category] || 'from-gray-100 to-gray-50'}
+          <SidebarRow key={it.id} icon={ITEM_ICON[it.category] || Package}
             name={it.name} sub={categoryLabels[it.category] || it.category} right={new Date(it.createdAt).toLocaleDateString('fr-FR')} onClick={() => onView(it)} />
         ))}
       </Panel>
@@ -603,12 +610,14 @@ function Panel({ title, icon: Icon, gold, children }: { title: string; icon: any
   );
 }
 
-function SidebarRow({ emoji, accent, name, sub, right, onClick }: {
-  emoji: string; accent: string; name: string; sub: string; right: string; onClick: () => void;
+function SidebarRow({ icon: Icon, name, sub, right, onClick }: {
+  icon: any; name: string; sub: string; right: string; onClick: () => void;
 }) {
   return (
     <button onClick={onClick} className="flex w-full items-center gap-3 rounded-lg p-1.5 text-left transition hover:bg-[var(--surface-soft)]">
-      <div className={cn('grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br text-base', accent)}>{emoji}</div>
+      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-foreground/[0.04]">
+        <Icon className="size-[18px] text-muted-foreground" strokeWidth={1.5} />
+      </div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-xs font-medium text-foreground">{name}</div>
         <div className="truncate text-[10px] text-muted-foreground">{sub}</div>

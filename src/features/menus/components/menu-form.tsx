@@ -125,7 +125,7 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
                         <span className="text-muted-foreground">Sélectionner une catégorie</span>
                       )}
                     </SelectTrigger>
-                    <SelectContent side="bottom" alignItemWithTrigger={false}>
+                    <SelectContent side="bottom">
                       {Object.entries(CATEGORY_LABELS).map(([key, label]) => {
                         const color = CATEGORY_BADGE_COLORS[key as keyof typeof CATEGORY_BADGE_COLORS];
                         const Icon = CATEGORY_ICONS[key as keyof typeof CATEGORY_ICONS];

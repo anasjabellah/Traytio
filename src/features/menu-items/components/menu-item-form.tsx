@@ -102,7 +102,7 @@ export function MenuItemForm({ onSubmit, isLoading = false, mode, onUploadingCha
                 const catColor = field.value ? CATEGORY_BADGE_COLORS[field.value as keyof typeof CATEGORY_BADGE_COLORS] : '';
                 return (
                   <Select onValueChange={field.onChange} value={field.value ?? ''}>
-                    <SelectTrigger className="min-h-12 text-sm px-4 border border-border bg-white rounded-2xl !h-12">
+                    <SelectTrigger className="w-full !h-12 rounded-2xl border border-border bg-white px-4 text-sm gap-2 transition-all focus-visible:ring-1 focus-visible:ring-gold/30 focus-visible:border-gold">
                       {field.value ? (
                         <span className={cn('inline-block rounded-full px-2 py-0.5 text-xs font-medium', catColor)}>
                           {currentLabel}
@@ -150,7 +150,7 @@ export function MenuItemForm({ onSubmit, isLoading = false, mode, onUploadingCha
               control={control}
               render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value ?? ''}>
-                  <SelectTrigger className="min-h-12 text-sm px-4 border border-border bg-white rounded-2xl !h-12 !text-muted-foreground">
+                  <SelectTrigger className="w-full !h-12 rounded-2xl border border-border bg-white px-4 text-sm gap-2 transition-all focus-visible:ring-1 focus-visible:ring-gold/30 focus-visible:border-gold">
                     <SelectValue placeholder="Sélectionner une unité" />
                   </SelectTrigger>
                   <SelectContent side="bottom">
