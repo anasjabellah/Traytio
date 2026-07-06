@@ -38,7 +38,7 @@ export const menusColumns = (
   },
   {
     accessorKey: 'pricePerPerson',
-    header: 'Prix par personne',
+    header: 'Prix par table',
     size: 150,
     cell: ({ row }) => {
       const price = Number(row.getValue('pricePerPerson'));
@@ -47,13 +47,13 @@ export const menusColumns = (
   },
   {
     accessorKey: 'minPersons',
-    header: 'Min. pax',
+    header: 'Min. TAB.',
     size: 80,
     cell: ({ row }) => <span className="tabular-nums">{row.getValue('minPersons')}</span>,
   },
   {
     accessorKey: 'maxPersons',
-    header: 'Max. pax',
+    header: 'Max. TAB.',
     size: 80,
     cell: ({ row }) => {
       const v = row.getValue('maxPersons');

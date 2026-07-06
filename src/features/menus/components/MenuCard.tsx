@@ -41,7 +41,7 @@ export function MenuCard({ menu, index, onView, onEdit, onDelete }: MenuCardProp
           </div>
           <div className="text-right shrink-0">
             <div className="text-lg font-bold tabular-nums text-[var(--gold-deep)] tracking-tight">{dh(Number(menu.pricePerPerson))}</div>
-            <div className="text-[10px] text-muted-foreground/60 mt-0.5">/ personne</div>
+            <div className="text-[10px] text-muted-foreground/60 mt-0.5">/ table</div>
           </div>
         </div>
 
@@ -83,21 +83,21 @@ export function MenuCard({ menu, index, onView, onEdit, onDelete }: MenuCardProp
       <div className="px-5 pb-5 flex items-center gap-2">
         <button
           onClick={(e) => { e.stopPropagation(); onView(menu); }}
-          className="flex-1 flex items-center justify-center gap-1.5 rounded-full border border-border/60 bg-card px-3 py-2 text-xs font-medium text-muted-foreground/60 transition-all hover:shadow-sm hover:text-[var(--gold-deep)] hover:border-[var(--gold-soft)]/50"
+          className="flex-1 flex items-center justify-center gap-1.5 rounded-full border border-border/60 bg-card px-3 min-h-[44px] text-xs font-medium text-muted-foreground/60 transition-all hover:shadow-sm hover:text-[var(--gold-deep)] hover:border-[var(--gold-soft)]/50"
         >
           <Eye className="size-3.5" strokeWidth={1.8} />
           Voir
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onEdit(menu); }}
-          className="flex-1 flex items-center justify-center gap-1.5 rounded-full border border-border/60 bg-card px-3 py-2 text-xs font-medium text-muted-foreground/60 transition-all hover:shadow-sm hover:text-foreground hover:border-foreground/20"
+          className="flex-1 flex items-center justify-center gap-1.5 rounded-full border border-border/60 bg-card px-3 min-h-[44px] text-xs font-medium text-muted-foreground/60 transition-all hover:shadow-sm hover:text-foreground hover:border-foreground/20"
         >
           <Pencil className="size-3.5" strokeWidth={1.8} />
           Modifier
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(menu); }}
-          className="flex-1 flex items-center justify-center gap-1.5 rounded-full border border-border/60 bg-card px-3 py-2 text-xs font-medium text-muted-foreground/60 transition-all hover:shadow-sm hover:text-red-600 hover:border-red-200"
+          className="flex-1 flex items-center justify-center gap-1.5 rounded-full border border-border/60 bg-card px-3 min-h-[44px] text-xs font-medium text-muted-foreground/60 transition-all hover:shadow-sm hover:text-red-600 hover:border-red-200"
         >
           <Trash2 className="size-3.5" strokeWidth={1.8} />
           Supprimer

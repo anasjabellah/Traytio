@@ -16,7 +16,7 @@ import { createMenu } from '@/features/menus/actions/create-menu';
 import { createMenuSchema } from '@/features/menus/validations/create-menu-schema';
 import type { Menu } from '@/features/menus/types';
 import { MenuForm } from './menu-form';
-import { CATEGORY_LABELS, CATEGORY_BADGE_COLORS } from '@/features/menus/constants';
+import { CATEGORY_LABELS, CATEGORY_ICONS, CATEGORY_BADGE_COLORS } from '@/features/menus/constants';
 import { X, Sparkles } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 
@@ -35,6 +35,7 @@ function LivePreview() {
 
   const catLabel = category ? CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS] || category : '';
   const catColor = category ? CATEGORY_BADGE_COLORS[category as keyof typeof CATEGORY_BADGE_COLORS] : '';
+  const CatIcon = category ? CATEGORY_ICONS[category as keyof typeof CATEGORY_ICONS] : null;
   const itemsCount = menuItems?.length ?? 0;
   const preview = (menuItems || []).slice(0, 4);
   const more = itemsCount - preview.length;
@@ -60,6 +61,7 @@ function LivePreview() {
             <div className="mt-1">
               {catLabel ? (
                 <span className={cn('inline-block rounded-full px-2 py-0.5 text-xs font-medium', catColor)}>
+                  {CatIcon && <CatIcon className="size-3.5 inline-block mr-1.5" />}
                   {catLabel}
                 </span>
               ) : (
@@ -69,14 +71,14 @@ function LivePreview() {
           </div>
 
           <div>
-            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Prix / pers.</span>
+            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Prix / table</span>
             <p className="font-display text-xl text-charcoal tabular-nums mt-0.5">
               {pricePerPerson ? formatCurrency(pricePerPerson) : '—'}
             </p>
           </div>
 
           <div>
-            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Personnes</span>
+            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Tables</span>
             <p className="font-display text-lg text-charcoal tabular-nums mt-0.5">
               {minPersons ? `${minPersons}` : '—'}{maxPersons ? ` – ${maxPersons}` : ''}
             </p>
@@ -157,7 +159,13 @@ export function CreateMenuDialog({ open, onOpenChange, onSuccess }: CreateMenuDi
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) form.reset(); onOpenChange(v); }}>
+    <Dialog open={open} onOpenChange={(v, detail) => {
+      if (!v && (detail.reason === 'outside-press' || detail.reason === 'focus-out')) {
+        const target = (detail.event as unknown as Event).target as HTMLElement | null;
+        if (target?.closest?.('[data-slot="select-content"]')) return;
+      }
+      if (!v) form.reset(); onOpenChange(v);
+    }}>
       <DialogContent showCloseButton={false} className="flex flex-col p-0 gap-0 w-[95vw] max-w-[1000px] !max-w-[1000px] rounded-2xl border border-border shadow-xl overflow-hidden max-h-[90vh]">
         <FormProvider {...form}>
           {/* HEADER */}

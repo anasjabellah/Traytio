@@ -24,7 +24,7 @@ import { EditMenuDialog } from '@/features/menus/components/edit-menu-dialog';
 import { DeleteMenuDialog } from '@/features/menus/components/delete-menu-dialog';
 import { Pagination } from '@/components/ui/pagination';
 import type { Menu, MenuCategory } from '@/features/menus/types';
-import { CATEGORY_LABELS, CATEGORY_BADGE_COLORS } from '@/features/menus/constants';
+import { CATEGORY_LABELS, CATEGORY_ICONS, CATEGORY_BADGE_COLORS } from '@/features/menus/constants';
 import { formatCurrency } from '@/lib/utils';
 
 const dh = (n: number) => formatCurrency(n);
@@ -232,7 +232,7 @@ export default function MenusPage() {
                     return (
                       <button key={c.key} onClick={() => setCatFilter(c.key)}
                         className={cn('flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition', catFilter === c.key ? catColor || 'border-charcoal bg-gradient-charcoal text-white' : 'border-border/60 bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground')}
-                      >{c.label}</button>
+                      >{c.key !== 'ALL' && (() => { const Icon = CATEGORY_ICONS[c.key as keyof typeof CATEGORY_ICONS]; return Icon ? <Icon className="size-3.5" /> : null; })()}{c.label}</button>
                     );
                   })}
                 </div>
@@ -380,7 +380,7 @@ function MostCompleteCard({ menu, onView }: { menu: Menu; onView: () => void }) 
                 <Utensils className="size-3.5 text-[var(--gold-deep)]" />
                 {menu.menuItems?.length ?? 0} articles
               </span>
-              <span>{dh(Number(menu.pricePerPerson))} / pers.</span>
+              <span>{dh(Number(menu.pricePerPerson))} / table</span>
               <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium border', CATEGORY_BADGE_COLORS[menu.category as keyof typeof CATEGORY_BADGE_COLORS] || 'bg-foreground/[0.05] text-muted-foreground')}>
                 {CATEGORY_LABELS[menu.category] || menu.category}
               </span>
@@ -397,7 +397,7 @@ function MostCompleteCard({ menu, onView }: { menu: Menu; onView: () => void }) 
             <Eye className="size-3.5" /> Voir le menu
           </button>
           <span className="text-[10px] text-muted-foreground/60">
-            {menu.minPersons}{menu.maxPersons ? `–${menu.maxPersons}` : '+'} personnes
+            {menu.minPersons}{menu.maxPersons ? `–${menu.maxPersons}` : '+'} tables
           </span>
         </div>
       </div>
@@ -482,7 +482,7 @@ function PackCard({ menu, onView, onEdit, onDelete }: {
         {/* Price bottom‑right */}
         <div className="absolute bottom-4 right-5 leading-none drop-shadow-sm tabular-nums">
           <span className="font-display text-[26px] font-medium text-stone-800">{dh(Number(menu.pricePerPerson))}</span>
-          <span className="ml-1.5 font-sans text-[11px] font-medium text-stone-500/80">/ pers.</span>
+          <span className="ml-1.5 font-sans text-[11px] font-medium text-stone-500/80">/ table</span>
         </div>
       </div>
 
@@ -497,8 +497,8 @@ function PackCard({ menu, onView, onEdit, onDelete }: {
 
         {/* 3-column stat grid */}
         <div className="mt-4 grid grid-cols-3 gap-2">
-          <StatBox icon={Users} label="Min" value={`${menu.minPersons}`} />
-          <StatBox icon={Users} label="Max" value={menu.maxPersons ? `${menu.maxPersons}` : '—'} />
+          <StatBox icon={TableIcon} label="Min" value={`${menu.minPersons}`} />
+          <StatBox icon={TableIcon} label="Max" value={menu.maxPersons ? `${menu.maxPersons}` : '—'} />
           <StatBox icon={Package} label="Items" value={`${itemsCount}`} />
         </div>
 
@@ -524,11 +524,36 @@ function PackCard({ menu, onView, onEdit, onDelete }: {
         {/* Footer */}
         <div className="mt-4 flex items-center justify-between border-t border-stone-100 pt-3">
           <div className="text-[11px] font-medium text-stone-500">{itemsCount} article{itemsCount > 1 ? 's' : ''}</div>
-          <div className="flex items-center gap-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+          <div className="hidden md:flex items-center gap-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
             <IconBtn onClick={onView} title="Voir"><Eye className="size-3.5" /></IconBtn>
             <IconBtn onClick={onEdit} title="Modifier"><Pencil className="size-3.5" /></IconBtn>
             <IconBtn onClick={onDelete} title="Supprimer" danger><Trash2 className="size-3.5" /></IconBtn>
           </div>
+        </div>
+
+        {/* Mobile actions */}
+        <div className="md:hidden mt-4 flex items-center gap-2">
+          <button
+            onClick={onView}
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-card px-2.5 min-h-[44px] text-xs font-medium text-muted-foreground/60 transition-all hover:text-stone-900 hover:border-stone-300 active:scale-[0.97]"
+          >
+            <Eye className="size-4" strokeWidth={1.6} />
+            Voir
+          </button>
+          <button
+            onClick={onEdit}
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-card px-2.5 min-h-[44px] text-xs font-medium text-muted-foreground/60 transition-all hover:text-foreground hover:border-foreground/20 active:scale-[0.97]"
+          >
+            <Pencil className="size-4" strokeWidth={1.6} />
+            Modifier
+          </button>
+          <button
+            onClick={onDelete}
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-card px-2.5 min-h-[44px] text-xs font-medium text-muted-foreground/60 transition-all hover:text-red-600 hover:border-red-200 active:scale-[0.97]"
+          >
+            <Trash2 className="size-4" strokeWidth={1.6} />
+            Supprimer
+          </button>
         </div>
       </div>
     </motion.article>
@@ -536,6 +561,30 @@ function PackCard({ menu, onView, onEdit, onDelete }: {
 }
 
 /* ---------------- Stat box ---------------- */
+
+function TableIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 491.413 491.413"
+      fill="currentColor"
+      className={className}
+    >
+      <path d="M491.413,133.867c0-62.4-126.613-96.107-245.653-96.107S0,71.467,0,133.867c0,60.48,118.72,93.973,234.453,96v125.76
+        c-0.213,0.747-0.533,1.387-0.853,2.133c-4.587,0.32-8.533,3.52-9.6,8.107c-1.173,4.16-2.773,8.107-4.8,11.947
+        c-1.067,0.533-2.24,0.853-3.413,1.067c-12.373,1.6-30.08-17.707-36.693-27.307c-3.307-4.907-10.027-6.08-14.827-2.773
+        c-4.8,3.307-6.08,10.027-2.773,14.827c2.347,3.413,20.373,29.013,42.987,35.2c-13.013,14.08-34.027,28.373-67.84,33.6
+        c-5.867,0.853-9.813,6.293-8.96,12.16c0.747,5.227,5.333,9.067,10.56,9.067c0.533,0,1.067,0,1.6-0.107
+        c56.853-8.64,83.733-39.68,95.787-61.227c3.627-3.093,6.827-6.613,9.387-10.667c2.56,3.947,5.76,7.573,9.387,10.667
+        c12.16,21.547,39.04,52.587,95.893,61.227c0.533,0.107,1.067,0.107,1.6,0.107c5.867,0,10.667-4.8,10.667-10.667
+        c0-5.333-3.84-9.813-9.067-10.56c-33.92-5.227-55.04-19.52-67.947-33.6c22.613-6.293,40.747-31.893,43.093-35.307
+        c3.307-4.907,2.027-11.52-2.773-14.827c-4.907-3.307-11.52-2.027-14.827,2.773c-6.507,9.6-24.213,29.013-36.693,27.307
+        c-1.173-0.107-2.453-0.533-3.52-1.067c-1.92-3.84-3.52-7.787-4.693-11.947c-1.067-4.48-5.013-7.787-9.6-8
+        c-0.32-0.747-0.533-1.387-0.853-2.133l0.107-125.653C371.84,228.16,491.413,194.56,491.413,133.867z M248.32,208.747
+        c-1.707-0.747-3.733-0.747-5.44,0C112.747,208,22.187,169.067,22.187,134.08c0-35.307,91.947-74.667,224-74.667
+        s224,39.36,224,74.667C470.187,169.173,379.2,208.32,248.32,208.747z"/>
+    </svg>
+  );
+}
 
 function StatBox({ icon: Icon, label, value }: { icon?: any; label: string; value: string }) {
   return (

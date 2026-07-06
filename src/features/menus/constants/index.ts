@@ -1,4 +1,14 @@
 import type { MenuCategory } from '@/features/menus/types';
+import {
+  Heart,
+  Building2,
+  Cake,
+  Baby,
+  GraduationCap,
+  UtensilsCrossed,
+  Settings2,
+  type LucideIcon,
+} from 'lucide-react';
 
 export const MENU_DEFAULT_PAGE_SIZE = 10;
 export const MENU_SORT_OPTIONS = ['name', 'createdAt', 'pricePerPerson', 'minPersons'] as const;
@@ -6,11 +16,21 @@ export const MENU_SORT_OPTIONS = ['name', 'createdAt', 'pricePerPerson', 'minPer
 export const CATEGORY_LABELS: Record<MenuCategory, string> = {
   WEDDING: 'Mariage',
   CORPORATE: 'Entreprise',
-  BUFFET: 'Buffet',
-  COCKTAIL: 'Cocktail',
-  BRUNCH: 'Brunch',
-  DESSERT: 'Dessert',
-  CUSTOM: 'Custom',
+  BUFFET: 'Anniversaire',
+  COCKTAIL: 'Baptême',
+  BRUNCH: 'Remise de diplôme',
+  DESSERT: 'Cocktail & Réception',
+  CUSTOM: 'Personnalisé',
+};
+
+export const CATEGORY_ICONS: Record<MenuCategory, LucideIcon> = {
+  WEDDING: Heart,
+  CORPORATE: Building2,
+  BUFFET: Cake,
+  COCKTAIL: Baby,
+  BRUNCH: GraduationCap,
+  DESSERT: UtensilsCrossed,
+  CUSTOM: Settings2,
 };
 
 export const CATEGORY_BADGE_COLORS: Record<MenuCategory, string> = {
@@ -21,16 +41,6 @@ export const CATEGORY_BADGE_COLORS: Record<MenuCategory, string> = {
   BRUNCH: 'bg-orange-100 text-orange-700 border-orange-200',
   DESSERT: 'bg-rose-100 text-rose-700 border-rose-200',
   CUSTOM: 'bg-gray-100 text-gray-700 border-gray-200',
-};
-
-export const CATEGORY_EMOJIS: Record<MenuCategory, string> = {
-  WEDDING: '💍',
-  CORPORATE: '💼',
-  BUFFET: '🍽️',
-  COCKTAIL: '🍸',
-  BRUNCH: '🥞',
-  DESSERT: '🍰',
-  CUSTOM: '📋',
 };
 
 export const CATEGORY_ACCENT: Record<MenuCategory, string> = {
