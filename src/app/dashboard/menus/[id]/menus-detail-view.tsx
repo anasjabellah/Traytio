@@ -69,10 +69,10 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
           className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-10"
         >
           <div className="flex items-start gap-4">
-            <Link
-              href="/dashboard/menus"
-              className="mt-2 size-10 rounded-xl border border-border bg-card flex items-center justify-center hover:bg-foreground/[0.04] transition-colors shadow-soft shrink-0"
-            >
+              <Link
+                href="/dashboard/menus"
+                className="mt-2 min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:size-10 rounded-xl border border-border bg-card flex items-center justify-center hover:bg-foreground/[0.04] transition-colors shadow-soft shrink-0"
+              >
               <ArrowLeft className="size-4 text-muted-foreground" />
             </Link>
             <div>
@@ -108,7 +108,7 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
               <Button
                 variant="outline"
                 size="icon"
-                className="size-10 rounded-xl border-border shadow-soft"
+                className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:size-10 rounded-xl border-border shadow-soft"
                 onClick={() => setEditOpen(true)}
                 title="Modifier"
               >
@@ -119,7 +119,7 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
               <Button
                 variant="outline"
                 size="icon"
-                className="size-10 rounded-xl border-border shadow-soft text-muted-foreground hover:text-red-600 hover:border-red-200 hover:bg-red-50"
+                className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:size-10 rounded-xl border-border shadow-soft text-muted-foreground hover:text-red-600 hover:border-red-200 hover:bg-red-50"
                 onClick={() => setDeleteOpen(true)}
                 title="Supprimer"
               >
@@ -145,7 +145,7 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
           <KpiCard
             icon={TableIcon}
             label="Capacité"
-            value={menu.minPersons + (menu.maxPersons ? `–${menu.maxPersons}` : '+') + ' pax'}
+            value={menu.minPersons + (menu.maxPersons ? `–${menu.maxPersons}` : '+') + ' tables'}
           />
           <KpiCard
             icon={Utensils}
@@ -232,7 +232,7 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.03 * i }}
-                        className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/[0.02] transition-colors"
+                        className="flex items-center gap-3 px-6 py-4 hover:bg-foreground/[0.02] transition-colors"
                       >
                         {item.menuItem.imageUrl ? (
                           <img src={item.menuItem.imageUrl} alt={item.menuItem.name} className="size-12 rounded-lg object-cover shrink-0" />
@@ -242,8 +242,8 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium truncate">{item.menuItem.name}</div>
-                          <div className="flex items-center gap-2 mt-0.5">
+                          <div className="text-sm font-medium break-words leading-snug">{item.menuItem.name}</div>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
                             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-foreground/[0.05] text-muted-foreground">
                               {catLabel}
                             </span>
@@ -252,7 +252,7 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
                             </span>
                           </div>
                         </div>
-                        <div className="shrink-0 text-sm font-medium tabular-nums">
+                        <div className="shrink-0 text-sm font-medium tabular-nums ml-2">
                           ×{item.defaultQty}
                         </div>
                       </motion.div>
@@ -391,13 +391,13 @@ function KpiCard({ icon: Icon, label, value, accent }: { icon: any; label: strin
       {accent && (
         <div className="pointer-events-none absolute -top-16 -right-16 size-44 rounded-full bg-gradient-gold opacity-20 blur-2xl" />
       )}
-      <div className="flex items-start justify-between mb-3">
-        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
-        <div className={`size-9 rounded-xl flex items-center justify-center ${accent ? "bg-gradient-gold text-[var(--gold-foreground)]" : "bg-foreground/[0.04] text-foreground"}`}>
-          <Icon className="size-4" />
+      <div className="flex items-start justify-between">
+        <span className="text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
+        <div className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${accent ? "bg-gradient-gold text-[var(--gold-foreground)]" : "bg-foreground/[0.04] text-foreground"}`}>
+          <Icon className="size-5" />
         </div>
       </div>
-      <div className="font-display text-2xl text-gradient-charcoal tabular-nums">{value}</div>
+      <div className="mt-3 font-display text-lg sm:text-xl lg:text-2xl text-gradient-charcoal tabular-nums">{value}</div>
     </motion.div>
   );
 }
@@ -430,12 +430,12 @@ function InfoItem({ icon: Icon, label, value }: { icon: any; label: string; valu
   const isMissing = value.includes("non") || value.includes("Non") || value.includes("Aucun") || value.includes("Indisponible");
   return (
     <div className="flex items-start gap-3">
-      <div className="size-8 rounded-lg bg-foreground/[0.04] flex items-center justify-center shrink-0 mt-0.5">
-        <Icon className="size-3.5 text-muted-foreground" />
+      <div className="size-9 rounded-lg bg-foreground/[0.04] flex items-center justify-center shrink-0 mt-0.5">
+        <Icon className="size-4 text-muted-foreground" />
       </div>
       <div className="min-w-0">
         <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-        <div className={`text-sm mt-0.5 truncate ${isMissing ? "text-muted-foreground/60 italic" : "font-medium"}`}>
+        <div className={`text-sm mt-1 whitespace-pre-wrap break-words ${isMissing ? "text-muted-foreground/60 italic" : "font-medium"}`}>
           {value}
         </div>
       </div>
