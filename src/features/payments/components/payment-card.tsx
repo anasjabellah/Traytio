@@ -120,7 +120,7 @@ export function PaymentCard({
           {needsDeposit && onCollectDeposit && (
             <Button
               variant="default"
-              className="w-full h-10 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold gap-1.5 shadow-sm"
+              className="w-full h-10 rounded-xl text-xs font-semibold gap-1.5 shadow-sm"
               onClick={onCollectDeposit}
             >
               <Zap className="size-3.5" strokeWidth={2.5} />

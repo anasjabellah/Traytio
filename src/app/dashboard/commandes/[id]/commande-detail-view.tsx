@@ -12,6 +12,7 @@ import {
   ShoppingBag, Hash, Tag, Clock, Package,
   Receipt, Download, Plus, FileDown, MessageCircle,
   Landmark, CreditCard, Ban, Loader2, Eye,
+  UtensilsCrossed, GlassWater, CakeSlice, BriefcaseBusiness, Music,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -20,6 +21,7 @@ import { PaymentCard } from "@/features/payments/components/payment-card";
 import { AddPaymentDialog } from "@/features/payments/components/add-payment-dialog";
 import { PaymentHistory } from "@/features/payments/components/payment-history";
 import { createQuoteFromCommande, createInvoiceFromCommande, getInvoices, updateInvoiceStatus, convertQuoteToInvoice } from "@/features/invoices/actions/invoice-actions";
+import { CATEGORY_LABELS } from "@/features/menu-items/constants";
 import type { CommandeWithDetails } from "@/features/commandes/types";
 import type { InvoiceWithCommande } from "@/features/invoices/types";
 
@@ -85,6 +87,12 @@ const METHOD_BADGES: Record<string, { label: string; icon: typeof CreditCard; st
 };
 
 const NOTE_TABS = ["Internes", "Client", "Générales"] as const;
+
+const CAT_ICON: Record<string, any> = {
+  FOOD: UtensilsCrossed, DRINKS: GlassWater, DESSERTS: CakeSlice,
+  DECORATION: Sparkles, STAFF: BriefcaseBusiness,
+  ENTERTAINMENT: Music, EXTRAS: Package,
+};
 
 export default function CommandeDetailView({ commande }: { commande: CommandeWithDetails }) {
   const router = useRouter();
@@ -302,10 +310,10 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
           className="mb-8"
         >
           {/* Top navigation row */}
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-between mb-4 sm:mb-5">
             <Link
               href="/dashboard/commandes"
-              className="inline-flex items-center gap-1.5 text-[13px] text-foreground/50 hover:text-foreground transition-colors font-medium"
+              className="min-h-[44px] md:min-h-0 inline-flex items-center gap-1.5 text-[13px] text-foreground/50 hover:text-foreground transition-colors font-medium"
             >
               <ArrowLeft className="size-4" strokeWidth={1.8} />
               Retour aux commandes
@@ -313,19 +321,19 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
 
             <div className="flex items-center gap-2">
               {commande.pdfUrl && (
-                <a href={commande.pdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg border border-border bg-white/60 hover:bg-white text-xs font-medium text-foreground/70 hover:text-foreground transition-all">
+                <a href={commande.pdfUrl} target="_blank" rel="noopener noreferrer" className="min-h-[44px] md:min-h-0 min-w-[44px] md:min-w-0 inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-lg border border-border bg-white/60 hover:bg-white text-xs font-medium text-foreground/70 hover:text-foreground transition-all">
                   <Download className="size-3.5" strokeWidth={1.8} />
                   PDF
                 </a>
               )}
               {can('commandes', 'update') && (
-                <Link href={`/dashboard/commandes/${commande.id}/edit`} className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg border border-border bg-white/60 hover:bg-white text-xs font-medium text-foreground/70 hover:text-foreground transition-all">
+                <Link href={`/dashboard/commandes/${commande.id}/edit`} className="min-h-[44px] md:min-h-0 min-w-[44px] md:min-w-0 inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-lg border border-border bg-white/60 hover:bg-white text-xs font-medium text-foreground/70 hover:text-foreground transition-all">
                   <Pencil className="size-3.5" strokeWidth={1.8} />
                   Modifier
                 </Link>
               )}
               {can('commandes', 'delete') && (
-                <button onClick={() => setDeleteOpen(true)} className="size-9 rounded-lg border border-border bg-white/60 hover:bg-white text-foreground/50 hover:text-red-600 transition-all flex items-center justify-center">
+                <button onClick={() => setDeleteOpen(true)} className="min-h-[44px] md:min-h-0 min-w-[44px] md:min-w-0 size-9 rounded-lg border border-border bg-white/60 hover:bg-white text-foreground/50 hover:text-red-600 transition-all flex items-center justify-center">
                   <Trash2 className="size-3.5" strokeWidth={1.8} />
                 </button>
               )}
@@ -333,18 +341,18 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
           </div>
 
           {/* Title row */}
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-4">
-            <div>
-              <span className="text-[11px] uppercase tracking-[0.1em] text-foreground/50 font-semibold mb-1.5 block">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 sm:gap-3 mb-3">
+            <div className="min-w-0">
+              <span className="text-[11px] uppercase tracking-[0.1em] text-foreground/50 font-semibold mb-1 block">
                 Commande
               </span>
-              <h1 className="font-display text-4xl lg:text-5xl text-gradient-charcoal leading-[1.05] tracking-tight">
+              <h1 className="font-display text-2xl sm:text-3xl lg:text-5xl text-gradient-charcoal leading-[1.05] tracking-tight break-words">
                 {commande.number}
               </h1>
             </div>
 
             {/* Badges row */}
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 shrink-0">
               <span className={`text-[11px] px-3 py-1 rounded-full font-semibold ${COMMANDE_STATUS_STYLES[commande.status] ?? "bg-gray-100 text-gray-500"}`}>
                 {COMMANDE_STATUS_LABELS[commande.status] ?? commande.status}
               </span>
@@ -363,24 +371,24 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
           </div>
 
           {/* KPI cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <motion.div
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.04, ease: [0.22, 1, 0.36, 1] as const }}
-              className="group relative overflow-hidden rounded-2xl border border-gold bg-card p-5 shadow-soft hover:shadow-lift transition-all"
+              className="group relative overflow-hidden rounded-2xl border border-gold bg-card p-4 sm:p-5 shadow-soft hover:shadow-lift transition-all"
             >
               <div className="pointer-events-none absolute -top-16 -right-16 size-44 rounded-full bg-gradient-gold opacity-20 blur-2xl" />
               <div className="flex items-start justify-between">
-                <div>
+                <div className="min-w-0">
                   <div className="text-xs uppercase tracking-wider text-muted-foreground">Total</div>
-                  <div className="mt-3 font-display text-4xl tabular-nums text-gradient-charcoal">{madFull(total)}</div>
+                  <div className="mt-2 sm:mt-3 font-display text-lg sm:text-2xl lg:text-4xl tabular-nums text-gradient-charcoal break-words">{madFull(total)}</div>
                 </div>
-                <div className="size-10 rounded-xl flex items-center justify-center bg-gradient-gold text-[var(--gold-foreground)]">
+                <div className="size-10 shrink-0 rounded-xl flex items-center justify-center bg-gradient-gold text-[var(--gold-foreground)]">
                   <Wallet className="size-5" strokeWidth={1.8} />
                 </div>
               </div>
-              <div className="mt-4 flex items-end justify-between gap-3">
+              <div className="mt-3 sm:mt-4">
                 <div className="text-xs text-muted-foreground/60">Montant total de la commande</div>
               </div>
             </motion.div>
@@ -388,18 +396,18 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.08, ease: [0.22, 1, 0.36, 1] as const }}
-              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-soft hover:shadow-lift transition-all"
+              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-soft hover:shadow-lift transition-all"
             >
               <div className="flex items-start justify-between">
-                <div>
+                <div className="min-w-0">
                   <div className="text-xs uppercase tracking-wider text-muted-foreground">Payé</div>
-                  <div className="mt-3 font-display text-4xl tabular-nums text-emerald-600">{madFull(paid)}</div>
+                  <div className="mt-2 sm:mt-3 font-display text-lg sm:text-2xl lg:text-4xl tabular-nums text-emerald-600 break-words">{madFull(paid)}</div>
                 </div>
-                <div className="size-10 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-600">
+                <div className="size-10 shrink-0 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-600">
                   <CheckCircle2 className="size-5" strokeWidth={1.8} />
                 </div>
               </div>
-              <div className="mt-4 flex items-end justify-between gap-3">
+              <div className="mt-3 sm:mt-4">
                 <div className="text-xs text-muted-foreground/60">Déjà encaissé</div>
               </div>
             </motion.div>
@@ -407,20 +415,20 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.12, ease: [0.22, 1, 0.36, 1] as const }}
-              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-soft hover:shadow-lift transition-all"
+              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-soft hover:shadow-lift transition-all"
             >
               <div className="flex items-start justify-between">
-                <div>
+                <div className="min-w-0">
                   <div className="text-xs uppercase tracking-wider text-muted-foreground">Reste</div>
-                  <div className={`mt-3 font-display text-4xl tabular-nums ${remaining > 0 ? "text-amber-600" : "text-emerald-600"}`}>
+                  <div className={`mt-2 sm:mt-3 font-display text-lg sm:text-2xl lg:text-4xl tabular-nums break-words ${remaining > 0 ? "text-amber-600" : "text-emerald-600"}`}>
                     {remaining > 0 ? madFull(remaining) : "0 MAD"}
                   </div>
                 </div>
-                <div className={`size-10 rounded-xl flex items-center justify-center ${remaining > 0 ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}>
+                <div className={`size-10 shrink-0 rounded-xl flex items-center justify-center ${remaining > 0 ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}>
                   <Clock className="size-5" strokeWidth={1.8} />
                 </div>
               </div>
-              <div className="mt-4 flex items-end justify-between gap-3">
+              <div className="mt-3 sm:mt-4">
                 {remaining > 0 ? (
                   <div className="text-xs text-muted-foreground/60">En attente de paiement</div>
                 ) : (
@@ -432,22 +440,22 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.16, ease: [0.22, 1, 0.36, 1] as const }}
-              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-soft hover:shadow-lift transition-all"
+              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-soft hover:shadow-lift transition-all"
             >
               <div className="flex items-start justify-between">
-                <div>
-                  <div className="text-xs uppercase tracking-wider text-muted-foreground">Invités</div>
-                  <div className="mt-3 font-display text-4xl tabular-nums text-gradient-charcoal">
+                <div className="min-w-0">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground">Tables</div>
+                  <div className="mt-2 sm:mt-3 font-display text-2xl sm:text-3xl lg:text-4xl tabular-nums text-gradient-charcoal">
                     {commande.guestCount ? `${commande.guestCount}` : "—"}
                   </div>
                 </div>
-                <div className="size-10 rounded-xl flex items-center justify-center bg-blue-50 text-blue-600">
-                  <Users className="size-5" strokeWidth={1.8} />
+                <div className="size-10 shrink-0 rounded-xl flex items-center justify-center bg-blue-50 text-blue-600">
+                  <TableIcon className="size-5" />
                 </div>
               </div>
-              <div className="mt-4 flex items-end justify-between gap-3">
+              <div className="mt-3 sm:mt-4">
                 <div className="text-xs text-muted-foreground/60">
-                  {commande.guestCount ? `${commande.guestCount} personne${commande.guestCount > 1 ? "s" : ""}` : "Non renseigné"}
+                  {commande.guestCount ? `table${commande.guestCount > 1 ? "s" : ""}` : "Non renseigné"}
                 </div>
               </div>
             </motion.div>
@@ -477,7 +485,8 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                   <h4 className="font-display text-sm font-semibold text-foreground">Articles</h4>
                   <span className="text-xs text-foreground/50 ml-auto">{commande.items.length} article{commande.items.length > 1 ? "s" : ""}</span>
                 </div>
-                <div className="overflow-x-auto mt-3">
+                {/* ─── Desktop table ─── */}
+                <div className="hidden md:block overflow-x-auto mt-3">
                   <table className="w-full">
                     <thead>
                       <tr className="border-y border-border/20">
@@ -506,6 +515,42 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* ─── Mobile cards ─── */}
+                <div className="md:hidden mt-3 px-4 pb-4 space-y-2">
+                  {commande.items.map((item) => (
+                    <div key={item.id} className="rounded-xl border border-border/40 bg-foreground/[0.02] p-4 space-y-3">
+                      {/* Row 1: Thumbnail + Name + Category */}
+                      <div className="flex items-start gap-3">
+                        <div className="size-10 shrink-0 rounded-lg overflow-hidden bg-foreground/[0.04] flex items-center justify-center">
+                          {(() => {
+                            const Icon = CAT_ICON[item.category ?? ''] ?? Package;
+                            return <Icon className="size-[18px] text-muted-foreground" strokeWidth={1.5} />;
+                          })()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-semibold text-foreground break-words leading-snug">{item.name}</div>
+                          {item.category && (
+                            <span className="inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-md bg-foreground/[0.04] text-muted-foreground border border-border/30">
+                              {CATEGORY_LABELS[item.category as keyof typeof CATEGORY_LABELS] ?? item.category}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-base font-bold tabular-nums text-foreground shrink-0">{mad(Number(item.totalPrice))}</div>
+                      </div>
+                      {/* Row 2: Quantity & Unit Price */}
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground border-t border-border/10 pt-3">
+                        <span>
+                          Qté <strong className="tabular-nums text-foreground font-semibold">{item.quantity}</strong>
+                        </span>
+                        <span className="text-border/40">/</span>
+                        <span>
+                          <strong className="tabular-nums text-foreground font-semibold">{mad(Number(item.unitPrice))}</strong> / unité
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </motion.div>
             )}
@@ -660,6 +705,49 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                   />
                 </div>
               </motion.div>
+            </div>
+
+            {/* ─── ACTIONS (mobile) ─── */}
+            <div className="lg:hidden rounded-2xl border border-border bg-card shadow-soft p-5">
+              <span className="text-[10px] uppercase tracking-[0.1em] text-foreground/50 font-semibold block mb-3">Actions</span>
+              <div className="space-y-2">
+                {can('payments', 'create') && (
+                  <button
+                    onClick={handleAddPaymentOpen}
+                    className="w-full inline-flex items-center justify-center gap-2 min-h-[44px] rounded-xl bg-[var(--gold-deep)] hover:bg-[var(--gold-deep)]/90 text-white text-xs font-semibold transition-all shadow-sm"
+                  >
+                    <Plus className="size-3.5" strokeWidth={2.5} />
+                    Ajouter un paiement
+                  </button>
+                )}
+                {can('invoices', 'create') && (
+                  <button
+                    onClick={handleGenerateQuote}
+                    disabled={generating === "quote"}
+                    className="w-full inline-flex items-center justify-center gap-2 min-h-[44px] rounded-xl border border-border bg-white hover:bg-foreground/[0.02] text-xs font-medium text-foreground/70 hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {generating === "quote" ? <Loader2 className="size-3.5 animate-spin" strokeWidth={1.8} /> : <FileDown className="size-3.5" strokeWidth={1.8} />}
+                    Générer un devis
+                  </button>
+                )}
+                {can('invoices', 'create') && (
+                  <button
+                    onClick={handleGenerateInvoice}
+                    disabled={generating === "invoice"}
+                    className="w-full inline-flex items-center justify-center gap-2 min-h-[44px] rounded-xl border border-border bg-white hover:bg-foreground/[0.02] text-xs font-medium text-foreground/70 hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {generating === "invoice" ? <Loader2 className="size-3.5 animate-spin" strokeWidth={1.8} /> : <Receipt className="size-3.5" strokeWidth={1.8} />}
+                    Générer une facture
+                  </button>
+                )}
+                <button
+                  onClick={() => toast.info("Envoi WhatsApp — bientôt disponible")}
+                  className="w-full inline-flex items-center justify-center gap-2 min-h-[44px] rounded-xl border border-border bg-white hover:bg-foreground/[0.02] text-xs font-medium text-foreground/70 hover:text-foreground transition-all"
+                >
+                  <MessageCircle className="size-3.5" strokeWidth={1.8} />
+                  Envoyer par WhatsApp
+                </button>
+              </div>
             </div>
 
             {/* ─── PAYMENT HISTORY (timeline) ─── */}
@@ -971,6 +1059,26 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
 }
 
 /* ---------------- Sub-components ---------------- */
+
+function TableIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 491.413 491.413" fill="currentColor" className={className}>
+      <path d="M491.413,133.867c0-62.4-126.613-96.107-245.653-96.107S0,71.467,0,133.867c0,60.48,118.72,93.973,234.453,96v125.76
+        c-0.213,0.747-0.533,1.387-0.853,2.133c-4.587,0.32-8.533,3.52-9.6,8.107c-1.173,4.16-2.773,8.107-4.8,11.947
+        c-1.067,0.533-2.24,0.853-3.413,1.067c-12.373,1.6-30.08-17.707-36.693-27.307c-3.307-4.907-10.027-6.08-14.827-2.773
+        c-4.8,3.307-6.08,10.027-2.773,14.827c2.347,3.413,20.373,29.013,42.987,35.2c-13.013,14.08-34.027,28.373-67.84,33.6
+        c-5.867,0.853-9.813,6.293-8.96,12.16c0.747,5.227,5.333,9.067,10.56,9.067c0.533,0,1.067,0,1.6-0.107
+        c56.853-8.64,83.733-39.68,95.787-61.227c3.627-3.093,6.827-6.613,9.387-10.667c2.56,3.947,5.76,7.573,9.387,10.667
+        c12.16,21.547,39.04,52.587,95.893,61.227c0.533,0.107,1.067,0.107,1.6,0.107c5.867,0,10.667-4.8,10.667-10.667
+        c0-5.333-3.84-9.813-9.067-10.56c-33.92-5.227-55.04-19.52-67.947-33.6c22.613-6.293,40.747-31.893,43.093-35.307
+        c3.307-4.8,2.133-11.52-2.667-14.827c-4.8-3.307-11.52-2.133-14.827,2.773c-6.72,9.6-24.213,28.907-36.693,27.307
+        c-1.173-0.213-2.347-0.533-3.413-1.067c-2.027-3.84-3.627-7.787-4.8-11.947c-1.173-4.587-5.12-7.787-9.707-8.107
+        c-5.44-0.32-9.067-0.533-10.56-2.133v-125.76C372.693,227.84,491.413,194.347,491.413,133.867z M245.76,211.733
+        c-113.173,0-192.853-31.04-204.8-77.867c11.947-46.827,91.627-77.867,204.8-77.867s192.853,31.04,204.8,77.867
+        C438.613,180.693,358.933,211.733,245.76,211.733z" />
+    </svg>
+  );
+}
 
 function FinRow({ label, value, muted, className }: { label: string; value: string; muted?: boolean; className?: string }) {
   return (

@@ -54,6 +54,8 @@ export type CommandeItem = {
   totalPrice: number;
   notes: string | null;
   menuItemId: string | null;
+  category?: string | null;
+  imageUrl?: string | null;
 };
 
 export type CommandeTask = {

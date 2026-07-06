@@ -27,7 +27,13 @@ export async function getCommandeById(id: string): Promise<ActionResponse<Comman
         menu: {
           select: { id: true, name: true },
         },
-        items: true,
+        items: {
+          include: {
+            menuItem: {
+              select: { category: true, imageUrl: true },
+            },
+          },
+        },
         tasks: true,
         attachments: true,
         activities: {
@@ -76,7 +82,11 @@ export async function getCommandeById(id: string): Promise<ActionResponse<Comman
         notes: commande.event.notes,
       } : null,
       menu: commande.menu ? { id: commande.menu.id, name: commande.menu.name } : null,
-      items: commande.items.map(serializeCommandeItem),
+      items: commande.items.map(item => ({
+        ...serializeCommandeItem(item),
+        category: item.menuItem?.category ?? null,
+        imageUrl: item.menuItem?.imageUrl ?? null,
+      })),
       tasks: commande.tasks,
       attachments: commande.attachments,
       activities: commande.activities,
