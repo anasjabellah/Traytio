@@ -46,7 +46,7 @@ function TodayEventsSection({ events }: { events: Event[] }) {
                 <div className="text-xs tabular-nums text-muted-foreground w-12 pt-0.5">{time}</div>
                 <div className="relative flex-1 pl-3 border-l-2 border-[var(--gold)]/40">
                   <div className="text-sm font-medium leading-tight">{ev.name}</div>
-                  <div className="text-[10px] text-muted-foreground mt-0.5">{ev.guestCount ? `${ev.guestCount} pax` : ''}</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">{ev.guestCount ? `${ev.guestCount} tables` : ''}</div>
                 </div>
               </motion.div>
             );

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { z } from 'zod';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Calendar, Clock, MapPin, Users, Wallet, Minus, Plus, Search, X, User, Phone } from 'lucide-react';
+import { Calendar, Clock, MapPin, Wallet, Minus, Plus, Search, X, User, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createEventSchema, validationErrorMap } from '@/features/events/validations/create-event-schema';
 import { AvailabilityCard } from '@/features/events/components/availability-card';
@@ -328,7 +328,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
       <div className="grid sm:grid-cols-2 gap-4">
         {/* Guests counter */}
         <div>
-          <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Nombre d'invités</div>
+          <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Nombre de tables</div>
           <Controller
             name="guestCount"
             control={control}
@@ -336,7 +336,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
               const val = field.value ?? 80;
               return (
                 <div className="flex items-center justify-between rounded-xl border border-border bg-surface-soft px-4 h-14">
-                  <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <TableIcon className="size-4 text-muted-foreground shrink-0" />
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
@@ -354,7 +354,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
                       <Plus className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                  <span className="text-xs text-muted-foreground">pax</span>
+                  <span className="text-xs text-muted-foreground">tables</span>
                 </div>
               );
             }}
@@ -525,5 +525,13 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
         </div>
       )}
     </form>
+  );
+}
+
+function TableIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 491.413 491.413" fill="currentColor" className={className}>
+      <path d="M491.413,133.867c0-62.4-126.613-96.107-245.653-96.107S0,71.467,0,133.867c0,60.48,118.72,93.973,234.453,96v125.76c-0.213,0.747-0.533,1.387-0.853,2.133c-4.587,0.32-8.533,3.52-9.6,8.107c-1.173,4.16-2.773,8.107-4.8,11.947c-1.067,0.533-2.24,0.853-3.413,1.067c-12.373,1.6-30.08-17.707-36.693-27.307c-3.307-4.907-10.027-6.08-14.827-2.773s-6.08,10.027-2.773,14.827c2.347,3.413,20.373,29.013,42.987,35.2c-13.013,14.08-34.027,28.373-67.84,33.6c-5.867,0.853-9.813,6.293-8.96,12.16c0.747,5.227,5.333,9.067,10.56,9.067c0.533,0,1.067,0,1.6-0.107c56.853-8.64,83.733-39.68,95.787-61.227c3.627-3.093,6.827-6.613,9.387-10.667c2.56,3.947,5.76,7.573,9.387,10.667c12.16,21.547,39.04,52.587,95.893,61.227c0.533,0.107,1.067,0.107,1.6,0.107c5.867,0,10.667-4.8,10.667-10.667c0-5.333-3.84-9.813-9.067-10.56c-33.92-5.227-55.04-19.52-67.947-33.6c22.613-6.293,40.747-31.893,43.093-35.307c3.307-4.8,2.133-11.52-2.667-14.827s-11.52-2.133-14.827,2.773c-6.72,9.6-24.213,28.907-36.693,27.307c-1.173-0.213-2.347-0.533-3.413-1.067c-2.027-3.84-3.627-7.787-4.8-11.947c-1.173-4.587-5.12-7.787-9.707-8.107c-5.44-0.32-9.067-0.533-10.56-2.133v-125.76C372.693,227.84,491.413,194.347,491.413,133.867z M245.76,211.733c-113.173,0-192.853-31.04-204.8-77.867c11.947-46.827,91.627-77.867,204.8-77.867s192.853,31.04,204.8,77.867C438.613,180.693,358.933,211.733,245.76,211.733z" />
+    </svg>
   );
 }
