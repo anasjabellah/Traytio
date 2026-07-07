@@ -144,6 +144,7 @@ export function EventsCalendar({ events, isLoading, onView, onEdit }: {
   const [currentMonth, setCurrentMonth] = useState(() => today.getMonth());
   const [currentYear, setCurrentYear] = useState(() => today.getFullYear());
   const [hoveredEvent, setHoveredEvent] = useState<Event | null>(null);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const openTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -217,8 +218,8 @@ export function EventsCalendar({ events, isLoading, onView, onEdit }: {
             {Array.from({ length: 35 }).map((_, i) => (
               <div key={i} className="h-24 rounded-xl bg-foreground/[0.02]" />
             ))}
-          </div>
         </div>
+      </div>
     </div>
   );
 }
@@ -275,15 +276,15 @@ export function EventsCalendar({ events, isLoading, onView, onEdit }: {
         <div className="flex items-center gap-2">
           <button
             onClick={goToday}
-            className="h-8 px-3.5 rounded-lg border border-border/60 text-xs font-medium text-gray-700 hover:text-foreground hover:bg-muted/30 hover:border-border transition-all"
+            className="min-h-[44px] sm:min-h-0 h-8 px-3.5 rounded-lg border border-border/60 text-xs font-medium text-gray-700 hover:text-foreground hover:bg-muted/30 hover:border-border transition-all"
           >
             Aujourd&apos;hui
           </button>
           <div className="flex items-center">
-            <button onClick={() => { const d = new Date(currentYear, currentMonth - 1, 1); goTo(d.getMonth(), d.getFullYear()); }} className="size-8 rounded-l-lg border border-border/60 hover:bg-muted/30 hover:border-border transition-all flex items-center justify-center text-gray-700">
+            <button onClick={() => { const d = new Date(currentYear, currentMonth - 1, 1); goTo(d.getMonth(), d.getFullYear()); }} className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 size-8 rounded-l-lg border border-border/60 hover:bg-muted/30 hover:border-border transition-all flex items-center justify-center text-gray-700">
               <ChevronLeft className="h-4 w-4" strokeWidth={1.8} />
             </button>
-            <button onClick={() => { const d = new Date(currentYear, currentMonth + 1, 1); goTo(d.getMonth(), d.getFullYear()); }} className="size-8 rounded-r-lg border-t border-b border-r border-border/60 hover:bg-muted/30 hover:border-border transition-all flex items-center justify-center text-gray-700 -ml-px">
+            <button onClick={() => { const d = new Date(currentYear, currentMonth + 1, 1); goTo(d.getMonth(), d.getFullYear()); }} className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 size-8 rounded-r-lg border-t border-b border-r border-border/60 hover:bg-muted/30 hover:border-border transition-all flex items-center justify-center text-gray-700 -ml-px">
               <ChevronRight className="h-4 w-4" strokeWidth={1.8} />
             </button>
           </div>
@@ -295,7 +296,7 @@ export function EventsCalendar({ events, isLoading, onView, onEdit }: {
         {/* Day headers */}
         <div className="grid grid-cols-7 px-2 pt-2.5 pb-1">
           {['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'].map((d, i) => (
-            <div key={d} className={`text-[10px] uppercase tracking-[0.14em] font-medium text-center ${i >= 5 ? 'text-gray-700/60' : 'text-gray-700'}`}>{d}</div>
+            <div key={d} className={`text-[8px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.14em] font-medium text-center ${i >= 5 ? 'text-gray-700/60' : 'text-gray-700'}`}>{d}</div>
           ))}
         </div>
 
@@ -311,7 +312,7 @@ export function EventsCalendar({ events, isLoading, onView, onEdit }: {
                     <div
                       key={`m-${p.event.id}-${pi}`}
                       style={{ gridColumn: `${p.colStart} / span ${p.colSpan}` }}
-                      className={`relative ${TYPE_BAR[p.event.type] || TYPE_BAR.OTHER} ${TYPE_BAR_HOVER[p.event.type] || TYPE_BAR_HOVER.OTHER} rounded-md text-[11px] font-medium px-2.5 py-1.5 border cursor-pointer transition-all flex items-center gap-2 z-10 shadow-sm ${p.isLeftOpen ? 'rounded-l-none ml-px' : ''} ${p.isRightOpen ? 'rounded-r-none mr-px' : ''}`}
+                      className={`hidden sm:block relative ${TYPE_BAR[p.event.type] || TYPE_BAR.OTHER} ${TYPE_BAR_HOVER[p.event.type] || TYPE_BAR_HOVER.OTHER} rounded-md text-[11px] font-medium px-2.5 py-1.5 border cursor-pointer transition-all flex items-center gap-2 z-10 shadow-sm ${p.isLeftOpen ? 'rounded-l-none ml-px' : ''} ${p.isRightOpen ? 'rounded-r-none mr-px' : ''}`}
                       onMouseEnter={() => handleHoverStart(p.event)}
                       onMouseLeave={handleHoverEnd}
                       onClick={() => onView(p.event)}
@@ -319,7 +320,9 @@ export function EventsCalendar({ events, isLoading, onView, onEdit }: {
                       {!p.isLeftOpen && <span className={`size-1.5 rounded-full shrink-0 ${TYPE_ACCENT[p.event.type] || TYPE_ACCENT.OTHER}`} />}
                       <span className="truncate">{!p.isLeftOpen ? `${time} • ${p.event.name}` : p.event.name}</span>
                       {hoveredEvent?.id === p.event.id && (
-                        <EventHoverCard event={p.event} onView={onView} onEdit={onEdit} onMouseEnter={handleTooltipEnter} onMouseLeave={handleTooltipLeave} />
+                        <div className="hidden sm:block">
+                          <EventHoverCard event={p.event} onView={onView} onEdit={onEdit} onMouseEnter={handleTooltipEnter} onMouseLeave={handleTooltipLeave} />
+                        </div>
                       )}
                     </div>
                   );
@@ -332,7 +335,7 @@ export function EventsCalendar({ events, isLoading, onView, onEdit }: {
                   return (
                     <div
                       key={isEmpty ? `e-${wi}-${ci}` : day}
-                      className={`relative rounded-xl border min-h-[130px] transition-all ${
+                      className={`relative rounded-xl border min-h-[44px] sm:min-h-[130px] transition-all ${
                         isEmpty
                           ? 'border-dashed border-border/15 bg-transparent'
                           : td
@@ -340,7 +343,8 @@ export function EventsCalendar({ events, isLoading, onView, onEdit }: {
                             : isWeekend
                               ? 'border-border/20 bg-muted/15'
                               : 'border-border/20 bg-background hover:border-primary/20 hover:shadow-sm'
-                      }`}
+                      } ${!isEmpty && selectedDay === day ? 'ring-1 ring-primary/30 border-primary/30 sm:ring-0 sm:border-border/20' : ''} ${!isEmpty && dayEvents.length > 0 ? 'sm:cursor-default cursor-pointer' : ''}`}
+                      onClick={() => { if (!isEmpty && dayEvents.length > 0) setSelectedDay(selectedDay === day ? null : day); }}
                     >
                       {!isEmpty && (
                         <>
@@ -354,7 +358,17 @@ export function EventsCalendar({ events, isLoading, onView, onEdit }: {
                               <div className="text-[9px] text-gray-400 font-medium">{dayEvents.length}</div>
                             )}
                           </div>
-                          <div className="px-1.5 space-y-1">
+                          {dayEvents.length > 0 && (
+                            <div className="sm:hidden flex items-center justify-center gap-1 px-1 pb-1 flex-wrap">
+                              {dayEvents.slice(0, 3).map((e) => (
+                                <span key={e.id} className={`size-1.5 rounded-full ${TYPE_ACCENT[e.type] || TYPE_ACCENT.OTHER}`} />
+                              ))}
+                              {dayEvents.length > 3 && (
+                                <span className="text-[8px] text-muted-foreground/50 font-medium">+{dayEvents.length - 3}</span>
+                              )}
+                            </div>
+                          )}
+                          <div className="hidden sm:block px-1.5 space-y-1">
                             {dayEvents.slice(0, 5).map((e) => {
                               const st = fmtTime(new Date(e.startDate));
                               const endDt = hasValidEndDate(e) ? new Date(e.endDate!) : null;
@@ -374,14 +388,16 @@ export function EventsCalendar({ events, isLoading, onView, onEdit }: {
                                     <span className="text-[11px] text-gray-600 shrink-0 whitespace-nowrap tabular-nums ml-auto">{timeLabel}</span>
                                   </div>
                                   {isHovered && (
-                                    <EventHoverCard event={e} onView={onView} onEdit={onEdit} onMouseEnter={handleTooltipEnter} onMouseLeave={handleTooltipLeave} />
+                                    <div className="hidden sm:block">
+                                      <EventHoverCard event={e} onView={onView} onEdit={onEdit} onMouseEnter={handleTooltipEnter} onMouseLeave={handleTooltipLeave} />
+                                    </div>
                                   )}
                                 </div>
                               );
                             })}
                           </div>
                           {dayEvents.length > 5 && (
-                            <div className="text-[9px] text-gray-500 text-center font-medium pt-0.5">+{dayEvents.length - 5}</div>
+                            <div className="hidden sm:block text-[9px] text-gray-500 text-center font-medium pt-0.5">+{dayEvents.length - 5}</div>
                           )}
                         </>
                       )}
@@ -393,6 +409,36 @@ export function EventsCalendar({ events, isLoading, onView, onEdit }: {
           })}
         </div>
       </div>
+
+      {/* Mobile selected-day popover */}
+      {selectedDay !== null && (
+        <div className="sm:hidden px-3 pb-3">
+          <div className="rounded-xl border border-border/20 bg-card shadow-md overflow-hidden">
+            <div className="px-3.5 py-2.5 border-b border-border/10">
+              <p className="text-xs font-semibold text-foreground">
+                {selectedDay} {new Date(currentYear, currentMonth, selectedDay).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+              </p>
+              <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                {(eventsByDay[selectedDay] || []).length} événement{(eventsByDay[selectedDay] || []).length > 1 ? 's' : ''}
+              </p>
+            </div>
+            <div className="divide-y divide-border/10">
+              {(eventsByDay[selectedDay] || []).map((e) => (
+                <div key={e.id} className="px-3.5 py-2.5 flex items-start gap-3 cursor-pointer hover:bg-muted/20 transition-colors" onClick={() => { onView(e); setSelectedDay(null); }}>
+                  <span className={`mt-0.5 size-2 rounded-full shrink-0 ${TYPE_ACCENT[e.type] || TYPE_ACCENT.OTHER}`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-foreground truncate">{e.name}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10px] text-muted-foreground/60">{fmtTime(new Date(e.startDate))}</span>
+                      {e.clientName && <span className="text-[10px] text-muted-foreground/40">• {e.clientName}</span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
