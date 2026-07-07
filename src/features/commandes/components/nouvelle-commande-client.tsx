@@ -277,7 +277,7 @@ export default function NouvelleCommandeClient({ clients, menuItems, menus }: Pr
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Nombre d'invités *</label>
+                <label className="block text-sm font-medium mb-1">Nombre de tables *</label>
                 <input
                   type="number"
                   min={1}

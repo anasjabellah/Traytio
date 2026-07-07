@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRole } from "@/hooks/use-role";
 import {
-  ArrowLeft, Pencil, Trash2, Calendar, MapPin, Users, Wallet,
+  ArrowLeft, Pencil, Trash2, Calendar, MapPin, Wallet,
   Sparkles, FileText, PartyPopper, CheckCircle2,
   Phone, Mail, ChevronRight, User,
   ShoppingBag, Hash, Tag, Clock, Package,
@@ -625,8 +625,8 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                     )}
                     {commande.guestCount && (
                       <div className="flex items-center gap-2 text-xs">
-                        <Users className="size-3 text-foreground/50 shrink-0" strokeWidth={1.8} />
-                        <span className="text-foreground/80">{commande.guestCount} invités</span>
+                        <TableIcon className="size-3 text-foreground/50 shrink-0" />
+                        <span className="text-foreground/80">{commande.guestCount} tables</span>
                       </div>
                     )}
                     {commande.location && (
