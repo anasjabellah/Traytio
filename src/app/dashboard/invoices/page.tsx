@@ -9,30 +9,8 @@ import { Search, Download, FileText, Sparkles, RefreshCw, Receipt, Settings, Loa
 import { InvoiceCard } from "@/features/invoices/components/InvoiceCard"
 import { PageGuard } from "@/components/ui/page-guard"
 import { Pagination } from "@/components/ui/pagination"
-
-const mad = (n: number) =>
-  new Intl.NumberFormat("fr-MA", { style: "currency", currency: "MAD", maximumFractionDigits: 2 }).format(n)
-
-const STATUS_LABELS: Record<string, string> = {
-  DRAFT: "Brouillon", SENT: "Envoyé", VIEWED: "Vu",
-  ACCEPTED: "Accepté", REJECTED: "Rejeté", PAID: "Payé", OVERDUE: "En retard",
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  DRAFT: "bg-amber-50 text-amber-700 ring-1 ring-amber-200/60",
-  SENT: "bg-blue-50 text-blue-700 ring-1 ring-blue-200/60",
-  VIEWED: "bg-purple-50 text-purple-700 ring-1 ring-purple-200/60",
-  ACCEPTED: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-300/60",
-  REJECTED: "bg-rose-50 text-rose-700 ring-1 ring-rose-200/60",
-  PAID: "bg-green-50 text-green-700 ring-1 ring-green-300/60",
-  OVERDUE: "bg-red-50 text-red-700 ring-1 ring-red-200/60",
-}
-
-const TYPE_FILTERS = [
-  { value: "", label: "Tous" },
-  { value: "DEVIS", label: "Devis" },
-  { value: "FACTURE", label: "Factures" },
-]
+import { STATUS_LABELS, STATUS_COLORS, TYPE_FILTERS } from "@/features/invoices/constants"
+import { formatCurrency } from "@/lib/utils"
 
 function SkeletonRows() {
   return (
@@ -317,7 +295,9 @@ function InvoicesPageContent() {
                         <tr
                           key={inv.id}
                           onClick={() => handleRowClick(inv.id)}
-                          className="transition-colors hover:bg-foreground/[0.03] cursor-pointer"
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleRowClick(inv.id); } }}
+                          className="transition-colors hover:bg-foreground/[0.03] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-deep)]"
                         >
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2.5">
@@ -362,10 +342,10 @@ function InvoicesPageContent() {
                             </select>
                           </td>
                           <td className="px-4 py-4 text-right">
-                            <span className="text-sm font-semibold tabular-nums text-foreground">{mad(inv.totalAmount)}</span>
+                            <span className="text-sm font-semibold tabular-nums text-foreground">{formatCurrency(inv.totalAmount)}</span>
                           </td>
                           <td className="px-4 py-4 text-right">
-                            <span className="text-sm tabular-nums text-emerald-600">{mad(inv.paidAmount)}</span>
+                            <span className="text-sm tabular-nums text-emerald-600">{formatCurrency(inv.paidAmount)}</span>
                           </td>
                           <td className="px-4 py-4">
                             <div className="flex items-center justify-center gap-1">

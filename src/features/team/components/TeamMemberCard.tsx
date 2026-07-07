@@ -6,9 +6,7 @@ import { RoleBadge } from '@/components/ui/role-badge';
 import type { TeamMember } from '@/features/team/types';
 import type { OrgRole } from '@prisma/client';
 import type { Module, Action } from '@/lib/permissions';
-
-const formatDate = (d: string) =>
-  new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+import { formatShortDate } from '@/lib/format';
 
 function Avatar({ name, email }: { name: string | null; email: string }) {
   const initial = (name ?? email).charAt(0).toUpperCase();
@@ -86,7 +84,7 @@ export function TeamMemberCard({
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Arrivée</span>
-            <span className="font-medium text-foreground tabular-nums">{formatDate(member.createdAt)}</span>
+            <span className="font-medium text-foreground tabular-nums">{formatShortDate(member.createdAt)}</span>
           </div>
         </div>
       </div>

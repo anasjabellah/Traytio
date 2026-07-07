@@ -4,9 +4,7 @@ import { motion } from 'framer-motion';
 import { Eye, Pencil, Trash2, Utensils, Users } from 'lucide-react';
 import { CATEGORY_LABELS, CATEGORY_BADGE_COLORS } from '@/features/menus/constants';
 import type { Menu } from '@/features/menus/types';
-
-const dh = (n: number) =>
-  new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(n);
+import { formatCurrency } from '@/lib/utils';
 
 interface MenuCardProps {
   menu: Menu;
@@ -40,7 +38,7 @@ export function MenuCard({ menu, index, onView, onEdit, onDelete }: MenuCardProp
             </div>
           </div>
           <div className="text-right shrink-0">
-            <div className="text-lg font-bold tabular-nums text-[var(--gold-deep)] tracking-tight">{dh(Number(menu.pricePerPerson))}</div>
+            <div className="text-lg font-bold tabular-nums text-[var(--gold-deep)] tracking-tight">{formatCurrency(menu.pricePerPerson)}</div>
             <div className="text-[10px] text-muted-foreground/60 mt-0.5">/ table</div>
           </div>
         </div>

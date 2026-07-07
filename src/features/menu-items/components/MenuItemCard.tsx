@@ -3,27 +3,9 @@
 import { motion } from 'framer-motion';
 import { Eye, Pencil, Copy, Archive, Trash2, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CATEGORY_LABELS, CATEGORY_BADGE_COLORS } from '@/features/menu-items/constants';
+import { CATEGORY_LABELS, CATEGORY_BADGE_COLORS, CATEGORY_ACCENT, ITEM_EMOJI } from '@/features/menu-items/constants';
 import type { MenuItem } from '@/features/menu-items/types';
-
-const dh = (n: number) =>
-  new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(n);
-
-const ITEM_EMOJI: Record<string, string> = {
-  FOOD: '\u{1F372}', DRINKS: '\u{1F379}', DESSERTS: '\u{1F36C}',
-  DECORATION: '\u{1F490}', STAFF: '\u{1F3A9}',
-  ENTERTAINMENT: '\u{1F3A7}', EXTRAS: '\u{1F386}',
-};
-
-const CAT_ACCENT: Record<string, string> = {
-  FOOD: 'from-orange-50 to-amber-50',
-  DRINKS: 'from-blue-50 to-sky-50',
-  DESSERTS: 'from-pink-50 to-rose-50',
-  DECORATION: 'from-purple-50 to-violet-50',
-  STAFF: 'from-green-50 to-emerald-50',
-  ENTERTAINMENT: 'from-red-50 to-rose-50',
-  EXTRAS: 'from-amber-50 to-yellow-50',
-};
+import { formatCurrency } from '@/lib/utils';
 
 interface MenuItemCardProps {
   item: MenuItem;
@@ -37,7 +19,7 @@ interface MenuItemCardProps {
 
 export function MenuItemCard({ item, index, onView, onEdit, onDelete, onDuplicate, onArchive }: MenuItemCardProps) {
   const emoji = ITEM_EMOJI[item.category] || '\u{1F4E6}';
-  const accent = CAT_ACCENT[item.category] || 'from-gray-50 to-stone-50';
+  const accent = CATEGORY_ACCENT[item.category] || 'from-gray-50 to-stone-50';
 
   return (
     <motion.div
@@ -82,7 +64,7 @@ export function MenuItemCard({ item, index, onView, onEdit, onDelete, onDuplicat
           </div>
           <div className="rounded-lg bg-foreground/[0.03] border border-border/40 p-2.5">
             <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Prix</div>
-            <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--gold-deep)]">{dh(Number(item.unitPrice))}</div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--gold-deep)]">{formatCurrency(item.unitPrice)}</div>
           </div>
         </div>
 

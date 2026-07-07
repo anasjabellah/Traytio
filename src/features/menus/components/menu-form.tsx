@@ -7,7 +7,8 @@ import { createMenuSchema } from '@/features/menus/validations/create-menu-schem
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { CATEGORY_LABELS, CATEGORY_ICONS, CATEGORY_BADGE_COLORS } from '@/features/menus/constants';
+import { CATEGORY_LABELS as MENU_CATEGORY_LABELS, CATEGORY_ICONS, CATEGORY_BADGE_COLORS } from '@/features/menus/constants';
+import { CATEGORY_LABELS as ITEM_CATEGORY_LABELS } from '@/features/menu-items/constants';
 import { X, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/utils';
@@ -22,15 +23,7 @@ type MenuFormProps = {
 
 const inputClass = "flex items-center gap-2 rounded-2xl border border-border bg-white px-4 h-12 transition-all focus-within:border-gold focus-within:ring-1 focus-within:ring-gold/30";
 
-const menuItemCategoryLabels: Record<string, string> = {
-  FOOD: 'Aliment',
-  DRINKS: 'Boisson',
-  DESSERTS: 'Dessert',
-  DECORATION: 'Décoration',
-  STAFF: 'Personnel',
-  ENTERTAINMENT: 'Divertissement',
-  EXTRAS: 'Extras',
-};
+
 
 type AvailableItem = {
   id: string;
@@ -110,7 +103,7 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
               name="category"
               control={control}
               render={({ field }) => {
-                const currentLabel = field.value ? CATEGORY_LABELS[field.value as keyof typeof CATEGORY_LABELS] || field.value : '';
+                const currentLabel = field.value ? MENU_CATEGORY_LABELS[field.value as keyof typeof MENU_CATEGORY_LABELS] || field.value : '';
                 const catColor = field.value ? CATEGORY_BADGE_COLORS[field.value as keyof typeof CATEGORY_BADGE_COLORS] : '';
                 const CatIcon = field.value ? CATEGORY_ICONS[field.value as keyof typeof CATEGORY_ICONS] : null;
                 return (
@@ -126,7 +119,7 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
                       )}
                     </SelectTrigger>
                     <SelectContent side="bottom">
-                      {Object.entries(CATEGORY_LABELS).map(([key, label]) => {
+                      {Object.entries(MENU_CATEGORY_LABELS).map(([key, label]) => {
                         const color = CATEGORY_BADGE_COLORS[key as keyof typeof CATEGORY_BADGE_COLORS];
                         const Icon = CATEGORY_ICONS[key as keyof typeof CATEGORY_ICONS];
                         return (
@@ -238,14 +231,14 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
                         <p className="text-sm font-medium truncate">{item?.name ?? field.menuItemId}</p>
                         {item && (
                           <Badge className="hidden md:inline-flex text-[10px] px-1.5 py-0 bg-gray-100 text-gray-700 shrink-0">
-                            {menuItemCategoryLabels[item.category] || item.category}
+                            {ITEM_CATEGORY_LABELS[item.category as keyof typeof ITEM_CATEGORY_LABELS] || item.category}
                           </Badge>
                         )}
                       </div>
                       {item && (
                         <div className="flex items-center gap-2 mt-1">
                           <Badge className="md:hidden text-[10px] px-1.5 py-0 bg-gray-100 text-gray-700">
-                            {menuItemCategoryLabels[item.category] || item.category}
+                            {ITEM_CATEGORY_LABELS[item.category as keyof typeof ITEM_CATEGORY_LABELS] || item.category}
                           </Badge>
                           <span className="hidden md:inline text-xs text-gray-500 whitespace-nowrap">
                             {formatCurrency(item.unitPrice)}
@@ -306,7 +299,7 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
                 const items = availableToAdd.filter(i => i.category === cat);
                 if (items.length === 0) return null;
                 return (
-                  <optgroup key={cat} label={menuItemCategoryLabels[cat] || cat}>
+                  <optgroup key={cat} label={ITEM_CATEGORY_LABELS[cat as keyof typeof ITEM_CATEGORY_LABELS] || cat}>
                     {items.map(item => (
                       <option key={item.id} value={item.id}>
                         {item.name} — {formatCurrency(item.unitPrice)}

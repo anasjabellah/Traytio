@@ -2,26 +2,12 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Trash2, CreditCard, Landmark, Ban, Wallet, Receipt, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import { Trash2, Receipt, Ban, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import { DeletePaymentDialog } from "./delete-payment-dialog";
 import type { PaymentSummary } from "@/features/commandes/types";
-
-const METHOD_BADGES: Record<string, { label: string; icon: typeof CreditCard; style: string }> = {
-  CASH:    { label: "Espèces",  icon: Wallet,     style: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50" },
-  CARD:    { label: "Carte",    icon: CreditCard, style: "bg-blue-50 text-blue-700 ring-1 ring-blue-200/50" },
-  TRANSFER:{ label: "Virement", icon: Landmark,   style: "bg-violet-50 text-violet-700 ring-1 ring-violet-200/50" },
-  CHECK:   { label: "Chèque",   icon: Receipt,    style: "bg-amber-50 text-amber-700 ring-1 ring-amber-200/50" },
-  OTHER:   { label: "Autre",    icon: Ban,        style: "bg-gray-100 text-gray-600 ring-1 ring-gray-200/50" },
-};
-
-const mad = (n: number) =>
-  new Intl.NumberFormat("fr-MA", { style: "currency", currency: "MAD", maximumFractionDigits: 0 }).format(n);
-
-const formatDate = (d: Date | string) =>
-  new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
-
-const formatTime = (d: Date | string) =>
-  new Date(d).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+import { METHOD_BADGES } from "@/features/payments/constants";
+import { formatCurrency } from "@/lib/utils";
+import { formatShortDate, formatTime } from "@/lib/format";
 
 interface PaymentHistoryProps {
   payments: PaymentSummary[];
@@ -97,7 +83,7 @@ export function PaymentHistory({ payments, onPaymentChange }: PaymentHistoryProp
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-semibold tabular-nums text-foreground">
-                        {isRefunded ? "-" : "+"}{mad(payment.amount)}
+                        {isRefunded ? "-" : "+"}{formatCurrency(payment.amount)}
                       </span>
                       <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${colorStyle}`}>
                         <Icon className="size-3" strokeWidth={2} />
@@ -111,7 +97,7 @@ export function PaymentHistory({ payments, onPaymentChange }: PaymentHistoryProp
                     </div>
 
                     <div className="flex items-center gap-2 text-[11px] text-foreground/50 mt-1">
-                      <span>{formatDate(payment.createdAt)}</span>
+                      <span>{formatShortDate(payment.createdAt)}</span>
                       <span className="size-0.5 rounded-full bg-foreground/30 shrink-0" />
                       <span>{formatTime(payment.createdAt)}</span>
                       {payment.reference && (

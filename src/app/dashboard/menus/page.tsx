@@ -26,6 +26,7 @@ import { Pagination } from '@/components/ui/pagination';
 import type { Menu, MenuCategory } from '@/features/menus/types';
 import { CATEGORY_LABELS, CATEGORY_ICONS, CATEGORY_BADGE_COLORS } from '@/features/menus/constants';
 import { formatCurrency } from '@/lib/utils';
+import { PageGuard } from '@/components/ui/page-guard';
 
 const dh = (n: number) => formatCurrency(n);
 
@@ -92,6 +93,14 @@ type ViewMode = 'grid' | 'table';
 type StatusFilter = 'all' | 'active' | 'inactive';
 
 export default function MenusPage() {
+  return (
+    <PageGuard module="menus" action="read">
+      <MenusPageContent />
+    </PageGuard>
+  )
+}
+
+function MenusPageContent() {
   const [query, setQuery] = useState('');
   const [catFilter, setCatFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');

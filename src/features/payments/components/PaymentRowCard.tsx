@@ -2,33 +2,11 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Wallet, CreditCard, Landmark, Ban, Receipt, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Ban } from 'lucide-react';
 import type { PaymentWithCommande } from '@/features/payments/types';
-
-const mad = (n: number) =>
-  new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(n);
-
-const formatDate = (d: Date | string) =>
-  new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
-
-const METHOD_ICONS: Record<string, typeof CreditCard> = {
-  CASH: Wallet, CARD: CreditCard, TRANSFER: Landmark, CHECK: Receipt, OTHER: Ban,
-};
-
-const METHOD_LABELS: Record<string, string> = {
-  CASH: 'Espèces', CARD: 'Carte', TRANSFER: 'Virement', CHECK: 'Chèque', OTHER: 'Autre',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  COMPLETED: 'Complété', PENDING: 'En attente', FAILED: 'Échoué', REFUNDED: 'Remboursé',
-};
-
-const STATUS_STYLES: Record<string, string> = {
-  COMPLETED: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-300/60',
-  PENDING: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200/60',
-  FAILED: 'bg-red-50 text-red-700 ring-1 ring-red-200/60',
-  REFUNDED: 'bg-gray-100 text-gray-600 ring-1 ring-gray-200/60',
-};
+import { METHOD_ICONS, METHOD_LABELS, STATUS_LABELS, STATUS_STYLES } from '@/features/payments/constants';
+import { formatCurrency } from '@/lib/utils';
+import { formatShortDate } from '@/lib/format';
 
 interface PaymentRowCardProps {
   payment: PaymentWithCommande;
@@ -48,7 +26,7 @@ export function PaymentRowCard({ payment, index }: PaymentRowCardProps) {
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="text-lg font-bold tabular-nums text-foreground">{mad(payment.amount)}</div>
+            <div className="text-lg font-bold tabular-nums text-foreground">{formatCurrency(payment.amount)}</div>
             <div className="flex items-center gap-1.5 mt-1">
               <div className="size-5 rounded-md bg-emerald-50 flex items-center justify-center">
                 <Icon className="size-3 text-emerald-600" strokeWidth={1.8} />
@@ -86,7 +64,7 @@ export function PaymentRowCard({ payment, index }: PaymentRowCardProps) {
           )}
           <div className="flex justify-between">
             <span>Date</span>
-            <span className="font-medium text-foreground">{formatDate(payment.createdAt)}</span>
+            <span className="font-medium text-foreground">{formatShortDate(payment.createdAt)}</span>
           </div>
         </div>
 

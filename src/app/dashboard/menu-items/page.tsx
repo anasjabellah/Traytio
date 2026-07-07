@@ -26,6 +26,7 @@ import { DeleteMenuItemDialog } from '@/features/menu-items/components/delete-me
 import type { MenuItem, MenuItemCategory } from '@/features/menu-items/types';
 import { CATEGORY_LABELS, CATEGORY_BADGE_COLORS } from '@/features/menu-items/constants';
 import { formatCurrency } from '@/lib/utils';
+import { PageGuard } from '@/components/ui/page-guard';
 
 const dh = (n: number) => formatCurrency(n);
 
@@ -94,6 +95,14 @@ type ViewMode = 'grid' | 'table';
 type StatusFilter = 'all' | 'active' | 'inactive';
 
 export default function MenuItemsPage() {
+  return (
+    <PageGuard module="menu-items" action="read">
+      <MenuItemsPageContent />
+    </PageGuard>
+  )
+}
+
+function MenuItemsPageContent() {
   const [query, setQuery] = useState('');
   const [catFilter, setCatFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');

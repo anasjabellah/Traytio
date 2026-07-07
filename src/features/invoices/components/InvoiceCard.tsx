@@ -3,24 +3,8 @@
 import { motion } from 'framer-motion';
 import { FileText, Receipt, Download, Loader2 } from 'lucide-react';
 import type { InvoiceWithCommande } from '@/features/invoices/types';
-
-const mad = (n: number) =>
-  new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(n);
-
-const STATUS_LABELS: Record<string, string> = {
-  DRAFT: 'Brouillon', SENT: 'Envoy\u00e9', VIEWED: 'Vu',
-  ACCEPTED: 'Accept\u00e9', REJECTED: 'Rejet\u00e9', PAID: 'Pay\u00e9', OVERDUE: 'En retard',
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  DRAFT: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200/60',
-  SENT: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/60',
-  VIEWED: 'bg-purple-50 text-purple-700 ring-1 ring-purple-200/60',
-  ACCEPTED: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-300/60',
-  REJECTED: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200/60',
-  PAID: 'bg-green-50 text-green-700 ring-1 ring-green-300/60',
-  OVERDUE: 'bg-red-50 text-red-700 ring-1 ring-red-200/60',
-};
+import { STATUS_LABELS, STATUS_COLORS } from '@/features/invoices/constants';
+import { formatCurrency } from '@/lib/utils';
 
 interface InvoiceCardProps {
   invoice: InvoiceWithCommande;
@@ -37,7 +21,10 @@ export function InvoiceCard({ invoice: inv, index, onView, onDownload, downloadi
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03, duration: 0.3, ease: [0.22, 1, 0.36, 1] as const }}
       onClick={() => onView(inv.id)}
-      className="group rounded-2xl border border-border/60 bg-card shadow-soft hover:shadow-lift transition-all cursor-pointer"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onView(inv.id); } }}
+      className="group rounded-2xl border border-border/60 bg-card shadow-soft hover:shadow-lift transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-deep)]"
     >
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
@@ -81,11 +68,11 @@ export function InvoiceCard({ invoice: inv, index, onView, onDownload, downloadi
         <div className="mt-3 pt-3 border-t border-border/40 grid grid-cols-2 gap-3">
           <div>
             <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Total</div>
-            <div className="text-sm font-bold tabular-nums text-foreground">{mad(inv.totalAmount)}</div>
+            <div className="text-sm font-bold tabular-nums text-foreground">{formatCurrency(inv.totalAmount)}</div>
           </div>
           <div className="text-right">
             <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Pay\u00e9</div>
-            <div className="text-sm font-semibold tabular-nums text-emerald-600">{mad(inv.paidAmount)}</div>
+            <div className="text-sm font-semibold tabular-nums text-emerald-600">{formatCurrency(inv.paidAmount)}</div>
           </div>
         </div>
       </div>
