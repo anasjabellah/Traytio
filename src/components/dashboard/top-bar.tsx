@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback, useLayoutEffect, startTransit
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Search, Bell, CheckCheck, AlertTriangle, Clock, Menu, ChevronDown, X } from "lucide-react"
-import { useUser } from "@clerk/nextjs"
+import { useUser, useClerk } from "@clerk/nextjs"
 import { useNotificationStore } from "@/stores/notification-store"
 import { useRole } from "@/hooks/use-role"
 import { RoleBadge } from "@/components/ui/role-badge"
@@ -111,6 +111,7 @@ export function TopBar() {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotificationStore()
   const { role, can } = useRole()
   const { user } = useUser()
+  const clerk = useClerk()
   const navWrapperRef = useRef<HTMLDivElement>(null)
   const measureRef = useRef<HTMLDivElement>(null)
   const [navSplitIndex, setNavSplitIndex] = useState<number | null>(null)
@@ -434,14 +435,16 @@ export function TopBar() {
                     Paramètres
                   </Link>
                   <div className="h-px bg-border/10 mx-2 my-1" />
-                  <Link
-                    href="#"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="block mx-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:text-red-600 hover:bg-red-50/50 transition-colors"
+                  <button
+                    onClick={() => {
+                      setUserMenuOpen(false)
+                      clerk.signOut({ redirectUrl: "/sign-in" })
+                    }}
+                    className="block w-full text-left mx-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:text-red-600 hover:bg-red-50/50 transition-colors"
                     role="menuitem"
                   >
                     Déconnexion
-                  </Link>
+                  </button>
                 </div>
               </div>
             )}
@@ -512,13 +515,15 @@ export function TopBar() {
               >
                 Paramètres
               </Link>
-              <Link
-                href="#"
-                onClick={() => setSheetOpen(false)}
-                className="flex items-center px-3 py-2.5 rounded-lg text-sm text-red-500 hover:text-red-600 hover:bg-red-50/50 transition-all"
+              <button
+                onClick={() => {
+                  setSheetOpen(false)
+                  clerk.signOut({ redirectUrl: "/sign-in" })
+                }}
+                className="flex w-full text-left items-center px-3 py-2.5 rounded-lg text-sm text-red-500 hover:text-red-600 hover:bg-red-50/50 transition-all"
               >
                 Déconnexion
-              </Link>
+              </button>
             </div>
           </div>
         </SheetContent>
