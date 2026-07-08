@@ -14,10 +14,11 @@ interface EventsTableProps {
   loading: boolean;
   onEdit: (event: Event) => void;
   onDelete: (event: Event) => void;
+  onCreate: () => void;
   isPrivacyMode?: boolean;
 }
 
-export function EventsTable({ data, loading, onEdit, onDelete, isPrivacyMode }: EventsTableProps) {
+export function EventsTable({ data, loading, onEdit, onDelete, onCreate, isPrivacyMode }: EventsTableProps) {
   const columns = useMemo(() => eventsColumns(onEdit, onDelete, isPrivacyMode), [onEdit, onDelete, isPrivacyMode]);
 
   const table = useReactTable({
@@ -66,10 +67,7 @@ export function EventsTable({ data, loading, onEdit, onDelete, isPrivacyMode }: 
           <p className="text-sm text-muted-foreground mt-1">Créez votre premier événement pour commencer.</p>
         </div>
         <button
-          onClick={() => {
-            const btn = document.querySelector('[data-create-event-btn]') as HTMLButtonElement;
-            btn?.click();
-          }}
+          onClick={onCreate}
           className="inline-flex items-center gap-2 bg-foreground hover:opacity-90 text-background rounded-xl px-5 py-2.5 text-sm font-medium transition-all shadow-sm"
         >
           <Plus className="size-4" strokeWidth={1.8} />

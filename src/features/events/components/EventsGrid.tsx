@@ -12,12 +12,13 @@ import type { Event } from '@/features/events/types';
 const mad = (n: number) =>
   new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(n);
 
-function EventsTableSection({ events, isLoading, statusFilter, onEdit, onDelete, pagination, onPageChange, onLimitChange }: {
+function EventsTableSection({ events, isLoading, statusFilter, onEdit, onDelete, onCreate, pagination, onPageChange, onLimitChange }: {
   events: Event[];
   isLoading: boolean;
   statusFilter: string | null;
   onEdit: (e: Event) => void;
   onDelete: (e: Event) => void;
+  onCreate: () => void;
   pagination: { page: number; totalPages: number; total: number; limit: number };
   onPageChange: (page: number) => void;
   onLimitChange: (limit: number) => void;
@@ -34,7 +35,7 @@ function EventsTableSection({ events, isLoading, statusFilter, onEdit, onDelete,
         </div>
         <span className="text-xs text-muted-foreground/60">{displayEvents.length} résultat{displayEvents.length > 1 ? 's' : ''}</span>
       </div>
-      <EventsTable data={displayEvents} loading={isLoading} onEdit={onEdit} onDelete={onDelete} isPrivacyMode={isPrivacyMode} />
+      <EventsTable data={displayEvents} loading={isLoading} onEdit={onEdit} onDelete={onDelete} onCreate={onCreate} isPrivacyMode={isPrivacyMode} />
       <Pagination
         page={pagination.page}
         totalPages={pagination.totalPages}
@@ -155,13 +156,14 @@ function EventAnalytics({ events }: { events: Event[] }) {
 }
 
 export function EventsGrid({
-  events, isLoading, statusFilter, onEdit, onDelete, upcomingSorted, pagination, onPageChange, onLimitChange,
+  events, isLoading, statusFilter, onEdit, onDelete, onCreate, upcomingSorted, pagination, onPageChange, onLimitChange,
 }: {
   events: Event[];
   isLoading: boolean;
   statusFilter: string | null;
   onEdit: (e: Event) => void;
   onDelete: (e: Event) => void;
+  onCreate: () => void;
   upcomingSorted: Event[];
   pagination: { page: number; totalPages: number; total: number; limit: number };
   onPageChange: (page: number) => void;
@@ -175,6 +177,7 @@ export function EventsGrid({
         statusFilter={statusFilter}
         onEdit={onEdit}
         onDelete={onDelete}
+        onCreate={onCreate}
         pagination={pagination}
         onPageChange={onPageChange}
         onLimitChange={onLimitChange}

@@ -117,6 +117,7 @@ export default function EventsPage() {
                 statusFilter={statusFilter}
                 onEdit={openEdit}
                 onDelete={openDelete}
+                onCreate={openCreate}
                 upcomingSorted={upcomingSorted}
                 pagination={pagination}
                 onPageChange={handlePageChange}
