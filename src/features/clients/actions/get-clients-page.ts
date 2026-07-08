@@ -76,7 +76,8 @@ export async function getClientsPage(params: GetClientsPageParams): Promise<Acti
 
     const clientSelect = {
       id: true, organizationId: true, name: true, email: true, phone: true, city: true,
-      totalSpent: true, lastOrderAt: true, createdAt: true, company: true,
+      address: true, postalCode: true, siret: true, notes: true,
+      totalSpent: true, lastOrderAt: true, createdAt: true, updatedAt: true, company: true,
       _count: { select: { commandes: true, events: true } },
     } satisfies Prisma.ClientSelect;
 
@@ -168,11 +169,15 @@ export async function getClientsPage(params: GetClientsPageParams): Promise<Acti
       email: client.email,
       phone: client.phone,
       city: client.city,
+      address: client.address,
+      postalCode: client.postalCode,
       company: client.company,
+      siret: client.siret,
+      notes: client.notes,
       totalSpent: Number(client.totalSpent || 0),
       lastOrderAt: client.lastOrderAt,
       createdAt: client.createdAt,
-      updatedAt: client.createdAt,
+      updatedAt: client.updatedAt,
       commandesCount: client._count.commandes,
       eventsCount: client._count.events,
     }));

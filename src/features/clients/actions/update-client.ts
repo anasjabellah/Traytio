@@ -52,12 +52,12 @@ export async function updateClient(id: string, input: unknown): Promise<ActionRe
         name,
         email: email ?? null,
         phone: phone ?? null,
-        address: address ?? null,
+        address: address ?? undefined,
         city: city ?? null,
-        postalCode: postalCode ?? null,
+        postalCode: postalCode ?? undefined,
         company: company ?? null,
-        siret: siret ?? null,
-        notes: notes ?? null
+        siret: siret ?? undefined,
+        notes: notes ?? undefined
       }
     });
 
