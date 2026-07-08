@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ClientForm } from './client-form';
 import { createClient } from '@/features/clients/actions/create-client';
 import type { Client } from '@/features/clients/types';
-import { toast } from 'sonner';
+import { notify } from "@/lib/notify";
 
 type CreateClientSheetProps = {
   open: boolean;
@@ -20,14 +20,14 @@ export function CreateClientSheet({ open, onOpenChange, onSuccess }: CreateClien
     try {
       const response = await createClient(values);
       if (response.success && response.data) {
-        toast.success('Client créé avec succès');
+        notify.success('Client créé avec succès.');
         onSuccess?.(response.data);
         onOpenChange(false);
       } else {
-        toast.error(response.error || 'Erreur lors de la création du client');
+        notify.error(response.error || 'Impossible de créer le client.');
       }
     } catch (err: any) {
-      toast.error(err.message || 'Erreur inattendue');
+      notify.error(err.message || 'Impossible de créer le client.');
     } finally {
       setIsSubmitting(false);
     }

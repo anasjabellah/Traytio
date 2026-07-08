@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { toast } from 'sonner';
+import { notify } from "@/lib/notify";
 import { deleteClient } from '@/features/clients/actions/delete-client';
 import type { ClientWithStats } from '@/features/clients/types';
 import {
@@ -35,14 +35,14 @@ export function DeleteClientDialog({
     try {
       const resp = await deleteClient(client.id);
       if (resp.success) {
-        toast.success('Client supprimé avec succès');
+        notify.success('Client supprimé avec succès.');
         onSuccess?.();
         onOpenChange(false);
       } else {
-        toast.error(resp.error || 'Erreur lors de la suppression du client');
+        notify.error(resp.error || 'Impossible de supprimer le client.');
       }
     } catch (e: any) {
-      toast.error(e.message ?? 'Erreur inattendue');
+      notify.error(e.message ?? 'Impossible de supprimer le client.');
     } finally {
       setIsDeleting(false);
     }

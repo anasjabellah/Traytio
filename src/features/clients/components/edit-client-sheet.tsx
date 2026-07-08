@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ClientForm } from './client-form';
 import { updateClient } from '@/features/clients/actions/update-client';
 import type { Client } from '@/features/clients/types';
-import { toast } from 'sonner';
+import { notify } from "@/lib/notify";
 
 type EditClientSheetProps = {
   open: boolean;
@@ -36,14 +36,14 @@ export function EditClientSheet({ open, onOpenChange, client, onSuccess }: EditC
     try {
       const response = await updateClient(client.id, values);
       if (response.success && response.data) {
-        toast.success('Client mis à jour avec succès');
+        notify.success('Client mis à jour avec succès.');
         onSuccess?.(response.data);
         onOpenChange(false);
       } else {
-        toast.error(response.error || 'Erreur lors de la mise à jour du client');
+        notify.error(response.error || 'Impossible de mettre à jour le client.');
       }
     } catch (err: any) {
-      toast.error(err.message || 'Erreur inattendue');
+      notify.error(err.message || 'Impossible de mettre à jour le client.');
     } finally {
       setIsSubmitting(false);
     }

@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import { notify } from "@/lib/notify";
 import { createClient } from '@/features/clients/actions/create-client';
 import type { Client } from '@/features/clients/types';
 import { ClientForm } from './client-form';
@@ -26,14 +26,14 @@ export function CreateClientDialog({ open, onOpenChange, onSuccess }: CreateClie
     try {
       const response = await createClient(values);
       if (response.success && response.data) {
-        toast.success('Client créé avec succès');
+        notify.success('Client créé avec succès.');
         onSuccess?.(response.data);
         onOpenChange(false);
       } else {
-        toast.error(response.error || 'Erreur lors de la création du client');
+        notify.error(response.error || 'Impossible de créer le client.');
       }
     } catch (err: any) {
-      toast.error(err.message || 'Erreur inattendue');
+      notify.error(err.message || 'Impossible de créer le client.');
     } finally {
       setIsSubmitting(false);
     }

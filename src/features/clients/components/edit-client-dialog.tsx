@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import { notify } from "@/lib/notify";
 import { updateClient } from '@/features/clients/actions/update-client';
 import type { Client } from '@/features/clients/types';
 import type { UpdateClientInput } from '@/features/clients/validations/update-client-schema';
@@ -43,14 +43,14 @@ export function EditClientDialog({ client, open, onOpenChange, onSuccess }: Edit
     try {
       const response = await updateClient(client.id, values);
       if (response.success && response.data) {
-        toast.success('Client mis à jour avec succès');
+        notify.success('Client mis à jour avec succès.');
         onSuccess();
         onOpenChange(false);
       } else {
-        toast.error(response.error || "Erreur lors de la mise à jour du client");
+        notify.error(response.error || 'Impossible de mettre à jour le client.');
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erreur inattendue");
+      notify.error(err instanceof Error ? err.message : 'Impossible de mettre à jour le client.');
     } finally {
       setIsSubmitting(false);
     }

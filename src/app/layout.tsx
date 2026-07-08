@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";  // ← زيد هاد السطر
+import { ClerkProvider } from "@clerk/nextjs";
 import { QueryProvider } from "@/providers/query-provider";
+import { ToastProvider } from "@/providers/toast-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -18,7 +19,9 @@ export default function RootLayout({
       <html lang="en">
         <body>
           <QueryProvider>
-            {children}
+            <ToastProvider>
+              {children}
+            </ToastProvider>
           </QueryProvider>
         </body>
       </html>
