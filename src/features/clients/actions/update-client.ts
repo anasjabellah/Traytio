@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { ActionResponse, Client } from "@/features/clients/types";
 import { updateClientSchema } from "@/features/clients/validations/update-client-schema";
+import { CLIENT } from "@/lib/notify/messages";
 import { getOrganizationId } from "@/lib/get-organization-id";
 import { assertCan } from "@/lib/assert-role";
 
@@ -15,7 +16,7 @@ export async function updateClient(id: string, input: unknown): Promise<ActionRe
     // Validate input with safeParse
     const result = updateClientSchema.safeParse(input);
     if (!result.success) {
-      return { success: false, error: "Invalid input data" };
+      return { success: false, error: CLIENT.INVALID_INPUT };
     }
 
     // Verify client belongs to organization before update
@@ -27,7 +28,7 @@ export async function updateClient(id: string, input: unknown): Promise<ActionRe
     });
 
     if (!existingClient) {
-      return { success: false, error: "Client not found or access denied" };
+      return { success: false, error: CLIENT.NOT_FOUND_OR_ACCESS_DENIED };
     }
 
     const { name, email, phone, address, city, postalCode, company, siret, notes } = result.data;
@@ -42,7 +43,7 @@ export async function updateClient(id: string, input: unknown): Promise<ActionRe
       });
 
       if (emailExists) {
-        return { success: false, error: "A client with this email already exists in your organization" };
+        return { success: false, error: CLIENT.DUPLICATE_EMAIL };
       }
     }
 
@@ -81,6 +82,6 @@ export async function updateClient(id: string, input: unknown): Promise<ActionRe
     updatedAt: client.updatedAt,
   } as import("@/features/clients/types").Client };
   } catch (error: any) {
-    return { success: false, error: error.message || "An error occurred" };
+    return { success: false, error: error.message || CLIENT.UNEXPECTED_ERROR };
   }
 }

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef, startTransition } fr
 import { Users, CheckCircle2, Wallet, UserPlus, ShoppingCart } from 'lucide-react';
 import { getClientsPage } from '@/features/clients/actions/get-clients-page';
 import { CLIENT_DEFAULT_PAGE_SIZE } from '@/features/clients/constants';
+import { CLIENT } from '@/lib/notify/messages';
 import type { ClientWithStats } from '@/features/clients/types';
 import type { ClientStats, ActivityItem, GetClientsPageParams } from '@/features/clients/actions/get-clients-page';
 
@@ -75,10 +76,10 @@ export function useClients(initialLimit = CLIENT_DEFAULT_PAGE_SIZE, sortBy?: str
         setActivity(d.activity);
         setPagination(prev => ({ ...prev, total: d.total, totalPages: d.totalPages }));
       } else {
-        setError(resp.error ?? 'Failed to load clients');
+        setError(resp.error ?? CLIENT.FETCH_ERROR);
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unexpected error');
+      setError(e instanceof Error ? e.message : CLIENT.UNEXPECTED_ERROR);
     } finally {
       fetchingRef.current = false;
       setIsLoading(false);

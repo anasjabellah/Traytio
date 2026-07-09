@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import type { ActionResponse, ClientWithStats } from '@/features/clients/types';
 import { CLIENT_DEFAULT_PAGE_SIZE } from '@/features/clients/constants';
+import { CLIENT } from '@/lib/notify/messages';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 
@@ -292,7 +293,7 @@ export async function getClientsPage(params: GetClientsPageParams): Promise<Acti
       },
     };
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : 'An error occurred';
+    const msg = error instanceof Error ? error.message : CLIENT.UNEXPECTED_ERROR;
     return { success: false, error: msg };
   }
 }

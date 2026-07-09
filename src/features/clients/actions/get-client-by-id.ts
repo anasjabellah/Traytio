@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import type { ActionResponse, ClientWithStats } from "@/features/clients/types";
 import { getOrganizationId } from "@/lib/get-organization-id";
+import { CLIENT } from "@/lib/notify/messages";
 import { assertCan } from "@/lib/assert-role";
 
 export async function getClientById(id: string): Promise<ActionResponse<ClientWithStats>> {
@@ -42,7 +43,7 @@ export async function getClientById(id: string): Promise<ActionResponse<ClientWi
     });
 
     if (!client) {
-      return { success: false, error: "Client not found" };
+      return { success: false, error: CLIENT.NOT_FOUND };
     }
 
     const { totalSpent, commandes, events, ...rest } = client;
@@ -60,6 +61,6 @@ export async function getClientById(id: string): Promise<ActionResponse<ClientWi
 
     return { success: true, data: clientWithStats };
   } catch (error: any) {
-    return { success: false, error: error.message || "An error occurred" };
+    return { success: false, error: error.message || CLIENT.UNEXPECTED_ERROR };
   }
 }

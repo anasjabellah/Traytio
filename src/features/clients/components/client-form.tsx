@@ -3,11 +3,12 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Mail, Phone, MapPin, MapPinHouse, Building, FileText } from 'lucide-react';
+import { CLIENT } from "@/lib/notify/messages";
 
 const clientFormSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères' }),
-  email: z.string().email({ message: 'Email invalide' }).optional().or(z.literal('')),
+  name: z.string().min(2, { message: CLIENT.VALIDATION.NAME_MIN_LENGTH }),
+  email: z.string().email({ message: CLIENT.VALIDATION.EMAIL_INVALID }).optional().or(z.literal('')),
   phone: z.string().optional().or(z.literal('')),
   address: z.string().optional().or(z.literal('')),
   city: z.string().optional().or(z.literal('')),

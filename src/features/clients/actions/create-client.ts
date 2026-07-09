@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { ActionResponse, Client } from "@/features/clients/types";
 import { createClientSchema } from "@/features/clients/validations/create-client-schema";
+import { CLIENT } from "@/lib/notify/messages";
 import { getOrganizationId } from "@/lib/get-organization-id";
 import { assertCan } from "@/lib/assert-role";
 
@@ -15,7 +16,7 @@ export async function createClient(input: unknown): Promise<ActionResponse<Clien
     // Validate input with safeParse
     const result = createClientSchema.safeParse(input);
     if (!result.success) {
-      return { success: false, error: "Invalid input data" };
+      return { success: false, error: CLIENT.INVALID_INPUT };
     }
 
     const { name, email, phone, address, city, postalCode, company, siret, notes } = result.data;
@@ -30,7 +31,7 @@ export async function createClient(input: unknown): Promise<ActionResponse<Clien
       });
 
       if (existingClient) {
-        return { success: false, error: "A client with this email already exists in your organization" };
+        return { success: false, error: CLIENT.DUPLICATE_EMAIL };
       }
     }
 
@@ -69,6 +70,6 @@ export async function createClient(input: unknown): Promise<ActionResponse<Clien
     updatedAt: client.updatedAt,
   } as import("@/features/clients/types").Client };
   } catch (error: any) {
-    return { success: false, error: error.message || "An error occurred" };
+    return { success: false, error: error.message || CLIENT.UNEXPECTED_ERROR };
   }
 }

@@ -60,7 +60,7 @@ export function DeleteClientDialog({
           </AlertDialogDescription>
           {hasActiveCommandes && (
             <p className="mt-2 text-sm text-destructive">
-              Ce client possède des commandes actives et ne peut pas être supprimé.
+              {CLIENT.ACTIVE_COMMANDES_WARNING}
             </p>
           )}
         </AlertDialogHeader>

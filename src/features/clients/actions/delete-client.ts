@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { ActionResponse } from "@/features/clients/types";
 import { getOrganizationId } from "@/lib/get-organization-id";
+import { CLIENT } from "@/lib/notify/messages";
 import { assertCan } from "@/lib/assert-role";
 
 export async function deleteClient(id: string): Promise<ActionResponse<void>> {
@@ -20,7 +21,7 @@ export async function deleteClient(id: string): Promise<ActionResponse<void>> {
     });
 
     if (!client) {
-      return { success: false, error: "Client not found or access denied" };
+      return { success: false, error: CLIENT.NOT_FOUND_OR_ACCESS_DENIED };
     }
 
     // Check for active commandes (not cancelled or delivered)
@@ -37,7 +38,7 @@ export async function deleteClient(id: string): Promise<ActionResponse<void>> {
     if (activeCommandesCount > 0) {
       return {
         success: false,
-        error: "Impossible de supprimer ce client car il possède des commandes actives"
+        error: CLIENT.HAS_ACTIVE_COMMANDES
       };
     }
 
@@ -50,6 +51,6 @@ export async function deleteClient(id: string): Promise<ActionResponse<void>> {
 
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message || "An error occurred" };
+    return { success: false, error: error.message || CLIENT.UNEXPECTED_ERROR };
   }
 }
