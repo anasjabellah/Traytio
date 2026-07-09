@@ -7,7 +7,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
+import { EVENT } from '@/lib/notify/messages';
 import { createEvent } from '@/features/events/actions/create-event';
 import type { Event } from '@/features/events/types';
 import { EventForm } from './event-form';
@@ -27,14 +28,14 @@ export function CreateEventDialog({ open, onOpenChange, onSuccess, defaultValues
     try {
       const response = await createEvent(values);
       if (response.success && response.data) {
-        toast.success('Événement créé avec succès');
+        notify.success(EVENT.CREATE.SUCCESS);
         onSuccess?.(response.data);
         onOpenChange(false);
       } else {
-        toast.error(response.error || "Erreur lors de la création de l'événement");
+        notify.error(response.error || EVENT.CREATE.ERROR);
       }
     } catch (err: any) {
-      toast.error(err.message || 'Erreur inattendue');
+      notify.error(err.message || EVENT.UNEXPECTED_ERROR);
     } finally {
       setIsSubmitting(false);
     }

@@ -1,21 +1,22 @@
 import { z } from 'zod';
+import { EVENT } from '@/lib/notify/messages';
 
 const MIN_DURATION_MS = 30 * 60 * 1000;
 
 export const validationErrorMap: z.core.$ZodErrorMap = (issue) => {
   if (issue.code === z.ZodIssueCode.invalid_type) {
-    if (issue.received === 'undefined') return 'Ce champ est obligatoire.';
-    if (issue.expected === 'date') return 'Veuillez sélectionner une date.';
-    return 'Valeur invalide.';
+    if (issue.received === 'undefined') return EVENT.VALIDATION.REQUIRED_FIELD;
+    if (issue.expected === 'date') return EVENT.VALIDATION.INVALID_DATE;
+    return EVENT.VALIDATION.INVALID_VALUE;
   }
   if (issue.code === z.ZodIssueCode.invalid_value) {
-    return "Veuillez sélectionner un type d'événement.";
+    return EVENT.VALIDATION.INVALID_TYPE;
   }
   return undefined;
 };
 
 export const createEventSchema = z.object({
-  name: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères' }),
+  name: z.string().min(2, { message: EVENT.VALIDATION.NAME_MIN_LENGTH }),
   type: z.enum(['WEDDING', 'CORPORATE', 'BIRTHDAY', 'ANNIVERSARY', 'HOLIDAY', 'OTHER']),
   status: z.enum(['DRAFT', 'PLANNED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']).default('DRAFT'),
   startDate: z.coerce.date(),
@@ -35,7 +36,7 @@ export const createEventSchema = z.object({
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['startDate'],
-      message: "La date de l'événement doit être aujourd'hui ou dans le futur.",
+      message: EVENT.VALIDATION.DATE_IN_PAST,
     });
   }
 
@@ -48,7 +49,7 @@ export const createEventSchema = z.object({
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['endDate'],
-      message: "L'heure de fin doit être différente de l'heure de début.",
+      message: EVENT.VALIDATION.SAME_START_END,
     });
     return;
   }
@@ -61,7 +62,7 @@ export const createEventSchema = z.object({
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['endDate'],
-      message: 'La durée doit être d\'au moins 30 minutes.',
+      message: EVENT.VALIDATION.MIN_DURATION,
     });
   }
 });

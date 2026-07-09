@@ -8,6 +8,7 @@ import type { EventsPageStats, EventsPageAlert } from '@/features/events/actions
 import { EVENT_DEFAULT_PAGE_SIZE, SPARK_DEFAULTS } from '@/features/events/constants';
 import { useNotificationStore } from '@/stores/notification-store';
 import type { KpiCardProps } from '@/shared/components/kpi-card';
+import { EVENT } from '@/lib/notify/messages';
 
 type Pagination = {
   page: number;
@@ -75,10 +76,10 @@ export function useEvents(initialLimit = EVENT_DEFAULT_PAGE_SIZE, filterParams?:
         setAlerts(d.alerts);
         setPagination(prev => ({ ...prev, total: d.total, totalPages: d.totalPages }));
       } else {
-        setError(resp.error ?? 'Failed to load events');
+        setError(resp.error ?? EVENT.FETCH_ERROR);
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unexpected error');
+      setError(e instanceof Error ? e.message : EVENT.UNEXPECTED_ERROR);
     } finally {
       fetchingRef.current = false;
       setIsLoading(false);

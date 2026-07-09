@@ -6,7 +6,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
+import { EVENT } from '@/lib/notify/messages';
 import { updateEvent } from '@/features/events/actions/update-event';
 import type { Event } from '@/features/events/types';
 import { EventForm } from './event-form';
@@ -27,14 +28,14 @@ export function EditEventDialog({ event, open, onClose, onSuccess }: EditEventDi
     try {
       const response = await updateEvent({ id: event.id, ...values });
       if (response.success && response.data) {
-        toast.success('Événement mis à jour avec succès');
+        notify.success(EVENT.UPDATE.SUCCESS);
         onSuccess?.();
         onClose(false);
       } else {
-        toast.error(response.error || "Erreur lors de la mise à jour de l'événement");
+        notify.error(response.error || EVENT.UPDATE.ERROR);
       }
     } catch (err: any) {
-      toast.error(err.message || 'Erreur inattendue');
+      notify.error(err.message || EVENT.UNEXPECTED_ERROR);
     } finally {
       setIsSubmitting(false);
     }

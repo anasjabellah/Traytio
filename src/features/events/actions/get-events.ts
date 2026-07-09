@@ -7,6 +7,7 @@ import { EVENT_DEFAULT_PAGE_SIZE } from '@/features/events/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { computeHealthScore } from '@/features/events/types';
+import { EVENT } from '@/lib/notify/messages';
 
 export async function getEvents(params: GetEventsParams): Promise<ActionResponse<PaginatedEvents>> {
   try {
@@ -146,6 +147,6 @@ export async function getEvents(params: GetEventsParams): Promise<ActionResponse
 
     return { success: true, data: { data: result, total, page, limit, totalPages } };
   } catch (error: unknown) {
-    return { success: false, error: error instanceof Error ? error.message : 'An error occurred' };
+    return { success: false, error: error instanceof Error ? error.message : EVENT.UNEXPECTED_ERROR };
   }
 }

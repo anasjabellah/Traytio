@@ -6,6 +6,7 @@ import type { ActionResponse, Event } from '@/features/events/types';
 import { updateEventSchema } from '@/features/events/validations/update-event-schema';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { EVENT } from '@/lib/notify/messages';
 
 export async function updateEvent(data: Record<string, unknown>): Promise<ActionResponse<Event>> {
   try {
@@ -15,7 +16,7 @@ export async function updateEvent(data: Record<string, unknown>): Promise<Action
     const parsed = updateEventSchema.safeParse(data);
     if (!parsed.success) {
       const first = parsed.error.issues[0];
-      return { success: false, error: first?.message || 'Données invalides.' };
+      return { success: false, error: first?.message || EVENT.INVALID_INPUT };
     }
 
     const { id, ...validData } = parsed.data;
@@ -107,6 +108,6 @@ export async function updateEvent(data: Record<string, unknown>): Promise<Action
 
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message || 'An error occurred' };
+    return { success: false, error: error.message || EVENT.UNEXPECTED_ERROR };
   }
 }

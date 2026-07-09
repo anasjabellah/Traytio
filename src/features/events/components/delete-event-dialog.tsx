@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
+import { EVENT } from '@/lib/notify/messages';
 import { deleteEvent } from '@/features/events/actions/delete-event';
 import type { Event } from '@/features/events/types';
 import {
@@ -28,14 +29,14 @@ export function DeleteEventDialog({ open, onOpenChange, event, onSuccess }: Dele
     try {
       const resp = await deleteEvent(event.id);
       if (resp.success) {
-        toast.success('Événement supprimé avec succès');
+        notify.success(EVENT.DELETE.SUCCESS);
         onSuccess?.();
         onOpenChange(false);
       } else {
-        toast.error(resp.error || "Erreur lors de la suppression de l'événement");
+        notify.error(resp.error || EVENT.DELETE.ERROR);
       }
     } catch (e: any) {
-      toast.error(e.message ?? 'Erreur inattendue');
+      notify.error(e.message ?? EVENT.UNEXPECTED_ERROR);
     } finally {
       setIsDeleting(false);
     }

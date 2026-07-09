@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse, EventDetail } from '@/features/events/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { EVENT } from '@/lib/notify/messages';
 
 export const getEventById = cache(async (id: string): Promise<ActionResponse<EventDetail>> => {
   try {
@@ -33,7 +34,7 @@ export const getEventById = cache(async (id: string): Promise<ActionResponse<Eve
     });
 
     if (!eventData) {
-      return { success: false, error: 'Event not found' };
+      return { success: false, error: EVENT.NOT_FOUND };
     }
 
     const [clientData, commandes] = await Promise.all([
@@ -83,6 +84,6 @@ export const getEventById = cache(async (id: string): Promise<ActionResponse<Eve
 
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message || 'An error occurred' };
+    return { success: false, error: error.message || EVENT.UNEXPECTED_ERROR };
   }
 });

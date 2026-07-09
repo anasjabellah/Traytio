@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Event } from '@/features/events/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { EVENT } from '@/lib/notify/messages';
 
 export async function duplicateEvent(id: string): Promise<ActionResponse<Event>> {
   try {
@@ -16,7 +17,7 @@ export async function duplicateEvent(id: string): Promise<ActionResponse<Event>>
     });
 
     if (!original) {
-      return { success: false, error: 'Événement introuvable.' };
+      return { success: false, error: EVENT.NOT_FOUND };
     }
 
     const event = await prisma.event.create({
@@ -57,6 +58,6 @@ export async function duplicateEvent(id: string): Promise<ActionResponse<Event>>
 
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message || 'An error occurred' };
+    return { success: false, error: error.message || EVENT.UNEXPECTED_ERROR };
   }
 }

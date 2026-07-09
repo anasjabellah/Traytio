@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { EVENT } from '@/lib/notify/messages';
 export type ConflictEventInfo = {
   id: string;
   name: string;
@@ -87,6 +88,6 @@ export async function checkEventConflicts(
       },
     };
   } catch (error: any) {
-    return { success: false, error: error.message || 'Failed to check conflicts' };
+    return { success: false, error: error.message || EVENT.CONFLICT_CHECK_ERROR };
   }
 }

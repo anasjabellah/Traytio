@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse } from '@/features/events/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { EVENT } from '@/lib/notify/messages';
 
 export async function deleteEvent(id: string): Promise<ActionResponse<void>> {
   try {
@@ -20,6 +21,6 @@ export async function deleteEvent(id: string): Promise<ActionResponse<void>> {
 
     return { success: true, data: undefined };
   } catch (error: any) {
-    return { success: false, error: error.message || 'An error occurred' };
+    return { success: false, error: error.message || EVENT.UNEXPECTED_ERROR };
   }
 }
