@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
+import { MENU } from '@/lib/notify/messages';
 import { Trash2 } from 'lucide-react';
 import { deleteMenu } from '@/features/menus/actions/delete-menu';
 import type { Menu } from '@/features/menus/types';
@@ -29,14 +30,14 @@ export function DeleteMenuDialog({ open, onOpenChange, menu, onSuccess }: Delete
     try {
       const resp = await deleteMenu(menu.id);
       if (resp.success) {
-        toast.success('Menu supprimé avec succès');
+        notify.success(MENU.DELETE.SUCCESS);
         onSuccess?.();
         onOpenChange(false);
       } else {
-        toast.error(resp.error || "Erreur lors de la suppression du menu");
+        notify.error(resp.error || MENU.DELETE.ERROR);
       }
     } catch (e: any) {
-      toast.error(e.message ?? 'Erreur inattendue');
+      notify.error(e.message ?? MENU.UNEXPECTED_ERROR);
     } finally {
       setIsDeleting(false);
     }

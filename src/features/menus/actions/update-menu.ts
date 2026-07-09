@@ -6,12 +6,13 @@ import type { ActionResponse, Menu, UpdateMenuInput } from '@/features/menus/typ
 import { updateMenuSchema } from '@/features/menus/validations/update-menu-schema';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { MENU } from '@/lib/notify/messages';
 
 export async function updateMenu(data: UpdateMenuInput): Promise<ActionResponse<Menu>> {
   try {
     const parsed = updateMenuSchema.safeParse(data);
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message || 'Invalid data' };
+      return { success: false, error: parsed.error.issues[0]?.message || MENU.INVALID_INPUT };
     }
     const validData = parsed.data;
     const organizationId = await getOrganizationId();
@@ -66,6 +67,6 @@ export async function updateMenu(data: UpdateMenuInput): Promise<ActionResponse<
       data: { ...menu, pricePerPerson: Number(menu.pricePerPerson) },
     };
   } catch (e: any) {
-    return { success: false, error: e.message || 'Erreur lors de la mise à jour du menu' };
+    return { success: false, error: e.message || MENU.UPDATE.ERROR };
   }
 }

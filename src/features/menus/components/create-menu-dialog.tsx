@@ -11,7 +11,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
+import { MENU } from '@/lib/notify/messages';
 import { createMenu } from '@/features/menus/actions/create-menu';
 import { createMenuSchema } from '@/features/menus/validations/create-menu-schema';
 import type { Menu } from '@/features/menus/types';
@@ -144,15 +145,15 @@ export function CreateMenuDialog({ open, onOpenChange, onSuccess }: CreateMenuDi
     try {
       const resp = await createMenu(values);
       if (resp.success && resp.data) {
-        toast.success('Menu créé avec succès');
+        notify.success(MENU.CREATE.SUCCESS);
         onSuccess?.(resp.data);
         onOpenChange(false);
         form.reset();
       } else {
-        toast.error(resp.error || 'Erreur lors de la création du menu');
+        notify.error(resp.error || MENU.CREATE.ERROR);
       }
     } catch (e: any) {
-      toast.error(e.message ?? 'Erreur inattendue');
+      notify.error(e.message ?? MENU.UNEXPECTED_ERROR);
     } finally {
       setIsSubmitting(false);
     }

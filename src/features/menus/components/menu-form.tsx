@@ -164,15 +164,16 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
             </div>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Max. tables</div>
+            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Max. tables *</div>
             <div className={inputClass}>
               <input
                 type="number"
-                placeholder="Optionnel"
+                placeholder="10"
                 {...register('maxPersons', { valueAsNumber: true })}
                 className="flex-1 bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
+            {errors.maxPersons && <p className="text-xs text-red-600 mt-1">{errors.maxPersons.message?.toString()}</p>}
           </div>
         </div>
       </div>

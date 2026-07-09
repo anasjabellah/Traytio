@@ -5,6 +5,7 @@ import type { ActionResponse, Menu, PaginatedMenus, GetMenusParams } from '@/fea
 import { MENU_DEFAULT_PAGE_SIZE } from '@/features/menus/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { MENU } from '@/lib/notify/messages';
 
 export async function getMenus(params: GetMenusParams): Promise<ActionResponse<PaginatedMenus>> {
   try {
@@ -77,6 +78,6 @@ export async function getMenus(params: GetMenusParams): Promise<ActionResponse<P
     const totalPages = Math.ceil(total / limit);
     return { success: true, data: { data, total, page, limit, totalPages } };
   } catch (e: any) {
-    return { success: false, error: e.message || 'Erreur lors du chargement des menus' };
+    return { success: false, error: e.message || MENU.FETCH_ERROR };
   }
 }

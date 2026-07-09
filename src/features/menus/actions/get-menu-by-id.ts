@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Menu } from '@/features/menus/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { MENU } from '@/lib/notify/messages';
 
 export async function getMenuById(id: string): Promise<ActionResponse<Menu>> {
   try {
@@ -42,7 +43,7 @@ export async function getMenuById(id: string): Promise<ActionResponse<Menu>> {
         },
       },
     });
-    if (!menu) throw new Error('Menu non trouvé');
+    if (!menu) throw new Error(MENU.NOT_FOUND);
     return {
       success: true,
       data: {
@@ -58,6 +59,6 @@ export async function getMenuById(id: string): Promise<ActionResponse<Menu>> {
       },
     };
   } catch (e: any) {
-    return { success: false, error: e.message || 'Erreur lors de la récupération du menu' };
+    return { success: false, error: e.message || MENU.UNEXPECTED_ERROR };
   }
 }

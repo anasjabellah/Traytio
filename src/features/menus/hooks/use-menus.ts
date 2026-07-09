@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, startTransition } from 'react
 import { getMenus } from '@/features/menus/actions/get-menus';
 import { MENU_DEFAULT_PAGE_SIZE } from '@/features/menus/constants';
 import type { Menu } from '@/features/menus/types';
+import { MENU } from '@/lib/notify/messages';
 
 type Pagination = {
   page: number;
@@ -56,10 +57,10 @@ export function useMenus(
           totalPages: d.totalPages,
         }));
       } else {
-        setError(resp.error ?? 'Failed to load menus');
+        setError(resp.error ?? MENU.FETCH_ERROR);
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unexpected error');
+      setError(e instanceof Error ? e.message : MENU.UNEXPECTED_ERROR);
     } finally {
       fetchingRef.current = false;
       setIsLoading(false);
