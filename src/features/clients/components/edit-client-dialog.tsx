@@ -7,6 +7,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { notify } from "@/lib/notify";
+import { NOTIFY } from "@/lib/messages";
 import { updateClient } from '@/features/clients/actions/update-client';
 import type { Client } from '@/features/clients/types';
 import type { UpdateClientInput } from '@/features/clients/validations/update-client-schema';
@@ -43,14 +44,14 @@ export function EditClientDialog({ client, open, onOpenChange, onSuccess }: Edit
     try {
       const response = await updateClient(client.id, values);
       if (response.success && response.data) {
-        notify.success('Client mis à jour avec succès.');
+        notify.success(NOTIFY.CLIENT.UPDATE.SUCCESS);
         onSuccess();
         onOpenChange(false);
       } else {
-        notify.error(response.error || 'Impossible de mettre à jour le client.');
+        notify.error(response.error || NOTIFY.CLIENT.UPDATE.ERROR);
       }
     } catch (err) {
-      notify.error(err instanceof Error ? err.message : 'Impossible de mettre à jour le client.');
+      notify.error(err instanceof Error ? err.message : NOTIFY.CLIENT.UPDATE.ERROR);
     } finally {
       setIsSubmitting(false);
     }

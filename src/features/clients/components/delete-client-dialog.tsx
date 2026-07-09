@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { notify } from "@/lib/notify";
+import { NOTIFY } from "@/lib/messages";
 import { deleteClient } from '@/features/clients/actions/delete-client';
 import type { ClientWithStats } from '@/features/clients/types';
 import {
@@ -35,14 +36,14 @@ export function DeleteClientDialog({
     try {
       const resp = await deleteClient(client.id);
       if (resp.success) {
-        notify.success('Client supprimé avec succès.');
+        notify.success(NOTIFY.CLIENT.DELETE.SUCCESS);
         onSuccess?.();
         onOpenChange(false);
       } else {
-        notify.error(resp.error || 'Impossible de supprimer le client.');
+        notify.error(resp.error || NOTIFY.CLIENT.DELETE.ERROR);
       }
     } catch (e: any) {
-      notify.error(e.message ?? 'Impossible de supprimer le client.');
+      notify.error(e.message ?? NOTIFY.CLIENT.DELETE.ERROR);
     } finally {
       setIsDeleting(false);
     }

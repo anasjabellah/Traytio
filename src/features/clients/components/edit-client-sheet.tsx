@@ -5,6 +5,7 @@ import { ClientForm } from './client-form';
 import { updateClient } from '@/features/clients/actions/update-client';
 import type { Client } from '@/features/clients/types';
 import { notify } from "@/lib/notify";
+import { NOTIFY } from "@/lib/messages";
 
 type EditClientSheetProps = {
   open: boolean;
@@ -36,14 +37,14 @@ export function EditClientSheet({ open, onOpenChange, client, onSuccess }: EditC
     try {
       const response = await updateClient(client.id, values);
       if (response.success && response.data) {
-        notify.success('Client mis à jour avec succès.');
+        notify.success(NOTIFY.CLIENT.UPDATE.SUCCESS);
         onSuccess?.(response.data);
         onOpenChange(false);
       } else {
-        notify.error(response.error || 'Impossible de mettre à jour le client.');
+        notify.error(response.error || NOTIFY.CLIENT.UPDATE.ERROR);
       }
     } catch (err: any) {
-      notify.error(err.message || 'Impossible de mettre à jour le client.');
+      notify.error(err.message || NOTIFY.CLIENT.UPDATE.ERROR);
     } finally {
       setIsSubmitting(false);
     }

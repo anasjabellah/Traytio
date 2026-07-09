@@ -8,6 +8,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { notify } from "@/lib/notify";
+import { NOTIFY } from "@/lib/messages";
 import { createClient } from '@/features/clients/actions/create-client';
 import type { Client } from '@/features/clients/types';
 import { ClientForm } from './client-form';
@@ -26,14 +27,14 @@ export function CreateClientDialog({ open, onOpenChange, onSuccess }: CreateClie
     try {
       const response = await createClient(values);
       if (response.success && response.data) {
-        notify.success('Client créé avec succès.');
+        notify.success(NOTIFY.CLIENT.CREATE.SUCCESS);
         onSuccess?.(response.data);
         onOpenChange(false);
       } else {
-        notify.error(response.error || 'Impossible de créer le client.');
+        notify.error(response.error || NOTIFY.CLIENT.CREATE.ERROR);
       }
     } catch (err: any) {
-      notify.error(err.message || 'Impossible de créer le client.');
+      notify.error(err.message || NOTIFY.CLIENT.CREATE.ERROR);
     } finally {
       setIsSubmitting(false);
     }
