@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback, useRef, startTransition } from 'react';
 import { getPayments } from '@/features/payments/actions/get-payments';
+import { PAYMENT } from '@/lib/notify/messages';
 import { PAYMENT_DEFAULT_PAGE_SIZE } from '@/features/payments/constants';
 import type { PaymentWithCommande, PaymentStats } from '@/features/payments/types';
 
@@ -45,10 +46,10 @@ export function usePayments(initialLimit = PAYMENT_DEFAULT_PAGE_SIZE, method?: s
         setStats(d.stats);
         setPagination(prev => ({ ...prev, total: d.total, totalPages: d.totalPages }));
       } else {
-        setError(result.error ?? 'Erreur');
+        setError(result.error ?? PAYMENT.ERROR_GENERIC);
       }
     } catch (e: any) {
-      setError(e.message ?? 'Erreur inattendue');
+      setError(e.message ?? PAYMENT.UNEXPECTED_ERROR);
     } finally {
       setIsLoading(false);
       fetchingRef.current = false;

@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { assertCan } from "@/lib/assert-role"
+import { PAYMENT } from "@/lib/notify/messages"
 import { recalculateCommandeBalances } from "@/features/financial/recalculate-commande-balances"
 import { recordPaymentSchema } from "@/features/payments/validations/payment-schemas"
 import type { PaymentMethod, CommandePaymentStatus } from "@prisma/client"
@@ -12,7 +13,7 @@ export async function recordPayment(input: unknown) {
   try {
     const parsed = recordPaymentSchema.safeParse(input)
     if (!parsed.success) {
-      return { success: false as const, error: parsed.error.issues[0]?.message ?? "Données invalides" }
+      return { success: false as const, error: parsed.error.issues[0]?.message ?? PAYMENT.VALIDATION.INVALID_DATA }
     }
 
     const data = parsed.data
@@ -26,7 +27,7 @@ export async function recordPayment(input: unknown) {
     })
 
     if (!commande) {
-      return { success: false as const, error: "Commande introuvable ou accès refusé" }
+      return { success: false as const, error: PAYMENT.NOT_FOUND_COMMANDE }
     }
 
     const result = await prisma.$transaction(async (tx) => {
@@ -37,14 +38,17 @@ export async function recordPayment(input: unknown) {
       })
 
       if (!freshCommande) {
-        return { success: false as const, error: "Commande introuvable" }
+        return { success: false as const, error: PAYMENT.NOT_FOUND_COMMANDE_ALT }
       }
 
       const remaining = Number(freshCommande.remainingAmount)
       if (data.amount > remaining) {
         return {
           success: false as const,
-          error: `Le montant (${data.amount.toLocaleString("fr-FR")} MAD) dépasse le solde restant (${remaining.toLocaleString("fr-FR")} MAD)`,
+          error: PAYMENT.VALIDATION.AMOUNT_EXCEEDS_BALANCE(
+            data.amount.toLocaleString("fr-FR"),
+            remaining.toLocaleString("fr-FR"),
+          ),
         }
       }
 
@@ -66,8 +70,12 @@ export async function recordPayment(input: unknown) {
       await tx.commandeActivity.create({
         data: {
           commandeId: data.commandeId,
-          action: "Paiement enregistré",
-          description: `Montant: ${data.amount.toLocaleString("fr-FR")} MAD | Méthode: ${data.method}${data.reference ? ` | Réf: ${data.reference}` : ""}`,
+          action: PAYMENT.ACTIVITY.CREATE.ACTION,
+          description: PAYMENT.ACTIVITY.CREATE.DESCRIPTION(
+            data.amount.toLocaleString("fr-FR"),
+            data.method,
+            data.reference ?? null,
+          ),
         },
       })
 
@@ -102,6 +110,6 @@ export async function recordPayment(input: unknown) {
       paymentStatus: updated?.paymentStatus as CommandePaymentStatus,
     }
   } catch (err: unknown) {
-    return { success: false as const, error: err instanceof Error ? err.message : "Erreur lors de l'enregistrement du paiement" }
+    return { success: false as const, error: err instanceof Error ? err.message : PAYMENT.CREATE.ERROR }
   }
 }

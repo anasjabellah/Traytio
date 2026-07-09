@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { assertCan } from "@/lib/assert-role"
+import { PAYMENT } from "@/lib/notify/messages"
 import { PAYMENT_DEFAULT_PAGE_SIZE } from "@/features/payments/constants"
 import type { ActionResponse, PaginatedPayments, PaymentWithCommande, PaymentStats } from "@/features/payments/types"
 import type { Prisma } from "@prisma/client"
@@ -146,6 +147,6 @@ export async function getPayments(params?: {
       data: { data, stats, total, page, limit, totalPages },
     }
   } catch (e: any) {
-    return { success: false, error: e.message || 'Erreur lors du chargement des paiements' }
+    return { success: false, error: e.message || PAYMENT.FETCH_ERROR }
   }
 }

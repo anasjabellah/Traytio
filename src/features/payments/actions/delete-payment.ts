@@ -4,13 +4,14 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { assertCan } from "@/lib/assert-role"
+import { PAYMENT } from "@/lib/notify/messages"
 import { recalculateCommandeBalances } from "@/features/financial/recalculate-commande-balances"
 import type { CommandePaymentStatus } from "@prisma/client"
 
 export async function deletePayment(paymentId: string) {
   try {
     if (!paymentId || typeof paymentId !== "string") {
-      return { success: false as const, error: "ID de paiement invalide" }
+      return { success: false as const, error: PAYMENT.INVALID_ID }
     }
 
     const organizationId = await getOrganizationId()
@@ -28,7 +29,7 @@ export async function deletePayment(paymentId: string) {
     })
 
     if (!payment) {
-      return { success: false as const, error: "Paiement introuvable ou accès refusé" }
+      return { success: false as const, error: PAYMENT.NOT_FOUND }
     }
 
     const commande = await prisma.commande.findFirst({
@@ -37,7 +38,7 @@ export async function deletePayment(paymentId: string) {
     })
 
     if (!commande) {
-      return { success: false as const, error: "Commande liée introuvable" }
+      return { success: false as const, error: PAYMENT.NOT_FOUND_COMMANDE_LINKED }
     }
 
     await prisma.$transaction(async (tx) => {
@@ -50,8 +51,12 @@ export async function deletePayment(paymentId: string) {
       await tx.commandeActivity.create({
         data: {
           commandeId: payment.commandeId,
-          action: "Paiement supprimé",
-          description: `Montant: ${Number(payment.amount).toLocaleString("fr-FR")} MAD | Méthode: ${payment.method}${payment.reference ? ` | Réf: ${payment.reference}` : ""}`,
+          action: PAYMENT.ACTIVITY.DELETE.ACTION,
+          description: PAYMENT.ACTIVITY.DELETE.DESCRIPTION(
+            Number(payment.amount).toLocaleString("fr-FR"),
+            payment.method,
+            payment.reference,
+          ),
         },
       })
     })
@@ -75,6 +80,6 @@ export async function deletePayment(paymentId: string) {
       paymentStatus: updated?.paymentStatus as CommandePaymentStatus,
     }
   } catch (err: unknown) {
-    return { success: false as const, error: err instanceof Error ? err.message : "Erreur lors de la suppression du paiement" }
+    return { success: false as const, error: err instanceof Error ? err.message : PAYMENT.DELETE.ERROR }
   }
 }
