@@ -6,6 +6,7 @@ import type { ActionResponse, Commande, GetCommandesParams } from '@/features/co
 import { serializeCommande } from '@/features/commandes/lib/serialize-commande';
 import { COMMANDE_DEFAULT_PAGE_SIZE } from '@/features/commandes/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { COMMANDE } from '@/lib/notify/messages';
 import { assertCan } from '@/lib/assert-role';
 
 export type CommandeStats = {
@@ -180,7 +181,7 @@ export async function getCommandesPage(params: GetCommandesParams): Promise<Acti
       },
     };
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : 'An error occurred';
+    const msg = error instanceof Error ? error.message : COMMANDE.UNEXPECTED_ERROR;
     return { success: false, error: msg };
   }
 }

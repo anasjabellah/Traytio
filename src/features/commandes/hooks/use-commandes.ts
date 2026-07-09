@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, startTransition } from 'react';
 import { getCommandesPage } from '@/features/commandes/actions/get-commandes-page';
+import { COMMANDE } from '@/lib/notify/messages';
 import type { Commande } from '@/features/commandes/types';
 import type { CommandeStats } from '@/features/commandes/actions/get-commandes-page';
 
@@ -60,10 +61,10 @@ export function useCommandes(initialLimit = 10) {
           totalPages: resp.data!.totalPages,
         }));
       } else {
-        setError(resp.error ?? 'Failed to load commandes');
+        setError(resp.error ?? COMMANDE.FETCH_ERROR);
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Unexpected error');
+      setError(e instanceof Error ? e.message : COMMANDE.UNEXPECTED_ERROR);
     } finally {
       fetchingRef.current = false;
       setIsLoading(false);

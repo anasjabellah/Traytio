@@ -3,13 +3,14 @@
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
+import { COMMANDE } from "@/lib/notify/messages"
 import { assertCan } from "@/lib/assert-role"
 import { revalidatePath } from "next/cache"
 
 const createCommandesClientSchema = z.object({
-  name: z.string().min(1, "Le nom est requis"),
+  name: z.string().min(1, COMMANDE.VALIDATION.NAME_REQUIRED),
   phone: z.string().nullable().optional(),
-  email: z.string().email("Email invalide").nullable().optional().or(z.literal("")),
+  email: z.string().email(COMMANDE.VALIDATION.EMAIL_INVALID).nullable().optional().or(z.literal("")),
   address: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
 })
@@ -18,7 +19,7 @@ export async function createClient(input: unknown) {
   try {
     const parsed = createCommandesClientSchema.safeParse(input)
     if (!parsed.success) {
-      return { success: false as const, error: parsed.error.issues[0]?.message ?? "Données invalides" }
+      return { success: false as const, error: parsed.error.issues[0]?.message ?? COMMANDE.VALIDATION.INVALID_DATA }
     }
 
     const data = parsed.data
@@ -55,7 +56,7 @@ export async function createClient(input: unknown) {
   } catch (err: unknown) {
     return {
       success: false as const,
-      error: err instanceof Error ? err.message : "Erreur lors de la création du client",
+      error: err instanceof Error ? err.message : COMMANDE.CLIENT.ERROR,
     }
   }
 }

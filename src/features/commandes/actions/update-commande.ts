@@ -7,13 +7,14 @@ import { assertCan } from '@/lib/assert-role';
 import { createCommandeSchema } from '@/features/commandes/validations/create-commande-schema';
 import { recalculateCommandeBalances } from '@/features/financial/recalculate-commande-balances';
 import type { ActionResponse } from '@/features/commandes/types';
+import { COMMANDE } from '@/lib/notify/messages';
 import type { CommandeStatus, EventType, EventStatus, DiscountType } from '@prisma/client';
 
 export async function updateCommande(id: string, input: unknown): Promise<ActionResponse<void>> {
   try {
     const parsed = createCommandeSchema.safeParse(input);
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid input' };
+      return { success: false, error: parsed.error.issues[0]?.message ?? COMMANDE.VALIDATION.INVALID_INPUT };
     }
 
     const organizationId = await getOrganizationId();
@@ -24,7 +25,7 @@ export async function updateCommande(id: string, input: unknown): Promise<Action
     });
 
     if (!existing) {
-      return { success: false, error: 'Commande not found or access denied' };
+      return { success: false, error: COMMANDE.NOT_FOUND_OR_ACCESS_DENIED };
     }
 
     await assertCan('commandes', 'update', existing.createdById ?? undefined);
@@ -49,7 +50,7 @@ export async function updateCommande(id: string, input: unknown): Promise<Action
         select: { id: true },
       });
       if (!targetEvent) {
-        return { success: false, error: 'Event not found or access denied' };
+        return { success: false, error: COMMANDE.EVENT_NOT_FOUND };
       }
 
       await prisma.event.update({
@@ -146,6 +147,6 @@ export async function updateCommande(id: string, input: unknown): Promise<Action
 
     return { success: true };
   } catch (error: unknown) {
-    return { success: false, error: error instanceof Error ? error.message : 'Failed to update commande' };
+    return { success: false, error: error instanceof Error ? error.message : COMMANDE.UPDATE.ERROR };
   }
 }

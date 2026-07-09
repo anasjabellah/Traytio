@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
+import { COMMANDE } from "@/lib/notify/messages"
 import { assertCan } from "@/lib/assert-role"
 
 export async function getCommandeMenuItems() {
@@ -31,6 +32,6 @@ export async function getCommandeMenuItems() {
       unit: item.unit ?? null,
     }))
   } catch (err: any) {
-    return { error: err.message || "Erreur lors du chargement des articles" }
+    return { error: err.message || COMMANDE.FETCH_ERROR_ITEMS }
   }
 }

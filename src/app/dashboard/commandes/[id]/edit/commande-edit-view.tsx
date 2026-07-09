@@ -2,7 +2,8 @@
 
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
+import { COMMANDE } from "@/lib/notify/messages";
 import { useInvalidateQueries } from "@/lib/invalidate-queries";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, StickyNote } from "lucide-react";
@@ -35,14 +36,14 @@ export default function CommandeEditView({ commande }: { commande: CommandeWithD
     const result = await handleSubmit();
     if (result.success) {
       if (result.uploadErrors?.length) {
-        toast.warning(`Commande mise à jour, mais ${result.uploadErrors.length} fichier(s) n'ont pas pu être téléchargés.`);
+        notify.warning(COMMANDE.UPDATE.SUCCESS_WITH_UPLOAD_ERRORS(result.uploadErrors.length));
       } else {
-        toast.success("Commande mise à jour avec succès");
+        notify.success(COMMANDE.UPDATE.SUCCESS);
       }
       invalidate([["dashboard"]]);
       router.push(`/dashboard/commandes/${commande.id}`);
     } else {
-      toast.error(result.error ?? "Erreur lors de la mise à jour de la commande");
+      notify.error(result.error ?? COMMANDE.UPDATE.ERROR);
     }
   }, [handleSubmit, router, commande.id]);
 

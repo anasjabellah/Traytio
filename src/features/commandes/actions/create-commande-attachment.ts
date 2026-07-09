@@ -3,14 +3,15 @@
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
+import { COMMANDE } from "@/lib/notify/messages"
 import { assertCan } from "@/lib/assert-role"
 import { revalidatePath } from "next/cache"
 
 const createAttachmentSchema = z.object({
   commandeId: z.string().min(1),
-  name: z.string().min(1, "Le nom est requis"),
-  url: z.string().min(1, "L'URL est requise"),
-  type: z.string().min(1, "Le type est requis"),
+  name: z.string().min(1, COMMANDE.VALIDATION.ATTACHMENT_NAME_REQUIRED),
+  url: z.string().min(1, COMMANDE.VALIDATION.ATTACHMENT_URL_REQUIRED),
+  type: z.string().min(1, COMMANDE.VALIDATION.ATTACHMENT_TYPE_REQUIRED),
 })
 
 export async function createCommandeAttachment(
@@ -22,7 +23,7 @@ export async function createCommandeAttachment(
   try {
     const parsed = createAttachmentSchema.safeParse({ commandeId, name, url, type })
     if (!parsed.success) {
-      return { success: false as const, error: parsed.error.issues[0]?.message ?? "Données invalides" }
+      return { success: false as const, error: parsed.error.issues[0]?.message ?? COMMANDE.VALIDATION.INVALID_DATA }
     }
 
     const organizationId = await getOrganizationId()
@@ -31,7 +32,7 @@ export async function createCommandeAttachment(
       where: { id: commandeId, organizationId },
       select: { id: true },
     })
-    if (!commande) return { success: false as const, error: "Commande introuvable" }
+    if (!commande) return { success: false as const, error: COMMANDE.NOT_FOUND }
 
     await prisma.commandeAttachment.create({
       data: { commandeId, name, url, type },
@@ -41,6 +42,6 @@ export async function createCommandeAttachment(
 
     return { success: true as const }
   } catch (err: unknown) {
-    return { success: false as const, error: err instanceof Error ? err.message : "Erreur lors de la création de la pièce jointe" }
+    return { success: false as const, error: err instanceof Error ? err.message : COMMANDE.ATTACHMENT.ERROR }
   }
 }

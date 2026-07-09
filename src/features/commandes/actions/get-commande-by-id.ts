@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse, CommandeWithDetails } from '@/features/commandes/types';
 import { serializeCommande, serializeCommandeItem, serializePaymentSummary } from '@/features/commandes/lib/serialize-commande';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { COMMANDE } from '@/lib/notify/messages';
 import { assertCan } from '@/lib/assert-role';
 
 export async function getCommandeById(id: string): Promise<ActionResponse<CommandeWithDetails>> {
@@ -55,7 +56,7 @@ export async function getCommandeById(id: string): Promise<ActionResponse<Comman
     });
 
     if (!commande) {
-      return { success: false, error: 'Commande not found' };
+      return { success: false, error: COMMANDE.NOT_FOUND };
     }
 
     const result: CommandeWithDetails = {
@@ -95,6 +96,6 @@ export async function getCommandeById(id: string): Promise<ActionResponse<Comman
 
     return { success: true, data: result };
   } catch (error: unknown) {
-    return { success: false, error: error instanceof Error ? error.message : 'An error occurred' };
+    return { success: false, error: error instanceof Error ? error.message : COMMANDE.UNEXPECTED_ERROR };
   }
 }

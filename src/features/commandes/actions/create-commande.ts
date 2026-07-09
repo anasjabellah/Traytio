@@ -6,6 +6,7 @@ import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { createCommandeSchema } from "@/features/commandes/validations/create-commande-schema"
 import { recalculateCommandeBalances } from "@/features/financial/recalculate-commande-balances"
 import { serializeCommande, serializeCommandeItem } from "@/features/commandes/lib/serialize-commande"
+import { COMMANDE } from "@/lib/notify/messages"
 import type { CommandeStatus, EventType, EventStatus, DiscountType } from "@prisma/client";
 
 function isPrismaP2002(err: unknown): boolean {
@@ -30,7 +31,7 @@ async function nextCommandeNumber(tx: any, organizationId: string): Promise<stri
 export async function createCommande(input: unknown) {
   const parsed = createCommandeSchema.safeParse(input)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" }
+    return { success: false, error: parsed.error.issues[0]?.message ?? COMMANDE.VALIDATION.INVALID_INPUT }
   }
 
   const data = parsed.data
@@ -135,9 +136,9 @@ export async function createCommande(input: unknown) {
       if (isPrismaP2002(err) && !data.number) {
         continue
       }
-      return { success: false, error: err instanceof Error ? err.message : "Failed to create commande" }
+      return { success: false, error: err instanceof Error ? err.message : COMMANDE.CREATE.ERROR }
     }
   }
 
-  return { success: false, error: lastError instanceof Error ? lastError.message : "Failed to create commande after multiple attempts" }
+  return { success: false, error: lastError instanceof Error ? lastError.message : COMMANDE.CREATE.ERROR_RETRIES }
 }

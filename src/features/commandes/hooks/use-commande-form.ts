@@ -9,6 +9,7 @@ import { getCommandeAllMenuItems } from "@/features/commandes/actions/get-comman
 import { getCommandeClientEvents, type ClientEventSummary } from "@/features/commandes/actions/get-commande-client-events";
 import { createCommande } from "@/features/commandes/actions/create-commande";
 import { createCommandeAttachment } from "@/features/commandes/actions/create-commande-attachment";
+import { COMMANDE } from "@/lib/notify/messages";
 import type { Client, MenuItemDisplay } from "@/features/commandes/types";
 
 export function useCommandeForm() {
@@ -232,7 +233,7 @@ export function useCommandeForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = useCallback(async (): Promise<{ success: true; data: { id: string }; uploadErrors?: string[] } | { success: false; error: string }> => {
-    if (!client) return { success: false as const, error: "Aucun client sélectionné" };
+    if (!client) return { success: false as const, error: COMMANDE.NO_CLIENT_SELECTED };
     setIsSubmitting(true);
     try {
       const discountTypeDb = discountType === "percent" ? "PERCENTAGE" : "FIXED";
@@ -274,7 +275,7 @@ export function useCommandeForm() {
         status: "DRAFT",
         items,
       });
-      if (!result.success || !result.data) return { success: false as const, error: result.error ?? "Erreur lors de la création" };
+      if (!result.success || !result.data) return { success: false as const, error: result.error ?? COMMANDE.CREATE.ERROR };
 
       const commandeId = result.data.id;
       const uploadErrors: string[] = [];

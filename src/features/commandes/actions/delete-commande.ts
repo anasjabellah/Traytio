@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse } from '@/features/commandes/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { COMMANDE } from '@/lib/notify/messages';
 import { assertCan } from '@/lib/assert-role';
 
 export async function deleteCommande(id: string): Promise<ActionResponse<void>> {
@@ -16,7 +17,7 @@ export async function deleteCommande(id: string): Promise<ActionResponse<void>> 
     });
 
     if (!commande) {
-      return { success: false, error: 'Commande not found or access denied' };
+      return { success: false, error: COMMANDE.NOT_FOUND_OR_ACCESS_DENIED };
     }
 
     // Check for invoices linked
@@ -27,7 +28,7 @@ export async function deleteCommande(id: string): Promise<ActionResponse<void>> 
     if (invoicesCount > 0) {
       return {
         success: false,
-        error: 'Impossible de supprimer cette commande car elle a des factures liées',
+        error: COMMANDE.DELETE.ERROR_INVOICES,
       };
     }
 
@@ -40,6 +41,6 @@ export async function deleteCommande(id: string): Promise<ActionResponse<void>> 
 
     return { success: true };
   } catch (error: unknown) {
-    return { success: false, error: error instanceof Error ? error.message : 'An error occurred' };
+    return { success: false, error: error instanceof Error ? error.message : COMMANDE.UNEXPECTED_ERROR };
   }
 }

@@ -2,7 +2,8 @@
 
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
+import { COMMANDE } from "@/lib/notify/messages";
 import { useInvalidateQueries } from "@/lib/invalidate-queries";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, StickyNote, Plus } from "lucide-react";
@@ -35,14 +36,14 @@ function NouvelleCommandePage() {
     const result = await handleSubmit();
     if (result.success) {
       if (result.uploadErrors?.length) {
-        toast.warning(`Commande créée, mais ${result.uploadErrors.length} fichier(s) n'ont pas pu être téléchargés.`);
+        notify.warning(COMMANDE.CREATE.SUCCESS_WITH_UPLOAD_ERRORS(result.uploadErrors.length));
       } else {
-        toast.success("Commande créée avec succès");
+        notify.success(COMMANDE.CREATE.SUCCESS);
       }
       invalidate([["dashboard"]]);
       router.push(`/dashboard/commandes/${result.data.id}`);
     } else {
-      toast.error(result.error ?? "Erreur lors de la création de la commande");
+      notify.error(result.error ?? COMMANDE.CREATE.ERROR);
     }
   }, [handleSubmit, router]);
 

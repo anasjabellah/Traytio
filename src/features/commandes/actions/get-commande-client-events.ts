@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
+import { COMMANDE } from "@/lib/notify/messages"
 import { assertCan } from "@/lib/assert-role"
 
 export type ClientEventSummary = {
@@ -58,6 +59,6 @@ export async function getCommandeClientEvents(clientId: string) {
       status: event.status,
     }))
   } catch (err: any) {
-    return { error: err.message || "Erreur lors du chargement des événements" }
+    return { error: err.message || COMMANDE.FETCH_ERROR_EVENTS }
   }
 }

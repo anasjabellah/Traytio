@@ -20,7 +20,8 @@ import { ViewSwitcher, type ViewMode } from '@/features/commandes/components/vie
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { Pagination } from '@/components/ui/pagination';
 import { deleteCommande } from '@/features/commandes/actions/delete-commande';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
+import { COMMANDE } from '@/lib/notify/messages';
 import { COMMANDE_STATUS_LABELS, COMMANDE_STATUS_STYLES } from '@/features/commandes/constants';
 import type { Commande } from '@/features/commandes/types';
 
@@ -92,12 +93,12 @@ export default function CommandesPage() {
     const result = await deleteCommande(deleteTarget.id);
     setDeleteLoading(false);
     setDeleteTarget(null);
-    if (result.success) {
-      toast.success('Commande supprimée', { description: `${deleteTarget.number} a été supprimée.` });
-      refresh();
-    } else {
-      toast.error('Erreur', { description: result.error ?? 'Impossible de supprimer la commande.' });
-    }
+      if (result.success) {
+        notify.success(COMMANDE.DELETE.SUCCESS(deleteTarget.number));
+        refresh();
+      } else {
+        notify.error(result.error ?? COMMANDE.DELETE.ERROR);
+      }
   }, [deleteTarget, refresh]);
 
   const toggleStatus = (key: string) => {

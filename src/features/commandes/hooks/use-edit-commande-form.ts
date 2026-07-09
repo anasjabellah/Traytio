@@ -8,6 +8,7 @@ import { getCommandeMenus } from "@/features/commandes/actions/get-commande-menu
 import { getCommandeAllMenuItems } from "@/features/commandes/actions/get-commande-all-menu-items";
 import { updateCommande } from "@/features/commandes/actions/update-commande";
 import { createCommandeAttachment } from "@/features/commandes/actions/create-commande-attachment";
+import { COMMANDE } from "@/lib/notify/messages";
 import type { Client, MenuItemDisplay, CommandeWithDetails } from "@/features/commandes/types";
 
 const EVENT_TYPE_MAP: Record<string, string> = {
@@ -224,7 +225,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleUpdate = useCallback(async () => {
-    if (!client) return { success: false as const, error: "Aucun client sélectionné" };
+    if (!client) return { success: false as const, error: COMMANDE.NO_CLIENT_SELECTED };
     setIsSubmitting(true);
     try {
       const discountTypeDb = discountType === "percent" ? "PERCENTAGE" : "FIXED";
@@ -267,7 +268,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
         status: commande.status as any,
         items,
       });
-      if (!result.success) return { success: false as const, error: result.error ?? "Erreur lors de la mise à jour" };
+      if (!result.success) return { success: false as const, error: result.error ?? COMMANDE.UPDATE.ERROR };
 
       const uploadErrors: string[] = [];
       for (const file of attachments) {

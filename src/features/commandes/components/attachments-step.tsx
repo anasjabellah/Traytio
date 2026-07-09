@@ -3,7 +3,8 @@
 import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, Trash2, FileText, FileImage, Eye, X, Maximize2, Download } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
+import { COMMANDE } from "@/lib/notify/messages";
 
 type PersistedAttachment = { id: string; name: string; url: string; type?: string | null };
 
@@ -68,7 +69,7 @@ export function AttachmentsStep({ attachments, setAttachments }: { attachments: 
     if (!files) return;
     const valid = Array.from(files).filter((f) => {
       if (!isAllowed(f)) {
-        toast.error(`Fichier refusé : ${f.name} — type ou taille non autorisé`);
+        notify.warning(COMMANDE.FILE.REJECTED(f.name));
         return false;
       }
       return true;

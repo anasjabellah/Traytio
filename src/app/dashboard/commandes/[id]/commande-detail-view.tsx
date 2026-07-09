@@ -15,7 +15,8 @@ import {
   UtensilsCrossed, GlassWater, CakeSlice, BriefcaseBusiness, Music,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
+import { COMMANDE } from "@/lib/notify/messages";
 import { DeleteCommandeDialog } from "@/features/commandes/components/delete-commande-dialog";
 import { PaymentCard } from "@/features/payments/components/payment-card";
 import { AddPaymentDialog } from "@/features/payments/components/add-payment-dialog";
@@ -132,13 +133,13 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
     try {
       const result = await createQuoteFromCommande(commande.id);
       if (result.success) {
-        toast.success("Devis créé avec succès");
+        notify.success(COMMANDE.QUOTE.SUCCESS);
         await fetchInvoices();
       } else {
-        toast.error(result.error ?? "Erreur lors de la création du devis");
+        notify.error(result.error ?? COMMANDE.QUOTE.ERROR);
       }
     } catch {
-      toast.error("Erreur lors de la création du devis");
+      notify.error(COMMANDE.QUOTE.ERROR);
     } finally {
       setGenerating(null);
     }
@@ -149,13 +150,13 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
     try {
       const result = await createInvoiceFromCommande(commande.id);
       if (result.success) {
-        toast.success("Facture créée avec succès");
+        notify.success(COMMANDE.INVOICE.SUCCESS);
         await fetchInvoices();
       } else {
-        toast.error(result.error ?? "Erreur lors de la création de la facture");
+        notify.error(result.error ?? COMMANDE.INVOICE.ERROR);
       }
     } catch {
-      toast.error("Erreur lors de la création de la facture");
+      notify.error(COMMANDE.INVOICE.ERROR);
     } finally {
       setGenerating(null);
     }
@@ -167,7 +168,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
       const resp = await fetch(`/api/invoices/${invoice.id}/pdf`);
       if (!resp.ok) {
         const err = await resp.json();
-        toast.error(err.error ?? "Erreur de téléchargement");
+        notify.error(err.error ?? COMMANDE.DOWNLOAD.ERROR);
         return;
       }
       const blob = await resp.blob();
@@ -180,7 +181,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch {
-      toast.error("Erreur de téléchargement");
+      notify.error(COMMANDE.DOWNLOAD.ERROR);
     } finally {
       setDownloadingInvoice(null);
     }
@@ -191,13 +192,13 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
     try {
       const result = await updateInvoiceStatus(invoiceId, newStatus);
       if (result.success) {
-        toast.success("Statut mis à jour");
+        notify.success(COMMANDE.STATUS.UPDATE_SUCCESS);
         await fetchInvoices();
       } else {
-        toast.error(result.error ?? "Erreur de mise à jour");
+        notify.error(result.error ?? COMMANDE.STATUS.UPDATE_ERROR);
       }
     } catch {
-      toast.error("Erreur de mise à jour");
+      notify.error(COMMANDE.STATUS.UPDATE_ERROR);
     } finally {
       setUpdatingInvoiceStatus(null);
     }
@@ -208,13 +209,13 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
     try {
       const result = await convertQuoteToInvoice(quoteId);
       if (result.success) {
-        toast.success("Facture créée à partir du devis");
+        notify.success(COMMANDE.INVOICE.CONVERT_SUCCESS);
         await fetchInvoices();
       } else {
-        toast.error(result.error ?? "Erreur de conversion");
+        notify.error(result.error ?? COMMANDE.INVOICE.CONVERT_ERROR);
       }
     } catch {
-      toast.error("Erreur de conversion");
+      notify.error(COMMANDE.INVOICE.CONVERT_ERROR);
     } finally {
       setConvertingInvoice(null);
     }
@@ -741,7 +742,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                   </button>
                 )}
                 <button
-                  onClick={() => toast.info("Envoi WhatsApp — bientôt disponible")}
+                  onClick={() => notify.info(COMMANDE.WHATSAPP.COMING_SOON)}
                   className="w-full inline-flex items-center justify-center gap-2 min-h-[44px] rounded-xl border border-border bg-white hover:bg-foreground/[0.02] text-xs font-medium text-foreground/70 hover:text-foreground transition-all"
                 >
                   <MessageCircle className="size-3.5" strokeWidth={1.8} />
@@ -1016,7 +1017,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                     </button>
                   )}
                   <button
-                    onClick={() => toast.info("Envoi WhatsApp — bientôt disponible")}
+                    onClick={() => notify.info(COMMANDE.WHATSAPP.COMING_SOON)}
                     className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl border border-border bg-white hover:bg-foreground/[0.02] text-xs font-medium text-foreground/70 hover:text-foreground transition-all"
                   >
                     <MessageCircle className="size-3.5" strokeWidth={1.8} />
