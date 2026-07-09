@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { CATEGORY_LABELS, CATEGORY_BADGE_COLORS } from '@/features/menu-items/constants';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
+import { MENU_ITEM } from '@/lib/notify/messages';
 import { CloudUpload, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -44,11 +45,11 @@ export function MenuItemForm({ onSubmit, isLoading = false, mode, onUploadingCha
 
   const handleFileUpload = async (file: File) => {
     if (!ALLOWED_TYPES.includes(file.type)) {
-      toast.error('Format non supporté. Utilisez JPEG, PNG ou WebP.');
+      notify.error(MENU_ITEM.IMAGE.FORMAT_ERROR);
       return;
     }
     if (file.size > MAX_SIZE) {
-      toast.error(`L'image dépasse la limite de ${MAX_SIZE / 1024 / 1024} MB`);
+      notify.error(MENU_ITEM.IMAGE.SIZE_ERROR);
       return;
     }
     const formData = new FormData();
@@ -60,13 +61,13 @@ export function MenuItemForm({ onSubmit, isLoading = false, mode, onUploadingCha
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
       if (!res.ok) {
         const err = await res.json().catch(() => null);
-        throw new Error(err?.error || 'Upload failed');
+        throw new Error(err?.error || MENU_ITEM.IMAGE.UPLOAD_ERROR);
       }
       const json = await res.json();
       setValue('imageUrl', json.url);
-      toast.success('Image téléchargée');
+      notify.success(MENU_ITEM.IMAGE.UPLOAD_SUCCESS);
     } catch {
-      toast.error('Erreur lors du téléchargement');
+      notify.error(MENU_ITEM.IMAGE.UPLOAD_ERROR);
     } finally {
       setIsUploading(false);
       onUploadingChange?.(false);

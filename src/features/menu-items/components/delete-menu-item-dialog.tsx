@@ -12,7 +12,8 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 import { Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
+import { MENU_ITEM } from '@/lib/notify/messages';
 import { deleteMenuItem } from '@/features/menu-items/actions/delete-menu-item';
 import type { MenuItem } from '@/features/menu-items/types';
 
@@ -31,14 +32,14 @@ export function DeleteMenuItemDialog({ open, onOpenChange, item, onSuccess }: De
     try {
       const resp = await deleteMenuItem(item.id);
       if (resp.success) {
-        toast.success('Article supprimé avec succès');
+        notify.success(MENU_ITEM.DELETE.SUCCESS);
         onSuccess?.();
         onOpenChange(false);
       } else {
-        toast.error(resp.error || "Erreur lors de la suppression de l'article");
+        notify.error(resp.error || MENU_ITEM.DELETE.ERROR);
       }
     } catch (e: any) {
-      toast.error(e.message ?? 'Erreur inattendue');
+      notify.error(e.message ?? MENU_ITEM.UNEXPECTED_ERROR);
     } finally {
       setIsDeleting(false);
     }

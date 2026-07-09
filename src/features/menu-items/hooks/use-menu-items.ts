@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, useRef, startTransition } from 'react
 import { getMenuItems } from '@/features/menu-items/actions/get-menu-items';
 import { MENU_ITEM_DEFAULT_PAGE_SIZE } from '@/features/menu-items/constants';
 import type { MenuItem } from '@/features/menu-items/types';
+import { MENU_ITEM } from '@/lib/notify/messages';
 
 type Pagination = { page: number; limit: number; total: number; totalPages: number };
 
@@ -43,10 +44,10 @@ export function useMenuItems(initialLimit = MENU_ITEM_DEFAULT_PAGE_SIZE, categor
         setItems(d.data);
         setPagination(prev => ({ ...prev, total: d.total, totalPages: d.totalPages }));
       } else {
-        setError(resp.error ?? 'Erreur');
+        setError(resp.error ?? MENU_ITEM.FETCH_ERROR);
       }
     } catch (e: any) {
-      setError(e.message ?? 'Erreur inattendue');
+      setError(e.message ?? MENU_ITEM.UNEXPECTED_ERROR);
     } finally {
       setIsLoading(false);
       fetchingRef.current = false;

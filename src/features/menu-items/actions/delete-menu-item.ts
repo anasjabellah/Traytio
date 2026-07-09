@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse } from '@/features/menu-items/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { MENU_ITEM } from '@/lib/notify/messages';
 
 export async function deleteMenuItem(id: string): Promise<ActionResponse> {
   try {
@@ -14,6 +15,6 @@ export async function deleteMenuItem(id: string): Promise<ActionResponse> {
     revalidatePath("/dashboard/menu-items")
     return { success: true };
   } catch (e: any) {
-    return { success: false, error: e.message || 'Erreur lors de la suppression' };
+    return { success: false, error: e.message || MENU_ITEM.DELETE.ERROR };
   }
 }

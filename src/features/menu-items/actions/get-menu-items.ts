@@ -5,6 +5,7 @@ import type { ActionResponse, GetMenuItemsParams, PaginatedMenuItems } from '@/f
 import { MENU_ITEM_DEFAULT_PAGE_SIZE } from '@/features/menu-items/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { MENU_ITEM } from '@/lib/notify/messages';
 
 export async function getMenuItems(
   params: GetMenuItemsParams,
@@ -58,6 +59,6 @@ export async function getMenuItems(
     const totalPages = Math.ceil(total / limit);
     return { success: true, data: { data, total, page, limit, totalPages } };
   } catch (e: any) {
-    return { success: false, error: e.message || 'Erreur lors du chargement des articles' };
+    return { success: false, error: e.message || MENU_ITEM.FETCH_ERROR };
   }
 }

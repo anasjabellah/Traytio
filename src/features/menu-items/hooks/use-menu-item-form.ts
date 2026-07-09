@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
+import { MENU_ITEM } from '@/lib/notify/messages';
 import type { MenuItem } from '@/features/menu-items/types';
 import { updateMenuItem } from '@/features/menu-items/actions/update-menu-item';
 import { createMenuItem } from '@/features/menu-items/actions/create-menu-item';
@@ -42,12 +43,12 @@ export function useMenuItemForm() {
         imageUrl: item.imageUrl ?? undefined,
       });
       if (resp.success) {
-        toast.success('Article dupliqué avec succès');
+        notify.success(MENU_ITEM.DUPLICATE.SUCCESS);
       } else {
-        toast.error(resp.error ?? 'Erreur lors de la duplication');
+        notify.error(resp.error ?? MENU_ITEM.DUPLICATE.ERROR);
       }
     } catch {
-      toast.error('Erreur inattendue');
+      notify.error(MENU_ITEM.UNEXPECTED_ERROR);
     } finally {
       setIsDuplicating(false);
     }
@@ -60,12 +61,12 @@ export function useMenuItemForm() {
         isActive: !item.isActive,
       });
       if (resp.success) {
-        toast.success(item.isActive ? 'Article archivé' : 'Article réactivé');
+        notify.success(item.isActive ? MENU_ITEM.ARCHIVE.SUCCESS_ARCHIVED : MENU_ITEM.ARCHIVE.SUCCESS_REACTIVATED);
       } else {
-        toast.error(resp.error ?? 'Erreur');
+        notify.error(resp.error ?? MENU_ITEM.ARCHIVE.ERROR);
       }
     } catch {
-      toast.error('Erreur inattendue');
+      notify.error(MENU_ITEM.UNEXPECTED_ERROR);
     }
   }, []);
 

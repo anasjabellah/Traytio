@@ -9,7 +9,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
+import { MENU_ITEM } from '@/lib/notify/messages';
 import { createMenuItem } from '@/features/menu-items/actions/create-menu-item';
 import { createMenuItemSchema } from '@/features/menu-items/validations/create-menu-item-schema';
 import type { MenuItem } from '@/features/menu-items/types';
@@ -117,15 +118,15 @@ export function CreateMenuItemDialog({ open, onOpenChange, onSuccess }: CreateMe
     try {
       const resp = await createMenuItem(values);
       if (resp.success && resp.data) {
-        toast.success('Article créé avec succès');
+        notify.success(MENU_ITEM.CREATE.SUCCESS);
         onSuccess?.(resp.data);
         onOpenChange(false);
         form.reset();
       } else {
-        toast.error(resp.error || 'Erreur lors de la création de l\'article');
+        notify.error(resp.error || MENU_ITEM.CREATE.ERROR);
       }
     } catch (e: any) {
-      toast.error(e.message ?? 'Erreur inattendue');
+      notify.error(e.message ?? MENU_ITEM.UNEXPECTED_ERROR);
     } finally {
       setIsSubmitting(false);
     }

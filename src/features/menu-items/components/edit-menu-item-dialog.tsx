@@ -10,7 +10,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
+import { MENU_ITEM } from '@/lib/notify/messages';
 import { updateMenuItem } from '@/features/menu-items/actions/update-menu-item';
 import { createMenuItemSchema } from '@/features/menu-items/validations/create-menu-item-schema';
 import type { MenuItem } from '@/features/menu-items/types';
@@ -57,14 +58,14 @@ export function EditMenuItemDialog({ item, open, onClose, onSuccess }: Props) {
     try {
       const resp = await updateMenuItem({ id: item.id, ...values });
       if (resp.success) {
-        toast.success('Article mis à jour');
+        notify.success(MENU_ITEM.UPDATE.SUCCESS);
         onSuccess?.();
         onClose(false);
       } else {
-        toast.error(resp.error ?? 'Erreur mise à jour');
+        notify.error(resp.error ?? MENU_ITEM.UPDATE.ERROR);
       }
     } catch (e: any) {
-      toast.error(e.message ?? 'Erreur inattendue');
+      notify.error(e.message ?? MENU_ITEM.UNEXPECTED_ERROR);
     } finally {
       setIsSubmitting(false);
     }

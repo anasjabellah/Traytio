@@ -6,6 +6,7 @@ import type { ActionResponse, MenuItem, UpdateMenuItemInput } from '@/features/m
 import { updateMenuItemSchema } from '@/features/menu-items/validations/update-menu-item-schema';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { MENU_ITEM } from '@/lib/notify/messages';
 
 export async function updateMenuItem(
   data: UpdateMenuItemInput,
@@ -13,7 +14,7 @@ export async function updateMenuItem(
   try {
     const parsed = updateMenuItemSchema.safeParse(data);
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message || 'Invalid data' };
+      return { success: false, error: parsed.error.issues[0]?.message || MENU_ITEM.INVALID_INPUT };
     }
     const validData = parsed.data;
     const organizationId = await getOrganizationId();
@@ -53,6 +54,6 @@ export async function updateMenuItem(
       data: { ...item, unitPrice: Number(item.unitPrice) },
     };
   } catch (e: any) {
-    return { success: false, error: e.message || 'Erreur lors de la mise à jour' };
+    return { success: false, error: e.message || MENU_ITEM.UPDATE.ERROR };
   }
 }

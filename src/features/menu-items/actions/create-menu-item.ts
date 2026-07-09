@@ -6,6 +6,7 @@ import type { ActionResponse, MenuItem, CreateMenuItemInput } from '@/features/m
 import { createMenuItemSchema } from '@/features/menu-items/validations/create-menu-item-schema';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { MENU_ITEM } from '@/lib/notify/messages';
 
 export async function createMenuItem(
   data: CreateMenuItemInput,
@@ -13,7 +14,7 @@ export async function createMenuItem(
   try {
     const parsed = createMenuItemSchema.safeParse(data);
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message || 'Invalid data' };
+      return { success: false, error: parsed.error.issues[0]?.message || MENU_ITEM.INVALID_INPUT };
     }
     const validData = parsed.data;
     const organizationId = await getOrganizationId();
@@ -52,6 +53,6 @@ export async function createMenuItem(
       data: { ...item, unitPrice: Number(item.unitPrice) },
     };
   } catch (e: any) {
-    return { success: false, error: e.message || 'Erreur lors de la création' };
+    return { success: false, error: e.message || MENU_ITEM.CREATE.ERROR };
   }
 }
