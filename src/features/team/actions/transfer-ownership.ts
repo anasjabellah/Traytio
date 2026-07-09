@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
+import { AUTH } from "@/lib/notify/messages"
 import { OrgRole } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 
@@ -11,7 +12,7 @@ export async function transferOwnership(targetMemberId: string) {
     await assertCan("team", "change-role")
 
     if (membership.role !== "OWNER") {
-      return { success: false, error: "Seul le propriétaire peut transférer la propriété" }
+      return { success: false, error: AUTH.OWNERSHIP.ONLY_OWNER_CAN_TRANSFER }
     }
 
     const [target, currentMember] = await Promise.all([
@@ -22,19 +23,19 @@ export async function transferOwnership(targetMemberId: string) {
     ])
 
     if (!target || target.organizationId !== membership.organizationId) {
-      return { success: false, error: "Membre introuvable" }
+      return { success: false, error: AUTH.MEMBER.NOT_FOUND }
     }
 
     if (target.role !== "ADMIN") {
-      return { success: false, error: "Vous ne pouvez transférer la propriété qu'à un administrateur" }
+      return { success: false, error: AUTH.OWNERSHIP.TRANSFER_TO_ADMIN_ONLY }
     }
 
     if (target.userId === membership.userId) {
-      return { success: false, error: "Vous êtes déjà le propriétaire" }
+      return { success: false, error: AUTH.OWNERSHIP.ALREADY_OWNER }
     }
 
     if (!currentMember) {
-      return { success: false, error: "Membre introuvable" }
+      return { success: false, error: AUTH.MEMBER.NOT_FOUND }
     }
 
     await prisma.$transaction(async (tx) => {
@@ -53,6 +54,6 @@ export async function transferOwnership(targetMemberId: string) {
     revalidatePath("/dashboard/settings/team")
     return { success: true }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : "Failed to transfer ownership" }
+    return { success: false, error: err instanceof Error ? err.message : AUTH.OWNERSHIP.TRANSFER_ERROR }
   }
 }

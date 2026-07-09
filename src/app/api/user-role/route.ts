@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCurrentMembership } from '@/lib/assert-role'
+import { AUTH } from '@/lib/notify/messages'
 
 export async function GET() {
   try {
@@ -9,6 +10,6 @@ export async function GET() {
       organizationId: membership.organizationId,
     })
   } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: AUTH.SESSION.UNAUTHORIZED }, { status: 401 })
   }
 }

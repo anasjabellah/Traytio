@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getCurrentMembership } from "@/lib/assert-role"
+import { AUTH } from "@/lib/notify/messages"
 import { PERMISSIONS } from "@/lib/permissions"
 
 export async function getTeam() {
@@ -10,7 +11,7 @@ export async function getTeam() {
 
     const allowed = PERMISSIONS.team?.view
     if (!allowed?.includes(membership.role)) {
-      throw new Error("Forbidden: you do not have permission to view the team")
+      throw new Error(AUTH.FORBIDDEN_VIEW_TEAM)
     }
 
     const [members, invitations] = await Promise.all([
@@ -56,6 +57,6 @@ export async function getTeam() {
 
     return { success: true, data: { members: serializedMembers, invitations: serializedInvitations } }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : "Failed to fetch team" }
+    return { success: false, error: err instanceof Error ? err.message : AUTH.FETCH_ERROR }
   }
 }

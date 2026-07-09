@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { AUTH } from "@/lib/notify/messages"
 
 export async function getInvitationByToken(token: string) {
   try {
@@ -10,11 +11,11 @@ export async function getInvitationByToken(token: string) {
     })
 
     if (!invitation) {
-      return { success: false, error: "Invitation invalide ou inexistante" }
+      return { success: false, error: AUTH.INVITATION.INVALID_OR_MISSING }
     }
 
     if (invitation.expiresAt < new Date()) {
-      return { success: false, error: "Cette invitation a expiré" }
+      return { success: false, error: AUTH.INVITATION.EXPIRED }
     }
 
     return {
@@ -26,6 +27,6 @@ export async function getInvitationByToken(token: string) {
       },
     }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : "Failed to fetch invitation" }
+    return { success: false, error: err instanceof Error ? err.message : AUTH.FETCH_ERROR }
   }
 }

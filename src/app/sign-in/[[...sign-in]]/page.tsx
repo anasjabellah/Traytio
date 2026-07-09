@@ -1,4 +1,5 @@
 import { SignIn } from "@clerk/nextjs";
+import { AUTH } from "@/lib/notify/messages";
 
 export default function SignInPage() {
   return (
@@ -6,10 +7,10 @@ export default function SignInPage() {
       <div className="w-full max-w-md space-y-6">
         <div className="space-y-2 text-center">
           <h1 className="font-heading text-3xl font-semibold">
-            Welcome Back
+            {AUTH.SIGN_IN.TITLE}
           </h1>
           <p className="text-muted-foreground">
-            Sign in to your TUR account
+            {AUTH.SIGN_IN.DESCRIPTION}
           </p>
         </div>
         <SignIn

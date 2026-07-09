@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
+import { AUTH } from "@/lib/notify/messages"
 import { revalidatePath } from "next/cache"
 
 export async function cancelInvitation(invitationId: string) {
@@ -14,7 +15,7 @@ export async function cancelInvitation(invitationId: string) {
     })
 
     if (!invitation || invitation.organizationId !== membership.organizationId) {
-      return { success: false, error: "Invitation introuvable" }
+      return { success: false, error: AUTH.INVITATION.NOT_FOUND }
     }
 
     await prisma.invitation.delete({ where: { id: invitationId } })
@@ -24,6 +25,6 @@ export async function cancelInvitation(invitationId: string) {
     revalidatePath("/dashboard/settings/team")
     return { success: true }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : "Failed to cancel invitation" }
+    return { success: false, error: err instanceof Error ? err.message : AUTH.INVITATION.CANCEL_ERROR }
   }
 }

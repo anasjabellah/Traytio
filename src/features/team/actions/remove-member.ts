@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
+import { AUTH } from "@/lib/notify/messages"
 import { revalidatePath } from "next/cache"
 
 export async function removeMember(memberId: string) {
@@ -14,16 +15,16 @@ export async function removeMember(memberId: string) {
     })
 
     if (!target || target.organizationId !== membership.organizationId) {
-      return { success: false, error: "Membre introuvable" }
+      return { success: false, error: AUTH.MEMBER.NOT_FOUND }
     }
 
     if (target.userId === membership.userId) {
-      return { success: false, error: "Vous ne pouvez pas vous retirer vous-même" }
+      return { success: false, error: AUTH.MEMBER.CANNOT_REMOVE_SELF }
     }
 
     // ADMIN can only remove MEMBER
     if (membership.role === "ADMIN" && target.role !== "MEMBER") {
-      return { success: false, error: "Vous ne pouvez supprimer que les membres" }
+      return { success: false, error: AUTH.MEMBER.CAN_ONLY_REMOVE_MEMBERS }
     }
 
     // OWNER protection: cannot remove the last OWNER
@@ -32,7 +33,7 @@ export async function removeMember(memberId: string) {
         where: { organizationId: membership.organizationId, role: "OWNER" },
       })
       if (ownerCount <= 1) {
-        return { success: false, error: "Impossible de supprimer le dernier propriétaire" }
+        return { success: false, error: AUTH.MEMBER.CANNOT_DELETE_LAST_OWNER }
       }
     }
 
@@ -43,6 +44,6 @@ export async function removeMember(memberId: string) {
     revalidatePath("/dashboard/settings/team")
     return { success: true }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : "Failed to remove member" }
+    return { success: false, error: err instanceof Error ? err.message : AUTH.MEMBER.REMOVE_ERROR }
   }
 }

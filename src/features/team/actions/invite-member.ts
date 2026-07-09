@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { resend, resendFromEmail } from "@/lib/resend"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
+import { AUTH } from "@/lib/notify/messages"
 import { OrgRole } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { buildInvitationEmailHtml } from "@/emails/invitation-email"
@@ -15,25 +16,25 @@ export async function inviteMember(input: { email: string; role: OrgRole }) {
     const { email, role } = input
 
     if (!email || !email.includes("@")) {
-      return { success: false, error: "Adresse email invalide" }
+      return { success: false, error: AUTH.INVITE.INVALID_EMAIL }
     }
 
     if (role === "OWNER") {
-      return { success: false, error: "Seul le propriétaire actuel peut transférer la propriété" }
+      return { success: false, error: AUTH.OWNERSHIP.ONLY_OWNER_CAN_TRANSFER_ALT }
     }
 
     const existingMember = await prisma.userOrganization.findFirst({
       where: { organizationId: membership.organizationId, user: { email } },
     })
     if (existingMember) {
-      return { success: false, error: "Cet utilisateur est déjà membre de l'organisation" }
+      return { success: false, error: AUTH.ALREADY_MEMBER }
     }
 
     const pending = await prisma.invitation.findFirst({
       where: { organizationId: membership.organizationId, email },
     })
     if (pending) {
-      return { success: false, error: "Une invitation est déjà en attente pour cet email" }
+      return { success: false, error: AUTH.INVITATION.ALREADY_PENDING }
     }
 
     const token = crypto.randomUUID()
@@ -93,14 +94,14 @@ export async function inviteMember(input: { email: string; role: OrgRole }) {
       console.error("[inviteMember] Resend send failed:", message)
 
       await prisma.invitation.delete({ where: { id: invitation.id } })
-      return { success: false, error: "Impossible d'envoyer l'email d'invitation. Veuillez réessayer." }
+      return { success: false, error: AUTH.INVITE.EMAIL_SEND_FAILED }
     }
 
     revalidatePath("/dashboard/settings/team")
     return { success: true }
   } catch (err) {
     console.error("[inviteMember] Error:", err)
-    return { success: false, error: err instanceof Error ? err.message : "Failed to invite member" }
+    return { success: false, error: err instanceof Error ? err.message : AUTH.INVITE.ERROR }
   }
 }
 

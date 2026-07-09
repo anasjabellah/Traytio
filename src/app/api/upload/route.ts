@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import cloudinary from '@/lib/cloudinary';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { AUTH } from '@/lib/notify/messages';
 
 const ALLOWED_MIME_TYPES = [
   'image/jpeg',
@@ -35,12 +36,12 @@ export async function POST(request: Request) {
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+      return NextResponse.json({ error: AUTH.SESSION.UNAUTHORIZED }, { status: 401 });
     }
 
     const organizationId = await getOrganizationId();
     if (!organizationId) {
-      return NextResponse.json({ error: 'Aucune organisation trouvée' }, { status: 403 });
+      return NextResponse.json({ error: AUTH.ORGANIZATION_NOT_FOUND }, { status: 403 });
     }
 
     const formData = await request.formData();

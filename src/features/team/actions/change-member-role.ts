@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
+import { AUTH } from "@/lib/notify/messages"
 import { OrgRole } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 
@@ -17,16 +18,16 @@ export async function changeMemberRole(input: { memberId: string; newRole: OrgRo
     })
 
     if (!target || target.organizationId !== membership.organizationId) {
-      return { success: false, error: "Membre introuvable" }
+      return { success: false, error: AUTH.MEMBER.NOT_FOUND }
     }
 
     if (target.userId === membership.userId) {
-      return { success: false, error: "Vous ne pouvez pas modifier votre propre rôle" }
+      return { success: false, error: AUTH.ROLE.CANNOT_CHANGE_OWN_ROLE }
     }
 
     // ADMIN can only modify MEMBER roles
     if (membership.role === "ADMIN" && target.role !== "MEMBER") {
-      return { success: false, error: "Vous ne pouvez modifier que les rôles des membres" }
+      return { success: false, error: AUTH.ROLE.CAN_ONLY_CHANGE_MEMBERS }
     }
 
     // OWNER protection: cannot demote the last OWNER
@@ -35,7 +36,7 @@ export async function changeMemberRole(input: { memberId: string; newRole: OrgRo
         where: { organizationId: membership.organizationId, role: "OWNER" },
       })
       if (ownerCount <= 1) {
-        return { success: false, error: "Impossible de rétrograder le dernier propriétaire" }
+        return { success: false, error: AUTH.ROLE.CANNOT_DOWNGRADE_LAST_OWNER }
       }
     }
 
@@ -49,6 +50,6 @@ export async function changeMemberRole(input: { memberId: string; newRole: OrgRo
     revalidatePath("/dashboard/settings/team")
     return { success: true }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : "Failed to change role" }
+    return { success: false, error: err instanceof Error ? err.message : AUTH.ROLE.CHANGE_ERROR }
   }
 }

@@ -1,4 +1,5 @@
 import { SignUp } from "@clerk/nextjs";
+import { AUTH } from "@/lib/notify/messages";
 
 export default function SignUpPage() {
   return (
@@ -6,10 +7,10 @@ export default function SignUpPage() {
       <div className="w-full max-w-md space-y-6">
         <div className="space-y-2 text-center">
           <h1 className="font-heading text-3xl font-semibold">
-            Create Account
+            {AUTH.SIGN_UP.TITLE}
           </h1>
           <p className="text-muted-foreground">
-            Start managing your catering business
+            {AUTH.SIGN_UP.DESCRIPTION}
           </p>
         </div>
         <SignUp

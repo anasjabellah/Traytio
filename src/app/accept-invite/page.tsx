@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useUser, SignInButton, SignUpButton } from "@clerk/nextjs"
+import { AUTH } from "@/lib/notify/messages"
 import { getInvitationByToken } from "@/features/team/actions/get-invitation-by-token"
 import { acceptInvite } from "@/features/team/actions/accept-invite"
 import { RoleBadge } from "@/components/ui/role-badge"
@@ -37,14 +38,14 @@ function AcceptInviteContent() {
 
   useEffect(() => {
     if (!token) {
-      setError("Lien d'invitation invalide")
+      setError(AUTH.ACCEPT.INVALID_LINK)
       return
     }
     getInvitationByToken(token).then((res) => {
       if (res.success && res.data) {
         setInvitation(res.data)
       } else {
-        setError(res.error ?? "Invitation invalide ou expirée")
+        setError(res.error ?? AUTH.ACCEPT.INVALID_OR_EXPIRED)
       }
     })
   }, [token])
@@ -57,7 +58,7 @@ function AcceptInviteContent() {
     if (res.success) {
       setAccepted(true)
     } else {
-      setError(res.error ?? "Erreur lors de l'acceptation")
+      setError(res.error ?? AUTH.ACCEPT.ERROR)
     }
   }
 
@@ -94,7 +95,7 @@ function AcceptInviteContent() {
           className="w-full max-w-md rounded-3xl border border-border/60 bg-card shadow-xl p-8 text-center"
         >
           <Loader2 className="size-8 animate-spin text-muted-foreground/50 mx-auto mb-4" />
-          <p className="text-sm text-muted-foreground">Vérification de l'invitation...</p>
+          <p className="text-sm text-muted-foreground">{AUTH.ACCEPT.LOADING}</p>
         </motion.div>
       </div>
     )
@@ -111,9 +112,9 @@ function AcceptInviteContent() {
           <div className="mx-auto size-14 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4">
             <CheckCircle2 className="size-6 text-emerald-500" strokeWidth={1.8} />
           </div>
-          <h1 className="font-display text-xl font-semibold mb-2">Invitation acceptée !</h1>
+          <h1 className="font-display text-xl font-semibold mb-2">{AUTH.ACCEPT.SUCCESS_TITLE}</h1>
           <p className="text-sm text-muted-foreground mb-6">
-            Vous faites désormais partie de <strong>{invitation.organizationName}</strong>.
+            {AUTH.ACCEPT.SUCCESS_DESCRIPTION_PREFIX} <strong>{invitation.organizationName}</strong>{AUTH.ACCEPT.SUCCESS_DESCRIPTION_SUFFIX}
           </p>
           <a
             href="/dashboard"
@@ -168,9 +169,7 @@ function AcceptInviteContent() {
               <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 mb-4 text-xs text-amber-800 flex items-start gap-2">
                 <AlertTriangle className="size-4 shrink-0 mt-0.5" strokeWidth={1.8} />
                 <span>
-                  Connecté en tant que <strong>{user.emailAddresses?.[0]?.emailAddress}</strong>, mais
-                  l'invitation a été envoyée à <strong>{invitation.email}</strong>.
-                  Veuillez vous connecter avec le bon compte.
+                  {AUTH.ACCEPT.EMAIL_MISMATCH_PREFIX} <strong>{user.emailAddresses?.[0]?.emailAddress}</strong>{AUTH.ACCEPT.EMAIL_MISMATCH_MIDDLE} <strong>{invitation.email}</strong>{AUTH.ACCEPT.EMAIL_MISMATCH_SUFFIX}
                 </span>
               </div>
             )}

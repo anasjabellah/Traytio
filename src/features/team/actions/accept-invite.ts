@@ -2,13 +2,14 @@
 
 import { prisma } from "@/lib/prisma"
 import { auth } from "@clerk/nextjs/server"
+import { AUTH } from "@/lib/notify/messages"
 import { revalidatePath } from "next/cache"
 
 export async function acceptInvite(token: string) {
   try {
     const { userId: clerkId } = await auth()
     if (!clerkId) {
-      return { success: false, error: "Vous devez être connecté pour accepter une invitation" }
+      return { success: false, error: AUTH.SESSION.REQUIRED }
     }
 
     const invitation = await prisma.invitation.findUnique({
@@ -17,21 +18,21 @@ export async function acceptInvite(token: string) {
     })
 
     if (!invitation) {
-      return { success: false, error: "Invitation invalide ou inexistante" }
+      return { success: false, error: AUTH.INVITATION.INVALID_OR_MISSING }
     }
 
     if (invitation.expiresAt < new Date()) {
       await prisma.invitation.delete({ where: { id: invitation.id } })
-      return { success: false, error: "Cette invitation a expiré" }
+      return { success: false, error: AUTH.INVITATION.EXPIRED }
     }
 
     const user = await prisma.user.findUnique({ where: { clerkId } })
     if (!user) {
-      return { success: false, error: "Utilisateur introuvable" }
+      return { success: false, error: AUTH.USER_NOT_FOUND }
     }
 
     if (user.email !== invitation.email) {
-      return { success: false, error: `Cette invitation a été envoyée à ${invitation.email}, pas à ${user.email}` }
+      return { success: false, error: AUTH.INVITATION.EMAIL_MISMATCH(invitation.email, user.email) }
     }
 
     const existing = await prisma.userOrganization.findUnique({
@@ -54,6 +55,6 @@ export async function acceptInvite(token: string) {
     revalidatePath("/dashboard")
     return { success: true, data: { organizationName: invitation.organization.name } }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : "Failed to accept invitation" }
+    return { success: false, error: err instanceof Error ? err.message : AUTH.ACCEPT.ERROR }
   }
 }
