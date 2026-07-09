@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getOrganizationId } from "@/lib/get-organization-id";
+import { INVOICE } from "@/lib/notify/messages";
 import { InvoicePDF } from "@/features/invoices/components/invoice-pdf";
 import { renderToBuffer } from "@react-pdf/renderer";
 
@@ -27,7 +28,7 @@ export async function GET(
     });
 
     if (!invoice) {
-      return NextResponse.json({ error: "Document introuvable" }, { status: 404 });
+      return NextResponse.json({ error: INVOICE.NOT_FOUND }, { status: 404 });
     }
 
     const org = await prisma.organization.findUnique({
@@ -43,12 +44,12 @@ export async function GET(
     });
 
     if (!org) {
-      return NextResponse.json({ error: "Organisation introuvable" }, { status: 404 });
+      return NextResponse.json({ error: INVOICE.NOT_FOUND_ORGANIZATION }, { status: 404 });
     }
 
     const cmd = invoice.commande;
     if (!cmd) {
-      return NextResponse.json({ error: "Commande liée introuvable" }, { status: 404 });
+      return NextResponse.json({ error: INVOICE.NOT_FOUND_COMMANDE_LINKED }, { status: 404 });
     }
 
     const pdfBuffer = await renderToBuffer((
@@ -142,7 +143,7 @@ export async function GET(
       },
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Erreur";
+    const message = err instanceof Error ? err.message : INVOICE.UNEXPECTED_ERROR;
     console.error("[PDF ROUTE ERROR]", message);
     if (err instanceof Error && err.stack) {
       console.error("[PDF ROUTE STACK]", err.stack);

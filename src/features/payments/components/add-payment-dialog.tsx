@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Wallet, CreditCard, Landmark, Receipt, Ban, Hash } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
+import { PAYMENT } from "@/lib/notify/messages";
 import { recordPayment } from "@/features/payments/actions/record-payment";
 
 const PAYMENT_METHODS = [
@@ -85,10 +86,10 @@ export function AddPaymentDialog({
 
     const parsedAmount = parseFloat(amount);
     if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
-      errors.amount = "Le montant doit être supérieur à 0";
+      errors.amount = PAYMENT.VALIDATION.AMOUNT_REQUIRED;
     }
     if (!date) {
-      errors.date = "La date est requise";
+      errors.date = PAYMENT.VALIDATION.DATE_REQUIRED;
     }
 
     if (Object.keys(errors).length > 0) {
@@ -108,15 +109,15 @@ export function AddPaymentDialog({
       });
 
       if (result.success) {
-        toast.success("Paiement enregistré avec succès");
+        notify.success(PAYMENT.CREATE.SUCCESS);
         resetForm();
         onSuccess();
         onOpenChange(false);
       } else {
-        toast.error(result.error ?? "Erreur lors de l'enregistrement du paiement");
+        notify.error(result.error ?? PAYMENT.CREATE.ERROR);
       }
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Erreur inattendue");
+      notify.error(e instanceof Error ? e.message : PAYMENT.UNEXPECTED_ERROR);
     } finally {
       setIsSubmitting(false);
     }

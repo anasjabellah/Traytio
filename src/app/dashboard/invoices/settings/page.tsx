@@ -6,7 +6,8 @@ import { motion } from "framer-motion"
 import {
   Sparkles, Save, ArrowLeft, CloudUpload, X, Palette, Type, Building2, FileText, Eye,
 } from "lucide-react"
-import { toast } from "sonner"
+import { notify } from "@/lib/notify"
+import { INVOICE } from "@/lib/notify/messages"
 import { getPdfSettings, updatePdfSettings, type PdfSettings } from "@/features/invoices/actions/pdf-settings-actions"
 import { PdfPreview } from "./pdf-preview"
 import { PageGuard } from "@/components/ui/page-guard"
@@ -69,11 +70,11 @@ function PdfSettingsPageContent() {
 
   const handleLogoUpload = async (file: File) => {
     if (!file.type.startsWith("image/")) {
-      toast.error("Veuillez sélectionner une image")
+      notify.error(INVOICE.SETTINGS.LOGO_INVALID)
       return
     }
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("L'image dépasse la limite de 10 MB")
+      notify.error(INVOICE.SETTINGS.LOGO_SIZE)
       return
     }
     const formData = new FormData()
@@ -85,9 +86,9 @@ function PdfSettingsPageContent() {
       if (!res.ok) throw new Error("Upload failed")
       const json = await res.json()
       updateField("logo", json.url)
-      toast.success("Logo mis à jour")
+      notify.success(INVOICE.SETTINGS.LOGO_SUCCESS)
     } catch {
-      toast.error("Erreur lors du téléchargement du logo")
+      notify.error(INVOICE.SETTINGS.LOGO_ERROR)
     } finally {
       setUploading(false)
     }
@@ -98,12 +99,12 @@ function PdfSettingsPageContent() {
     try {
       const res = await updatePdfSettings(form)
       if (res.success) {
-        toast.success("Paramètres enregistrés")
+        notify.success(INVOICE.SETTINGS.SAVE_SUCCESS)
       } else {
-        toast.error(res.error || "Erreur lors de la sauvegarde")
+        notify.error(res.error || INVOICE.SETTINGS.SAVE_ERROR)
       }
     } catch {
-      toast.error("Erreur lors de la sauvegarde")
+      notify.error(INVOICE.SETTINGS.SAVE_ERROR)
     } finally {
       setSaving(false)
     }

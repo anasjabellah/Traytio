@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { Trash2, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
+import { PAYMENT } from "@/lib/notify/messages";
 import { deletePayment } from "@/features/payments/actions/delete-payment";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -39,14 +40,14 @@ export function DeletePaymentDialog({
     try {
       const resp = await deletePayment(paymentId);
       if (resp.success) {
-        toast.success("Paiement supprim\u00e9 avec succ\u00e8s");
+        notify.success(PAYMENT.DELETE.SUCCESS);
         onSuccess();
         onOpenChange(false);
       } else {
-        toast.error(resp.error ?? "Erreur lors de la suppression du paiement");
+        notify.error(resp.error ?? PAYMENT.DELETE.ERROR);
       }
     } catch {
-      toast.error("Erreur inattendue lors de la suppression");
+      notify.error(PAYMENT.DELETE.UNEXPECTED_ERROR);
     } finally {
       setIsDeleting(false);
     }

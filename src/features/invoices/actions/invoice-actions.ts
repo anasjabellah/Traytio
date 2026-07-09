@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { assertCan } from "@/lib/assert-role"
 import { updateInvoiceStatusSchema } from "@/features/invoices/validations/invoice-schemas"
+import { INVOICE } from "@/lib/notify/messages"
 import type { ActionResponse, Invoice, InvoiceWithCommande } from "@/features/invoices/types"
 
 function isPrismaP2002(err: unknown): boolean {
@@ -43,7 +44,7 @@ export async function createQuoteFromCommande(commandeId: string): Promise<Actio
   })
 
   if (!commande) {
-    return { success: false, error: "Commande introuvable" }
+    return { success: false, error: INVOICE.NOT_FOUND_COMMANDE }
   }
 
   // nextInvoiceNumber runs outside the transaction via prisma.$queryRaw
@@ -91,11 +92,11 @@ export async function createQuoteFromCommande(commandeId: string): Promise<Actio
       if (isPrismaP2002(err)) {
         continue
       }
-      return { success: false, error: err instanceof Error ? err.message : "Erreur lors de la création du devis" }
+      return { success: false, error: err instanceof Error ? err.message : INVOICE.CREATE.QUOTE.ERROR }
     }
   }
 
-  return { success: false, error: lastError instanceof Error ? lastError.message : "Erreur lors de la création du devis après plusieurs tentatives" }
+  return { success: false, error: lastError instanceof Error ? lastError.message : INVOICE.CREATE.QUOTE.ERROR_RETRIES }
 }
 
 export async function createInvoiceFromCommande(commandeId: string): Promise<ActionResponse<InvoiceWithCommande>> {
@@ -112,7 +113,7 @@ export async function createInvoiceFromCommande(commandeId: string): Promise<Act
   })
 
   if (!commande) {
-    return { success: false, error: "Commande introuvable" }
+    return { success: false, error: INVOICE.NOT_FOUND_COMMANDE }
   }
 
   let lastError: unknown = null
@@ -157,11 +158,11 @@ export async function createInvoiceFromCommande(commandeId: string): Promise<Act
       if (isPrismaP2002(err)) {
         continue
       }
-      return { success: false, error: err instanceof Error ? err.message : "Erreur lors de la création de la facture" }
+      return { success: false, error: err instanceof Error ? err.message : INVOICE.CREATE.INVOICE.ERROR }
     }
   }
 
-  return { success: false, error: lastError instanceof Error ? lastError.message : "Erreur lors de la création de la facture après plusieurs tentatives" }
+  return { success: false, error: lastError instanceof Error ? lastError.message : INVOICE.CREATE.INVOICE.ERROR_RETRIES }
 }
 
 export async function getInvoiceById(id: string): Promise<ActionResponse<InvoiceWithCommande>> {
@@ -183,12 +184,12 @@ export async function getInvoiceById(id: string): Promise<ActionResponse<Invoice
     })
 
     if (!invoice) {
-      return { success: false, error: "Document introuvable" }
+      return { success: false, error: INVOICE.NOT_FOUND }
     }
 
     return { success: true, data: serializeInvoice(invoice) }
   } catch (err: unknown) {
-    return { success: false, error: err instanceof Error ? err.message : "Erreur" }
+    return { success: false, error: err instanceof Error ? err.message : INVOICE.UNEXPECTED_ERROR }
   }
 }
 
@@ -255,7 +256,7 @@ export async function getInvoices(params: {
       },
     }
   } catch (err: unknown) {
-    return { success: false, error: err instanceof Error ? err.message : "Erreur" }
+    return { success: false, error: err instanceof Error ? err.message : INVOICE.UNEXPECTED_ERROR }
   }
 }
 
@@ -266,7 +267,7 @@ export async function updateInvoiceStatus(
   try {
     const parsed = updateInvoiceStatusSchema.safeParse({ id, status })
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message ?? "Statut invalide" }
+      return { success: false, error: parsed.error.issues[0]?.message ?? INVOICE.INVALID_STATUS }
     }
 
     const organizationId = await getOrganizationId()
@@ -278,7 +279,7 @@ export async function updateInvoiceStatus(
     })
 
     if (!existing) {
-      return { success: false, error: "Document introuvable" }
+      return { success: false, error: INVOICE.NOT_FOUND }
     }
 
     const invoice = await prisma.invoice.update({
@@ -299,7 +300,7 @@ export async function updateInvoiceStatus(
 
     return { success: true, data: serializeInvoice(invoice) }
   } catch (err: unknown) {
-    return { success: false, error: err instanceof Error ? err.message : "Erreur lors de la mise à jour" }
+    return { success: false, error: err instanceof Error ? err.message : INVOICE.UPDATE.STATUS.ERROR }
   }
 }
 
@@ -321,11 +322,11 @@ export async function convertQuoteToInvoice(quoteId: string): Promise<ActionResp
   })
 
   if (!quote) {
-    return { success: false, error: "Devis introuvable" }
+    return { success: false, error: INVOICE.NOT_FOUND_QUOTE }
   }
 
   if (!quote.commande) {
-    return { success: false, error: "Le devis n'est lié à aucune commande" }
+    return { success: false, error: INVOICE.NO_COMMANDE_LINKED }
   }
 
   let lastError: unknown = null
@@ -371,11 +372,11 @@ export async function convertQuoteToInvoice(quoteId: string): Promise<ActionResp
       if (isPrismaP2002(err)) {
         continue
       }
-      return { success: false, error: err instanceof Error ? err.message : "Erreur lors de la conversion du devis" }
+      return { success: false, error: err instanceof Error ? err.message : INVOICE.CONVERT.ERROR }
     }
   }
 
-  return { success: false, error: lastError instanceof Error ? lastError.message : "Erreur lors de la conversion du devis après plusieurs tentatives" }
+  return { success: false, error: lastError instanceof Error ? lastError.message : INVOICE.CONVERT.ERROR_RETRIES }
 }
 
 function serializeInvoice(invoice: unknown): InvoiceWithCommande {

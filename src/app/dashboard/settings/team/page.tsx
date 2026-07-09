@@ -22,7 +22,8 @@ import { changeMemberRole } from "@/features/team/actions/change-member-role"
 import { removeMember } from "@/features/team/actions/remove-member"
 import { transferOwnership } from "@/features/team/actions/transfer-ownership"
 import { cancelInvitation } from "@/features/team/actions/cancel-invitation"
-import { toast } from "sonner"
+import { notify } from "@/lib/notify"
+import { AUTH } from "@/lib/notify/messages"
 import type { OrgRole } from "@prisma/client"
 import type { TeamMember } from "@/features/team/types"
 import { TeamMemberCard } from "@/features/team/components/TeamMemberCard"
@@ -77,22 +78,23 @@ export default function TeamSettingsPage() {
 
   const handleInvite = async () => {
     if (!inviteEmail.includes("@")) {
-      toast.error("Email invalide")
+      notify.error(AUTH.INVITE.EMAIL_INVALID)
       return
     }
     setInviting(true)
     const res = await inviteMember({ email: inviteEmail, role: inviteRole })
     setInviting(false)
     if (res.success) {
-      toast.success("Invitation envoyée", {
-        description: `${inviteEmail} a été invité comme ${inviteRole === "ADMIN" ? "Administrateur" : "Membre"}`,
-      })
+      notify.success(`${AUTH.INVITE.SUCCESS} — ${AUTH.INVITE.SUCCESS_DESCRIPTION(
+        inviteEmail,
+        inviteRole === "ADMIN" ? "Administrateur" : "Membre",
+      )}`)
       setInviteOpen(false)
       setInviteEmail("")
       setInviteRole("MEMBER")
       refresh()
     } else {
-      toast.error(res.error ?? "Erreur lors de l'invitation")
+      notify.error(res.error ?? AUTH.INVITE.ERROR)
     }
   }
 
@@ -101,10 +103,10 @@ export default function TeamSettingsPage() {
     const res = await changeMemberRole({ memberId, newRole })
     setChangingRole(null)
     if (res.success) {
-      toast.success("Rôle modifié")
+      notify.success(AUTH.ROLE.UPDATE_SUCCESS)
       refresh()
     } else {
-      toast.error(res.error ?? "Erreur")
+      notify.error(res.error ?? AUTH.ERROR)
     }
   }
 
@@ -113,10 +115,10 @@ export default function TeamSettingsPage() {
     const res = await removeMember(confirmDialog.memberId)
     setConfirmDialog(null)
     if (res.success) {
-      toast.success("Membre supprimé")
+      notify.success(AUTH.MEMBER.REMOVE_SUCCESS)
       refresh()
     } else {
-      toast.error(res.error ?? "Erreur")
+      notify.error(res.error ?? AUTH.ERROR)
     }
   }
 
@@ -125,10 +127,10 @@ export default function TeamSettingsPage() {
     const res = await transferOwnership(confirmDialog.memberId)
     setConfirmDialog(null)
     if (res.success) {
-      toast.success("Propriété transférée")
+      notify.success(AUTH.OWNERSHIP.TRANSFER_SUCCESS)
       refresh()
     } else {
-      toast.error(res.error ?? "Erreur")
+      notify.error(res.error ?? AUTH.ERROR)
     }
   }
 
@@ -137,10 +139,10 @@ export default function TeamSettingsPage() {
     const res = await cancelInvitation(confirmDialog.invitationId)
     setConfirmDialog(null)
     if (res.success) {
-      toast.success("Invitation annulée")
+      notify.success(AUTH.INVITATION.CANCEL_SUCCESS)
       refresh()
     } else {
-      toast.error(res.error ?? "Erreur")
+      notify.error(res.error ?? AUTH.ERROR)
     }
   }
 

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { assertCan } from "@/lib/assert-role"
+import { INVOICE } from "@/lib/notify/messages"
 
 export type PdfSettings = {
   logo: string | null
@@ -55,7 +56,7 @@ export async function getPdfSettings(): Promise<{ success: boolean; data?: PdfSe
     })
 
     if (!org) {
-      return { success: false, error: "Organisation introuvable" }
+      return { success: false, error: INVOICE.NOT_FOUND_ORGANIZATION }
     }
 
     return {
@@ -83,7 +84,7 @@ export async function getPdfSettings(): Promise<{ success: boolean; data?: PdfSe
     }
   } catch (error) {
     console.error("getPdfSettings error:", error)
-    return { success: false, error: "Erreur lors de la récupération des paramètres" }
+    return { success: false, error: INVOICE.SETTINGS.FETCH_ERROR }
   }
 }
 
@@ -119,6 +120,6 @@ export async function updatePdfSettings(data: Partial<PdfSettings>): Promise<{ s
     return { success: true }
   } catch (error) {
     console.error("updatePdfSettings error:", error)
-    return { success: false, error: "Erreur lors de la sauvegarde des paramètres" }
+    return { success: false, error: INVOICE.SETTINGS.SAVE_ERROR }
   }
 }
