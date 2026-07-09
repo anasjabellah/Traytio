@@ -5,7 +5,7 @@ import { ClientForm } from './client-form';
 import { createClient } from '@/features/clients/actions/create-client';
 import type { Client } from '@/features/clients/types';
 import { notify } from "@/lib/notify";
-import { NOTIFY } from "@/lib/messages";
+import { CLIENT } from "@/lib/notify/messages";
 
 type CreateClientSheetProps = {
   open: boolean;
@@ -21,14 +21,14 @@ export function CreateClientSheet({ open, onOpenChange, onSuccess }: CreateClien
     try {
       const response = await createClient(values);
       if (response.success && response.data) {
-        notify.success(NOTIFY.CLIENT.CREATE.SUCCESS);
+        notify.success(CLIENT.CREATE.SUCCESS);
         onSuccess?.(response.data);
         onOpenChange(false);
       } else {
-        notify.error(response.error || NOTIFY.CLIENT.CREATE.ERROR);
+        notify.error(response.error || CLIENT.CREATE.ERROR);
       }
     } catch (err: any) {
-      notify.error(err.message || NOTIFY.CLIENT.CREATE.ERROR);
+      notify.error(err.message || CLIENT.CREATE.ERROR);
     } finally {
       setIsSubmitting(false);
     }
