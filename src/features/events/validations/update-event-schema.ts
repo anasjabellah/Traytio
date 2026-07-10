@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { EVENT } from '@/lib/notify/messages';
 
-export const updateEventSchema = z.object({
+export const baseUpdateEventSchema = z.object({
   id: z.string(),
   name: z.string().min(2, { message: EVENT.VALIDATION.NAME_MIN_LENGTH }).optional(),
   type: z.enum(['WEDDING', 'CORPORATE', 'BIRTHDAY', 'ANNIVERSARY', 'HOLIDAY', 'OTHER']).optional(),
@@ -15,6 +15,19 @@ export const updateEventSchema = z.object({
   contactPhone: z.string().optional(),
   notes: z.string().optional(),
   clientId: z.string().optional(),
+});
+
+export const updateEventSchema = baseUpdateEventSchema.superRefine((data, ctx) => {
+  if (!data.startDate) return;
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  if (data.startDate.getTime() < now.getTime()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['startDate'],
+      message: EVENT.VALIDATION.DATE_IN_PAST,
+    });
+  }
 });
 
 export type UpdateEventInput = z.infer<typeof updateEventSchema>;

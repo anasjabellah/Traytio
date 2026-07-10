@@ -66,6 +66,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
 
   const { dateStr: startDateStr, timeStr: startTimeStr } = splitDate(startDateVal);
   const { timeStr: endTimeStr } = splitDate(endDateVal);
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   const durationLabel = React.useMemo(() => {
     if (!startDateVal || !endDateVal) return null;
@@ -249,6 +250,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
             <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
             <input
               type="date"
+              min={todayStr}
               value={startDateStr}
               onChange={(e) => {
                 const nd = e.target.value;

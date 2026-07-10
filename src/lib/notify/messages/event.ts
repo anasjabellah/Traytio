@@ -25,7 +25,7 @@ export const EVENT = {
     INVALID_DATE: VALIDATION.INVALID_DATE,
     INVALID_VALUE: VALIDATION.INVALID_VALUE,
     INVALID_TYPE: "Veuillez sélectionner un type d'événement.",
-    DATE_IN_PAST: "La date de l'événement doit être aujourd'hui ou dans le futur.",
+    DATE_IN_PAST: "La date de l'événement ne peut pas être antérieure à aujourd'hui.",
     SAME_START_END: "L'heure de fin doit être différente de l'heure de début.",
     MIN_DURATION: "La durée doit être d'au moins 30 minutes.",
   },
