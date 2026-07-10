@@ -67,6 +67,11 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
   const { dateStr: startDateStr, timeStr: startTimeStr } = splitDate(startDateVal);
   const { timeStr: endTimeStr } = splitDate(endDateVal);
   const todayStr = new Date().toISOString().slice(0, 10);
+  const isToday = startDateStr === todayStr;
+  const roundUp = new Date(Date.now() + 60000);
+  const minTime = isToday
+    ? `${String(roundUp.getHours()).padStart(2, '0')}:${String(roundUp.getMinutes()).padStart(2, '0')}`
+    : undefined;
 
   const durationLabel = React.useMemo(() => {
     if (!startDateVal || !endDateVal) return null;
@@ -274,6 +279,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
             <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
             <input
               type="time"
+              min={minTime}
               value={startTimeStr}
               onChange={(e) => {
                 const joined = joinDate(startDateStr, e.target.value);

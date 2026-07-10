@@ -40,6 +40,19 @@ export const createEventSchema = z.object({
     });
   }
 
+  const isToday =
+    data.startDate.getFullYear() === now.getFullYear() &&
+    data.startDate.getMonth() === now.getMonth() &&
+    data.startDate.getDate() === now.getDate();
+
+  if (isToday && data.startDate.getTime() < new Date().getTime()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['startDate'],
+      message: EVENT.VALIDATION.START_TIME_IN_PAST,
+    });
+  }
+
   const sh = data.startDate.getHours();
   const sm = data.startDate.getMinutes();
   const eh = data.endDate.getHours();

@@ -21,11 +21,25 @@ export const updateEventSchema = baseUpdateEventSchema.superRefine((data, ctx) =
   if (!data.startDate) return;
   const now = new Date();
   now.setHours(0, 0, 0, 0);
+
   if (data.startDate.getTime() < now.getTime()) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['startDate'],
       message: EVENT.VALIDATION.DATE_IN_PAST,
+    });
+  }
+
+  const isToday =
+    data.startDate.getFullYear() === now.getFullYear() &&
+    data.startDate.getMonth() === now.getMonth() &&
+    data.startDate.getDate() === now.getDate();
+
+  if (isToday && data.startDate.getTime() < new Date().getTime()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['startDate'],
+      message: EVENT.VALIDATION.START_TIME_IN_PAST,
     });
   }
 });
