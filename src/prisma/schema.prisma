@@ -205,7 +205,7 @@ model Commande {
   createdById     String?
   clientId        String
   eventId         String?
-  number          String                @unique // e.g., CMD-2024-001
+  number          String                // e.g., CMD-2024-001
   status          CommandeStatus        @default(DRAFT)
   eventType       EventType?
   eventDate       DateTime?
@@ -254,6 +254,7 @@ model Commande {
   activities   CommandeActivity[]
   payments     Payment[]
 
+  @@unique([organizationId, number])
   @@index([organizationId])
   @@index([clientId])
   @@index([clientId, status])

@@ -1,4 +1,4 @@
-﻿CREATE TABLE "commande_number_counters" (
+CREATE TABLE "commande_number_counters" (
     "organizationId" TEXT NOT NULL,
     "year" INTEGER NOT NULL,
     "lastNumber" INTEGER NOT NULL DEFAULT 0,
