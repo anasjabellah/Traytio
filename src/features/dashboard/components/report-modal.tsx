@@ -10,7 +10,8 @@ import {
   AlertTriangle,
   CheckCircle2,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { notify } from '@/lib/notify';
+import { COMMON } from '@/lib/notify/messages';
 import {
   Dialog,
   DialogContent,
@@ -87,7 +88,7 @@ export function ReportModal({ open, onOpenChange }: { open: boolean; onOpenChang
   const handleGenerate = useCallback(async () => {
     const range = preset === 'custom' ? { dateFrom: customFrom, dateTo: customTo } : getDateRange(preset);
     if (preset === 'custom' && !customFrom) {
-      toast.error('Veuillez sélectionner une date de début');
+      notify.error(COMMON.REPORT.DATE_REQUIRED);
       return;
     }
     setLoading(true);
@@ -97,9 +98,9 @@ export function ReportModal({ open, onOpenChange }: { open: boolean; onOpenChang
     setLoading(false);
     if (res.success && res.data) {
       setReport(res.data);
-      toast.success(`Rapport généré : ${res.data.summary.totalCommandes} commandes`);
+      notify.success(COMMON.REPORT.GENERATE_SUCCESS(res.data.summary.totalCommandes));
     } else {
-      toast.error(res.error ?? 'Erreur lors de la génération du rapport');
+      notify.error(res.error ?? COMMON.REPORT.GENERATE_ERROR);
     }
   }, [preset, customFrom, customTo, status, eventType]);
 
@@ -133,7 +134,7 @@ export function ReportModal({ open, onOpenChange }: { open: boolean; onOpenChang
       a.click();
       URL.revokeObjectURL(url);
       setExporting(false);
-      toast.success('Rapport téléchargé (CSV)');
+      notify.success(COMMON.REPORT.DOWNLOAD_SUCCESS);
     }, 50);
   }, [report]);
 

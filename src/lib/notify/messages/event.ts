@@ -1,3 +1,6 @@
+import { COMMON } from "./common";
+import { VALIDATION } from "./validation";
+
 export const EVENT = {
   CREATE: {
     SUCCESS: "Événement créé avec succès.",
@@ -12,18 +15,28 @@ export const EVENT = {
     ERROR: "Impossible de supprimer l'événement.",
   },
   NOT_FOUND: "Événement introuvable.",
-  INVALID_INPUT: "Données invalides. Veuillez vérifier les champs.",
+  INVALID_INPUT: COMMON.INVALID_INPUT,
   FETCH_ERROR: "Échec du chargement des événements.",
   CONFLICT_CHECK_ERROR: "Échec de la vérification des conflits.",
-  UNEXPECTED_ERROR: "Une erreur inattendue est survenue.",
+  UNEXPECTED_ERROR: COMMON.UNEXPECTED_ERROR,
   VALIDATION: {
-    NAME_MIN_LENGTH: "Le nom doit contenir au moins 2 caractères.",
-    REQUIRED_FIELD: "Ce champ est obligatoire.",
-    INVALID_DATE: "Veuillez sélectionner une date.",
-    INVALID_VALUE: "Valeur invalide.",
+    NAME_MIN_LENGTH: VALIDATION.NAME_MIN_LENGTH,
+    REQUIRED_FIELD: VALIDATION.REQUIRED_FIELD,
+    INVALID_DATE: VALIDATION.INVALID_DATE,
+    INVALID_VALUE: VALIDATION.INVALID_VALUE,
     INVALID_TYPE: "Veuillez sélectionner un type d'événement.",
     DATE_IN_PAST: "La date de l'événement doit être aujourd'hui ou dans le futur.",
     SAME_START_END: "L'heure de fin doit être différente de l'heure de début.",
     MIN_DURATION: "La durée doit être d'au moins 30 minutes.",
+  },
+  DRAG: {
+    DROP_SUCCESS: "Événement déplacé.",
+    DROP_ERROR: "Erreur lors du déplacement.",
+    RESIZE_SUCCESS: "Événement redimensionné.",
+    RESIZE_ERROR: "Erreur lors du redimensionnement.",
+  },
+  DUPLICATE: {
+    SUCCESS: "Événement dupliqué.",
+    ERROR: "Erreur lors de la duplication.",
   },
 } as const;

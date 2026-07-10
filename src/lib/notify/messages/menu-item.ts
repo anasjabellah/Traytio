@@ -1,3 +1,7 @@
+import { COMMON } from "./common";
+import { VALIDATION } from "./validation";
+import { UPLOAD } from "./upload";
+
 export const MENU_ITEM = {
   CREATE: {
     SUCCESS: "Article créé avec succès.",
@@ -21,19 +25,19 @@ export const MENU_ITEM = {
     ERROR: "Impossible de modifier le statut de l'article.",
   },
   NOT_FOUND: "Article introuvable.",
-  INVALID_INPUT: "Données invalides. Veuillez vérifier les champs.",
+  INVALID_INPUT: COMMON.INVALID_INPUT,
   FETCH_ERROR: "Échec du chargement des articles.",
   IMAGE: {
-    UPLOAD_SUCCESS: "Image téléchargée.",
-    UPLOAD_ERROR: "Erreur lors du téléchargement de l'image.",
-    FORMAT_ERROR: "Format non supporté. Utilisez JPEG, PNG ou WebP.",
-    SIZE_ERROR: "L'image dépasse la limite de 10 MB.",
+    UPLOAD_SUCCESS: UPLOAD.UPLOAD_SUCCESS,
+    UPLOAD_ERROR: UPLOAD.UPLOAD_FAILED,
+    FORMAT_ERROR: UPLOAD.UNSUPPORTED_FORMAT,
+    SIZE_ERROR: UPLOAD.FILE_TOO_LARGE_SIZE("10 MB"),
   },
-  UNEXPECTED_ERROR: "Une erreur inattendue est survenue.",
+  UNEXPECTED_ERROR: COMMON.UNEXPECTED_ERROR,
   VALIDATION: {
-    NAME_MIN_LENGTH: "Le nom doit contenir au moins 2 caractères.",
+    NAME_MIN_LENGTH: VALIDATION.NAME_MIN_LENGTH,
     CATEGORY_REQUIRED: "Veuillez sélectionner une catégorie.",
-    INVALID_PRICE: "Veuillez entrer un nombre valide.",
-    PRICE_POSITIVE: "Le prix doit être supérieur à 0.",
+    INVALID_PRICE: VALIDATION.INVALID_NUMBER,
+    PRICE_POSITIVE: VALIDATION.PRICE_POSITIVE,
   },
 } as const;

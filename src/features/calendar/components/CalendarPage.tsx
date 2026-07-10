@@ -3,7 +3,8 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Calendar, CalendarCheck, CalendarRange, Wallet, Banknote, ExternalLink, Pencil, Copy, Trash2 } from 'lucide-react'
-import { toast } from 'sonner'
+import { notify } from '@/lib/notify'
+import { EVENT } from '@/lib/notify/messages'
 import { motion } from 'framer-motion'
 import type { DatesSetArg, EventDropArg, DateSelectArg } from '@fullcalendar/core'
 import type { EventResizeDoneArg } from '@fullcalendar/interaction'
@@ -134,10 +135,10 @@ export function CalendarPage() {
       endDate: newEnd ? newEnd.toISOString() : undefined,
     } as unknown as Record<string, unknown>)
     if (result.success) {
-      toast.success('Événement déplacé')
+      notify.success(EVENT.DRAG.DROP_SUCCESS)
       refresh()
     } else {
-      toast.error(result.error || 'Erreur lors du déplacement')
+      notify.error(result.error || EVENT.DRAG.DROP_ERROR)
       arg.revert()
     }
   }, [refresh])
@@ -153,10 +154,10 @@ export function CalendarPage() {
       endDate: newEnd.toISOString(),
     } as unknown as Record<string, unknown>)
     if (result.success) {
-      toast.success('Événement redimensionné')
+      notify.success(EVENT.DRAG.RESIZE_SUCCESS)
       refresh()
     } else {
-      toast.error(result.error || 'Erreur lors du redimensionnement')
+      notify.error(result.error || EVENT.DRAG.RESIZE_ERROR)
       arg.revert()
     }
   }, [refresh])
@@ -176,10 +177,10 @@ export function CalendarPage() {
     setContextMenu(null)
     const result = await duplicateEvent(event.id)
     if (result.success) {
-      toast.success('Événement dupliqué')
+      notify.success(EVENT.DUPLICATE.SUCCESS)
       refresh()
     } else {
-      toast.error(result.error || 'Erreur lors de la duplication')
+      notify.error(result.error || EVENT.DUPLICATE.ERROR)
     }
   }, [refresh])
 

@@ -1,1 +1,22 @@
-export const COMMON = {} as const;
+export const COMMON = {
+  UNEXPECTED_ERROR: "Une erreur inattendue est survenue.",
+  UNKNOWN_ERROR: "Erreur inconnue.",
+  NETWORK_ERROR: "Erreur réseau. Veuillez réessayer.",
+  INVALID_INPUT: "Données invalides. Veuillez vérifier les champs.",
+  INVALID_DATA: "Données invalides.",
+  LOADING: "Chargement...",
+  SUCCESS: "Opération réussie.",
+  SAVED: "Enregistré.",
+  UPDATED: "Mis à jour.",
+  DELETED: "Supprimé.",
+  OPERATION_COMPLETED: "Opération terminée.",
+  OPERATION_FAILED: "L'opération a échoué.",
+  ERROR: "Erreur.",
+  FETCH_ERROR: "Erreur lors du chargement.",
+  REPORT: {
+    DATE_REQUIRED: "Veuillez sélectionner une date de début.",
+    GENERATE_ERROR: "Erreur lors de la génération du rapport.",
+    GENERATE_SUCCESS: (count: number) => `Rapport généré : ${count} commandes.`,
+    DOWNLOAD_SUCCESS: "Rapport téléchargé (CSV).",
+  },
+} as const;

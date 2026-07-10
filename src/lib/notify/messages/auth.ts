@@ -1,3 +1,5 @@
+import { COMMON } from "./common";
+
 export const AUTH = {
   INVITE: {
     SUCCESS: "Invitation envoyée",
@@ -70,7 +72,7 @@ export const AUTH = {
   ALREADY_MEMBER: "Cet utilisateur est déjà membre de l'organisation",
   USER_NOT_FOUND: "Utilisateur introuvable",
   ORGANIZATION_NOT_FOUND: "Aucune organisation trouvée",
-  FETCH_ERROR: "Erreur lors du chargement",
+  FETCH_ERROR: COMMON.FETCH_ERROR,
   FORBIDDEN_VIEW_TEAM: "Accès refusé : vous n'avez pas la permission de voir l'équipe",
-  ERROR: "Erreur",
+  ERROR: COMMON.ERROR,
 } as const;

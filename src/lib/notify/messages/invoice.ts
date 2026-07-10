@@ -1,3 +1,5 @@
+import { COMMON } from "./common";
+
 export const INVOICE = {
   CREATE: {
     QUOTE: {
@@ -25,7 +27,7 @@ export const INVOICE = {
   NOT_FOUND_COMMANDE_LINKED: "Commande liée introuvable.",
   NO_COMMANDE_LINKED: "Le devis n'est lié à aucune commande.",
   INVALID_STATUS: "Statut invalide.",
-  UNEXPECTED_ERROR: "Erreur.",
+  UNEXPECTED_ERROR: COMMON.ERROR,
   SETTINGS: {
     FETCH_ERROR: "Erreur lors de la récupération des paramètres.",
     SAVE_SUCCESS: "Paramètres enregistrés.",

@@ -1,3 +1,6 @@
+import { COMMON } from "./common";
+import { VALIDATION } from "./validation";
+
 export const CLIENT = {
   CREATE: {
     SUCCESS: "Client créé avec succès.",
@@ -16,11 +19,11 @@ export const CLIENT = {
   DUPLICATE_EMAIL: "Un client avec cet email existe déjà dans votre organisation.",
   HAS_ACTIVE_COMMANDES: "Impossible de supprimer ce client car il possède des commandes actives.",
   ACTIVE_COMMANDES_WARNING: "Ce client possède des commandes actives et ne peut pas être supprimé.",
-  INVALID_INPUT: "Données invalides. Veuillez vérifier les champs.",
+  INVALID_INPUT: COMMON.INVALID_INPUT,
   FETCH_ERROR: "Échec du chargement des clients.",
-  UNEXPECTED_ERROR: "Une erreur inattendue est survenue.",
+  UNEXPECTED_ERROR: COMMON.UNEXPECTED_ERROR,
   VALIDATION: {
-    NAME_MIN_LENGTH: "Le nom doit contenir au moins 2 caractères.",
-    EMAIL_INVALID: "Email invalide.",
+    NAME_MIN_LENGTH: VALIDATION.NAME_MIN_LENGTH,
+    EMAIL_INVALID: VALIDATION.INVALID_EMAIL,
   },
 } as const;

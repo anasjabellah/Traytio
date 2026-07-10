@@ -1,3 +1,6 @@
+import { COMMON } from "./common";
+import { VALIDATION } from "./validation";
+
 export const PAYMENT = {
   CREATE: {
     SUCCESS: "Paiement enregistré avec succès",
@@ -9,9 +12,9 @@ export const PAYMENT = {
     UNEXPECTED_ERROR: "Erreur inattendue lors de la suppression",
   },
   VALIDATION: {
-    AMOUNT_REQUIRED: "Le montant doit être supérieur à 0",
-    DATE_REQUIRED: "La date est requise",
-    INVALID_DATA: "Données invalides",
+    AMOUNT_REQUIRED: VALIDATION.INVALID_AMOUNT,
+    DATE_REQUIRED: VALIDATION.INVALID_DATE,
+    INVALID_DATA: COMMON.INVALID_DATA,
     AMOUNT_EXCEEDS_BALANCE: (amount: string, remaining: string) =>
       `Le montant (${amount} MAD) dépasse le solde restant (${remaining} MAD)`,
   },
@@ -21,7 +24,7 @@ export const PAYMENT = {
   NOT_FOUND_COMMANDE_LINKED: "Commande liée introuvable",
   INVALID_ID: "ID de paiement invalide",
   FETCH_ERROR: "Erreur lors du chargement des paiements",
-  ERROR_GENERIC: "Erreur",
+  ERROR_GENERIC: COMMON.ERROR,
   UNEXPECTED_ERROR: "Erreur inattendue",
   ACTIVITY: {
     CREATE: {

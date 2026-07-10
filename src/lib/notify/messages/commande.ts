@@ -1,3 +1,7 @@
+import { COMMON } from "./common";
+import { VALIDATION } from "./validation";
+import { UPLOAD } from "./upload";
+
 export const COMMANDE = {
   CREATE: {
     SUCCESS: "Commande créée avec succès.",
@@ -24,10 +28,10 @@ export const COMMANDE = {
   FETCH_ERROR_ITEMS: "Échec du chargement des articles.",
   FETCH_ERROR_CLIENTS: "Échec du chargement des clients.",
   FETCH_ERROR_EVENTS: "Échec du chargement des événements.",
-  UNEXPECTED_ERROR: "Une erreur inattendue est survenue.",
+  UNEXPECTED_ERROR: COMMON.UNEXPECTED_ERROR,
   NO_CLIENT_SELECTED: "Aucun client sélectionné.",
   FILE: {
-    REJECTED: (name: string) => `Fichier refusé : ${name} — type ou taille non autorisé.`,
+    REJECTED: UPLOAD.REJECTED,
   },
   CLIENT: {
     ERROR: "Impossible de créer le client.",
@@ -57,11 +61,11 @@ export const COMMANDE = {
   },
   VALIDATION: {
     NAME_REQUIRED: "Le nom est requis.",
-    EMAIL_INVALID: "Email invalide.",
-    INVALID_DATA: "Données invalides.",
+    EMAIL_INVALID: VALIDATION.INVALID_EMAIL,
+    INVALID_DATA: COMMON.INVALID_DATA,
     ATTACHMENT_NAME_REQUIRED: "Le nom est requis.",
     ATTACHMENT_URL_REQUIRED: "L'URL est requise.",
     ATTACHMENT_TYPE_REQUIRED: "Le type est requis.",
-    INVALID_INPUT: "Données invalides. Veuillez vérifier les champs.",
+    INVALID_INPUT: COMMON.INVALID_INPUT,
   },
 } as const;

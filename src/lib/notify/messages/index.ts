@@ -8,3 +8,4 @@ export { PAYMENT } from "./payment";
 export { AUTH } from "./auth";
 export { UPLOAD } from "./upload";
 export { COMMON } from "./common";
+export { VALIDATION } from "./validation";
