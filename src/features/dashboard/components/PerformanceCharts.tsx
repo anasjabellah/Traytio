@@ -4,7 +4,7 @@ import { memo, useMemo, useId } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet, Calendar, Users, CreditCard } from 'lucide-react';
 import { mad } from '@/features/dashboard/constants';
-import { calcGrowth } from '@/features/dashboard/lib/calc-growth';
+import { computeKpi } from '@/features/dashboard/lib/kpi-engine';
 
 const GOLD = 'oklch(0.72 0.13 78)';
 
@@ -56,10 +56,10 @@ export const PerformanceCharts = memo(function PerformanceCharts({
   paymentsReceived: number;
 }) {
   const cards = useMemo(() => {
-    const revenueGrowth = calcGrowth(perfRevenue);
-    const eventsGrowth = calcGrowth(perfEvents);
-    const clientsGrowth = calcGrowth(perfClients);
-    const paymentsGrowth = calcGrowth(perfPayments);
+    const revenueGrowth = computeKpi(perfRevenue).delta;
+    const eventsGrowth = computeKpi(perfEvents).delta;
+    const clientsGrowth = computeKpi(perfClients).delta;
+    const paymentsGrowth = computeKpi(perfPayments).delta;
 
     const eventsTotal = perfEvents.reduce((s, v) => s + v, 0);
 

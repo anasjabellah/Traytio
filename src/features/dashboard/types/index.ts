@@ -50,4 +50,6 @@ export type DashboardData = {
   perfEvents: number[];
   perfClients: number[];
   perfPayments: number[];
+  perfCommandes: number[];
+  perfDeposits: number[];
 };

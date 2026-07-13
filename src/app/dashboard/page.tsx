@@ -18,7 +18,7 @@ import { QuickActions } from '@/features/dashboard/components/QuickActions';
 import { PerformanceCharts } from '@/features/dashboard/components/PerformanceCharts';
 import { DashboardSidebar } from '@/features/dashboard/components/DashboardSidebar';
 import { DashboardSkeleton, DashboardError } from '@/features/dashboard/components/DashboardStates';
-import { calcGrowth } from '@/features/dashboard/lib/calc-growth';
+import { computeKpi } from '@/features/dashboard/lib/kpi-engine';
 import type { DashboardData } from '@/features/dashboard/types';
 
 export default function Page() {
@@ -59,9 +59,11 @@ function Dashboard() {
 }
 
 function DashboardContent({ data }: { data: DashboardData }) {
-  const eventsDelta = calcGrowth(data.perfEvents);
-  const clientsDelta = calcGrowth(data.perfClients);
-  const paymentsDelta = calcGrowth(data.perfPayments);
+  const eventsKpi = useMemo(() => computeKpi(data.perfEvents), [data.perfEvents]);
+  const clientsKpi = useMemo(() => computeKpi(data.perfClients), [data.perfClients]);
+  const paymentsKpi = useMemo(() => computeKpi(data.perfPayments), [data.perfPayments]);
+  const commandesKpi = useMemo(() => computeKpi(data.perfCommandes), [data.perfCommandes]);
+  const depositsKpi = useMemo(() => computeKpi(data.perfDeposits), [data.perfDeposits]);
   const eventsTotal = data.confirmedEvents + data.completedEvents;
 
   const KPIS = useMemo(() => [
@@ -78,27 +80,27 @@ function DashboardContent({ data }: { data: DashboardData }) {
     {
       label: "Commandes actives",
       value: data.activeCommandes,
-      delta: 0,
-      trend: "up" as const,
-      spark: data.perfRevenue,
+      delta: commandesKpi.delta,
+      trend: commandesKpi.trend,
+      spark: commandesKpi.spark,
       icon: Receipt,
       sensitive: true,
     },
     {
       label: "\u00c9v\u00e9nements",
       value: eventsTotal,
-      delta: eventsDelta,
-      trend: eventsDelta >= 0 ? ("up" as const) : ("down" as const),
-      spark: data.perfEvents,
+      delta: eventsKpi.delta,
+      trend: eventsKpi.trend,
+      spark: eventsKpi.spark,
       icon: PartyPopper,
       sensitive: true,
     },
     {
       label: "Clients actifs",
       value: data.activeClients,
-      delta: clientsDelta,
-      trend: clientsDelta >= 0 ? ("up" as const) : ("down" as const),
-      spark: data.perfClients,
+      delta: clientsKpi.delta,
+      trend: clientsKpi.trend,
+      spark: clientsKpi.spark,
       icon: Users,
       sensitive: true,
     },
@@ -106,9 +108,9 @@ function DashboardContent({ data }: { data: DashboardData }) {
       label: "Acomptes en attente",
       value: data.pendingDeposits,
       prefix: "MAD",
-      delta: 0,
-      trend: "down" as const,
-      spark: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, data.pendingDeposits > 0 ? 5 : 1],
+      delta: depositsKpi.delta,
+      trend: depositsKpi.trend,
+      spark: depositsKpi.spark,
       icon: Clock,
       sensitive: true,
     },
@@ -116,13 +118,13 @@ function DashboardContent({ data }: { data: DashboardData }) {
       label: "Paiements encaiss\u00e9s",
       value: data.paymentsReceived,
       prefix: "MAD",
-      delta: paymentsDelta,
-      trend: paymentsDelta >= 0 ? ("up" as const) : ("down" as const),
-      spark: data.perfPayments,
+      delta: paymentsKpi.delta,
+      trend: paymentsKpi.trend,
+      spark: paymentsKpi.spark,
       icon: Banknote,
       sensitive: true,
     },
-  ], [data, eventsTotal, eventsDelta, clientsDelta, paymentsDelta]);
+  ], [data, eventsTotal, eventsKpi, clientsKpi, paymentsKpi, commandesKpi, depositsKpi]);
 
   return (
       <div className="mt-8 grid grid-cols-12 gap-6">

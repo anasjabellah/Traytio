@@ -5,6 +5,7 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import type { CommandeStatus } from '@prisma/client';
 import type { DashboardData } from '@/features/dashboard/types';
+import { buildMonthlySparkline, buildMonthlySparklineFromMap } from '@/features/dashboard/lib/kpi-engine';
 
 const COMMANDE_ACTIVE_STATUSES: CommandeStatus[] = ['QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'READY'];
 const COMMANDE_REVENUE_STATUSES = { notIn: ['CANCELLED'] as CommandeStatus[] };
@@ -31,6 +32,7 @@ export async function getDashboardData(): Promise<{
       last8Months.push({ key: `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, '0')}`, start: m });
     }
     const eightMonthsAgo = last8Months[0].start;
+    const monthKeys = last8Months.map((m) => m.key);
 
     const [
       revenueAgg,
@@ -50,6 +52,8 @@ export async function getDashboardData(): Promise<{
       yearEvents,
       perfEventRows,
       clientCountsRaw,
+      perfCommandeRows,
+      perfDepositRows,
     ] = await Promise.all([
       // All-time revenue/payments aggregate (lightweight, no row data)
       prisma.commande.aggregate({
@@ -137,6 +141,16 @@ export async function getDashboardData(): Promise<{
         WHERE "organizationId" = ${organizationId} AND "createdAt" >= ${eightMonthsAgo}
         GROUP BY 1 ORDER BY 1
       `,
+      // Active commandes created per month for sparkline
+      prisma.commande.findMany({
+        where: { organizationId, status: { in: COMMANDE_ACTIVE_STATUSES }, createdAt: { gte: eightMonthsAgo } },
+        select: { createdAt: true },
+      }),
+      // Pending deposits per month for sparkline
+      prisma.commande.findMany({
+        where: { organizationId, remainingAmount: { gt: 0 }, status: { in: ['CONFIRMED', 'IN_PROGRESS'] }, createdAt: { gte: eightMonthsAgo } },
+        select: { createdAt: true, remainingAmount: true },
+      }),
     ]);
 
     // ── Revenue maps (single pass over allRevenueData) ──
@@ -255,22 +269,20 @@ export async function getDashboardData(): Promise<{
     const completionRate = totalQuickEvents > 0 ? Math.round((compEventsFiltered / totalQuickEvents) * 100) : 0;
 
     // ── Performance charts ──
-    const perfRevenue = last8Months.map(({ key }) => Math.round(monthlyMap.get(key) ?? 0));
-    const perfPayments = last8Months.map(({ key }) => Math.round(paidMonthlyMap.get(key) ?? 0));
+    const perfRevenue = buildMonthlySparklineFromMap(monthlyMap, monthKeys);
+    const perfPayments = buildMonthlySparklineFromMap(paidMonthlyMap, monthKeys);
 
-    const eventCountMap = new Map<string, number>();
-    for (const e of perfEventRows) {
-      const d = new Date(e.createdAt);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      eventCountMap.set(key, (eventCountMap.get(key) || 0) + 1);
-    }
+    const perfEvents = buildMonthlySparkline(perfEventRows, monthKeys);
 
     const clientCountMap = new Map<string, number>();
     for (const row of (clientCountsRaw as Array<{ month: Date; count: bigint }>)) {
       const d = new Date(row.month);
       clientCountMap.set(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, Number(row.count));
     }
-    const clientCountsPerMonth = last8Months.map(({ key }) => clientCountMap.get(key) ?? 0);
+    const clientCountsPerMonth = buildMonthlySparklineFromMap(clientCountMap, monthKeys);
+
+    const perfCommandes = buildMonthlySparkline(perfCommandeRows, monthKeys);
+    const perfDeposits = buildMonthlySparkline(perfDepositRows, monthKeys, (c) => Number(c.remainingAmount));
 
     return {
       success: true,
@@ -319,9 +331,11 @@ export async function getDashboardData(): Promise<{
         revenueMaps,
         weekAnalytics: { weekData, weekLabels, weekTotal: Math.round(weekCurrent), weekGrowth },
         perfRevenue,
-        perfEvents: last8Months.map(({ key }) => eventCountMap.get(key) ?? 0),
+        perfEvents,
         perfClients: clientCountsPerMonth,
         perfPayments,
+        perfCommandes,
+        perfDeposits,
       },
     };
   } catch (error: unknown) {
