@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import { usePayments } from "@/features/payments/hooks/use-payments"
 import { Pagination } from "@/components/ui/pagination"
+import { computeKpi } from "@/features/dashboard/lib/kpi-engine"
 import type { PaymentWithCommande, PaymentStats } from "@/features/payments/types"
 import { PageGuard } from "@/components/ui/page-guard"
 import { PaymentRowCard } from "@/features/payments/components/PaymentRowCard"
@@ -79,51 +80,45 @@ function PaymentsPageContent() {
     return () => clearTimeout(timer)
   }, [localSearch, handleSearch])
 
+  const collectedKpi = useMemo(() => computeKpi(stats?.perfCollected ?? []), [stats?.perfCollected])
+  const revenueKpi = useMemo(() => computeKpi(stats?.perfRevenue ?? []), [stats?.perfRevenue])
+  const refundedKpi = useMemo(() => computeKpi(stats?.perfRefunded ?? []), [stats?.perfRefunded])
+  const pendingKpi = useMemo(() => computeKpi(stats?.perfPending ?? []), [stats?.perfPending])
+
   const kpiCards = useMemo(() => {
     if (!stats) return []
-    const monthlyDelta = stats.previousMonthRevenue > 0
-      ? Math.round(((stats.monthlyRevenue - stats.previousMonthRevenue) / stats.previousMonthRevenue) * 100)
-      : 0
 
     return [
       {
         label: "Total collecté",
         value: stats.totalCollected,
         prefix: "MAD" as const,
-        delta: 0,
-        trend: "up" as const,
-        spark: [1, 1, 1, 1, 1, 1, 1],
         icon: Wallet,
         accent: true,
+        ...collectedKpi,
       },
       {
         label: "Revenu du mois",
         value: stats.monthlyRevenue,
         prefix: "MAD" as const,
-        delta: monthlyDelta,
-        trend: (monthlyDelta >= 0 ? "up" : "down") as "up" | "down",
-        spark: [1, 1, 1, 1, 1, 1, 1],
         icon: TrendingUp,
+        ...revenueKpi,
       },
       {
         label: "Remboursé",
         value: stats.totalRefunded,
         prefix: "MAD" as const,
-        delta: 0,
-        trend: "down" as const,
-        spark: [1, 1, 1, 1, 1, 1, 1],
         icon: Ban,
+        ...refundedKpi,
       },
       {
         label: "En attente",
         value: stats.pendingCount,
-        delta: 0,
-        trend: "up" as const,
-        spark: [1, 1, 1, 1, 1, 1, 1],
         icon: Receipt,
+        ...pendingKpi,
       },
     ]
-  }, [stats])
+  }, [stats, collectedKpi, revenueKpi, refundedKpi, pendingKpi])
 
   const subtitleParts = [
     stats && `${stats.totalCollected > 0 ? mad(stats.totalCollected) : "0 MAD"} collecté`,

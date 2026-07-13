@@ -7,6 +7,7 @@ import { PAYMENT } from "@/lib/notify/messages"
 import { PAYMENT_DEFAULT_PAGE_SIZE } from "@/features/payments/constants"
 import type { ActionResponse, PaginatedPayments, PaymentWithCommande, PaymentStats } from "@/features/payments/types"
 import type { Prisma } from "@prisma/client"
+import { buildMonthlySparkline, buildMonthKeys } from "@/features/dashboard/lib/kpi-engine"
 
 type PaymentWithCommandeRaw = Prisma.PaymentGetPayload<{
   include: {
@@ -34,6 +35,9 @@ export async function getPayments(params?: {
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const startOfPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const monthKeys = buildMonthKeys(8)
+    const [firstYear, firstMonth] = monthKeys[0].split('-').map(Number)
+    const historicalStart = new Date(firstYear, firstMonth - 1, 1)
 
     const page = params?.page ?? 1
     const limit = params?.limit ?? PAYMENT_DEFAULT_PAGE_SIZE
@@ -67,7 +71,7 @@ export async function getPayments(params?: {
       },
     } satisfies Prisma.PaymentInclude
 
-    const [items, total, collectedAgg, refundedAgg, monthlyAgg, previousMonthlyAgg, pendingCount] =
+    const [items, total, collectedAgg, refundedAgg, monthlyAgg, previousMonthlyAgg, pendingCount, historicalRows] =
       await prisma.$transaction(async (tx) => {
         const p = await tx.payment.findMany({
           where,
@@ -114,7 +118,12 @@ export async function getPayments(params?: {
           where: { organizationId, status: "PENDING" },
         })
 
-        return [p, total, collected, refunded, monthly, previousMonthly, pending] as const
+        const historical = await tx.payment.findMany({
+          where: { organizationId, createdAt: { gte: historicalStart } },
+          select: { createdAt: true, amount: true, status: true },
+        })
+
+        return [p, total, collected, refunded, monthly, previousMonthly, pending, historical] as const
       })
 
     const data: PaymentWithCommande[] = items.map((p: PaymentWithCommandeRaw) => ({
@@ -132,12 +141,39 @@ export async function getPayments(params?: {
       },
     }))
 
+    const perfCollected = buildMonthlySparkline(
+      historicalRows.filter(r => r.status === "COMPLETED"),
+      monthKeys,
+      r => Number(r.amount),
+    )
+
+    const perfRevenue = buildMonthlySparkline(
+      historicalRows.filter(r => r.status === "COMPLETED"),
+      monthKeys,
+      r => Number(r.amount),
+    )
+
+    const perfRefunded = buildMonthlySparkline(
+      historicalRows.filter(r => r.status === "REFUNDED"),
+      monthKeys,
+      r => Number(r.amount),
+    )
+
+    const perfPending = buildMonthlySparkline(
+      historicalRows.filter(r => r.status === "PENDING"),
+      monthKeys,
+    )
+
     const stats: PaymentStats = {
       totalCollected: Number(collectedAgg._sum.amount ?? 0),
       totalRefunded: Number(refundedAgg._sum.amount ?? 0),
       monthlyRevenue: Number(monthlyAgg._sum.amount ?? 0),
       pendingCount,
       previousMonthRevenue: Number(previousMonthlyAgg._sum.amount ?? 0),
+      perfCollected,
+      perfRevenue,
+      perfRefunded,
+      perfPending,
     }
 
     const totalPages = Math.ceil(total / limit)

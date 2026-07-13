@@ -19,6 +19,10 @@ export type PaymentStats = {
   monthlyRevenue: number;
   pendingCount: number;
   previousMonthRevenue: number;
+  perfCollected: number[];
+  perfRevenue: number[];
+  perfRefunded: number[];
+  perfPending: number[];
 };
 
 export type GetPaymentsParams = {
