@@ -651,8 +651,13 @@ export default function CommandesPage() {
           onOpenChange={() => setDeleteTarget(null)}
           onConfirm={handleDeleteConfirm}
           loading={deleteLoading}
-          entityName="la commande"
-          itemLabel={`la commande ${deleteTarget.number}`}
+          title="Supprimer la commande"
+          description={
+            <>
+              Êtes-vous sûr de vouloir supprimer la commande{' '}
+              <span className="font-semibold text-foreground">{deleteTarget.number}</span> ?
+            </>
+          }
         />
       )}
     </div>

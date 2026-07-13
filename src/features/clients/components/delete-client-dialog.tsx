@@ -4,17 +4,8 @@ import * as React from 'react';
 import { notify } from "@/lib/notify";
 import { CLIENT } from "@/lib/notify/messages";
 import { deleteClient } from '@/features/clients/actions/delete-client';
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import type { ClientWithStats } from '@/features/clients/types';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from '@/components/ui/alert-dialog';
 
 export function DeleteClientDialog({
   open,
@@ -31,7 +22,7 @@ export function DeleteClientDialog({
   const hasActiveCommandes = client.commandesCount > 0;
 
   const handleDelete = async () => {
-    if (hasActiveCommandes) return; // safety guard
+    if (hasActiveCommandes) return;
     setIsDeleting(true);
     try {
       const resp = await deleteClient(client.id);
@@ -50,31 +41,22 @@ export function DeleteClientDialog({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Supprimer le client</AlertDialogTitle>
-          <AlertDialogDescription>
-            Êtes‑vous sûr de vouloir supprimer le client{' '}
-            <strong>{client.name}</strong>{' '}? Cette action est irréversible.
-          </AlertDialogDescription>
+    <DeleteConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      onConfirm={handleDelete}
+      loading={isDeleting}
+      title="Supprimer le client"
+      description={
+        <>
+          Êtes-vous sûr de vouloir supprimer le client{' '}
+          <span className="font-semibold text-foreground">{client.name}</span> ?
           {hasActiveCommandes && (
-            <p className="mt-2 text-sm text-destructive">
-              {CLIENT.ACTIVE_COMMANDES_WARNING}
-            </p>
+            <p className="mt-2 text-sm text-destructive">{CLIENT.ACTIVE_COMMANDES_WARNING}</p>
           )}
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
-            disabled={hasActiveCommandes || isDeleting}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            {isDeleting ? 'Suppression…' : 'Supprimer'}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+        </>
+      }
+      confirmLabel={hasActiveCommandes ? "Client avec commandes" : "Supprimer"}
+    />
   );
 }

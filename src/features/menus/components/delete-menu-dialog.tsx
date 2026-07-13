@@ -1,19 +1,11 @@
+'use client';
+
 import * as React from 'react';
 import { notify } from '@/lib/notify';
 import { MENU } from '@/lib/notify/messages';
-import { Trash2 } from 'lucide-react';
 import { deleteMenu } from '@/features/menus/actions/delete-menu';
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import type { Menu } from '@/features/menus/types';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from '@/components/ui/alert-dialog';
 
 type DeleteMenuDialogProps = {
   open: boolean;
@@ -44,28 +36,18 @@ export function DeleteMenuDialog({ open, onOpenChange, menu, onSuccess }: Delete
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <div className="mx-auto mb-2 size-12 rounded-full bg-red-100 flex items-center justify-center">
-            <Trash2 className="size-6 text-red-600" />
-          </div>
-          <AlertDialogTitle>Supprimer le menu</AlertDialogTitle>
-          <AlertDialogDescription>
-            Êtes‑vous sûr de vouloir supprimer le menu <strong>{menu.name}</strong> ? Cette action est irréversible.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            {isDeleting ? 'Suppression…' : 'Supprimer'}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <DeleteConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      onConfirm={handleDelete}
+      loading={isDeleting}
+      title="Supprimer le menu"
+      description={
+        <>
+          Êtes-vous sûr de vouloir supprimer le menu{' '}
+          <span className="font-semibold text-foreground">{menu.name}</span> ?
+        </>
+      }
+    />
   );
 }

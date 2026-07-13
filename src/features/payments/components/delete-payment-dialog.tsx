@@ -1,22 +1,11 @@
 "use client"
 
 import * as React from "react";
-import { Trash2, Loader2 } from "lucide-react";
 import { notify } from "@/lib/notify";
 import { PAYMENT } from "@/lib/notify/messages";
 import { deletePayment } from "@/features/payments/actions/delete-payment";
 import { formatCurrency } from "@/lib/utils";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-  AlertDialogMedia,
-} from "@/components/ui/alert-dialog";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface DeletePaymentDialogProps {
   open: boolean;
@@ -54,38 +43,20 @@ export function DeletePaymentDialog({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogMedia className="bg-red-100 text-red-600">
-            <Trash2 className="size-5" />
-          </AlertDialogMedia>
-          <AlertDialogTitle>Supprimer le paiement</AlertDialogTitle>
-          <AlertDialogDescription>
-            Êtes-vous sûr de vouloir supprimer ce paiement de{" "}
-            <strong>{formatCurrency(amount)}</strong>&nbsp;?
-            <br />
-            Cette action est irréversible. Les soldes seront recalculés.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
-          >
-            {isDeleting ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                Suppression...
-              </>
-            ) : (
-              "Supprimer"
-            )}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <DeleteConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      onConfirm={handleDelete}
+      loading={isDeleting}
+      title="Supprimer le paiement"
+      description={
+        <>
+          Êtes-vous sûr de vouloir supprimer ce paiement de{' '}
+          <span className="font-semibold text-foreground">{formatCurrency(amount)}</span> ?
+          <br />
+          Les soldes seront recalculés.
+        </>
+      }
+    />
   );
 }

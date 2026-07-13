@@ -11,6 +11,7 @@ import { RoleBadge } from "@/components/ui/role-badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/hooks/use-role"
 import type { Module, Action } from "@/lib/permissions"
@@ -550,8 +551,39 @@ export default function TeamSettingsPage() {
       </AnimatePresence>
 
       {/* Confirm Dialog */}
-      <AnimatePresence>
-        {confirmDialog && (
+      {confirmDialog?.type === "remove" && (
+        <DeleteConfirmDialog
+          open={true}
+          onOpenChange={() => setConfirmDialog(null)}
+          onConfirm={handleRemoveMember}
+          title="Supprimer le membre"
+          description={
+            <>
+              Êtes-vous sûr de vouloir supprimer{' '}
+              <span className="font-semibold text-foreground">{confirmDialog.label}</span> de l'organisation ?
+            </>
+          }
+        />
+      )}
+
+      {confirmDialog?.type === "cancel-invite" && (
+        <DeleteConfirmDialog
+          open={true}
+          onOpenChange={() => setConfirmDialog(null)}
+          onConfirm={handleCancelInvitation}
+          title="Annuler l'invitation"
+          confirmLabel="Confirmer"
+          description={
+            <>
+              Annuler l'invitation de{' '}
+              <span className="font-semibold text-foreground">{confirmDialog.label}</span> ?
+            </>
+          }
+        />
+      )}
+
+      {confirmDialog?.type === "transfer" && (
+        <AnimatePresence>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -566,54 +598,36 @@ export default function TeamSettingsPage() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-sm rounded-2xl border border-border/60 bg-card shadow-xl p-6 text-center"
             >
-              <div className={`mx-auto size-12 rounded-2xl flex items-center justify-center mb-4 ${
-                confirmDialog.type === "transfer" ? "bg-amber-50" : "bg-red-50"
-              }`}>
-                {confirmDialog.type === "transfer" ? (
-                  <Crown className="size-5 text-amber-600" strokeWidth={1.8} />
-                ) : (
-                  <AlertTriangle className="size-5 text-red-500" strokeWidth={1.8} />
-                )}
+              <div className="mx-auto size-12 rounded-2xl bg-amber-50 flex items-center justify-center mb-4">
+                <Crown className="size-5 text-amber-600" strokeWidth={1.8} />
               </div>
 
               <h3 className="font-display text-lg font-semibold mb-2">
-                {confirmDialog.type === "remove" && "Supprimer le membre"}
-                {confirmDialog.type === "transfer" && "Transférer la propriété"}
-                {confirmDialog.type === "cancel-invite" && "Annuler l'invitation"}
+                Transférer la propriété
               </h3>
 
               <p className="text-sm text-muted-foreground mb-6">
-                {confirmDialog.type === "remove" && `Êtes-vous sûr de vouloir supprimer ${confirmDialog.label} de l'organisation ?`}
-                {confirmDialog.type === "transfer" && `Transférer la propriété à ${confirmDialog.label} ? Vous deviendrez administrateur.`}
-                {confirmDialog.type === "cancel-invite" && `Annuler l'invitation de ${confirmDialog.label} ?`}
+                Transférer la propriété à {confirmDialog.label} ? Vous deviendrez administrateur.
               </p>
 
               <div className="flex items-center gap-2 justify-center">
                 <button
                   onClick={() => setConfirmDialog(null)}
-                  className="h-9 px-5 rounded-xl border border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-all"
+                  className="h-9 px-5 rounded-xl border border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-all cursor-pointer"
                 >
                   Annuler
                 </button>
                 <button
-                  onClick={
-                    confirmDialog.type === "remove" ? handleRemoveMember :
-                    confirmDialog.type === "transfer" ? handleTransferOwnership :
-                    handleCancelInvitation
-                  }
-                  className={`inline-flex items-center gap-1.5 h-9 px-5 rounded-xl text-xs font-semibold text-white transition-all ${
-                    confirmDialog.type === "transfer"
-                      ? "bg-amber-600 hover:bg-amber-700"
-                      : "bg-red-600 hover:bg-red-700"
-                  }`}
+                  onClick={handleTransferOwnership}
+                  className="inline-flex items-center gap-1.5 h-9 px-5 rounded-xl text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 transition-all cursor-pointer"
                 >
-                  {confirmDialog.type === "transfer" ? "Transférer" : "Confirmer"}
+                  Transférer
                 </button>
               </div>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>
+      )}
     </PageGuard>
   )
 }

@@ -1,18 +1,11 @@
+'use client';
+
 import * as React from 'react';
 import { notify } from '@/lib/notify';
 import { EVENT } from '@/lib/notify/messages';
 import { deleteEvent } from '@/features/events/actions/delete-event';
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import type { Event } from '@/features/events/types';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from '@/components/ui/alert-dialog';
 
 type DeleteEventDialogProps = {
   open: boolean;
@@ -43,25 +36,18 @@ export function DeleteEventDialog({ open, onOpenChange, event, onSuccess }: Dele
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Supprimer l'événement</AlertDialogTitle>
-          <AlertDialogDescription>
-            Êtes‑vous sûr de vouloir supprimer l'événement <strong>{event.name}</strong> ? Cette action est irréversible.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            {isDeleting ? 'Suppression…' : 'Supprimer'}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <DeleteConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      onConfirm={handleDelete}
+      loading={isDeleting}
+      title="Supprimer l'événement"
+      description={
+        <>
+          Êtes-vous sûr de vouloir supprimer l'événement{' '}
+          <span className="font-semibold text-foreground">{event.name}</span> ?
+        </>
+      }
+    />
   );
 }
