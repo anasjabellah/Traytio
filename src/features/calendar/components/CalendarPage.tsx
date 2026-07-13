@@ -16,6 +16,7 @@ import { EventDetailSheet } from '@/features/calendar/components/EventDetailShee
 import { EventsHeader } from '@/features/events/components/EventsHeader'
 import { EventsStats } from '@/features/events/components/EventsStats'
 import { EventsFilters } from '@/features/events/components/EventsFilters'
+import { computeKpi } from '@/features/dashboard/lib/kpi-engine'
 import { CreateEventDialog } from '@/features/events/components/create-event-dialog'
 import { DeleteEventDialog } from '@/features/events/components/delete-event-dialog'
 import { updateEvent } from '@/features/events/actions/update-event'
@@ -190,13 +191,19 @@ export function CalendarPage() {
     router.push(`/dashboard/events/${event.id}`)
   }, [router])
 
+  const totalKpi = useMemo(() => computeKpi(stats.perfTotal), [stats.perfTotal])
+  const weekKpi = useMemo(() => computeKpi(stats.perfWeek), [stats.perfWeek])
+  const monthKpi = useMemo(() => computeKpi(stats.perfMonth), [stats.perfMonth])
+  const budgetKpi = useMemo(() => computeKpi(stats.perfBudget), [stats.perfBudget])
+  const paymentsKpi = useMemo(() => computeKpi(stats.perfPayments), [stats.perfPayments])
+
   const KPIS = useMemo(() => [
-    { label: 'Événements', value: stats.totalEvents, delta: 0, trend: 'up' as const, spark: [3, 4, 5, 4, 6, 5, 7], icon: Calendar, sensitive: false },
-    { label: 'Cette semaine', value: stats.thisWeek, delta: 0, trend: 'up' as const, spark: [3, 4, 5, 4, 6, 5, 7], icon: CalendarCheck, sensitive: false },
-    { label: 'Ce mois', value: stats.thisMonth, delta: 0, trend: 'up' as const, spark: [12, 15, 18, 14, 20, 22, 25], icon: CalendarRange, sensitive: false },
-    { label: 'Budget total', value: stats.totalBudget, prefix: 'MAD', delta: 0, trend: 'up' as const, spark: [12, 15, 18, 14, 20, 22, 25], icon: Wallet, sensitive: true },
-    { label: 'Encaissé', value: stats.totalPaid, prefix: 'MAD', delta: 0, trend: 'up' as const, spark: [12, 15, 18, 14, 20, 22, 25], icon: Banknote, sensitive: true },
-  ], [stats])
+    { label: 'Événements', value: stats.totalEvents, icon: Calendar, sensitive: false, ...totalKpi },
+    { label: 'Cette semaine', value: stats.thisWeek, icon: CalendarCheck, sensitive: false, ...weekKpi },
+    { label: 'Ce mois', value: stats.thisMonth, icon: CalendarRange, sensitive: false, ...monthKpi },
+    { label: 'Budget total', value: stats.totalBudget, prefix: 'MAD', icon: Wallet, sensitive: true, ...budgetKpi },
+    { label: 'Encaissé', value: stats.totalPaid, prefix: 'MAD', icon: Banknote, sensitive: true, ...paymentsKpi },
+  ], [stats, totalKpi, weekKpi, monthKpi, budgetKpi, paymentsKpi])
 
   if (error && allEvents.length === 0) {
     return (

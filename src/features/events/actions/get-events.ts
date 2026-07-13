@@ -8,6 +8,7 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { computeHealthScore } from '@/features/events/types';
 import { EVENT } from '@/lib/notify/messages';
+import { buildMonthlySparkline, buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
 
 export async function getEvents(params: GetEventsParams): Promise<ActionResponse<PaginatedEvents>> {
   try {
@@ -49,7 +50,11 @@ export async function getEvents(params: GetEventsParams): Promise<ActionResponse
       if (params.budgetMax !== undefined) where.budget.lte = params.budgetMax;
     }
 
-    const [total, events] = await prisma.$transaction([
+    const monthKeys = buildMonthKeys(8);
+    const [firstYear, firstMonth] = monthKeys[0].split('-').map(Number);
+    const historicalStart = new Date(firstYear, firstMonth - 1, 1);
+
+    const [total, events, historicalRows] = await prisma.$transaction([
       prisma.event.count({ where }),
       prisma.event.findMany({
         where,
@@ -86,7 +91,29 @@ export async function getEvents(params: GetEventsParams): Promise<ActionResponse
         skip,
         take: limit,
       }),
+      prisma.event.findMany({
+        where: { organizationId, createdAt: { gte: historicalStart } },
+        select: {
+          createdAt: true,
+          budget: true,
+          commandes: {
+            select: { paidAmount: true, remainingAmount: true },
+          },
+        },
+      }),
     ]);
+
+    const historicalWithPaid = historicalRows.map(e => ({
+      createdAt: e.createdAt,
+      budget: Number(e.budget ?? 0),
+      totalPaid: (e.commandes || []).reduce((sum, c) => sum + Number(c.paidAmount ?? 0), 0),
+    }));
+
+    const perfTotal = buildMonthlySparkline(historicalRows, monthKeys);
+    const perfWeek = buildMonthlySparkline(historicalRows, monthKeys);
+    const perfMonth = buildMonthlySparkline(historicalRows, monthKeys);
+    const perfBudget = buildMonthlySparkline(historicalWithPaid, monthKeys, e => e.budget);
+    const perfPayments = buildMonthlySparkline(historicalWithPaid, monthKeys, e => e.totalPaid);
 
     const now = Date.now();
     const result: Event[] = events.map((event) => {
@@ -145,7 +172,7 @@ export async function getEvents(params: GetEventsParams): Promise<ActionResponse
 
     const totalPages = Math.ceil(total / limit);
 
-    return { success: true, data: { data: result, total, page, limit, totalPages } };
+    return { success: true, data: { data: result, total, page, limit, totalPages, perfTotal, perfWeek, perfMonth, perfBudget, perfPayments } };
   } catch (error: unknown) {
     return { success: false, error: error instanceof Error ? error.message : EVENT.UNEXPECTED_ERROR };
   }

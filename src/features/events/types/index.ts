@@ -69,6 +69,11 @@ export type PaginatedEvents = {
   page: number;
   limit: number;
   totalPages: number;
+  perfTotal: number[];
+  perfWeek: number[];
+  perfMonth: number[];
+  perfBudget: number[];
+  perfPayments: number[];
 };
 
 export type EventDetail = Event & {

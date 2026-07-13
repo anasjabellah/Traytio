@@ -16,6 +16,11 @@ export type CalendarStats = {
   thisMonth: number
   totalBudget: number
   totalPaid: number
+  perfTotal: number[]
+  perfWeek: number[]
+  perfMonth: number[]
+  perfBudget: number[]
+  perfPayments: number[]
 }
 
 export function useCalendarData() {
@@ -25,6 +30,13 @@ export function useCalendarData() {
   const [filters, setFilters] = useState<CalendarFilters>({})
   const [dateRange, setDateRange] = useState<{ from: string; to: string } | null>(null)
   const [everHadEvents, setEverHadEvents] = useState(false)
+  const [perfData, setPerfData] = useState<{
+    perfTotal: number[]
+    perfWeek: number[]
+    perfMonth: number[]
+    perfBudget: number[]
+    perfPayments: number[]
+  } | null>(null)
   const mounted = useRef(false)
   const fetchingRef = useRef(false)
   const lastFetchedKey = useRef('')
@@ -53,6 +65,13 @@ export function useCalendarData() {
 
         if (result.success && result.data) {
           setEvents(result.data.data)
+          setPerfData({
+            perfTotal: result.data.perfTotal,
+            perfWeek: result.data.perfWeek,
+            perfMonth: result.data.perfMonth,
+            perfBudget: result.data.perfBudget,
+            perfPayments: result.data.perfPayments,
+          })
           if (result.data.data.length > 0) setEverHadEvents(true)
         } else {
           setError(result.error || 'Erreur lors du chargement')
@@ -137,8 +156,13 @@ export function useCalendarData() {
       thisMonth: thisMonth.length,
       totalBudget: appliedFilters.reduce((sum, e) => sum + (e.budget || 0), 0),
       totalPaid: appliedFilters.reduce((sum, e) => sum + (e.totalPaid || 0), 0),
+      perfTotal: perfData?.perfTotal ?? [],
+      perfWeek: perfData?.perfWeek ?? [],
+      perfMonth: perfData?.perfMonth ?? [],
+      perfBudget: perfData?.perfBudget ?? [],
+      perfPayments: perfData?.perfPayments ?? [],
     }
-  }, [appliedFilters])
+  }, [appliedFilters, perfData])
 
   const refresh = useCallback(() => {
     if (dateRange) {
