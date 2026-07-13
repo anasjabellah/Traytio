@@ -28,9 +28,13 @@ export type TeamData = {
   invitations: TeamInvitation[];
 };
 
-export type TeamKPIs = {
+export type TeamStats = {
   totalMembers: number;
   activeMembers: number;
   pendingInvitations: number;
   adminCount: number;
+  perfTotal: number[];
+  perfActive: number[];
+  perfInvites: number[];
+  perfAdmins: number[];
 };

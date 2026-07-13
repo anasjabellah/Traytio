@@ -1,53 +1,45 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, startTransition, useMemo } from 'react';
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getTeam } from '@/features/team/actions/get-team';
-import type { TeamMember, TeamInvitation, TeamKPIs } from '@/features/team/types';
+import { computeKpi } from '@/features/dashboard/lib/kpi-engine';
+import type { TeamStats } from '@/features/team/types';
+
+export const TEAM_QUERY_KEY = ['team'] as const;
 
 export function useTeam() {
-  const [members, setMembers] = useState<TeamMember[]>([]);
-  const [invitations, setInvitations] = useState<TeamInvitation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchingRef = useRef(false);
-
-  const fetch = useCallback(async () => {
-    if (fetchingRef.current) return;
-    fetchingRef.current = true;
-    setIsLoading(true);
-    setError(null);
-    try {
+  const query = useQuery({
+    queryKey: TEAM_QUERY_KEY,
+    queryFn: async () => {
       const res = await getTeam();
-      if (res.success && res.data) {
-        setMembers(res.data.members);
-        setInvitations(res.data.invitations);
-      } else {
-        setError(res.error ?? 'Erreur lors du chargement de l\'équipe');
-      }
-    } catch (e: any) {
-      setError(e.message ?? 'Erreur inattendue');
-    } finally {
-      setIsLoading(false);
-      fetchingRef.current = false;
-    }
-  }, []);
+      if (res.success && res.data) return res.data;
+      throw new Error(res.error ?? 'Erreur lors du chargement de l\'équipe');
+    },
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
 
-  useEffect(() => {
-    startTransition(() => { fetch(); });
-  }, [fetch]);
+  const teamData = query.data ?? null;
+  const members = teamData?.members ?? [];
+  const invitations = teamData?.invitations ?? [];
+  const stats: TeamStats | null = teamData?.stats ?? null;
 
-  const refresh = useCallback(() => {
-    fetchingRef.current = false;
-    fetch();
-  }, [fetch]);
+  const totalKpi = useMemo(() => computeKpi(stats?.perfTotal ?? []), [stats?.perfTotal]);
+  const activeKpi = useMemo(() => computeKpi(stats?.perfActive ?? []), [stats?.perfActive]);
+  const inviteKpi = useMemo(() => computeKpi(stats?.perfInvites ?? []), [stats?.perfInvites]);
+  const adminKpi = useMemo(() => computeKpi(stats?.perfAdmins ?? []), [stats?.perfAdmins]);
 
-  const kpis: TeamKPIs = useMemo(() => ({
-    totalMembers: members.length,
-    activeMembers: members.length,
-    pendingInvitations: invitations.length,
-    adminCount: members.filter((m) => m.role === 'ADMIN').length,
-  }), [members, invitations]);
-
-  return { members, invitations, isLoading, error, kpis, refresh };
+  return {
+    members,
+    invitations,
+    isLoading: query.isLoading,
+    error: query.error?.message ?? null,
+    stats,
+    totalKpi,
+    activeKpi,
+    inviteKpi,
+    adminKpi,
+    refresh: () => query.refetch(),
+  };
 }

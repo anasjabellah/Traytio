@@ -26,7 +26,7 @@ import { cancelInvitation } from "@/features/team/actions/cancel-invitation"
 import { notify } from "@/lib/notify"
 import { AUTH } from "@/lib/notify/messages"
 import type { OrgRole } from "@prisma/client"
-import type { TeamMember } from "@/features/team/types"
+import type { TeamMember, TeamStats } from "@/features/team/types"
 import { TeamMemberCard } from "@/features/team/components/TeamMemberCard"
 
 const ROLE_OPTIONS: { value: OrgRole; label: string }[] = [
@@ -48,7 +48,7 @@ const formatDate = (d: string) =>
 
 export default function TeamSettingsPage() {
   const { can, role: currentRole } = useRole()
-  const { members, invitations, isLoading, error, kpis, refresh } = useTeam()
+  const { members, invitations, isLoading, error, stats, totalKpi, activeKpi, inviteKpi, adminKpi, refresh } = useTeam()
 
   const [query, setQuery] = useState("")
   const [roleFilter, setRoleFilter] = useState<string>("")
@@ -153,6 +153,13 @@ export default function TeamSettingsPage() {
     return false
   }
 
+  const kpiResults = useMemo(() => ({
+    totalMembers: totalKpi,
+    activeMembers: activeKpi,
+    pendingInvitations: inviteKpi,
+    adminCount: adminKpi,
+  }), [totalKpi, activeKpi, inviteKpi, adminKpi])
+
   const isSearching = query.length > 0 || !!roleFilter
   const hasNoResults = !isLoading && isSearching && filteredMembers.length === 0
   const hasNoMembers = !isLoading && !isSearching && members.length === 0
@@ -172,7 +179,7 @@ export default function TeamSettingsPage() {
                   <Users className="size-3 text-[var(--gold-deep)]" /> Équipe
                 </Badge>
                 <span className="text-muted-foreground/40 mx-1">•</span>
-                <span>{kpis.totalMembers} membre{kpis.totalMembers > 1 ? 's' : ''}</span>
+                <span>{stats?.totalMembers ?? 0} membre{(stats?.totalMembers ?? 0) > 1 ? 's' : ''}</span>
               </div>
               <h1 className="font-display text-4xl lg:text-5xl text-gradient-charcoal leading-[1.05]">
                 Équipe
@@ -206,11 +213,9 @@ export default function TeamSettingsPage() {
               <KpiCard
                 key={def.key}
                 label={def.label}
-                value={kpis[def.key as keyof typeof kpis] as number}
+                value={(stats?.[def.key as keyof TeamStats] as number) ?? 0}
                 icon={def.icon}
-                delta={0}
-                trend="up"
-                spark={[1, 1, 1, 1, 1, 1, 1]}
+                {...kpiResults[def.key]}
                 delay={i * 0.05}
               />
             ))}

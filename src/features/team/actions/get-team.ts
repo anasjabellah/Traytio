@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma"
 import { getCurrentMembership } from "@/lib/assert-role"
 import { AUTH } from "@/lib/notify/messages"
 import { PERMISSIONS } from "@/lib/permissions"
+import { buildMonthKeys, buildMonthlySparkline } from "@/features/dashboard/lib/kpi-engine"
+import type { TeamStats } from "@/features/team/types"
 
 export async function getTeam() {
   try {
@@ -55,7 +57,41 @@ export async function getTeam() {
       expiresAt: inv.expiresAt.toISOString(),
     }))
 
-    return { success: true, data: { members: serializedMembers, invitations: serializedInvitations } }
+    const monthKeys = buildMonthKeys(8)
+    const historicalStart = new Date()
+    historicalStart.setMonth(historicalStart.getMonth() - 8)
+
+    const historicalMembers = await prisma.userOrganization.findMany({
+      where: {
+        organizationId: membership.organizationId,
+        createdAt: { gte: historicalStart },
+      },
+      select: { createdAt: true, role: true },
+    })
+
+    const historicalInvitations = await prisma.invitation.findMany({
+      where: {
+        organizationId: membership.organizationId,
+        createdAt: { gte: historicalStart },
+      },
+      select: { createdAt: true },
+    })
+
+    const stats: TeamStats = {
+      totalMembers: serializedMembers.length,
+      activeMembers: serializedMembers.length,
+      pendingInvitations: serializedInvitations.length,
+      adminCount: serializedMembers.filter((m) => m.role === 'ADMIN').length,
+      perfTotal: buildMonthlySparkline(historicalMembers, monthKeys),
+      perfActive: buildMonthlySparkline(historicalMembers, monthKeys),
+      perfInvites: buildMonthlySparkline(historicalInvitations, monthKeys),
+      perfAdmins: buildMonthlySparkline(
+        historicalMembers.filter((m) => m.role === 'ADMIN'),
+        monthKeys,
+      ),
+    }
+
+    return { success: true, data: { members: serializedMembers, invitations: serializedInvitations, stats } }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : AUTH.FETCH_ERROR }
   }
