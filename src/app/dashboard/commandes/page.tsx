@@ -10,6 +10,7 @@ import {
   Calendar, CheckCircle2, Wallet, Receipt, ArrowUpRight,
   ShoppingBag, Users, Sparkles, SlidersHorizontal, RefreshCw, Tag,
 } from 'lucide-react';
+import { computeKpi } from '@/features/dashboard/lib/kpi-engine';
 import { useCommandes } from '@/features/commandes/hooks/use-commandes';
 import { CommandesTable } from '@/features/commandes/components/commandes-table';
 import { MobileOrderCards } from '@/features/commandes/components/mobile-order-cards';
@@ -112,79 +113,21 @@ export default function CommandesPage() {
 
   const stats = useMemo(() => {
     const c = dbStats?.currentMonth;
-    const p = dbStats?.previousMonth;
-    const spark = dbStats?.sparklines.revenue ?? [];
+    const totalKpi = computeKpi(dbStats?.perfTotal ?? []);
+    const activeKpi = computeKpi(dbStats?.perfActive ?? []);
+    const upcomingKpi = computeKpi(dbStats?.perfUpcoming ?? []);
+    const revenueKpi = computeKpi(dbStats?.perfRevenue ?? []);
+    const remainingKpi = computeKpi(dbStats?.perfRemaining ?? []);
+    const conversionKpi = computeKpi(dbStats?.perfConversion ?? []);
 
-    const calcDelta = (curr: number | undefined, prev: number | undefined) => {
-      if (curr === undefined || prev === undefined || prev === 0) return 0;
-      return Math.round(((curr - prev) / prev) * 100);
-    };
-
-    const calcTrend = (delta: number): 'up' | 'down' => delta >= 0 ? 'up' : 'down';
-
-    const dTotal = calcDelta(c?.total, p?.total);
-    const dActive = calcDelta(c?.active, p?.active);
-    const dUpcoming = calcDelta(c?.upcomingCount, p?.upcomingCount);
-    const dRevenue = calcDelta(c?.revenue, p?.revenue);
-    const dRemaining = calcDelta(c?.remaining, p?.remaining);
-    const dConversion = calcDelta(c?.conversionRate, p?.conversionRate);
-
-    const kpiData = [
-      {
-        label: 'Total commandes',
-        value: c?.total ?? 0,
-        delta: dTotal,
-        trend: calcTrend(dTotal),
-        spark: spark.length >= 7 ? spark : [1, 1, 1, 1, 1, 1, 1],
-        icon: ShoppingBag,
-        accent: true,
-      },
-      {
-        label: 'Commandes actives',
-        value: c?.active ?? 0,
-        delta: dActive,
-        trend: calcTrend(dActive),
-        spark: spark.length >= 7 ? spark.slice(-7) : [1, 1, 1, 1, 1, 1, 1],
-        icon: CheckCircle2,
-      },
-      {
-        label: 'Événements à venir',
-        value: c?.upcomingCount ?? 0,
-        delta: dUpcoming,
-        trend: calcTrend(dUpcoming),
-        spark: spark.length >= 7 ? spark.slice(-7) : [1, 1, 1, 1, 1, 1, 1],
-        icon: Calendar,
-      },
-      {
-        label: "Chiffre d'affaires",
-        value: c?.revenue ?? 0,
-        prefix: 'MAD',
-        delta: dRevenue,
-        trend: calcTrend(dRevenue),
-        spark: spark.length >= 7 ? spark : [1, 1, 1, 1, 1, 1, 1],
-        icon: Wallet,
-        accent: true,
-      },
-      {
-        label: 'Reste à encaisser',
-        value: c?.remaining ?? 0,
-        prefix: 'MAD',
-        delta: dRemaining,
-        trend: calcTrend(dRemaining),
-        spark: spark.length >= 7 ? spark.slice(-7) : [1, 1, 1, 1, 1, 1, 1],
-        icon: Receipt,
-      },
-      {
-        label: 'Taux de conversion',
-        value: c?.conversionRate ?? 0,
-        delta: dConversion,
-        trend: calcTrend(dConversion),
-        spark: spark.length >= 7 ? spark.slice(-7) : [1, 1, 1, 1, 1, 1, 1],
-        icon: TrendingUp,
-      },
+    return [
+      { label: 'Total commandes', value: c?.total ?? 0, icon: ShoppingBag, accent: true, ...totalKpi },
+      { label: 'Commandes actives', value: c?.active ?? 0, icon: CheckCircle2, ...activeKpi },
+      { label: 'Événements à venir', value: c?.upcomingCount ?? 0, icon: Calendar, ...upcomingKpi },
+      { label: "Chiffre d'affaires", value: c?.revenue ?? 0, prefix: 'MAD', icon: Wallet, accent: true, ...revenueKpi },
+      { label: 'Reste à encaisser', value: c?.remaining ?? 0, prefix: 'MAD', icon: Receipt, ...remainingKpi },
+      { label: 'Taux de conversion', value: c?.conversionRate ?? 0, icon: TrendingUp, ...conversionKpi },
     ];
-
-    return kpiData;
   }, [dbStats]);
 
   const filteredByEventType = useMemo(() => {

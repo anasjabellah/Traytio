@@ -8,6 +8,7 @@ import { COMMANDE_DEFAULT_PAGE_SIZE } from '@/features/commandes/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { COMMANDE } from '@/lib/notify/messages';
 import { assertCan } from '@/lib/assert-role';
+import { buildMonthlySparkline, buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
 
 export type CommandeStats = {
   currentMonth: {
@@ -26,10 +27,12 @@ export type CommandeStats = {
     remaining: number;
     conversionRate: number;
   };
-  sparklines: {
-    revenue: number[];
-    total: number[];
-  };
+  perfTotal: number[];
+  perfActive: number[];
+  perfUpcoming: number[];
+  perfRevenue: number[];
+  perfRemaining: number[];
+  perfConversion: number[];
 };
 
 type CommandesPageResult = {
@@ -124,10 +127,10 @@ export async function getCommandesPage(params: GetCommandesParams): Promise<Acti
       prisma.commande.count({
         where: { organizationId, createdAt: { gte: prevMonthStart, lt: monthStart }, eventDate: { gt: now }, status: { not: 'CANCELLED' } },
       }),
-      // Sparkline data: only current month, minimal fields
+      // Historical data for monthly perf arrays (last 8 months)
       prisma.commande.findMany({
-        where: { organizationId, createdAt: { gte: monthStart } },
-        select: { totalAmount: true, createdAt: true },
+        where: { organizationId, createdAt: { gte: new Date(now.getFullYear(), now.getMonth() - 7, 1) } },
+        select: { totalAmount: true, remainingAmount: true, status: true, eventDate: true, createdAt: true },
       }),
     ]);
 
@@ -152,15 +155,48 @@ export async function getCommandesPage(params: GetCommandesParams): Promise<Acti
       return { total, active, upcomingCount, revenue, remaining, conversionRate };
     };
 
-    const buildSparkline = (): number[] => {
-      const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-      const buckets = new Array(days).fill(0);
-      for (const r of sparklineRows) {
-        const d = new Date(r.createdAt).getDate();
-        buckets[d - 1] += Number(r.totalAmount);
+    const buildMonthlyConversionRate = (rows: typeof sparklineRows, keys: string[]): number[] => {
+      const monthBuckets = new Map<string, { nonDraft: number; converted: number }>();
+      for (const row of rows) {
+        const d = new Date(row.createdAt);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const bucket = monthBuckets.get(key) ?? { nonDraft: 0, converted: 0 };
+        if (row.status !== 'DRAFT') {
+          bucket.nonDraft += 1;
+          if (!['DRAFT', 'CANCELLED', 'QUOTED'].includes(row.status)) {
+            bucket.converted += 1;
+          }
+        }
+        monthBuckets.set(key, bucket);
       }
-      return buckets;
+      return keys.map((key) => {
+        const b = monthBuckets.get(key);
+        if (!b || b.nonDraft === 0) return 0;
+        return Math.round((b.converted / b.nonDraft) * 100);
+      });
     };
+
+    const monthKeys = buildMonthKeys(8);
+
+    const perfTotal = buildMonthlySparkline(sparklineRows, monthKeys);
+
+    const perfActive = buildMonthlySparkline(sparklineRows, monthKeys, (r) =>
+      !['CANCELLED', 'DELIVERED', 'DRAFT'].includes(r.status) ? 1 : 0,
+    );
+
+    const perfUpcoming = buildMonthlySparkline(sparklineRows, monthKeys, (r) =>
+      r.eventDate && new Date(r.eventDate) > now && r.status !== 'CANCELLED' ? 1 : 0,
+    );
+
+    const perfRevenue = buildMonthlySparkline(sparklineRows, monthKeys, (r) =>
+      r.status !== 'CANCELLED' ? Number(r.totalAmount) : 0,
+    );
+
+    const perfRemaining = buildMonthlySparkline(sparklineRows, monthKeys, (r) =>
+      Number(r.remainingAmount),
+    );
+
+    const perfConversion = buildMonthlyConversionRate(sparklineRows, monthKeys);
 
     const result: Commande[] = commandes.map(serializeCommande);
     const totalPages = Math.ceil(total / limit);
@@ -176,7 +212,12 @@ export async function getCommandesPage(params: GetCommandesParams): Promise<Acti
         stats: {
           currentMonth: calcStats(currentGroups as unknown as StatusAgg[], currentUpcoming),
           previousMonth: calcStats(prevGroups as unknown as StatusAgg[], prevUpcoming),
-          sparklines: { revenue: buildSparkline(), total: [] },
+          perfTotal,
+          perfActive,
+          perfUpcoming,
+          perfRevenue,
+          perfRemaining,
+          perfConversion,
         },
       },
     };
