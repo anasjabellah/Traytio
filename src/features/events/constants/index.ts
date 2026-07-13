@@ -9,15 +9,6 @@ export const EVENT_SORT_OPTIONS = [
 
 export type ViewMode = 'table' | 'calendar';
 
-export const SPARK_DEFAULTS: Record<string, number[]> = {
-  DRAFT: [2, 3, 2, 4, 3, 5, 4],
-  PLANNED: [3, 4, 5, 4, 6, 5, 7],
-  CONFIRMED: [4, 6, 5, 7, 8, 9, 12],
-  IN_PROGRESS: [1, 2, 2, 3, 3, 4, 5],
-  COMPLETED: [5, 7, 8, 10, 12, 14, 18],
-  CANCELLED: [1, 1, 2, 1, 2, 1, 1],
-};
-
 export const EVENT_TYPE_LABELS: Record<string, string> = {
   WEDDING: 'Mariage', CORPORATE: 'Entreprise', BIRTHDAY: 'Anniversaire',
   ANNIVERSARY: 'Anniversaire', HOLIDAY: 'Gala', OTHER: 'Autre',

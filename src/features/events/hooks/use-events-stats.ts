@@ -4,9 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { PartyPopper, Calendar as CalendarIcon, CheckCircle2, Wallet, Users } from 'lucide-react';
 import type { Event } from '@/features/events/types';
 import { useNotificationStore } from '@/stores/notification-store';
-import { SPARK_DEFAULTS } from '@/features/events/constants';
-import { formatCurrency } from '@/lib/utils';
-import { useCounter } from '@/shared/hooks/use-counter';
+import { computeKpi, buildMonthlySparkline, buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
 
 const mad = (n: number) =>
   new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(n);
@@ -37,12 +35,37 @@ export function useEventsStats(events: Event[]) {
 
   const eventTrend: 'up' | 'down' = eventGrowth >= 0 ? 'up' : 'down';
 
+  const monthKeys = useMemo(() => buildMonthKeys(8), []);
+  const perfTotal = useMemo(() => buildMonthlySparkline(events, monthKeys), [events, monthKeys]);
+  const perfUpcoming = useMemo(
+    () => buildMonthlySparkline(events.filter(e => new Date(e.startDate) > today), monthKeys),
+    [events, monthKeys, today],
+  );
+  const perfConfirmed = useMemo(
+    () => buildMonthlySparkline(events.filter(e => e.status === 'CONFIRMED'), monthKeys),
+    [events, monthKeys],
+  );
+  const perfBudget = useMemo(
+    () => buildMonthlySparkline(events, monthKeys, e => Number(e.budget ?? 0)),
+    [events, monthKeys],
+  );
+  const perfActive = useMemo(
+    () => buildMonthlySparkline(events.filter(e => e.clientId && (e.status === 'CONFIRMED' || e.status === 'IN_PROGRESS')), monthKeys),
+    [events, monthKeys],
+  );
+
+  const totalKpi = useMemo(() => computeKpi(perfTotal), [perfTotal]);
+  const upcomingKpi = useMemo(() => computeKpi(perfUpcoming), [perfUpcoming]);
+  const confirmedKpi = useMemo(() => computeKpi(perfConfirmed), [perfConfirmed]);
+  const budgetKpi = useMemo(() => computeKpi(perfBudget), [perfBudget]);
+  const activeKpi = useMemo(() => computeKpi(perfActive), [perfActive]);
+
   const KPIS = [
-    { label: "Total événements", value: totalEvents, delta: eventGrowth, trend: eventTrend, spark: SPARK_DEFAULTS.CONFIRMED, icon: PartyPopper, accent: true, sensitive: false },
-    { label: "À venir", value: upcomingEvents, delta: 0, trend: 'up' as 'up' | 'down', spark: SPARK_DEFAULTS.PLANNED, icon: CalendarIcon, sensitive: false },
-    { label: "Confirmés", value: confirmedEvents, delta: confirmationRate, trend: 'up' as 'up' | 'down', spark: SPARK_DEFAULTS.CONFIRMED, icon: CheckCircle2, sensitive: true },
-    { label: "Budget total", value: totalBudget, prefix: "MAD", delta: 0, trend: 'up' as 'up' | 'down', spark: SPARK_DEFAULTS.COMPLETED, icon: Wallet, sensitive: true },
-    { label: "Clients actifs", value: activeClients, delta: 0, trend: 'up' as 'up' | 'down', spark: SPARK_DEFAULTS.CONFIRMED, icon: Users, sensitive: false },
+    { label: "Total événements", value: totalEvents, icon: PartyPopper, accent: true, sensitive: false, ...totalKpi },
+    { label: "À venir", value: upcomingEvents, icon: CalendarIcon, sensitive: false, ...upcomingKpi },
+    { label: "Confirmés", value: confirmedEvents, icon: CheckCircle2, sensitive: true, ...confirmedKpi },
+    { label: "Budget total", value: totalBudget, prefix: "MAD", icon: Wallet, sensitive: true, ...budgetKpi },
+    { label: "Clients actifs", value: activeClients, icon: Users, sensitive: false, ...activeKpi },
   ];
 
   const todayEvents = events.filter(e => {

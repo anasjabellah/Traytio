@@ -8,6 +8,7 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { computeHealthScore } from '@/features/events/types';
 import { EVENT } from '@/lib/notify/messages';
+import { buildMonthlySparkline, buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
 
 export type EventsPageStats = {
   totalEvents: number;
@@ -19,6 +20,11 @@ export type EventsPageStats = {
   activeClients: number;
   confirmationRate: number;
   eventGrowth: number;
+  perfTotal: number[];
+  perfUpcoming: number[];
+  perfConfirmed: number[];
+  perfBudget: number[];
+  perfActive: number[];
 };
 
 export type EventsPageAlert = {
@@ -203,6 +209,9 @@ export async function getEventsPage(params: GetEventsPageParams): Promise<Action
     const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const monthKeys = buildMonthKeys(8);
+    const [firstYear, firstMonth] = monthKeys[0].split('-').map(Number);
+    const historicalStart = new Date(firstYear, firstMonth - 1, 1);
 
     const eventSelect = {
       id: true, organizationId: true, clientId: true, name: true, type: true, status: true,
@@ -215,7 +224,7 @@ export async function getEventsPage(params: GetEventsPageParams): Promise<Action
     const [
       total, events, totalBudgetResult, confirmedCount, upcomingCount,
       thisMonthCount, prevMonthCount, activeClientGroups,
-      todayRaw, upcomingRaw,
+      todayRaw, upcomingRaw, historicalEvents,
     ] = await Promise.all([
       prisma.event.count({ where }),
       prisma.event.findMany({
@@ -246,6 +255,10 @@ export async function getEventsPage(params: GetEventsPageParams): Promise<Action
         orderBy: { startDate: 'asc' },
         take: 3,
       }),
+      prisma.event.findMany({
+        where: { organizationId, createdAt: { gte: historicalStart } },
+        select: { createdAt: true, status: true, startDate: true, budget: true, clientId: true },
+      }),
     ]);
 
     const mappedEvents = events.map(mapEvent);
@@ -260,6 +273,26 @@ export async function getEventsPage(params: GetEventsPageParams): Promise<Action
       ? Math.round(((thisMonthCount - prevMonthCount) / prevMonthCount) * 100)
       : thisMonthCount > 0 ? 100 : 0;
 
+    const nowDate = now;
+    const perfTotal = buildMonthlySparkline(historicalEvents, monthKeys);
+    const perfUpcoming = buildMonthlySparkline(
+      historicalEvents.filter(e => e.startDate > nowDate),
+      monthKeys,
+    );
+    const perfConfirmed = buildMonthlySparkline(
+      historicalEvents.filter(e => e.status === 'CONFIRMED'),
+      monthKeys,
+    );
+    const perfBudget = buildMonthlySparkline(
+      historicalEvents,
+      monthKeys,
+      e => Number(e.budget ?? 0),
+    );
+    const perfActive = buildMonthlySparkline(
+      historicalEvents.filter(e => e.clientId && (e.status === 'CONFIRMED' || e.status === 'IN_PROGRESS')),
+      monthKeys,
+    );
+
     const stats: EventsPageStats = {
       totalEvents: total,
       confirmedEvents: confirmedCount,
@@ -270,6 +303,11 @@ export async function getEventsPage(params: GetEventsPageParams): Promise<Action
       activeClients,
       confirmationRate,
       eventGrowth,
+      perfTotal,
+      perfUpcoming,
+      perfConfirmed,
+      perfBudget,
+      perfActive,
     };
 
     const alerts = computeAlerts(mappedEvents, now);

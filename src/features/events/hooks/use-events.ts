@@ -5,9 +5,9 @@ import { PartyPopper, Calendar as CalendarIcon, CheckCircle2, Wallet, Users } fr
 import { getEventsPage } from '@/features/events/actions/get-events-page';
 import type { Event } from '@/features/events/types';
 import type { EventsPageStats, EventsPageAlert } from '@/features/events/actions/get-events-page';
-import { EVENT_DEFAULT_PAGE_SIZE, SPARK_DEFAULTS } from '@/features/events/constants';
+import { EVENT_DEFAULT_PAGE_SIZE } from '@/features/events/constants';
+import { computeKpi } from '@/features/dashboard/lib/kpi-engine';
 import { useNotificationStore } from '@/stores/notification-store';
-import type { KpiCardProps } from '@/shared/components/kpi-card';
 import { EVENT } from '@/lib/notify/messages';
 
 type Pagination = {
@@ -112,14 +112,18 @@ export function useEvents(initialLimit = EVENT_DEFAULT_PAGE_SIZE, filterParams?:
     fetch();
   };
 
-  const trend = (stats?.eventGrowth ?? 0) >= 0 ? 'up' as const : 'down' as const;
+  const totalKpi = computeKpi(stats?.perfTotal ?? []);
+  const upcomingKpi = computeKpi(stats?.perfUpcoming ?? []);
+  const confirmedKpi = computeKpi(stats?.perfConfirmed ?? []);
+  const budgetKpi = computeKpi(stats?.perfBudget ?? []);
+  const activeKpi = computeKpi(stats?.perfActive ?? []);
 
-  const KPIS: KpiCardProps[] = [
-    { label: "Total événements", value: stats?.totalEvents ?? 0, delta: stats?.eventGrowth ?? 0, trend, spark: SPARK_DEFAULTS.CONFIRMED, icon: PartyPopper, accent: true, sensitive: false },
-    { label: "À venir", value: stats?.upcomingEvents ?? 0, delta: 0, trend: 'up', spark: SPARK_DEFAULTS.PLANNED, icon: CalendarIcon, sensitive: false },
-    { label: "Confirmés", value: stats?.confirmedEvents ?? 0, delta: stats?.confirmationRate ?? 0, trend: 'up', spark: SPARK_DEFAULTS.CONFIRMED, icon: CheckCircle2, sensitive: true },
-    { label: "Budget total", value: stats?.totalBudget ?? 0, prefix: "MAD", delta: 0, trend: 'up', spark: SPARK_DEFAULTS.COMPLETED, icon: Wallet, sensitive: true },
-    { label: "Clients actifs", value: stats?.activeClients ?? 0, delta: 0, trend: 'up', spark: SPARK_DEFAULTS.CONFIRMED, icon: Users, sensitive: false },
+  const KPIS = [
+    { label: "Total événements", value: stats?.totalEvents ?? 0, icon: PartyPopper, accent: true, sensitive: false, ...totalKpi },
+    { label: "À venir", value: stats?.upcomingEvents ?? 0, icon: CalendarIcon, sensitive: false, ...upcomingKpi },
+    { label: "Confirmés", value: stats?.confirmedEvents ?? 0, icon: CheckCircle2, sensitive: true, ...confirmedKpi },
+    { label: "Budget total", value: stats?.totalBudget ?? 0, prefix: "MAD", icon: Wallet, sensitive: true, ...budgetKpi },
+    { label: "Clients actifs", value: stats?.activeClients ?? 0, icon: Users, sensitive: false, ...activeKpi },
   ];
 
   const STATS_EVENTS = [
