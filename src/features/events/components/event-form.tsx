@@ -63,6 +63,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
   const startDateVal = useWatch({ control, name: 'startDate' }) as Date | undefined;
   const endDateVal = useWatch({ control, name: 'endDate' }) as Date | undefined;
   const typeVal = useWatch({ control, name: 'type' }) as string | undefined;
+  const watchedGuestCount = useWatch({ control, name: 'guestCount' });
 
   const { dateStr: startDateStr, timeStr: startTimeStr } = splitDate(startDateVal);
   const { timeStr: endTimeStr } = splitDate(endDateVal);
@@ -89,6 +90,12 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
   const [clientQuery, setClientQuery] = useState('');
   const [clientFocused, setClientFocused] = useState(false);
   const clientDebounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [guestCountDraft, setGuestCountDraft] = useState<string>('10');
+
+  useEffect(() => {
+    setGuestCountDraft(String(watchedGuestCount ?? 10));
+  }, [watchedGuestCount]);
 
   const loadClients = useCallback(async (search?: string) => {
     try {
@@ -341,22 +348,54 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
             name="guestCount"
             control={control}
             render={({ field }) => {
-              const val = field.value ?? 80;
+              const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                const raw = e.target.value.replace(/\D/g, '');
+                if (raw.length > 4) return;
+                setGuestCountDraft(raw);
+              };
+              const handleBlur = () => {
+                const draft = guestCountDraft;
+                if (draft === '') {
+                  field.onChange(10);
+                  setGuestCountDraft('10');
+                } else {
+                  const num = parseInt(draft, 10);
+                  if (num < 1) { field.onChange(1); setGuestCountDraft('1'); }
+                  else if (num > 1000) { field.onChange(1000); setGuestCountDraft('1000'); }
+                  else { field.onChange(num); }
+                }
+              };
+              const currentVal = parseInt(guestCountDraft, 10) || 0;
               return (
                 <div className="flex items-center justify-between rounded-xl border border-border bg-surface-soft px-4 h-14">
                   <TableIcon className="size-4 text-muted-foreground shrink-0" />
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
-                      onClick={() => field.onChange(Math.max(1, val - 10))}
+                      onClick={() => {
+                        const next = Math.max(1, (currentVal || 10) - 10);
+                        field.onChange(next);
+                        setGuestCountDraft(String(next));
+                      }}
                       className="h-7 w-7 rounded-full hover:bg-secondary flex items-center justify-center"
                     >
                       <Minus className="h-3.5 w-3.5" />
                     </button>
-                    <span className="font-display text-2xl font-semibold tabular-nums w-10 text-center">{val}</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={guestCountDraft}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      className="font-display text-2xl font-semibold tabular-nums w-16 text-center bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                     <button
                       type="button"
-                      onClick={() => field.onChange(val + 10)}
+                      onClick={() => {
+                        const next = Math.min(1000, (currentVal || 10) + 10);
+                        field.onChange(next);
+                        setGuestCountDraft(String(next));
+                      }}
                       className="h-7 w-7 rounded-full hover:bg-secondary flex items-center justify-center"
                     >
                       <Plus className="h-3.5 w-3.5" />

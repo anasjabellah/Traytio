@@ -215,7 +215,7 @@ export function useCommandeForm() {
       setEndTime("");
     }
     setLocation(event.location ?? "");
-    setGuests(event.guestCount ?? 80);
+    setGuests(event.guestCount ?? 10);
     setBudget(event.budget ? Number(event.budget) : 0);
     setContactPerson(event.contactPerson ?? "");
     setContactPhone(event.contactPhone ?? "");
@@ -226,7 +226,7 @@ export function useCommandeForm() {
   const handleCreateNewEvent = useCallback(() => {
     setSelectedEvent("new");
     setEventName(""); setEventType(""); setEventDate(""); setStartTime("");
-    setEndTime(""); setLocation(""); setGuests(80); setBudget(0);
+    setEndTime(""); setLocation(""); setGuests(10); setBudget(0);
     setContactPerson(""); setContactPhone(""); setEventNotes("");
   }, []);
 

@@ -57,7 +57,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
   const [startTime, setStartTime] = useState(startTimeStr);
   const [endTime, setEndTime] = useState(endTimeStr);
   const [location, setLocation] = useState(eventSrc?.location ?? commande.location ?? "");
-  const [guests, setGuests] = useState(eventSrc?.guestCount ?? commande.guestCount ?? 80);
+  const [guests, setGuests] = useState(eventSrc?.guestCount ?? commande.guestCount ?? 10);
   const [budget, setBudget] = useState(eventSrc?.budget ?? commande.clientBudget ?? 0);
   const [eventStatus, setEventStatus] = useState<string | null>(eventSrc?.status ?? null);
   const [contactPerson, setContactPerson] = useState(eventSrc?.contactPerson ?? commande.contactName ?? "");

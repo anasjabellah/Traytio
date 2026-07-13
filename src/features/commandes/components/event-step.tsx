@@ -1,5 +1,6 @@
 "use client"
 
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, Clock, MapPin, Wallet, Phone, CheckCircle2, AlertTriangle, Minus, Plus } from "lucide-react";
 import { EVENT_TYPES } from "@/features/commandes/data/mock-data";
@@ -39,6 +40,12 @@ export function EventStep(props: any) {
     contactPerson, setContactPerson,
     contactPhone, setContactPhone, eventNotes, setEventNotes, dateAvailable,
   } = props;
+
+  const [guestCountDraft, setGuestCountDraft] = useState<string>(String(guests ?? 10));
+
+  useEffect(() => {
+    setGuestCountDraft(String(guests ?? 10));
+  }, [guests]);
 
   return (
     <div className="space-y-5">
@@ -111,22 +118,62 @@ export function EventStep(props: any) {
       <PremiumField label="Lieu" value={location} onChange={setLocation} placeholder="Adresse, salle, château…" icon={<MapPin className="h-4 w-4" />} />
 
       <div className="grid sm:grid-cols-2 gap-4">
-        <label className="block">
+        <div>
           <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Nombre de tables</div>
-          <div className="flex items-center justify-between rounded-2xl border border-border bg-surface-soft px-4 py-3">
-            <TableIcon className="h-4 w-4 text-muted-foreground" />
-            <button onClick={() => setGuests(Math.max(1, guests - 10))} className="h-7 w-7 rounded-full hover:bg-secondary flex items-center justify-center">
-              <Minus className="h-3.5 w-3.5" />
-            </button>
-            <motion.span key={guests} initial={{ y: -3, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="font-display text-2xl tabular-nums">
-              {guests}
-            </motion.span>
-            <button onClick={() => setGuests(guests + 10)} className="h-7 w-7 rounded-full hover:bg-secondary flex items-center justify-center">
-              <Plus className="h-3.5 w-3.5" />
-            </button>
+          <div className="flex items-center justify-between rounded-xl border border-border bg-surface-soft px-4 h-14">
+            <TableIcon className="size-4 text-muted-foreground shrink-0" />
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  const current = parseInt(guestCountDraft, 10) || 10;
+                  const next = Math.max(1, current - 10);
+                  setGuests(next);
+                  setGuestCountDraft(String(next));
+                }}
+                className="h-7 w-7 rounded-full hover:bg-secondary flex items-center justify-center"
+              >
+                <Minus className="h-3.5 w-3.5" />
+              </button>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={guestCountDraft}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/\D/g, '');
+                  if (raw.length > 4) return;
+                  setGuestCountDraft(raw);
+                }}
+                onBlur={() => {
+                  const draft = guestCountDraft;
+                  if (draft === '') {
+                    setGuests(10);
+                    setGuestCountDraft('10');
+                  } else {
+                    const num = parseInt(draft, 10);
+                    if (num < 1) { setGuests(1); setGuestCountDraft('1'); }
+                    else if (num > 1000) { setGuests(1000); setGuestCountDraft('1000'); }
+                    else { setGuests(num); }
+                  }
+                }}
+                className="font-display text-2xl font-semibold tabular-nums w-16 text-center bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const current = parseInt(guestCountDraft, 10) || 10;
+                  const next = Math.min(1000, current + 10);
+                  setGuests(next);
+                  setGuestCountDraft(String(next));
+                }}
+                className="h-7 w-7 rounded-full hover:bg-secondary flex items-center justify-center"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </div>
             <span className="text-xs text-muted-foreground">tables</span>
           </div>
-        </label>
+        </div>
         <PremiumField label="Budget client" value={budget} onChange={(v) => setBudget(parseInt(v) || 0)} type="number" prefix="MAD" icon={<Wallet className="h-4 w-4" />} />
       </div>
 
