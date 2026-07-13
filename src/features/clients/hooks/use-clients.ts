@@ -5,6 +5,7 @@ import { Users, CheckCircle2, Wallet, UserPlus, ShoppingCart } from 'lucide-reac
 import { getClientsPage } from '@/features/clients/actions/get-clients-page';
 import { CLIENT_DEFAULT_PAGE_SIZE } from '@/features/clients/constants';
 import { CLIENT } from '@/lib/notify/messages';
+import { computeKpi } from '@/features/dashboard/lib/kpi-engine';
 import type { ClientWithStats } from '@/features/clients/types';
 import type { ClientStats, ActivityItem, GetClientsPageParams } from '@/features/clients/actions/get-clients-page';
 
@@ -13,24 +14,6 @@ type Pagination = {
   limit: number;
   total: number;
   totalPages: number;
-};
-
-const SPARK_DEFAULTS: Record<string, number[]> = {
-  up: [2, 3, 4, 3, 5, 4, 6],
-  down: [5, 4, 3, 4, 2, 3, 2],
-  steady: [3, 3, 4, 4, 3, 4, 4],
-};
-
-type KpiItem = {
-  label: string;
-  value: number;
-  delta: number;
-  trend: 'up' | 'down';
-  spark: number[];
-  icon: React.ComponentType<{ className?: string }>;
-  prefix?: string;
-  accent?: boolean;
-  sensitive?: boolean;
 };
 
 export function useClients(initialLimit = CLIENT_DEFAULT_PAGE_SIZE, sortBy?: string) {
@@ -116,12 +99,18 @@ export function useClients(initialLimit = CLIENT_DEFAULT_PAGE_SIZE, sortBy?: str
   const activePct = totalClients > 0 ? Math.round((activeClientsCount / totalClients) * 100) : 0;
   const totalCommandes = stats?.totalCommandes ?? 0;
 
-  const KPIS: KpiItem[] = [
-    { label: "Total Clients", value: totalClients, delta: stats?.growthRate ?? 0, trend: (stats?.growthRate ?? 0) >= 0 ? 'up' : 'down', spark: SPARK_DEFAULTS.up, icon: Users, accent: true, sensitive: true },
-    { label: "Clients Actifs", value: activeClientsCount, delta: activePct, trend: activePct >= 50 ? 'up' : 'down', spark: SPARK_DEFAULTS.steady, icon: CheckCircle2, sensitive: true },
-    { label: "Chiffre d'Affaires", value: totalRevenue, delta: stats ? Math.round((totalRevenue / Math.max(stats.totalRevenue || totalRevenue, 1)) * 100) : 0, trend: 'up', spark: SPARK_DEFAULTS.up, icon: Wallet, accent: true, prefix: 'MAD', sensitive: true },
-    { label: "Nouveaux (30j)", value: newClients30d, delta: stats ? Math.round((newClients30d / Math.max(stats.newClients30d || newClients30d, 1)) * 100) : 0, trend: newClients30d > 0 ? 'up' : 'down', spark: SPARK_DEFAULTS.up, icon: UserPlus, sensitive: true },
-    { label: "Commandes", value: totalCommandes, delta: 0, trend: totalCommandes > 0 ? 'up' : 'down', spark: SPARK_DEFAULTS.up, icon: ShoppingCart, sensitive: true },
+  const totalKpi = useMemo(() => computeKpi(stats?.perfTotal ?? []), [stats?.perfTotal]);
+  const activeKpi = useMemo(() => computeKpi(stats?.perfActive ?? []), [stats?.perfActive]);
+  const revenueKpi = useMemo(() => computeKpi(stats?.perfRevenue ?? []), [stats?.perfRevenue]);
+  const new30dKpi = useMemo(() => computeKpi(stats?.perfNew30d ?? []), [stats?.perfNew30d]);
+  const commandesKpi = useMemo(() => computeKpi(stats?.perfCommandes ?? []), [stats?.perfCommandes]);
+
+  const KPIS = [
+    { label: "Total Clients", value: totalClients, icon: Users, accent: true, sensitive: true, ...totalKpi },
+    { label: "Clients Actifs", value: activeClientsCount, icon: CheckCircle2, sensitive: true, ...activeKpi },
+    { label: "Chiffre d'Affaires", value: totalRevenue, prefix: 'MAD', icon: Wallet, accent: true, sensitive: true, ...revenueKpi },
+    { label: "Nouveaux (30j)", value: newClients30d, icon: UserPlus, sensitive: true, ...new30dKpi },
+    { label: "Commandes", value: totalCommandes, icon: ShoppingCart, sensitive: true, ...commandesKpi },
   ];
 
   const recentClients = useMemo(() =>

@@ -7,6 +7,7 @@ import { CLIENT_DEFAULT_PAGE_SIZE } from '@/features/clients/constants';
 import { CLIENT } from '@/lib/notify/messages';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { buildMonthlySparkline, buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
 
 export type ClientStats = {
   totalClients: number;
@@ -18,6 +19,11 @@ export type ClientStats = {
   topCity: string;
   growthRate: number;
   topSpendingClient: { name: string; totalSpent: number } | null;
+  perfTotal: number[];
+  perfActive: number[];
+  perfRevenue: number[];
+  perfNew30d: number[];
+  perfCommandes: number[];
 };
 
 export type ActivityItem = {
@@ -74,6 +80,9 @@ export async function getClientsPage(params: GetClientsPageParams): Promise<Acti
     const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthKeys = buildMonthKeys(8);
+    const [firstYear, firstMonth] = monthKeys[0].split('-').map(Number);
+    const historicalStart = new Date(firstYear, firstMonth - 1, 1);
 
     const clientSelect = {
       id: true, organizationId: true, name: true, email: true, phone: true, city: true,
@@ -87,6 +96,7 @@ export async function getClientsPage(params: GetClientsPageParams): Promise<Acti
       newClients30dCount, prevMonthClientsCount, topCityGroup,
       topSpendingClientResult, recentClientsForActivity, recentlyUpdatedClients,
       totalCommandes, recentCommandes, recentEvents, recentPayments,
+      historicalClients, historicalCommandes, activeClientsWithOrders,
     ] = await Promise.all([
       prisma.client.count({ where }),
       prisma.client.findMany({
@@ -160,6 +170,18 @@ export async function getClientsPage(params: GetClientsPageParams): Promise<Acti
           },
         },
       }),
+      prisma.client.findMany({
+        where: { ...where, createdAt: { gte: historicalStart } },
+        select: { createdAt: true },
+      }),
+      prisma.commande.findMany({
+        where: { organizationId, createdAt: { gte: historicalStart } },
+        select: { createdAt: true, totalAmount: true },
+      }),
+      prisma.client.findMany({
+        where: { ...where, lastOrderAt: { gte: historicalStart } },
+        select: { lastOrderAt: true },
+      }),
     ]);
 
     // ── Map clients with stats ──
@@ -196,6 +218,15 @@ export async function getClientsPage(params: GetClientsPageParams): Promise<Acti
         ? { name: topSpendingClientResult.name, totalSpent: Number(topSpendingClientResult.totalSpent) }
         : null;
 
+    const perfTotal = buildMonthlySparkline(historicalClients, monthKeys);
+    const perfNew30d = buildMonthlySparkline(historicalClients, monthKeys);
+    const perfCommandes = buildMonthlySparkline(historicalCommandes, monthKeys);
+    const perfRevenue = buildMonthlySparkline(historicalCommandes, monthKeys, r => Number(r.totalAmount));
+    const perfActive = buildMonthlySparkline(
+      activeClientsWithOrders.map(c => ({ createdAt: c.lastOrderAt! })),
+      monthKeys,
+    );
+
     const stats: ClientStats = {
       totalClients,
       activeClients: activeClientsCount,
@@ -206,6 +237,11 @@ export async function getClientsPage(params: GetClientsPageParams): Promise<Acti
       topCity,
       growthRate,
       topSpendingClient,
+      perfTotal,
+      perfActive,
+      perfRevenue,
+      perfNew30d,
+      perfCommandes,
     };
 
     // ── Compute activity (only 5+5 recent clients, not full scan) ──
