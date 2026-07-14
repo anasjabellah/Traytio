@@ -24,8 +24,10 @@ export function useRole() {
       return res.json() as Promise<RoleResponse>
     },
     enabled: isLoaded && !!userId,
-    staleTime: Infinity,
-    retry: false,
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+    retryDelay: 1000,
+    gcTime: 10 * 60 * 1000,
   })
 
   const role = data?.role ?? null

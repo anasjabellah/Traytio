@@ -16,6 +16,7 @@ export const getCurrentMembership = cache(async (): Promise<Membership> => {
 
   const result = await prisma.userOrganization.findFirst({
     where: { user: { clerkId } },
+    orderBy: { createdAt: 'asc' },
     select: { organizationId: true, role: true, userId: true },
   })
 
