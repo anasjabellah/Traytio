@@ -7,8 +7,9 @@ import { createClientSchema } from "@/features/clients/validations/create-client
 import { CLIENT } from "@/lib/notify/messages";
 import { getOrganizationId } from "@/lib/get-organization-id";
 import { assertCan } from "@/lib/assert-role";
+import { withActionGuard } from "@/lib/action-guard";
 
-export async function createClient(input: unknown): Promise<ActionResponse<Client>> {
+async function createClientHandler(input: unknown): Promise<ActionResponse<Client>> {
   try {
     const organizationId = await getOrganizationId();
     await assertCan('clients', 'create');
@@ -73,3 +74,5 @@ export async function createClient(input: unknown): Promise<ActionResponse<Clien
     return { success: false, error: error.message || CLIENT.UNEXPECTED_ERROR };
   }
 }
+
+export const createClient = withActionGuard(createClientHandler, { name: 'clients:create' })

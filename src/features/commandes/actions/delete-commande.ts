@@ -7,12 +7,13 @@ import type { ActionResponse } from '@/features/commandes/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { COMMANDE } from '@/lib/notify/messages';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 
 const deleteCommandeSchema = z.object({
   id: z.string().min(1),
 });
 
-export async function deleteCommande(id: string): Promise<ActionResponse<void>> {
+async function deleteCommandeHandler(id: string): Promise<ActionResponse<void>> {
   try {
     const parsed = deleteCommandeSchema.safeParse({ id });
     if (!parsed.success) {
@@ -54,3 +55,5 @@ export async function deleteCommande(id: string): Promise<ActionResponse<void>> 
     return { success: false, error: error instanceof Error ? error.message : COMMANDE.UNEXPECTED_ERROR };
   }
 }
+
+export const deleteCommande = withActionGuard(deleteCommandeHandler, { name: 'commandes:delete' })

@@ -8,9 +8,10 @@ import { createCommandeSchema } from '@/features/commandes/validations/create-co
 import { recalculateCommandeBalances } from '@/features/financial/recalculate-commande-balances';
 import type { ActionResponse } from '@/features/commandes/types';
 import { COMMANDE } from '@/lib/notify/messages';
+import { withActionGuard } from '@/lib/action-guard';
 import type { CommandeStatus, EventType, EventStatus, DiscountType } from '@prisma/client';
 
-export async function updateCommande(id: string, input: unknown): Promise<ActionResponse<void>> {
+async function updateCommandeHandler(id: string, input: unknown): Promise<ActionResponse<void>> {
   try {
     const parsed = createCommandeSchema.safeParse(input);
     if (!parsed.success) {
@@ -150,3 +151,5 @@ export async function updateCommande(id: string, input: unknown): Promise<Action
     return { success: false, error: error instanceof Error ? error.message : COMMANDE.UPDATE.ERROR };
   }
 }
+
+export const updateCommande = withActionGuard(updateCommandeHandler, { name: 'commandes:update' })
