@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 import { EVENT } from '@/lib/notify/messages';
 
 const checkEventConflictsSchema = z.object({
@@ -40,7 +41,7 @@ type EventRow = {
   is_conflicting: boolean;
 };
 
-export async function checkEventConflicts(
+async function checkEventConflictsHandler(
   startDate: Date,
   endDate: Date | null,
   excludeEventId?: string
@@ -103,3 +104,5 @@ export async function checkEventConflicts(
     return { success: false, error: error.message || EVENT.CONFLICT_CHECK_ERROR };
   }
 }
+
+export const checkEventConflicts = withActionGuard(checkEventConflictsHandler, { name: 'events:read' })

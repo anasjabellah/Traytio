@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 
 const getMonthEventsSchema = z.object({
   year: z.coerce.number().int().min(2000).max(2100),
@@ -19,7 +20,7 @@ export type CalendarEventData = {
   clientName: string | null;
 };
 
-export async function getMonthEvents(
+async function getMonthEventsHandler(
   year: number,
   month: number,
 ): Promise<{ success: boolean; data?: CalendarEventData[]; error?: string }> {
@@ -61,3 +62,5 @@ export async function getMonthEvents(
     return { success: false, error: error instanceof Error ? error.message : 'An error occurred' };
   }
 }
+
+export const getMonthEvents = withActionGuard(getMonthEventsHandler, { name: 'events:read' })

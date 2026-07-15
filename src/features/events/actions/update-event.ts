@@ -6,9 +6,10 @@ import type { ActionResponse, Event } from '@/features/events/types';
 import { updateEventSchema } from '@/features/events/validations/update-event-schema';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 import { EVENT } from '@/lib/notify/messages';
 
-export async function updateEvent(data: Record<string, unknown>): Promise<ActionResponse<Event>> {
+async function updateEventHandler(data: Record<string, unknown>): Promise<ActionResponse<Event>> {
   try {
     const organizationId = await getOrganizationId();
     await assertCan('events', 'update');
@@ -111,3 +112,5 @@ export async function updateEvent(data: Record<string, unknown>): Promise<Action
     return { success: false, error: error.message || EVENT.UNEXPECTED_ERROR };
   }
 }
+
+export const updateEvent = withActionGuard(updateEventHandler, { name: 'events:update' })

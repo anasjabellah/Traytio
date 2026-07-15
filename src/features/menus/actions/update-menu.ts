@@ -7,8 +7,9 @@ import { updateMenuSchema } from '@/features/menus/validations/update-menu-schem
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { MENU } from '@/lib/notify/messages';
+import { withActionGuard } from '@/lib/action-guard';
 
-export async function updateMenu(data: UpdateMenuInput): Promise<ActionResponse<Menu>> {
+async function updateMenuHandler(data: UpdateMenuInput): Promise<ActionResponse<Menu>> {
   try {
     const parsed = updateMenuSchema.safeParse(data);
     if (!parsed.success) {
@@ -70,3 +71,5 @@ export async function updateMenu(data: UpdateMenuInput): Promise<ActionResponse<
     return { success: false, error: e.message || MENU.UPDATE.ERROR };
   }
 }
+
+export const updateMenu = withActionGuard(updateMenuHandler, { name: 'menus:update' })

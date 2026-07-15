@@ -6,8 +6,9 @@ import type { ActionResponse, Event } from '@/features/events/types';
 import { createEventSchema } from '@/features/events/validations/create-event-schema';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 import { EVENT } from '@/lib/notify/messages';
-export async function createEvent(data: Record<string, unknown>): Promise<ActionResponse<Event>> {
+async function createEventHandler(data: Record<string, unknown>): Promise<ActionResponse<Event>> {
   try {
     const parsed = createEventSchema.safeParse(data);
     if (!parsed.success) {
@@ -95,3 +96,5 @@ export async function createEvent(data: Record<string, unknown>): Promise<Action
     return { success: false, error: error.message || EVENT.UNEXPECTED_ERROR };
   }
 }
+
+export const createEvent = withActionGuard(createEventHandler, { name: 'events:create' })

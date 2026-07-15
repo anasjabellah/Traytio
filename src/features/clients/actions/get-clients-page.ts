@@ -7,6 +7,7 @@ import { CLIENT_DEFAULT_PAGE_SIZE } from '@/features/clients/constants';
 import { CLIENT } from '@/lib/notify/messages';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 import { buildMonthlySparkline, buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
 
 export type ClientStats = {
@@ -53,7 +54,7 @@ export type GetClientsPageParams = {
   sortOrder?: 'asc' | 'desc';
 };
 
-export async function getClientsPage(params: GetClientsPageParams): Promise<ActionResponse<ClientsPageResult>> {
+async function getClientsPageHandler(params: GetClientsPageParams): Promise<ActionResponse<ClientsPageResult>> {
   try {
     const organizationId = await getOrganizationId();
     await assertCan('clients', 'read');
@@ -333,3 +334,5 @@ export async function getClientsPage(params: GetClientsPageParams): Promise<Acti
     return { success: false, error: msg };
   }
 }
+
+export const getClientsPage = withActionGuard(getClientsPageHandler, { name: 'clients:read' })

@@ -3,13 +3,14 @@
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 import type { CommandeStatus } from '@prisma/client';
 import type { DashboardData } from '@/features/dashboard/types';
 import { buildMonthlySparkline, buildMonthlySparklineFromMap } from '@/features/dashboard/lib/kpi-engine';
 
 const COMMANDE_ACTIVE_STATUSES: CommandeStatus[] = ['QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'READY'];
 const COMMANDE_REVENUE_STATUSES = { notIn: ['CANCELLED'] as CommandeStatus[] };
-export async function getDashboardData(): Promise<{
+async function getDashboardDataHandler(): Promise<{
   success: boolean;
   data?: DashboardData;
   error?: string;
@@ -342,6 +343,8 @@ export async function getDashboardData(): Promise<{
     return { success: false, error: error instanceof Error ? error.message : 'An error occurred' };
   }
 }
+
+export const getDashboardData = withActionGuard(getDashboardDataHandler, { name: 'dashboard:view' })
 
 function formatTimeAgo(date: Date): string {
   const diffMs = Date.now() - date.getTime();

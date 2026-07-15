@@ -6,13 +6,14 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse } from '@/features/menu-items/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 import { MENU_ITEM } from '@/lib/notify/messages';
 
 const deleteMenuItemSchema = z.object({
   id: z.string().min(1),
 });
 
-export async function deleteMenuItem(id: string): Promise<ActionResponse> {
+async function deleteMenuItemHandler(id: string): Promise<ActionResponse> {
   try {
     const parsed = deleteMenuItemSchema.safeParse({ id });
     if (!parsed.success) {
@@ -28,3 +29,5 @@ export async function deleteMenuItem(id: string): Promise<ActionResponse> {
     return { success: false, error: e.message || MENU_ITEM.DELETE.ERROR };
   }
 }
+
+export const deleteMenuItem = withActionGuard(deleteMenuItemHandler, { name: 'menu-items:delete' })

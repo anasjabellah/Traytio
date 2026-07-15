@@ -4,13 +4,14 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { AUTH } from "@/lib/notify/messages"
+import { withActionGuard } from "@/lib/action-guard"
 import { revalidatePath } from "next/cache"
 
 const removeMemberSchema = z.object({
   memberId: z.string().min(1),
 })
 
-export async function removeMember(memberId: string) {
+async function removeMemberHandler(memberId: string) {
   try {
     const parsed = removeMemberSchema.safeParse({ memberId })
     if (!parsed.success) {
@@ -57,3 +58,5 @@ export async function removeMember(memberId: string) {
     return { success: false, error: err instanceof Error ? err.message : AUTH.MEMBER.REMOVE_ERROR }
   }
 }
+
+export const removeMember = withActionGuard(removeMemberHandler, { name: 'team:remove' })

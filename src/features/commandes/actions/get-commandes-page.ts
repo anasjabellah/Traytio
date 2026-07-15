@@ -8,6 +8,7 @@ import { COMMANDE_DEFAULT_PAGE_SIZE } from '@/features/commandes/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { COMMANDE } from '@/lib/notify/messages';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 import { buildMonthlySparkline, buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
 
 export type CommandeStats = {
@@ -44,7 +45,7 @@ type CommandesPageResult = {
   stats: CommandeStats;
 };
 
-export async function getCommandesPage(params: GetCommandesParams): Promise<ActionResponse<CommandesPageResult>> {
+async function getCommandesPageHandler(params: GetCommandesParams): Promise<ActionResponse<CommandesPageResult>> {
   try {
     const organizationId = await getOrganizationId();
     await assertCan('commandes', 'read');
@@ -226,3 +227,5 @@ export async function getCommandesPage(params: GetCommandesParams): Promise<Acti
     return { success: false, error: msg };
   }
 }
+
+export const getCommandesPage = withActionGuard(getCommandesPageHandler, { name: 'commandes:read' })

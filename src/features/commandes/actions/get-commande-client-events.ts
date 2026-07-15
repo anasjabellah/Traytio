@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { COMMANDE } from "@/lib/notify/messages"
 import { assertCan } from "@/lib/assert-role"
+import { withActionGuard } from "@/lib/action-guard"
 
 const getCommandeClientEventsSchema = z.object({
   clientId: z.string().min(1),
@@ -25,7 +26,7 @@ export type ClientEventSummary = {
   status: string;
 };
 
-export async function getCommandeClientEvents(clientId: string) {
+async function getCommandeClientEventsHandler(clientId: string) {
   try {
     getCommandeClientEventsSchema.parse({ clientId })
     const organizationId = await getOrganizationId()
@@ -68,3 +69,5 @@ export async function getCommandeClientEvents(clientId: string) {
     return { error: err.message || COMMANDE.FETCH_ERROR_EVENTS }
   }
 }
+
+export const getCommandeClientEvents = withActionGuard(getCommandeClientEventsHandler, { name: 'events:read' })

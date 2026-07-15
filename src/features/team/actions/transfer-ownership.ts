@@ -5,13 +5,14 @@ import { prisma } from "@/lib/prisma"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { AUTH } from "@/lib/notify/messages"
 import { OrgRole } from "@prisma/client"
+import { withActionGuard } from "@/lib/action-guard"
 import { revalidatePath } from "next/cache"
 
 const transferOwnershipSchema = z.object({
   targetMemberId: z.string().min(1),
 })
 
-export async function transferOwnership(targetMemberId: string) {
+async function transferOwnershipHandler(targetMemberId: string) {
   try {
     const parsed = transferOwnershipSchema.safeParse({ targetMemberId })
     if (!parsed.success) {
@@ -67,3 +68,5 @@ export async function transferOwnership(targetMemberId: string) {
     return { success: false, error: err instanceof Error ? err.message : AUTH.OWNERSHIP.TRANSFER_ERROR }
   }
 }
+
+export const transferOwnership = withActionGuard(transferOwnershipHandler, { name: 'team:change-role' })

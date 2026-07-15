@@ -6,13 +6,14 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse } from '@/features/events/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 import { EVENT } from '@/lib/notify/messages';
 
 const deleteEventSchema = z.object({
   id: z.string().min(1),
 });
 
-export async function deleteEvent(id: string): Promise<ActionResponse<void>> {
+async function deleteEventHandler(id: string): Promise<ActionResponse<void>> {
   try {
     const parsed = deleteEventSchema.safeParse({ id });
     if (!parsed.success) {
@@ -34,3 +35,5 @@ export async function deleteEvent(id: string): Promise<ActionResponse<void>> {
     return { success: false, error: error.message || EVENT.UNEXPECTED_ERROR };
   }
 }
+
+export const deleteEvent = withActionGuard(deleteEventHandler, { name: 'events:delete' })

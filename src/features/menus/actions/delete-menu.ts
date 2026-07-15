@@ -7,12 +7,13 @@ import type { ActionResponse } from '@/features/menus/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { MENU } from '@/lib/notify/messages';
+import { withActionGuard } from '@/lib/action-guard';
 
 const deleteMenuSchema = z.object({
   id: z.string().min(1),
 });
 
-export async function deleteMenu(id: string): Promise<ActionResponse> {
+async function deleteMenuHandler(id: string): Promise<ActionResponse> {
   try {
     const parsed = deleteMenuSchema.safeParse({ id });
     if (!parsed.success) {
@@ -28,3 +29,5 @@ export async function deleteMenu(id: string): Promise<ActionResponse> {
     return { success: false, error: e.message || MENU.DELETE.ERROR };
   }
 }
+
+export const deleteMenu = withActionGuard(deleteMenuHandler, { name: 'menus:delete' })

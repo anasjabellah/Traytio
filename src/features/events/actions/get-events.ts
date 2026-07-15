@@ -7,6 +7,7 @@ import type { ActionResponse, Event, PaginatedEvents, GetEventsParams } from '@/
 import { EVENT_DEFAULT_PAGE_SIZE } from '@/features/events/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 import { computeHealthScore } from '@/features/events/types';
 import { EVENT } from '@/lib/notify/messages';
 import { buildMonthlySparkline, buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
@@ -28,7 +29,7 @@ const getEventsSchema = z.object({
   healthMax: z.coerce.number().optional(),
 });
 
-export async function getEvents(params: GetEventsParams): Promise<ActionResponse<PaginatedEvents>> {
+async function getEventsHandler(params: GetEventsParams): Promise<ActionResponse<PaginatedEvents>> {
   try {
     getEventsSchema.parse(params);
     const organizationId = await getOrganizationId();
@@ -196,3 +197,5 @@ export async function getEvents(params: GetEventsParams): Promise<ActionResponse
     return { success: false, error: error instanceof Error ? error.message : EVENT.UNEXPECTED_ERROR };
   }
 }
+
+export const getEvents = withActionGuard(getEventsHandler, { name: 'events:read' })

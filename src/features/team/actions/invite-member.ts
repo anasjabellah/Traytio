@@ -6,6 +6,7 @@ import { resend, resendFromEmail } from "@/lib/resend"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { AUTH } from "@/lib/notify/messages"
 import { OrgRole } from "@prisma/client"
+import { withActionGuard } from "@/lib/action-guard"
 import { revalidatePath } from "next/cache"
 import { buildInvitationEmailHtml } from "@/emails/invitation-email"
 
@@ -14,7 +15,7 @@ const inviteMemberSchema = z.object({
   role: z.nativeEnum(OrgRole),
 })
 
-export async function inviteMember(input: { email: string; role: OrgRole }) {
+async function inviteMemberHandler(input: { email: string; role: OrgRole }) {
   try {
     const parsed = inviteMemberSchema.safeParse(input)
     if (!parsed.success) {
@@ -110,6 +111,8 @@ export async function inviteMember(input: { email: string; role: OrgRole }) {
     return { success: false, error: err instanceof Error ? err.message : AUTH.INVITE.ERROR }
   }
 }
+
+export const inviteMember = withActionGuard(inviteMemberHandler, { name: 'team:invite' })
 
 function isPlaceholder(value: string): boolean {
   return value.includes("placeholder.local")

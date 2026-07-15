@@ -7,6 +7,7 @@ import type { ActionResponse, Event } from '@/features/events/types';
 import { EVENT_DEFAULT_PAGE_SIZE } from '@/features/events/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 import { computeHealthScore } from '@/features/events/types';
 import { EVENT } from '@/lib/notify/messages';
 import { buildMonthlySparkline, buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
@@ -178,7 +179,7 @@ function computeAlerts(events: Event[], now: Date): EventsPageAlert[] {
   return result.slice(0, 4);
 }
 
-export async function getEventsPage(params: GetEventsPageParams): Promise<ActionResponse<EventsPageResult>> {
+async function getEventsPageHandler(params: GetEventsPageParams): Promise<ActionResponse<EventsPageResult>> {
   try {
     getEventsPageSchema.parse(params);
     const organizationId = await getOrganizationId();
@@ -347,3 +348,5 @@ export async function getEventsPage(params: GetEventsPageParams): Promise<Action
     return { success: false, error: error instanceof Error ? error.message : EVENT.UNEXPECTED_ERROR };
   }
 }
+
+export const getEventsPage = withActionGuard(getEventsPageHandler, { name: 'events:read' })

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { assertCan } from "@/lib/assert-role"
+import { withActionGuard } from "@/lib/action-guard"
 import { updateInvoiceStatusSchema } from "@/features/invoices/validations/invoice-schemas"
 import { INVOICE } from "@/lib/notify/messages"
 import type { ActionResponse, Invoice, InvoiceWithCommande } from "@/features/invoices/types"
@@ -51,7 +52,7 @@ async function nextInvoiceNumber(organizationId: string, type: "DEVIS" | "FACTUR
   return `${prefix}-${year}-${String(seqNumber).padStart(4, "0")}`
 }
 
-export async function createQuoteFromCommande(commandeId: string): Promise<ActionResponse<InvoiceWithCommande>> {
+async function createQuoteFromCommandeHandler(commandeId: string): Promise<ActionResponse<InvoiceWithCommande>> {
   const parsed = commandeIdSchema.safeParse({ commandeId })
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message ?? INVOICE.INVALID_STATUS }
@@ -125,7 +126,9 @@ export async function createQuoteFromCommande(commandeId: string): Promise<Actio
   return { success: false, error: lastError instanceof Error ? lastError.message : INVOICE.CREATE.QUOTE.ERROR_RETRIES }
 }
 
-export async function createInvoiceFromCommande(commandeId: string): Promise<ActionResponse<InvoiceWithCommande>> {
+export const createQuoteFromCommande = withActionGuard(createQuoteFromCommandeHandler, { name: 'invoices:create' })
+
+async function createInvoiceFromCommandeHandler(commandeId: string): Promise<ActionResponse<InvoiceWithCommande>> {
   const parsed = commandeIdSchema.safeParse({ commandeId })
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message ?? INVOICE.INVALID_STATUS }
@@ -196,7 +199,9 @@ export async function createInvoiceFromCommande(commandeId: string): Promise<Act
   return { success: false, error: lastError instanceof Error ? lastError.message : INVOICE.CREATE.INVOICE.ERROR_RETRIES }
 }
 
-export async function getInvoiceById(id: string): Promise<ActionResponse<InvoiceWithCommande>> {
+export const createInvoiceFromCommande = withActionGuard(createInvoiceFromCommandeHandler, { name: 'invoices:create' })
+
+async function getInvoiceByIdHandler(id: string): Promise<ActionResponse<InvoiceWithCommande>> {
   try {
     getInvoiceByIdSchema.parse({ id });
     const organizationId = await getOrganizationId()
@@ -225,6 +230,8 @@ export async function getInvoiceById(id: string): Promise<ActionResponse<Invoice
   }
 }
 
+export const getInvoiceById = withActionGuard(getInvoiceByIdHandler, { name: 'invoices:read' })
+
 export type PaginatedResult<T> = {
   data: T[]
   total: number
@@ -235,7 +242,7 @@ export type PaginatedResult<T> = {
   hasPreviousPage: boolean
 }
 
-export async function getInvoices(params: {
+async function getInvoicesHandler(params: {
   commandeId?: string
   type?: "DEVIS" | "FACTURE"
   search?: string
@@ -293,7 +300,9 @@ export async function getInvoices(params: {
   }
 }
 
-export async function updateInvoiceStatus(
+export const getInvoices = withActionGuard(getInvoicesHandler, { name: 'invoices:read' })
+
+async function updateInvoiceStatusHandler(
   id: string,
   status: string,
 ): Promise<ActionResponse<InvoiceWithCommande>> {
@@ -337,7 +346,9 @@ export async function updateInvoiceStatus(
   }
 }
 
-export async function convertQuoteToInvoice(quoteId: string): Promise<ActionResponse<InvoiceWithCommande>> {
+export const updateInvoiceStatus = withActionGuard(updateInvoiceStatusHandler, { name: 'invoices:update' })
+
+async function convertQuoteToInvoiceHandler(quoteId: string): Promise<ActionResponse<InvoiceWithCommande>> {
   const parsed = quoteIdSchema.safeParse({ quoteId })
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message ?? INVOICE.INVALID_STATUS }
@@ -416,6 +427,8 @@ export async function convertQuoteToInvoice(quoteId: string): Promise<ActionResp
 
   return { success: false, error: lastError instanceof Error ? lastError.message : INVOICE.CONVERT.ERROR_RETRIES }
 }
+
+export const convertQuoteToInvoice = withActionGuard(convertQuoteToInvoiceHandler, { name: 'invoices:create' })
 
 function serializeInvoice(invoice: unknown): InvoiceWithCommande {
   const i = invoice as Record<string, unknown>

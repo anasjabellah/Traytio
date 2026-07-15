@@ -7,8 +7,9 @@ import { createMenuSchema } from '@/features/menus/validations/create-menu-schem
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { MENU } from '@/lib/notify/messages';
+import { withActionGuard } from '@/lib/action-guard';
 
-export async function createMenu(data: CreateMenuInput): Promise<ActionResponse<Menu>> {
+async function createMenuHandler(data: CreateMenuInput): Promise<ActionResponse<Menu>> {
   try {
     const parsed = createMenuSchema.safeParse(data);
     if (!parsed.success) {
@@ -64,3 +65,5 @@ export async function createMenu(data: CreateMenuInput): Promise<ActionResponse<
     return { success: false, error: e.message || MENU.CREATE.ERROR };
   }
 }
+
+export const createMenu = withActionGuard(createMenuHandler, { name: 'menus:create' })

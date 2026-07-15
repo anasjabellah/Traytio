@@ -4,6 +4,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { assertCan } from "@/lib/assert-role"
+import { withActionGuard } from "@/lib/action-guard"
 import { PAYMENT } from "@/lib/notify/messages"
 import { PAYMENT_DEFAULT_PAGE_SIZE } from "@/features/payments/constants"
 import type { ActionResponse, PaginatedPayments, PaymentWithCommande, PaymentStats } from "@/features/payments/types"
@@ -30,7 +31,7 @@ type PaymentWithCommandeRaw = Prisma.PaymentGetPayload<{
   }
 }>
 
-export async function getPayments(params?: {
+async function getPaymentsHandler(params?: {
   search?: string
   method?: string
   status?: string
@@ -196,3 +197,5 @@ export async function getPayments(params?: {
     return { success: false, error: e.message || PAYMENT.FETCH_ERROR }
   }
 }
+
+export const getPayments = withActionGuard(getPaymentsHandler, { name: 'payments:read' })

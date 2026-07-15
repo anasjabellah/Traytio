@@ -4,13 +4,14 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { AUTH } from "@/lib/notify/messages"
+import { withActionGuard } from "@/lib/action-guard"
 import { revalidatePath } from "next/cache"
 
 const cancelInvitationSchema = z.object({
   invitationId: z.string().min(1),
 })
 
-export async function cancelInvitation(invitationId: string) {
+async function cancelInvitationHandler(invitationId: string) {
   try {
     const parsed = cancelInvitationSchema.safeParse({ invitationId })
     if (!parsed.success) {
@@ -38,3 +39,5 @@ export async function cancelInvitation(invitationId: string) {
     return { success: false, error: err instanceof Error ? err.message : AUTH.INVITATION.CANCEL_ERROR }
   }
 }
+
+export const cancelInvitation = withActionGuard(cancelInvitationHandler, { name: 'team:remove' })

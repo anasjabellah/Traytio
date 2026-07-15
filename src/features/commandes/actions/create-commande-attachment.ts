@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { COMMANDE } from "@/lib/notify/messages"
 import { assertCan } from "@/lib/assert-role"
+import { withActionGuard } from "@/lib/action-guard"
 import { revalidatePath } from "next/cache"
 
 const createAttachmentSchema = z.object({
@@ -14,7 +15,7 @@ const createAttachmentSchema = z.object({
   type: z.string().min(1, COMMANDE.VALIDATION.ATTACHMENT_TYPE_REQUIRED),
 })
 
-export async function createCommandeAttachment(
+async function createCommandeAttachmentHandler(
   commandeId: string,
   name: string,
   url: string,
@@ -45,3 +46,5 @@ export async function createCommandeAttachment(
     return { success: false as const, error: err instanceof Error ? err.message : COMMANDE.ATTACHMENT.ERROR }
   }
 }
+
+export const createCommandeAttachment = withActionGuard(createCommandeAttachmentHandler, { name: 'commandes:update' })

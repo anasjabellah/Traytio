@@ -6,13 +6,14 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse, EventDetail } from '@/features/events/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 import { EVENT } from '@/lib/notify/messages';
 
 const getEventByIdSchema = z.object({
   id: z.string().min(1),
 });
 
-export const getEventById = cache(async (id: string): Promise<ActionResponse<EventDetail>> => {
+async function getEventByIdHandler(id: string): Promise<ActionResponse<EventDetail>> {
   try {
     getEventByIdSchema.parse({ id });
     const organizationId = await getOrganizationId();
@@ -92,4 +93,6 @@ export const getEventById = cache(async (id: string): Promise<ActionResponse<Eve
   } catch (error: any) {
     return { success: false, error: error.message || EVENT.UNEXPECTED_ERROR };
   }
-});
+}
+
+export const getEventById = withActionGuard(cache(getEventByIdHandler), { name: 'events:read' })

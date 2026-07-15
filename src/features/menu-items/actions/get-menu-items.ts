@@ -7,6 +7,7 @@ import { MENU_ITEM_DEFAULT_PAGE_SIZE } from '@/features/menu-items/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { MENU_ITEM } from '@/lib/notify/messages';
+import { withActionGuard } from '@/lib/action-guard';
 
 const getMenuItemsSchema = z.object({
   search: z.string().max(100).optional(),
@@ -18,7 +19,7 @@ const getMenuItemsSchema = z.object({
   sortOrder: z.enum(['asc', 'desc']).optional(),
 });
 
-export async function getMenuItems(
+async function getMenuItemsHandler(
   params: GetMenuItemsParams,
 ): Promise<ActionResponse<PaginatedMenuItems>> {
   try {
@@ -74,3 +75,5 @@ export async function getMenuItems(
     return { success: false, error: e.message || MENU_ITEM.FETCH_ERROR };
   }
 }
+
+export const getMenuItems = withActionGuard(getMenuItemsHandler, { name: 'menu-items:read' })

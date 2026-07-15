@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { assertCan } from "@/lib/assert-role"
+import { withActionGuard } from "@/lib/action-guard"
 import { PAYMENT } from "@/lib/notify/messages"
 import { recalculateCommandeBalances } from "@/features/financial/recalculate-commande-balances"
 import type { CommandePaymentStatus } from "@prisma/client"
@@ -13,7 +14,7 @@ const deletePaymentSchema = z.object({
   paymentId: z.string().min(1),
 })
 
-export async function deletePayment(paymentId: string) {
+async function deletePaymentHandler(paymentId: string) {
   try {
     const parsed = deletePaymentSchema.safeParse({ paymentId })
     if (!parsed.success) {
@@ -89,3 +90,5 @@ export async function deletePayment(paymentId: string) {
     return { success: false as const, error: err instanceof Error ? err.message : PAYMENT.DELETE.ERROR }
   }
 }
+
+export const deletePayment = withActionGuard(deletePaymentHandler, { name: 'payments:delete' })

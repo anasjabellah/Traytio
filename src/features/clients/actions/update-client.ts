@@ -7,8 +7,9 @@ import { updateClientSchema } from "@/features/clients/validations/update-client
 import { CLIENT } from "@/lib/notify/messages";
 import { getOrganizationId } from "@/lib/get-organization-id";
 import { assertCan } from "@/lib/assert-role";
+import { withActionGuard } from "@/lib/action-guard";
 
-export async function updateClient(id: string, input: unknown): Promise<ActionResponse<Client>> {
+async function updateClientHandler(id: string, input: unknown): Promise<ActionResponse<Client>> {
   try {
     const organizationId = await getOrganizationId();
     await assertCan('clients', 'update');
@@ -85,3 +86,5 @@ export async function updateClient(id: string, input: unknown): Promise<ActionRe
     return { success: false, error: error.message || CLIENT.UNEXPECTED_ERROR };
   }
 }
+
+export const updateClient = withActionGuard(updateClientHandler, { name: 'clients:update' })

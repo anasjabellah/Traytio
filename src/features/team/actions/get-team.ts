@@ -3,11 +3,12 @@
 import { prisma } from "@/lib/prisma"
 import { getCurrentMembership } from "@/lib/assert-role"
 import { AUTH } from "@/lib/notify/messages"
+import { withActionGuard } from "@/lib/action-guard"
 import { PERMISSIONS } from "@/lib/permissions"
 import { buildMonthKeys, buildMonthlySparkline } from "@/features/dashboard/lib/kpi-engine"
 import type { TeamStats } from "@/features/team/types"
 
-export async function getTeam() {
+async function getTeamHandler() {
   try {
     const membership = await getCurrentMembership()
 
@@ -96,3 +97,5 @@ export async function getTeam() {
     return { success: false, error: err instanceof Error ? err.message : AUTH.FETCH_ERROR }
   }
 }
+
+export const getTeam = withActionGuard(getTeamHandler, { name: 'team:read' })

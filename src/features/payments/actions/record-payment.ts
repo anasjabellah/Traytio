@@ -3,13 +3,14 @@
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { assertCan } from "@/lib/assert-role"
+import { withActionGuard } from "@/lib/action-guard"
 import { PAYMENT } from "@/lib/notify/messages"
 import { recalculateCommandeBalances } from "@/features/financial/recalculate-commande-balances"
 import { recordPaymentSchema } from "@/features/payments/validations/payment-schemas"
 import type { PaymentMethod, CommandePaymentStatus } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 
-export async function recordPayment(input: unknown) {
+async function recordPaymentHandler(input: unknown) {
   try {
     const parsed = recordPaymentSchema.safeParse(input)
     if (!parsed.success) {
@@ -113,3 +114,5 @@ export async function recordPayment(input: unknown) {
     return { success: false as const, error: err instanceof Error ? err.message : PAYMENT.CREATE.ERROR }
   }
 }
+
+export const recordPayment = withActionGuard(recordPaymentHandler, { name: 'payments:create' })

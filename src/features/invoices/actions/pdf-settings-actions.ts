@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { assertCan } from "@/lib/assert-role"
+import { withActionGuard } from "@/lib/action-guard"
 import { INVOICE } from "@/lib/notify/messages"
 
 export type PdfSettings = {
@@ -49,7 +50,7 @@ const updatePdfSettingsSchema = z.object({
   invoiceNotes: z.string().nullable().optional(),
 })
 
-export async function getPdfSettings(): Promise<{ success: boolean; data?: PdfSettings; error?: string }> {
+async function getPdfSettingsHandler(): Promise<{ success: boolean; data?: PdfSettings; error?: string }> {
   try {
     const organizationId = await getOrganizationId()
     await assertCan('invoices', 'settings')
@@ -110,7 +111,7 @@ export async function getPdfSettings(): Promise<{ success: boolean; data?: PdfSe
   }
 }
 
-export async function updatePdfSettings(data: Partial<PdfSettings>): Promise<{ success: boolean; error?: string }> {
+async function updatePdfSettingsHandler(data: Partial<PdfSettings>): Promise<{ success: boolean; error?: string }> {
   try {
     const parsed = updatePdfSettingsSchema.safeParse(data)
     if (!parsed.success) {
@@ -150,3 +151,6 @@ export async function updatePdfSettings(data: Partial<PdfSettings>): Promise<{ s
     return { success: false, error: INVOICE.SETTINGS.SAVE_ERROR }
   }
 }
+
+export const getPdfSettings = withActionGuard(getPdfSettingsHandler, { name: 'invoices:settings' })
+export const updatePdfSettings = withActionGuard(updatePdfSettingsHandler, { name: 'invoices:settings' })

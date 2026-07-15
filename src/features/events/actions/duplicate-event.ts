@@ -6,13 +6,14 @@ import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Event } from '@/features/events/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 import { EVENT } from '@/lib/notify/messages';
 
 const duplicateEventSchema = z.object({
   id: z.string().min(1),
 });
 
-export async function duplicateEvent(id: string): Promise<ActionResponse<Event>> {
+async function duplicateEventHandler(id: string): Promise<ActionResponse<Event>> {
   try {
     const parsed = duplicateEventSchema.safeParse({ id });
     if (!parsed.success) {
@@ -71,3 +72,5 @@ export async function duplicateEvent(id: string): Promise<ActionResponse<Event>>
     return { success: false, error: error.message || EVENT.UNEXPECTED_ERROR };
   }
 }
+
+export const duplicateEvent = withActionGuard(duplicateEventHandler, { name: 'events:create' })

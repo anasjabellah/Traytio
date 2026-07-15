@@ -4,8 +4,9 @@ import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { COMMANDE } from "@/lib/notify/messages"
 import { assertCan } from "@/lib/assert-role"
+import { withActionGuard } from "@/lib/action-guard"
 
-export async function getCommandeMenus() {
+async function getCommandeMenusHandler() {
   try {
     const organizationId = await getOrganizationId()
     await assertCan('menus', 'read')
@@ -58,3 +59,5 @@ export async function getCommandeMenus() {
     return { error: err.message || COMMANDE.FETCH_ERROR_MENUS }
   }
 }
+
+export const getCommandeMenus = withActionGuard(getCommandeMenusHandler, { name: 'menus:read' })

@@ -2,13 +2,14 @@
 
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
+import { withActionGuard } from "@/lib/action-guard"
 import { AUTH } from "@/lib/notify/messages"
 
 const getInvitationByTokenSchema = z.object({
   token: z.string().min(1),
 })
 
-export async function getInvitationByToken(token: string) {
+async function getInvitationByTokenHandler(token: string) {
   try {
     getInvitationByTokenSchema.parse({ token })
     const invitation = await prisma.invitation.findUnique({
@@ -36,3 +37,5 @@ export async function getInvitationByToken(token: string) {
     return { success: false, error: err instanceof Error ? err.message : AUTH.FETCH_ERROR }
   }
 }
+
+export const getInvitationByToken = withActionGuard(getInvitationByTokenHandler, { name: 'team:read' })

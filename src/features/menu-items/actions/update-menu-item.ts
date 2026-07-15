@@ -7,8 +7,9 @@ import { updateMenuItemSchema } from '@/features/menu-items/validations/update-m
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { MENU_ITEM } from '@/lib/notify/messages';
+import { withActionGuard } from '@/lib/action-guard';
 
-export async function updateMenuItem(
+async function updateMenuItemHandler(
   data: UpdateMenuItemInput,
 ): Promise<ActionResponse<MenuItem>> {
   try {
@@ -57,3 +58,5 @@ export async function updateMenuItem(
     return { success: false, error: e.message || MENU_ITEM.UPDATE.ERROR };
   }
 }
+
+export const updateMenuItem = withActionGuard(updateMenuItemHandler, { name: 'menu-items:update' })

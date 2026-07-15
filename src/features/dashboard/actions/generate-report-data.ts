@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 
 export type ReportRow = {
   number: string;
@@ -55,7 +56,7 @@ export type ReportData = {
   generatedAt: string;
 };
 
-export async function generateReportData(filters: ReportFilters): Promise<{
+async function generateReportDataHandler(filters: ReportFilters): Promise<{
   success: boolean;
   data?: ReportData;
   error?: string;
@@ -168,3 +169,5 @@ export async function generateReportData(filters: ReportFilters): Promise<{
     };
   }
 }
+
+export const generateReportData = withActionGuard(generateReportDataHandler, { name: 'dashboard:view' })

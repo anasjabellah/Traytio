@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 import type { ActivityFeedItem, ActivityFeedResponse, ActivityType } from '@/features/activity/types';
 
 const ACTION_TO_TYPE: Record<string, ActivityType> = {
@@ -29,7 +30,7 @@ function fmtTimeAgo(date: Date): string {
   return `il y a ${weeks} sem`;
 }
 
-export async function getActivity(): Promise<{ success: boolean; data?: ActivityFeedResponse; error?: string }> {
+async function getActivityHandler(): Promise<{ success: boolean; data?: ActivityFeedResponse; error?: string }> {
   try {
     const organizationId = await getOrganizationId();
     await assertCan('dashboard', 'view');
@@ -84,3 +85,5 @@ export async function getActivity(): Promise<{ success: boolean; data?: Activity
     return { success: false, error: error instanceof Error ? error.message : 'An error occurred' };
   }
 }
+
+export const getActivity = withActionGuard(getActivityHandler, { name: 'dashboard:view' })

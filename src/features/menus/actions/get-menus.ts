@@ -7,6 +7,7 @@ import { MENU_DEFAULT_PAGE_SIZE } from '@/features/menus/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { MENU } from '@/lib/notify/messages';
+import { withActionGuard } from '@/lib/action-guard';
 
 const getMenusSchema = z.object({
   search: z.string().max(100).optional(),
@@ -18,7 +19,7 @@ const getMenusSchema = z.object({
   isActive: z.coerce.boolean().optional(),
 });
 
-export async function getMenus(params: GetMenusParams): Promise<ActionResponse<PaginatedMenus>> {
+async function getMenusHandler(params: GetMenusParams): Promise<ActionResponse<PaginatedMenus>> {
   try {
     getMenusSchema.parse(params);
     const organizationId = await getOrganizationId();
@@ -93,3 +94,5 @@ export async function getMenus(params: GetMenusParams): Promise<ActionResponse<P
     return { success: false, error: e.message || MENU.FETCH_ERROR };
   }
 }
+
+export const getMenus = withActionGuard(getMenusHandler, { name: 'menus:read' })

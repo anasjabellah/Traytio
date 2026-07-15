@@ -3,6 +3,7 @@
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@clerk/nextjs/server"
+import { withActionGuard } from "@/lib/action-guard"
 import { AUTH } from "@/lib/notify/messages"
 import { revalidatePath } from "next/cache"
 
@@ -10,7 +11,7 @@ const acceptInviteSchema = z.object({
   token: z.string().min(1),
 })
 
-export async function acceptInvite(token: string) {
+async function acceptInviteHandler(token: string) {
   try {
     const parsed = acceptInviteSchema.safeParse({ token })
     if (!parsed.success) {
@@ -68,3 +69,5 @@ export async function acceptInvite(token: string) {
     return { success: false, error: err instanceof Error ? err.message : AUTH.ACCEPT.ERROR }
   }
 }
+
+export const acceptInvite = withActionGuard(acceptInviteHandler, { name: 'team:accept' })

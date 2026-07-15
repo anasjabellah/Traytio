@@ -4,7 +4,7 @@ import { checkRateLimit } from './rate-limiter'
 const MAX_REQUESTS = 10
 const WINDOW_MS = 10_000
 
-export function withActionGuard<T extends (...args: any[]) => Promise<{ success: boolean; error?: string }>>(
+export function withActionGuard<T extends (...args: any[]) => Promise<any>>(
   fn: T,
   config: { name: string }
 ): T {

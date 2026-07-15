@@ -7,12 +7,13 @@ import { serializeCommande, serializeCommandeItem, serializePaymentSummary } fro
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { COMMANDE } from '@/lib/notify/messages';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 
 const getCommandeByIdSchema = z.object({
   id: z.string().min(1),
 });
 
-export async function getCommandeById(id: string): Promise<ActionResponse<CommandeWithDetails>> {
+async function getCommandeByIdHandler(id: string): Promise<ActionResponse<CommandeWithDetails>> {
   try {
     getCommandeByIdSchema.parse({ id });
     const organizationId = await getOrganizationId();
@@ -105,3 +106,5 @@ export async function getCommandeById(id: string): Promise<ActionResponse<Comman
     return { success: false, error: error instanceof Error ? error.message : COMMANDE.UNEXPECTED_ERROR };
   }
 }
+
+export const getCommandeById = withActionGuard(getCommandeByIdHandler, { name: 'commandes:read' })

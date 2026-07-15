@@ -6,9 +6,10 @@ import type { ActionResponse, MenuItem, CreateMenuItemInput } from '@/features/m
 import { createMenuItemSchema } from '@/features/menu-items/validations/create-menu-item-schema';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+import { withActionGuard } from '@/lib/action-guard';
 import { MENU_ITEM } from '@/lib/notify/messages';
 
-export async function createMenuItem(
+async function createMenuItemHandler(
   data: CreateMenuItemInput,
 ): Promise<ActionResponse<MenuItem>> {
   try {
@@ -56,3 +57,5 @@ export async function createMenuItem(
     return { success: false, error: e.message || MENU_ITEM.CREATE.ERROR };
   }
 }
+
+export const createMenuItem = withActionGuard(createMenuItemHandler, { name: 'menu-items:create' })

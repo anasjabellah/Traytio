@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { AUTH } from "@/lib/notify/messages"
 import { OrgRole } from "@prisma/client"
+import { withActionGuard } from "@/lib/action-guard"
 import { revalidatePath } from "next/cache"
 
 const changeMemberRoleSchema = z.object({
@@ -12,7 +13,7 @@ const changeMemberRoleSchema = z.object({
   newRole: z.nativeEnum(OrgRole),
 })
 
-export async function changeMemberRole(input: { memberId: string; newRole: OrgRole }) {
+async function changeMemberRoleHandler(input: { memberId: string; newRole: OrgRole }) {
   try {
     const parsed = changeMemberRoleSchema.safeParse(input)
     if (!parsed.success) {
@@ -63,3 +64,5 @@ export async function changeMemberRole(input: { memberId: string; newRole: OrgRo
     return { success: false, error: err instanceof Error ? err.message : AUTH.ROLE.CHANGE_ERROR }
   }
 }
+
+export const changeMemberRole = withActionGuard(changeMemberRoleHandler, { name: 'team:change-role' })
