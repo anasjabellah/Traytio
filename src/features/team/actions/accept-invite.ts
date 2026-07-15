@@ -1,12 +1,22 @@
 "use server"
 
+import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@clerk/nextjs/server"
 import { AUTH } from "@/lib/notify/messages"
 import { revalidatePath } from "next/cache"
 
+const acceptInviteSchema = z.object({
+  token: z.string().min(1),
+})
+
 export async function acceptInvite(token: string) {
   try {
+    const parsed = acceptInviteSchema.safeParse({ token })
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? AUTH.ACCEPT.ERROR }
+    }
+
     const { userId: clerkId } = await auth()
     if (!clerkId) {
       return { success: false, error: AUTH.SESSION.REQUIRED }

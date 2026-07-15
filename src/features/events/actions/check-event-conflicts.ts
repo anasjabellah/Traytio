@@ -1,9 +1,17 @@
 'use server';
 
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { EVENT } from '@/lib/notify/messages';
+
+const checkEventConflictsSchema = z.object({
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date().nullable(),
+  excludeEventId: z.string().optional(),
+});
+
 export type ConflictEventInfo = {
   id: string;
   name: string;
@@ -38,18 +46,22 @@ export async function checkEventConflicts(
   excludeEventId?: string
 ): Promise<{ success: boolean; data?: ConflictCheckResult; error?: string }> {
   try {
+    const parsed = checkEventConflictsSchema.safeParse({ startDate, endDate, excludeEventId });
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? EVENT.CONFLICT_CHECK_ERROR };
+    }
+
+    const { startDate: newStart, endDate: newEndParsed, excludeEventId: excludeId } = parsed.data;
+    const newEnd = newEndParsed ? new Date(newEndParsed) : null;
     const orgId = await getOrganizationId();
     await assertCan('events', 'read');
 
-    const newStart = new Date(startDate);
-    const newEnd = endDate ? new Date(endDate) : null;
-
-    const dayStart = new Date(startDate);
+    const dayStart = new Date(newStart);
     dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(startDate);
+    const dayEnd = new Date(newStart);
     dayEnd.setHours(23, 59, 59, 999);
 
-    const excludeParam = excludeEventId ?? null;
+    const excludeParam = excludeId ?? null;
 
     const rows = await prisma.$queryRaw<EventRow[]>`
       SELECT

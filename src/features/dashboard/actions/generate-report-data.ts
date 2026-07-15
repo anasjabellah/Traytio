@@ -1,5 +1,6 @@
 'use server';
 
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
@@ -40,6 +41,14 @@ export type ReportFilters = {
   eventType?: string;
 };
 
+const reportFiltersSchema = z.object({
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+  status: z.string().optional(),
+  clientId: z.string().optional(),
+  eventType: z.string().optional(),
+});
+
 export type ReportData = {
   rows: ReportRow[];
   summary: ReportSummary;
@@ -52,32 +61,37 @@ export async function generateReportData(filters: ReportFilters): Promise<{
   error?: string;
 }> {
   try {
+    const parsed = reportFiltersSchema.safeParse(filters);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? 'Invalid filter parameters' };
+    }
+
     const organizationId = await getOrganizationId();
     await assertCan('dashboard', 'view');
 
     const where: Record<string, unknown> = { organizationId };
 
-    if (filters.dateFrom || filters.dateTo) {
+    if (parsed.data.dateFrom || parsed.data.dateTo) {
       const createdAtFilter: Record<string, Date> = {};
-      if (filters.dateFrom) createdAtFilter.gte = new Date(filters.dateFrom);
-      if (filters.dateTo) {
-        const end = new Date(filters.dateTo);
+      if (parsed.data.dateFrom) createdAtFilter.gte = new Date(parsed.data.dateFrom);
+      if (parsed.data.dateTo) {
+        const end = new Date(parsed.data.dateTo);
         end.setHours(23, 59, 59, 999);
         createdAtFilter.lte = end;
       }
       where.createdAt = createdAtFilter;
     }
 
-    if (filters.status) {
-      where.status = filters.status;
+    if (parsed.data.status) {
+      where.status = parsed.data.status;
     }
 
-    if (filters.clientId) {
-      where.clientId = filters.clientId;
+    if (parsed.data.clientId) {
+      where.clientId = parsed.data.clientId;
     }
 
-    if (filters.eventType) {
-      where.eventType = filters.eventType;
+    if (parsed.data.eventType) {
+      where.eventType = parsed.data.eventType;
     }
 
     const commandes = await prisma.commande.findMany({

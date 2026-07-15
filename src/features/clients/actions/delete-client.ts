@@ -1,5 +1,6 @@
 'use server';
 
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { ActionResponse } from "@/features/clients/types";
@@ -7,8 +8,17 @@ import { getOrganizationId } from "@/lib/get-organization-id";
 import { CLIENT } from "@/lib/notify/messages";
 import { assertCan } from "@/lib/assert-role";
 
+const deleteClientSchema = z.object({
+  id: z.string().min(1),
+});
+
 export async function deleteClient(id: string): Promise<ActionResponse<void>> {
   try {
+    const parsed = deleteClientSchema.safeParse({ id });
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? CLIENT.UNEXPECTED_ERROR };
+    }
+
     const organizationId = await getOrganizationId();
     await assertCan('clients', 'delete');
 

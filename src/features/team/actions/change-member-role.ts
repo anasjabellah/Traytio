@@ -1,17 +1,27 @@
 "use server"
 
+import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { AUTH } from "@/lib/notify/messages"
 import { OrgRole } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 
+const changeMemberRoleSchema = z.object({
+  memberId: z.string().min(1),
+  newRole: z.nativeEnum(OrgRole),
+})
+
 export async function changeMemberRole(input: { memberId: string; newRole: OrgRole }) {
   try {
+    const parsed = changeMemberRoleSchema.safeParse(input)
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? AUTH.ROLE.CHANGE_ERROR }
+    }
+
+    const { memberId, newRole } = parsed.data
     const membership = await getCurrentMembership()
     await assertCan("team", "change-role")
-
-    const { memberId, newRole } = input
 
     const target = await prisma.userOrganization.findUnique({
       where: { id: memberId },

@@ -1,5 +1,6 @@
 'use server';
 
+import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse } from '@/features/menus/types';
@@ -7,8 +8,17 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { MENU } from '@/lib/notify/messages';
 
+const deleteMenuSchema = z.object({
+  id: z.string().min(1),
+});
+
 export async function deleteMenu(id: string): Promise<ActionResponse> {
   try {
+    const parsed = deleteMenuSchema.safeParse({ id });
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? MENU.UNEXPECTED_ERROR };
+    }
+
     const organizationId = await getOrganizationId();
     await assertCan('menus', 'delete');
     await prisma.menu.delete({ where: { id, organizationId } });

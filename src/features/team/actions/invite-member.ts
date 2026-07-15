@@ -1,5 +1,6 @@
 "use server"
 
+import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { resend, resendFromEmail } from "@/lib/resend"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
@@ -8,16 +9,21 @@ import { OrgRole } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { buildInvitationEmailHtml } from "@/emails/invitation-email"
 
+const inviteMemberSchema = z.object({
+  email: z.string().email(AUTH.INVITE.INVALID_EMAIL),
+  role: z.nativeEnum(OrgRole),
+})
+
 export async function inviteMember(input: { email: string; role: OrgRole }) {
   try {
+    const parsed = inviteMemberSchema.safeParse(input)
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? AUTH.INVITE.ERROR }
+    }
+
+    const { email, role } = parsed.data
     const membership = await getCurrentMembership()
     await assertCan("team", "invite")
-
-    const { email, role } = input
-
-    if (!email || !email.includes("@")) {
-      return { success: false, error: AUTH.INVITE.INVALID_EMAIL }
-    }
 
     if (role === "OWNER") {
       return { success: false, error: AUTH.OWNERSHIP.ONLY_OWNER_CAN_TRANSFER_ALT }

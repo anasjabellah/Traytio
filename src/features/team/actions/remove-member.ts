@@ -1,12 +1,22 @@
 "use server"
 
+import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { AUTH } from "@/lib/notify/messages"
 import { revalidatePath } from "next/cache"
 
+const removeMemberSchema = z.object({
+  memberId: z.string().min(1),
+})
+
 export async function removeMember(memberId: string) {
   try {
+    const parsed = removeMemberSchema.safeParse({ memberId })
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? AUTH.MEMBER.REMOVE_ERROR }
+    }
+
     const membership = await getCurrentMembership()
     await assertCan("team", "remove")
 

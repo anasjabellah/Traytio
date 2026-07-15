@@ -1,5 +1,6 @@
 'use server';
 
+import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse } from '@/features/commandes/types';
@@ -7,8 +8,17 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { COMMANDE } from '@/lib/notify/messages';
 import { assertCan } from '@/lib/assert-role';
 
+const deleteCommandeSchema = z.object({
+  id: z.string().min(1),
+});
+
 export async function deleteCommande(id: string): Promise<ActionResponse<void>> {
   try {
+    const parsed = deleteCommandeSchema.safeParse({ id });
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? COMMANDE.VALIDATION.INVALID_DATA };
+    }
+
     const organizationId = await getOrganizationId();
     await assertCan('commandes', 'delete');
 

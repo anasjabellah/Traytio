@@ -1,5 +1,6 @@
 "use server"
 
+import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
@@ -8,9 +9,14 @@ import { PAYMENT } from "@/lib/notify/messages"
 import { recalculateCommandeBalances } from "@/features/financial/recalculate-commande-balances"
 import type { CommandePaymentStatus } from "@prisma/client"
 
+const deletePaymentSchema = z.object({
+  paymentId: z.string().min(1),
+})
+
 export async function deletePayment(paymentId: string) {
   try {
-    if (!paymentId || typeof paymentId !== "string") {
+    const parsed = deletePaymentSchema.safeParse({ paymentId })
+    if (!parsed.success) {
       return { success: false as const, error: PAYMENT.INVALID_ID }
     }
 

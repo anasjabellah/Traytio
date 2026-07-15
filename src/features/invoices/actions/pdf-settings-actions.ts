@@ -1,5 +1,6 @@
 "use server"
 
+import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
@@ -26,6 +27,27 @@ export type PdfSettings = {
   invoiceTerms: string | null
   invoiceNotes: string | null
 }
+
+const updatePdfSettingsSchema = z.object({
+  logo: z.string().nullable().optional(),
+  primaryColor: z.string().optional(),
+  secondaryColor: z.string().optional(),
+  pdfFontFamily: z.string().optional(),
+  companyName: z.string().nullable().optional(),
+  companyAddress: z.string().nullable().optional(),
+  companyPhone: z.string().nullable().optional(),
+  companyEmail: z.string().nullable().optional(),
+  companyWebsite: z.string().nullable().optional(),
+  companyICE: z.string().nullable().optional(),
+  companyIF: z.string().nullable().optional(),
+  companyRC: z.string().nullable().optional(),
+  invoicePrefix: z.string().optional(),
+  quotePrefix: z.string().optional(),
+  paymentDelayDays: z.number().int().positive().optional(),
+  invoiceFooter: z.string().nullable().optional(),
+  invoiceTerms: z.string().nullable().optional(),
+  invoiceNotes: z.string().nullable().optional(),
+})
 
 export async function getPdfSettings(): Promise<{ success: boolean; data?: PdfSettings; error?: string }> {
   try {
@@ -90,6 +112,11 @@ export async function getPdfSettings(): Promise<{ success: boolean; data?: PdfSe
 
 export async function updatePdfSettings(data: Partial<PdfSettings>): Promise<{ success: boolean; error?: string }> {
   try {
+    const parsed = updatePdfSettingsSchema.safeParse(data)
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? INVOICE.SETTINGS.SAVE_ERROR }
+    }
+
     const organizationId = await getOrganizationId()
     await assertCan('invoices', 'settings')
     await prisma.organization.update({

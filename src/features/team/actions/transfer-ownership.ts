@@ -1,13 +1,23 @@
 "use server"
 
+import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { AUTH } from "@/lib/notify/messages"
 import { OrgRole } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 
+const transferOwnershipSchema = z.object({
+  targetMemberId: z.string().min(1),
+})
+
 export async function transferOwnership(targetMemberId: string) {
   try {
+    const parsed = transferOwnershipSchema.safeParse({ targetMemberId })
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? AUTH.OWNERSHIP.TRANSFER_ERROR }
+    }
+
     const membership = await getCurrentMembership()
     await assertCan("team", "change-role")
 

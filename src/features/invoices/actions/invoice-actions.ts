@@ -1,5 +1,6 @@
 "use server"
 
+import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
@@ -7,6 +8,14 @@ import { assertCan } from "@/lib/assert-role"
 import { updateInvoiceStatusSchema } from "@/features/invoices/validations/invoice-schemas"
 import { INVOICE } from "@/lib/notify/messages"
 import type { ActionResponse, Invoice, InvoiceWithCommande } from "@/features/invoices/types"
+
+const commandeIdSchema = z.object({
+  commandeId: z.string().min(1),
+})
+
+const quoteIdSchema = z.object({
+  quoteId: z.string().min(1),
+})
 
 function isPrismaP2002(err: unknown): boolean {
   return typeof err === 'object' && err !== null && 'code' in err && (err as { code: string }).code === 'P2002'
@@ -31,11 +40,16 @@ async function nextInvoiceNumber(organizationId: string, type: "DEVIS" | "FACTUR
 }
 
 export async function createQuoteFromCommande(commandeId: string): Promise<ActionResponse<InvoiceWithCommande>> {
+  const parsed = commandeIdSchema.safeParse({ commandeId })
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? INVOICE.INVALID_STATUS }
+  }
+
   const organizationId = await getOrganizationId()
   await assertCan('invoices', 'create')
 
   const commande = await prisma.commande.findFirst({
-    where: { id: commandeId, organizationId },
+    where: { id: parsed.data.commandeId, organizationId },
     include: {
       client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
       event: { select: { name: true, startDate: true, location: true } },
@@ -100,11 +114,16 @@ export async function createQuoteFromCommande(commandeId: string): Promise<Actio
 }
 
 export async function createInvoiceFromCommande(commandeId: string): Promise<ActionResponse<InvoiceWithCommande>> {
+  const parsed = commandeIdSchema.safeParse({ commandeId })
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? INVOICE.INVALID_STATUS }
+  }
+
   const organizationId = await getOrganizationId()
   await assertCan('invoices', 'create')
 
   const commande = await prisma.commande.findFirst({
-    where: { id: commandeId, organizationId },
+    where: { id: parsed.data.commandeId, organizationId },
     include: {
       client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
       event: { select: { name: true, startDate: true, location: true } },
@@ -305,11 +324,16 @@ export async function updateInvoiceStatus(
 }
 
 export async function convertQuoteToInvoice(quoteId: string): Promise<ActionResponse<InvoiceWithCommande>> {
+  const parsed = quoteIdSchema.safeParse({ quoteId })
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? INVOICE.INVALID_STATUS }
+  }
+
   const organizationId = await getOrganizationId()
   await assertCan('invoices', 'create')
 
   const quote = await prisma.invoice.findFirst({
-    where: { id: quoteId, organizationId, type: "DEVIS" },
+    where: { id: parsed.data.quoteId, organizationId, type: "DEVIS" },
     include: {
       commande: {
         include: {
