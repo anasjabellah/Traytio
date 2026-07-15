@@ -154,6 +154,7 @@ model Event {
   @@index([clientId])
   @@index([organizationId, createdAt])
   @@index([organizationId, startDate, endDate])
+  @@index([organizationId, startDate])
   @@map("events")
 }
 
@@ -260,6 +261,8 @@ model Commande {
   @@index([clientId, status])
   @@index([eventId])
   @@index([eventId, createdAt])
+  @@index([organizationId, status])
+  @@index([organizationId, createdAt])
   @@map("commandes")
 }
 
@@ -374,6 +377,8 @@ model Invoice {
   payments     Payment[]
 
   @@index([organizationId])
+  @@index([commandeId])
+  @@index([organizationId, dueDate])
   @@map("invoices")
 }
 
@@ -399,6 +404,7 @@ model Payment {
 
   @@index([organizationId])
   @@index([commandeId])
+  @@index([invoiceId])
   @@map("payments")
 }
 
