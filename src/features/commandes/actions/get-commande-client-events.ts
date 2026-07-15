@@ -1,9 +1,14 @@
 "use server"
 
+import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { COMMANDE } from "@/lib/notify/messages"
 import { assertCan } from "@/lib/assert-role"
+
+const getCommandeClientEventsSchema = z.object({
+  clientId: z.string().min(1),
+})
 
 export type ClientEventSummary = {
   id: string;
@@ -22,6 +27,7 @@ export type ClientEventSummary = {
 
 export async function getCommandeClientEvents(clientId: string) {
   try {
+    getCommandeClientEventsSchema.parse({ clientId })
     const organizationId = await getOrganizationId()
     await assertCan('events', 'read')
 

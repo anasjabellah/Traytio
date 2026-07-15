@@ -1,5 +1,6 @@
 ﻿'use server';
 
+import { z } from 'zod';
 import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, EventDetail } from '@/features/events/types';
@@ -7,8 +8,13 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { EVENT } from '@/lib/notify/messages';
 
+const getEventByIdSchema = z.object({
+  id: z.string().min(1),
+});
+
 export const getEventById = cache(async (id: string): Promise<ActionResponse<EventDetail>> => {
   try {
+    getEventByIdSchema.parse({ id });
     const organizationId = await getOrganizationId();
     await assertCan('events', 'read');
 

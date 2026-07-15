@@ -1,13 +1,19 @@
 'use server';
 
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, MenuItem } from '@/features/menu-items/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { MENU_ITEM } from '@/lib/notify/messages';
 
+const getMenuItemByIdSchema = z.object({
+  id: z.string().min(1),
+});
+
 export async function getMenuItemById(id: string): Promise<ActionResponse<MenuItem>> {
   try {
+    getMenuItemByIdSchema.parse({ id });
     const organizationId = await getOrganizationId();
     await assertCan('menu-items', 'read');
     const item = await prisma.menuItem.findFirst({

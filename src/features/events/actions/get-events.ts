@@ -1,5 +1,6 @@
 'use server';
 
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import type { ActionResponse, Event, PaginatedEvents, GetEventsParams } from '@/features/events/types';
@@ -10,8 +11,26 @@ import { computeHealthScore } from '@/features/events/types';
 import { EVENT } from '@/lib/notify/messages';
 import { buildMonthlySparkline, buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
 
+const getEventsSchema = z.object({
+  search: z.string().max(100).optional(),
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().optional(),
+  sortBy: z.enum(['name', 'createdAt', 'budget', 'startDate']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+  status: z.string().optional(),
+  type: z.string().optional(),
+  paymentStatus: z.string().optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+  budgetMin: z.coerce.number().optional(),
+  budgetMax: z.coerce.number().optional(),
+  healthMin: z.coerce.number().optional(),
+  healthMax: z.coerce.number().optional(),
+});
+
 export async function getEvents(params: GetEventsParams): Promise<ActionResponse<PaginatedEvents>> {
   try {
+    getEventsSchema.parse(params);
     const organizationId = await getOrganizationId();
     await assertCan('events', 'read');
 

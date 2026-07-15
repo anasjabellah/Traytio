@@ -1,5 +1,6 @@
 'use server';
 
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, CommandeWithDetails } from '@/features/commandes/types';
 import { serializeCommande, serializeCommandeItem, serializePaymentSummary } from '@/features/commandes/lib/serialize-commande';
@@ -7,8 +8,13 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { COMMANDE } from '@/lib/notify/messages';
 import { assertCan } from '@/lib/assert-role';
 
+const getCommandeByIdSchema = z.object({
+  id: z.string().min(1),
+});
+
 export async function getCommandeById(id: string): Promise<ActionResponse<CommandeWithDetails>> {
   try {
+    getCommandeByIdSchema.parse({ id });
     const organizationId = await getOrganizationId();
     await assertCan('commandes', 'read');
 

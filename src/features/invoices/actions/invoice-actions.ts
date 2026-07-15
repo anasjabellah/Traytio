@@ -17,6 +17,18 @@ const quoteIdSchema = z.object({
   quoteId: z.string().min(1),
 })
 
+const getInvoiceByIdSchema = z.object({
+  id: z.string().min(1),
+})
+
+const getInvoicesSchema = z.object({
+  commandeId: z.string().optional(),
+  type: z.enum(["DEVIS", "FACTURE"]).optional(),
+  search: z.string().max(100).optional(),
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().optional(),
+})
+
 function isPrismaP2002(err: unknown): boolean {
   return typeof err === 'object' && err !== null && 'code' in err && (err as { code: string }).code === 'P2002'
 }
@@ -186,6 +198,7 @@ export async function createInvoiceFromCommande(commandeId: string): Promise<Act
 
 export async function getInvoiceById(id: string): Promise<ActionResponse<InvoiceWithCommande>> {
   try {
+    getInvoiceByIdSchema.parse({ id });
     const organizationId = await getOrganizationId()
     await assertCan('invoices', 'read')
 
@@ -230,6 +243,7 @@ export async function getInvoices(params: {
   limit?: number
 }): Promise<ActionResponse<PaginatedResult<InvoiceWithCommande>>> {
   try {
+    getInvoicesSchema.parse(params);
     const organizationId = await getOrganizationId()
     await assertCan('invoices', 'read')
     const { commandeId, type, search, page = 1, limit = 20 } = params

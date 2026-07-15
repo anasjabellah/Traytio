@@ -1,12 +1,18 @@
 "use server"
 
+import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { COMMANDE } from "@/lib/notify/messages"
 import { assertCan } from "@/lib/assert-role"
 
+const getCommandeClientsSchema = z.object({
+  search: z.string().max(100).optional(),
+})
+
 export async function getCommandeClients(search?: string) {
   try {
+    getCommandeClientsSchema.parse({ search })
     const organizationId = await getOrganizationId()
     await assertCan('clients', 'read')
     const where: Record<string, unknown> = { organizationId }

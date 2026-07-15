@@ -1,8 +1,14 @@
 'use server';
 
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
+
+const getMonthEventsSchema = z.object({
+  year: z.coerce.number().int().min(2000).max(2100),
+  month: z.coerce.number().int().min(1).max(12),
+})
 
 export type CalendarEventData = {
   id: string;
@@ -18,6 +24,7 @@ export async function getMonthEvents(
   month: number,
 ): Promise<{ success: boolean; data?: CalendarEventData[]; error?: string }> {
   try {
+    getMonthEventsSchema.parse({ year, month });
     const organizationId = await getOrganizationId();
     await assertCan('events', 'read');
 

@@ -1,5 +1,6 @@
 'use server';
 
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, GetMenuItemsParams, PaginatedMenuItems } from '@/features/menu-items/types';
 import { MENU_ITEM_DEFAULT_PAGE_SIZE } from '@/features/menu-items/constants';
@@ -7,10 +8,21 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { MENU_ITEM } from '@/lib/notify/messages';
 
+const getMenuItemsSchema = z.object({
+  search: z.string().max(100).optional(),
+  category: z.string().optional(),
+  isActive: z.coerce.boolean().optional(),
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().optional(),
+  sortBy: z.enum(['name', 'createdAt', 'unitPrice']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+});
+
 export async function getMenuItems(
   params: GetMenuItemsParams,
 ): Promise<ActionResponse<PaginatedMenuItems>> {
   try {
+    getMenuItemsSchema.parse(params);
     const organizationId = await getOrganizationId();
     await assertCan('menu-items', 'read');
     const {

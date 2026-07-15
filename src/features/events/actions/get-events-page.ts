@@ -1,5 +1,6 @@
 'use server';
 
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import type { ActionResponse, Event } from '@/features/events/types';
@@ -9,6 +10,20 @@ import { assertCan } from '@/lib/assert-role';
 import { computeHealthScore } from '@/features/events/types';
 import { EVENT } from '@/lib/notify/messages';
 import { buildMonthlySparkline, buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
+
+const getEventsPageSchema = z.object({
+  search: z.string().max(100).optional(),
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().optional(),
+  sortBy: z.string().optional(),
+  sortOrder: z.string().optional(),
+  status: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+  budgetMin: z.coerce.number().optional(),
+  budgetMax: z.coerce.number().optional(),
+});
 
 export type EventsPageStats = {
   totalEvents: number;
@@ -165,6 +180,7 @@ function computeAlerts(events: Event[], now: Date): EventsPageAlert[] {
 
 export async function getEventsPage(params: GetEventsPageParams): Promise<ActionResponse<EventsPageResult>> {
   try {
+    getEventsPageSchema.parse(params);
     const organizationId = await getOrganizationId();
     await assertCan('events', 'read');
 

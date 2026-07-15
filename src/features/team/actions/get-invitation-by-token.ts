@@ -1,10 +1,16 @@
 "use server"
 
+import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { AUTH } from "@/lib/notify/messages"
 
+const getInvitationByTokenSchema = z.object({
+  token: z.string().min(1),
+})
+
 export async function getInvitationByToken(token: string) {
   try {
+    getInvitationByTokenSchema.parse({ token })
     const invitation = await prisma.invitation.findUnique({
       where: { token },
       include: { organization: { select: { name: true } } },

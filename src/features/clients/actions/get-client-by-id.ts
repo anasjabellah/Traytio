@@ -1,13 +1,19 @@
 'use server';
 
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import type { ActionResponse, ClientWithStats } from "@/features/clients/types";
 import { getOrganizationId } from "@/lib/get-organization-id";
 import { CLIENT } from "@/lib/notify/messages";
 import { assertCan } from "@/lib/assert-role";
 
+const getClientByIdSchema = z.object({
+  id: z.string().min(1),
+});
+
 export async function getClientById(id: string): Promise<ActionResponse<ClientWithStats>> {
   try {
+    getClientByIdSchema.parse({ id });
     const organizationId = await getOrganizationId();
     await assertCan('clients', 'read');
 

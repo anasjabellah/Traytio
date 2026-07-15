@@ -1,7 +1,12 @@
 "use server"
 
+import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getCurrentMembership } from "@/lib/assert-role"
+
+const searchGlobalSchema = z.object({
+  query: z.string().max(100),
+})
 
 export type SearchResultItem = {
   id: string
@@ -29,6 +34,7 @@ export type GlobalSearchResults = {
 }
 
 export async function searchGlobal(query: string): Promise<GlobalSearchResults> {
+  searchGlobalSchema.parse({ query })
   const trimmed = query.trim()
   if (!trimmed) {
     return { clients: [], commandes: [], invoices: [], events: [], payments: [], menus: [], menuItems: [], members: [] }

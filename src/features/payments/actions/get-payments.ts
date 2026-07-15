@@ -1,5 +1,6 @@
 "use server"
 
+import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { assertCan } from "@/lib/assert-role"
@@ -8,6 +9,14 @@ import { PAYMENT_DEFAULT_PAGE_SIZE } from "@/features/payments/constants"
 import type { ActionResponse, PaginatedPayments, PaymentWithCommande, PaymentStats } from "@/features/payments/types"
 import type { Prisma } from "@prisma/client"
 import { buildMonthlySparkline, buildMonthKeys } from "@/features/dashboard/lib/kpi-engine"
+
+const getPaymentsSchema = z.object({
+  search: z.string().max(100).optional(),
+  method: z.string().optional(),
+  status: z.string().optional(),
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().optional(),
+})
 
 type PaymentWithCommandeRaw = Prisma.PaymentGetPayload<{
   include: {
@@ -29,6 +38,7 @@ export async function getPayments(params?: {
   limit?: number
 }): Promise<ActionResponse<PaginatedPayments>> {
   try {
+    getPaymentsSchema.parse(params ?? {});
     const organizationId = await getOrganizationId()
     await assertCan('payments', 'read')
 

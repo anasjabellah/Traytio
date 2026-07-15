@@ -1,5 +1,6 @@
 'use server';
 
+import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import type { ActionResponse, Menu, PaginatedMenus, GetMenusParams } from '@/features/menus/types';
 import { MENU_DEFAULT_PAGE_SIZE } from '@/features/menus/constants';
@@ -7,8 +8,19 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { MENU } from '@/lib/notify/messages';
 
+const getMenusSchema = z.object({
+  search: z.string().max(100).optional(),
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().optional(),
+  sortBy: z.enum(['name', 'createdAt', 'pricePerPerson', 'minPersons']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+  category: z.string().optional(),
+  isActive: z.coerce.boolean().optional(),
+});
+
 export async function getMenus(params: GetMenusParams): Promise<ActionResponse<PaginatedMenus>> {
   try {
+    getMenusSchema.parse(params);
     const organizationId = await getOrganizationId();
     await assertCan('menus', 'read');
     const { search, page = 1, limit = MENU_DEFAULT_PAGE_SIZE, sortBy = 'createdAt', sortOrder = 'desc', category, isActive } = params;
