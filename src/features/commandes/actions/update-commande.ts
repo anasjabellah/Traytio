@@ -9,6 +9,7 @@ import { recalculateCommandeBalances } from '@/features/financial/recalculate-co
 import type { ActionResponse } from '@/features/commandes/types';
 import { COMMANDE } from '@/lib/notify/messages';
 import { withActionGuard } from '@/lib/action-guard';
+import { normalizeActionError } from '@/lib/action-error';
 import type { CommandeStatus, EventType, EventStatus, DiscountType } from '@prisma/client';
 
 async function updateCommandeHandler(id: string, input: unknown): Promise<ActionResponse<void>> {
@@ -148,7 +149,7 @@ async function updateCommandeHandler(id: string, input: unknown): Promise<Action
 
     return { success: true };
   } catch (error: unknown) {
-    return { success: false, error: error instanceof Error ? error.message : COMMANDE.UPDATE.ERROR };
+    return { success: false, error: normalizeActionError(error, COMMANDE.UPDATE.ERROR) };
   }
 }
 

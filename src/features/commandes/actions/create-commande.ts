@@ -8,6 +8,7 @@ import { recalculateCommandeBalances } from "@/features/financial/recalculate-co
 import { serializeCommande, serializeCommandeItem } from "@/features/commandes/lib/serialize-commande"
 import { COMMANDE } from "@/lib/notify/messages"
 import { withActionGuard } from "@/lib/action-guard"
+import { normalizeActionError } from "@/lib/action-error"
 import type { CommandeStatus, EventType, EventStatus, DiscountType } from "@prisma/client";
 
 function isPrismaP2002(err: unknown): boolean {
@@ -137,11 +138,11 @@ async function createCommandeHandler(input: unknown) {
       if (isPrismaP2002(err) && !data.number) {
         continue
       }
-      return { success: false, error: err instanceof Error ? err.message : COMMANDE.CREATE.ERROR }
+      return { success: false, error: normalizeActionError(err, COMMANDE.CREATE.ERROR) }
     }
   }
 
-  return { success: false, error: lastError instanceof Error ? lastError.message : COMMANDE.CREATE.ERROR_RETRIES }
+  return { success: false, error: normalizeActionError(lastError, COMMANDE.CREATE.ERROR_RETRIES) }
 }
 
 export const createCommande = withActionGuard(createCommandeHandler, { name: 'commandes:create' })

@@ -6,6 +6,7 @@ import { getOrganizationId } from "@/lib/get-organization-id"
 import { COMMANDE } from "@/lib/notify/messages"
 import { assertCan } from "@/lib/assert-role"
 import { withActionGuard } from "@/lib/action-guard"
+import { normalizeActionError } from "@/lib/action-error"
 
 const getCommandeClientEventsSchema = z.object({
   clientId: z.string().min(1),
@@ -66,7 +67,7 @@ async function getCommandeClientEventsHandler(clientId: string) {
       status: event.status,
     }))
   } catch (err: any) {
-    return { error: err.message || COMMANDE.FETCH_ERROR_EVENTS }
+    return { error: normalizeActionError(err, COMMANDE.FETCH_ERROR_EVENTS) }
   }
 }
 

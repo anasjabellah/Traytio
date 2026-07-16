@@ -6,6 +6,7 @@ import { getOrganizationId } from "@/lib/get-organization-id"
 import { COMMANDE } from "@/lib/notify/messages"
 import { assertCan } from "@/lib/assert-role"
 import { withActionGuard } from "@/lib/action-guard"
+import { normalizeActionError } from "@/lib/action-error"
 
 const getCommandeClientsSchema = z.object({
   search: z.string().max(100).optional(),
@@ -46,7 +47,7 @@ async function getCommandeClientsHandler(search?: string) {
       vip: false,
     }))
   } catch (err: any) {
-    return { error: err.message || COMMANDE.FETCH_ERROR_CLIENTS }
+    return { error: normalizeActionError(err, COMMANDE.FETCH_ERROR_CLIENTS) }
   }
 }
 

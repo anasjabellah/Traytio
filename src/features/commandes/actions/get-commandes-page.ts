@@ -9,6 +9,7 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { COMMANDE } from '@/lib/notify/messages';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
+import { normalizeActionError } from '@/lib/action-error';
 import { buildMonthlySparkline, buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
 
 export type CommandeStats = {
@@ -223,8 +224,7 @@ async function getCommandesPageHandler(params: GetCommandesParams): Promise<Acti
       },
     };
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : COMMANDE.UNEXPECTED_ERROR;
-    return { success: false, error: msg };
+    return { success: false, error: normalizeActionError(error, COMMANDE.UNEXPECTED_ERROR) };
   }
 }
 

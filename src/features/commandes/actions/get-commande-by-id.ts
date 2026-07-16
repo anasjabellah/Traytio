@@ -8,6 +8,7 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { COMMANDE } from '@/lib/notify/messages';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
+import { normalizeActionError } from '@/lib/action-error';
 
 const getCommandeByIdSchema = z.object({
   id: z.string().min(1),
@@ -103,7 +104,7 @@ async function getCommandeByIdHandler(id: string): Promise<ActionResponse<Comman
 
     return { success: true, data: result };
   } catch (error: unknown) {
-    return { success: false, error: error instanceof Error ? error.message : COMMANDE.UNEXPECTED_ERROR };
+    return { success: false, error: normalizeActionError(error, COMMANDE.UNEXPECTED_ERROR) };
   }
 }
 

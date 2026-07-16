@@ -5,6 +5,7 @@ import { getOrganizationId } from "@/lib/get-organization-id"
 import { COMMANDE } from "@/lib/notify/messages"
 import { assertCan } from "@/lib/assert-role"
 import { withActionGuard } from "@/lib/action-guard"
+import { normalizeActionError } from "@/lib/action-error"
 
 async function getCommandeAllMenuItemsHandler() {
   try {
@@ -35,7 +36,7 @@ async function getCommandeAllMenuItemsHandler() {
       imageUrl: item.imageUrl,
     }))
   } catch (err: any) {
-    return { error: err.message || COMMANDE.FETCH_ERROR_ITEMS }
+    return { error: normalizeActionError(err, COMMANDE.FETCH_ERROR_ITEMS) }
   }
 }
 

@@ -6,6 +6,7 @@ import { getOrganizationId } from "@/lib/get-organization-id"
 import { COMMANDE } from "@/lib/notify/messages"
 import { assertCan } from "@/lib/assert-role"
 import { withActionGuard } from "@/lib/action-guard"
+import { normalizeActionError } from "@/lib/action-error"
 import { revalidatePath } from "next/cache"
 
 const createAttachmentSchema = z.object({
@@ -43,7 +44,7 @@ async function createCommandeAttachmentHandler(
 
     return { success: true as const }
   } catch (err: unknown) {
-    return { success: false as const, error: err instanceof Error ? err.message : COMMANDE.ATTACHMENT.ERROR }
+    return { success: false as const, error: normalizeActionError(err, COMMANDE.ATTACHMENT.ERROR) }
   }
 }
 

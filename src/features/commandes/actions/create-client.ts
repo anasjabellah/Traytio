@@ -7,6 +7,7 @@ import { COMMANDE } from "@/lib/notify/messages"
 import { assertCan } from "@/lib/assert-role"
 import { withActionGuard } from "@/lib/action-guard"
 import { revalidatePath } from "next/cache"
+import { normalizeActionError } from "@/lib/action-error"
 
 const createCommandesClientSchema = z.object({
   name: z.string().min(1, COMMANDE.VALIDATION.NAME_REQUIRED),
@@ -57,7 +58,7 @@ async function createClientHandler(input: unknown) {
   } catch (err: unknown) {
     return {
       success: false as const,
-      error: err instanceof Error ? err.message : COMMANDE.CLIENT.ERROR,
+      error: normalizeActionError(err, COMMANDE.CLIENT.ERROR),
     }
   }
 }
