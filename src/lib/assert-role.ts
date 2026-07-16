@@ -34,6 +34,11 @@ export async function assertCan(
   ownerId?: string,
 ): Promise<OrgRole> {
   const membership = await getCurrentMembership()
+
+  if (membership.role === 'SUPERADMIN') {
+    return 'SUPERADMIN'
+  }
+
   const allowed = PERMISSIONS[module]?.[action]
 
   if (!allowed) {

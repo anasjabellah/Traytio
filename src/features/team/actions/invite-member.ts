@@ -30,6 +30,10 @@ async function inviteMemberHandler(input: { email: string; role: OrgRole }) {
       return { success: false, error: AUTH.OWNERSHIP.ONLY_OWNER_CAN_TRANSFER_ALT }
     }
 
+    if (role === "SUPERADMIN") {
+      return { success: false, error: "Le rôle SUPERADMIN ne peut pas être attribué via une invitation." }
+    }
+
     const existingMember = await prisma.userOrganization.findFirst({
       where: { organizationId: membership.organizationId, user: { email } },
     })

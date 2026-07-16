@@ -21,6 +21,11 @@ async function changeMemberRoleHandler(input: { memberId: string; newRole: OrgRo
     }
 
     const { memberId, newRole } = parsed.data
+
+    if (newRole === "SUPERADMIN") {
+      return { success: false, error: "Le rôle SUPERADMIN ne peut pas être attribué via l'interface." }
+    }
+
     const membership = await getCurrentMembership()
     await assertCan("team", "change-role")
 

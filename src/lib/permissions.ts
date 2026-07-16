@@ -14,6 +14,13 @@ export type Action =
   | 'billing'
   | 'delete-org'
   | 'view'
+  | 'sentry'
+  | 'impersonate'
+  | 'audit-logs'
+  | 'system-metrics'
+  | 'db-access'
+  | 'feature-flags'
+  | 'organizations'
 
 export type Module =
   | 'dashboard'
@@ -26,65 +33,74 @@ export type Module =
   | 'payments'
   | 'team'
   | 'settings'
+  | 'superadmin'
 
 export const PERMISSIONS: Record<Module, Partial<Record<Action, OrgRole[]>>> = {
   dashboard: {
-    view: ['OWNER', 'ADMIN', 'MEMBER'],
+    view: ['SUPERADMIN', 'OWNER', 'ADMIN', 'MEMBER'],
   },
   commandes: {
-    create: ['OWNER', 'ADMIN', 'MEMBER'],
-    read: ['OWNER', 'ADMIN', 'MEMBER'],
-    update: ['OWNER', 'ADMIN', 'MEMBER'],
-    delete: ['OWNER', 'ADMIN'],
-    'manage-items': ['OWNER', 'ADMIN'],
+    create: ['SUPERADMIN', 'OWNER', 'ADMIN', 'MEMBER'],
+    read: ['SUPERADMIN', 'OWNER', 'ADMIN', 'MEMBER'],
+    update: ['SUPERADMIN', 'OWNER', 'ADMIN', 'MEMBER'],
+    delete: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    'manage-items': ['SUPERADMIN', 'OWNER', 'ADMIN'],
   },
   clients: {
-    create: ['OWNER', 'ADMIN', 'MEMBER'],
-    read: ['OWNER', 'ADMIN', 'MEMBER'],
-    update: ['OWNER', 'ADMIN', 'MEMBER'],
-    delete: ['OWNER', 'ADMIN'],
+    create: ['SUPERADMIN', 'OWNER', 'ADMIN', 'MEMBER'],
+    read: ['SUPERADMIN', 'OWNER', 'ADMIN', 'MEMBER'],
+    update: ['SUPERADMIN', 'OWNER', 'ADMIN', 'MEMBER'],
+    delete: ['SUPERADMIN', 'OWNER', 'ADMIN'],
   },
   events: {
-    create: ['OWNER', 'ADMIN'],
-    read: ['OWNER', 'ADMIN', 'MEMBER'],
-    update: ['OWNER', 'ADMIN'],
-    delete: ['OWNER', 'ADMIN'],
+    create: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    read: ['SUPERADMIN', 'OWNER', 'ADMIN', 'MEMBER'],
+    update: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    delete: ['SUPERADMIN', 'OWNER', 'ADMIN'],
   },
   menus: {
-    create: ['OWNER', 'ADMIN'],
-    read: ['OWNER', 'ADMIN', 'MEMBER'],
-    update: ['OWNER', 'ADMIN'],
-    delete: ['OWNER', 'ADMIN'],
+    create: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    read: ['SUPERADMIN', 'OWNER', 'ADMIN', 'MEMBER'],
+    update: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    delete: ['SUPERADMIN', 'OWNER', 'ADMIN'],
   },
   'menu-items': {
-    create: ['OWNER', 'ADMIN'],
-    read: ['OWNER', 'ADMIN', 'MEMBER'],
-    update: ['OWNER', 'ADMIN'],
-    delete: ['OWNER', 'ADMIN'],
+    create: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    read: ['SUPERADMIN', 'OWNER', 'ADMIN', 'MEMBER'],
+    update: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    delete: ['SUPERADMIN', 'OWNER', 'ADMIN'],
   },
   invoices: {
-    create: ['OWNER', 'ADMIN'],
-    read: ['OWNER', 'ADMIN'],
-    update: ['OWNER', 'ADMIN'],
-    delete: ['OWNER', 'ADMIN'],
-    send: ['OWNER', 'ADMIN'],
-    settings: ['OWNER', 'ADMIN'],
+    create: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    read: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    update: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    delete: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    send: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    settings: ['SUPERADMIN', 'OWNER', 'ADMIN'],
   },
   payments: {
-    create: ['OWNER', 'ADMIN'],
-    read: ['OWNER', 'ADMIN'],
-    delete: ['OWNER', 'ADMIN'],
+    create: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    read: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    delete: ['SUPERADMIN', 'OWNER', 'ADMIN'],
   },
   team: {
-    view: ['OWNER', 'ADMIN'],
-    invite: ['OWNER', 'ADMIN'],
-    remove: ['OWNER', 'ADMIN'],
-    'change-role': ['OWNER', 'ADMIN'],
+    view: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    invite: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    remove: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    'change-role': ['SUPERADMIN', 'OWNER', 'ADMIN'],
   },
   settings: {
-    read: ['OWNER', 'ADMIN'],
-    update: ['OWNER'],
-    billing: ['OWNER'],
-    'delete-org': ['OWNER'],
+    read: ['SUPERADMIN', 'OWNER', 'ADMIN'],
+    update: ['SUPERADMIN', 'OWNER'],
+    billing: ['SUPERADMIN', 'OWNER'],
+    'delete-org': ['SUPERADMIN', 'OWNER'],
+  },
+  superadmin: {
+    organizations: ['SUPERADMIN'],
+    'audit-logs': ['SUPERADMIN'],
+    'system-metrics': ['SUPERADMIN'],
+    'db-access': ['SUPERADMIN'],
+    'feature-flags': ['SUPERADMIN'],
+    impersonate: ['SUPERADMIN'],
   },
 }

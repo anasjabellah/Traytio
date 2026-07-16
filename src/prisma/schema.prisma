@@ -513,6 +513,7 @@ enum OrgRole {
   OWNER
   ADMIN
   MEMBER
+  SUPERADMIN
 }
 
 enum EventType {
