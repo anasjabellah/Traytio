@@ -8,6 +8,7 @@ import { getOrganizationId } from "@/lib/get-organization-id";
 import { CLIENT } from "@/lib/notify/messages";
 import { assertCan } from "@/lib/assert-role";
 import { withActionGuard } from "@/lib/action-guard";
+import { normalizeActionError } from "@/lib/action-error";
 
 const deleteClientSchema = z.object({
   id: z.string().min(1),
@@ -61,8 +62,8 @@ async function deleteClientHandler(id: string): Promise<ActionResponse<void>> {
     revalidatePath("/dashboard/clients")
 
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message || CLIENT.UNEXPECTED_ERROR };
+  } catch (error: unknown) {
+    return { success: false, error: normalizeActionError(error, CLIENT.UNEXPECTED_ERROR) };
   }
 }
 

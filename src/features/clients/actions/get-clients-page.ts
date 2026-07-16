@@ -8,6 +8,7 @@ import { CLIENT } from '@/lib/notify/messages';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
+import { normalizeActionError } from '@/lib/action-error';
 import { buildMonthlySparkline, buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
 
 export type ClientStats = {
@@ -330,8 +331,7 @@ async function getClientsPageHandler(params: GetClientsPageParams): Promise<Acti
       },
     };
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : CLIENT.UNEXPECTED_ERROR;
-    return { success: false, error: msg };
+    return { success: false, error: normalizeActionError(error, CLIENT.UNEXPECTED_ERROR) };
   }
 }
 
