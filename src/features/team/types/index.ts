@@ -23,9 +23,17 @@ export type TeamInvitation = {
   expiresAt: string;
 };
 
+export type TeamPagination = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
 export type TeamData = {
   members: TeamMember[];
   invitations: TeamInvitation[];
+  pagination: TeamPagination;
 };
 
 export type TeamStats = {

@@ -19,6 +19,13 @@ export type ActivityFeedItem = {
   metadata?: Record<string, unknown>;
 };
 
+export type ActivityPagination = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
 export type ActivityFeedResponse = {
   items: ActivityFeedItem[];
   stats: {
@@ -26,4 +33,5 @@ export type ActivityFeedResponse = {
     totalWeek: number;
     totalMonth: number;
   };
+  pagination: ActivityPagination;
 };

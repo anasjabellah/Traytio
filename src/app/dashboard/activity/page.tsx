@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Activity, RotateCw } from "lucide-react";
 import { PrivacyModeProvider } from '@/components/privacy-mode';
 import { useActivityFeed } from '@/features/activity/hooks/use-activity';
@@ -8,6 +8,7 @@ import { ActivityStats } from '@/features/activity/components/ActivityStats';
 import { ActivityFilters } from '@/features/activity/components/ActivityFilters';
 import { ActivityTimeline } from '@/features/activity/components/ActivityTimeline';
 import { ActivitySkeleton } from '@/features/activity/components/ActivitySkeleton';
+import { Pagination } from '@/components/ui/pagination';
 import type { ActivityType } from '@/features/activity/types';
 
 export default function ActivityPage() {
@@ -19,9 +20,20 @@ export default function ActivityPage() {
 }
 
 function PageContent() {
-  const { items, stats, loading, error, refresh } = useActivityFeed();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const { items, stats, pagination, loading, error, refresh } = useActivityFeed(page, limit);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<ActivityType | 'all'>('all');
+
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    setPage(1);
+  }, [search, typeFilter]);
 
   return (
     <div className="min-h-screen bg-[var(--surface-soft)] text-foreground">
@@ -85,6 +97,17 @@ function PageContent() {
             <div className="rounded-xl border border-border/60 bg-card p-5 shadow-soft">
               <ActivityTimeline items={items} search={search} typeFilter={typeFilter} />
             </div>
+
+            <Pagination
+              page={page}
+              totalPages={pagination.totalPages}
+              total={pagination.total}
+              limit={limit}
+              onPageChange={setPage}
+              onLimitChange={setLimit}
+              itemLabel="activité"
+              loading={loading}
+            />
           </div>
         )}
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect, useMemo } from "react"
+import { useState, useCallback, useEffect, useMemo, startTransition, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Users, UserPlus, Mail, Shield, Trash2, Crown, X, Loader2, AlertTriangle,
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog"
+import { Pagination } from "@/components/ui/pagination"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/hooks/use-role"
 import type { Module, Action } from "@/lib/permissions"
@@ -48,10 +49,21 @@ const formatDate = (d: string) =>
 
 export default function TeamSettingsPage() {
   const { can, role: currentRole } = useRole()
-  const { members, invitations, isLoading, error, stats, totalKpi, activeKpi, inviteKpi, adminKpi, refresh } = useTeam()
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(20)
+  const { members, invitations, pagination, isLoading, error, stats, totalKpi, activeKpi, inviteKpi, adminKpi, refresh } = useTeam(page, limit)
 
   const [query, setQuery] = useState("")
   const [roleFilter, setRoleFilter] = useState<string>("")
+
+  const firstRender = useRef(true)
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false
+      return
+    }
+    setPage(1)
+  }, [query, roleFilter])
 
   const [inviteOpen, setInviteOpen] = useState(false)
   const [inviteEmail, setInviteEmail] = useState("")
@@ -361,6 +373,17 @@ export default function TeamSettingsPage() {
                   </div>
                 </>
               )}
+
+              <Pagination
+                page={page}
+                totalPages={pagination.totalPages}
+                total={pagination.total}
+                limit={limit}
+                onPageChange={setPage}
+                onLimitChange={setLimit}
+                itemLabel="membre"
+                loading={isLoading}
+              />
             </div>
 
             {/* Sidebar */}

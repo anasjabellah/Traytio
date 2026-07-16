@@ -4,15 +4,15 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getTeam } from '@/features/team/actions/get-team';
 import { computeKpi } from '@/features/dashboard/lib/kpi-engine';
-import type { TeamStats } from '@/features/team/types';
+import type { TeamStats, TeamPagination } from '@/features/team/types';
 
-export const TEAM_QUERY_KEY = ['team'] as const;
+export function useTeam(page = 1, limit = 20) {
+  const queryKey = ['team', page, limit] as const;
 
-export function useTeam() {
   const query = useQuery({
-    queryKey: TEAM_QUERY_KEY,
+    queryKey,
     queryFn: async () => {
-      const res = await getTeam();
+      const res = await getTeam({ page, limit });
       if (res.success && res.data) return res.data;
       throw new Error(res.error ?? 'Erreur lors du chargement de l\'équipe');
     },
@@ -24,6 +24,7 @@ export function useTeam() {
   const members = teamData?.members ?? [];
   const invitations = teamData?.invitations ?? [];
   const stats: TeamStats | null = teamData?.stats ?? null;
+  const pagination: TeamPagination = teamData?.pagination ?? { page, limit, total: 0, totalPages: 0 };
 
   const totalKpi = useMemo(() => computeKpi(stats?.perfTotal ?? []), [stats?.perfTotal]);
   const activeKpi = useMemo(() => computeKpi(stats?.perfActive ?? []), [stats?.perfActive]);
@@ -33,6 +34,7 @@ export function useTeam() {
   return {
     members,
     invitations,
+    pagination,
     isLoading: query.isLoading,
     error: query.error?.message ?? null,
     stats,

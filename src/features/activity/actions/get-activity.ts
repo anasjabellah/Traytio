@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
-import type { ActivityFeedItem, ActivityFeedResponse, ActivityType } from '@/features/activity/types';
+import type { ActivityFeedItem, ActivityFeedResponse, ActivityType, ActivityPagination } from '@/features/activity/types';
 
 const ACTION_TO_TYPE: Record<string, ActivityType> = {
   commande_created: 'commande_created',
@@ -15,6 +15,8 @@ const ACTION_TO_TYPE: Record<string, ActivityType> = {
   event_created: 'event_created',
   invoice_created: 'invoice_created',
 };
+
+const ACTIVITY_DEFAULT_PAGE_SIZE = 20;
 
 function fmtTimeAgo(date: Date): string {
   const diffMs = Date.now() - date.getTime();
@@ -30,21 +32,31 @@ function fmtTimeAgo(date: Date): string {
   return `il y a ${weeks} sem`;
 }
 
-async function getActivityHandler(): Promise<{ success: boolean; data?: ActivityFeedResponse; error?: string }> {
+async function getActivityHandler(params?: { page?: number; limit?: number }): Promise<{ success: boolean; data?: ActivityFeedResponse; error?: string }> {
   try {
     const organizationId = await getOrganizationId();
     await assertCan('dashboard', 'view');
 
-    const activities = await prisma.commandeActivity.findMany({
-      where: { commande: { organizationId } },
-      orderBy: { createdAt: 'desc' },
-      take: 200,
-      include: {
-        commande: {
-          select: { id: true, number: true },
+    const page = Math.max(1, params?.page ?? 1);
+    const limit = Math.max(1, Math.min(100, params?.limit ?? ACTIVITY_DEFAULT_PAGE_SIZE));
+    const skip = (page - 1) * limit;
+
+    const [total, activities] = await Promise.all([
+      prisma.commandeActivity.count({
+        where: { commande: { organizationId } },
+      }),
+      prisma.commandeActivity.findMany({
+        where: { commande: { organizationId } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          commande: {
+            select: { id: true, number: true },
+          },
         },
-      },
-    });
+      }),
+    ]);
 
     const items: ActivityFeedItem[] = [];
     const now = new Date();
@@ -77,9 +89,12 @@ async function getActivityHandler(): Promise<{ success: boolean; data?: Activity
       if (ts >= monthStart) totalMonth++;
     }
 
+    const totalPages = Math.ceil(total / limit);
+    const pagination: ActivityPagination = { page, limit, total, totalPages };
+
     return {
       success: true,
-      data: { items, stats: { totalToday, totalWeek, totalMonth } },
+      data: { items, stats: { totalToday, totalWeek, totalMonth }, pagination },
     };
   } catch (error: unknown) {
     return { success: false, error: error instanceof Error ? error.message : 'An error occurred' };

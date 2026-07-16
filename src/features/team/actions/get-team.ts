@@ -6,9 +6,11 @@ import { AUTH } from "@/lib/notify/messages"
 import { withActionGuard } from "@/lib/action-guard"
 import { PERMISSIONS } from "@/lib/permissions"
 import { buildMonthKeys, buildMonthlySparkline } from "@/features/dashboard/lib/kpi-engine"
-import type { TeamStats } from "@/features/team/types"
+import type { TeamStats, TeamPagination } from "@/features/team/types"
 
-async function getTeamHandler() {
+const TEAM_DEFAULT_PAGE_SIZE = 20
+
+async function getTeamHandler(params?: { page?: number; limit?: number }) {
   try {
     const membership = await getCurrentMembership()
 
@@ -17,7 +19,14 @@ async function getTeamHandler() {
       throw new Error(AUTH.FORBIDDEN_VIEW_TEAM)
     }
 
-    const [members, invitations] = await Promise.all([
+    const page = Math.max(1, params?.page ?? 1)
+    const limit = Math.max(1, Math.min(100, params?.limit ?? TEAM_DEFAULT_PAGE_SIZE))
+    const skip = (page - 1) * limit
+
+    const [total, members, invitations] = await Promise.all([
+      prisma.userOrganization.count({
+        where: { organizationId: membership.organizationId },
+      }),
       prisma.userOrganization.findMany({
         where: { organizationId: membership.organizationId },
         include: {
@@ -26,6 +35,8 @@ async function getTeamHandler() {
           },
         },
         orderBy: { createdAt: "asc" },
+        skip,
+        take: limit,
       }),
       prisma.invitation.findMany({
         where: { organizationId: membership.organizationId },
@@ -92,7 +103,10 @@ async function getTeamHandler() {
       ),
     }
 
-    return { success: true, data: { members: serializedMembers, invitations: serializedInvitations, stats } }
+    const totalPages = Math.ceil(total / limit)
+    const pagination: TeamPagination = { page, limit, total, totalPages }
+
+    return { success: true, data: { members: serializedMembers, invitations: serializedInvitations, stats, pagination } }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : AUTH.FETCH_ERROR }
   }
