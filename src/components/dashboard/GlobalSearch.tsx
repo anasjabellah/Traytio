@@ -123,8 +123,8 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
     }
     setLoading(true)
     try {
-      const data = await searchGlobal(q)
-      setResults(data as unknown as Record<string, SearchResultItem[]>)
+      const res = await searchGlobal(q)
+      setResults(res.success && res.data ? res.data : null)
     } catch {
       setResults(null)
     } finally {
