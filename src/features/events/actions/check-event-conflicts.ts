@@ -6,6 +6,7 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
 import { EVENT } from '@/lib/notify/messages';
+import { normalizeActionError } from '@/lib/action-error';
 
 const checkEventConflictsSchema = z.object({
   startDate: z.coerce.date(),
@@ -100,8 +101,8 @@ async function checkEventConflictsHandler(
         sameDayEvents: sameDay,
       },
     };
-  } catch (error: any) {
-    return { success: false, error: error.message || EVENT.CONFLICT_CHECK_ERROR };
+  } catch (error: unknown) {
+    return { success: false, error: normalizeActionError(error, EVENT.CONFLICT_CHECK_ERROR) };
   }
 }
 

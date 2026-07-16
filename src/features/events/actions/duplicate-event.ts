@@ -8,6 +8,7 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
 import { EVENT } from '@/lib/notify/messages';
+import { normalizeActionError } from '@/lib/action-error';
 
 const duplicateEventSchema = z.object({
   id: z.string().min(1),
@@ -68,8 +69,8 @@ async function duplicateEventHandler(id: string): Promise<ActionResponse<Event>>
     revalidatePath('/dashboard/calendar');
 
     return { success: true, data: result };
-  } catch (error: any) {
-    return { success: false, error: error.message || EVENT.UNEXPECTED_ERROR };
+  } catch (error: unknown) {
+    return { success: false, error: normalizeActionError(error, EVENT.UNEXPECTED_ERROR) };
   }
 }
 

@@ -8,6 +8,7 @@ import { EVENT_DEFAULT_PAGE_SIZE } from '@/features/events/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
+import { normalizeActionError } from '@/lib/action-error';
 import { computeHealthScore } from '@/features/events/types';
 import { EVENT } from '@/lib/notify/messages';
 import { buildMonthlySparkline, buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
@@ -345,7 +346,7 @@ async function getEventsPageHandler(params: GetEventsPageParams): Promise<Action
       },
     };
   } catch (error: unknown) {
-    return { success: false, error: error instanceof Error ? error.message : EVENT.UNEXPECTED_ERROR };
+    return { success: false, error: normalizeActionError(error, EVENT.UNEXPECTED_ERROR) };
   }
 }
 

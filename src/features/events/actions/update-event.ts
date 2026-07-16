@@ -8,6 +8,7 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
 import { EVENT } from '@/lib/notify/messages';
+import { normalizeActionError } from '@/lib/action-error';
 
 async function updateEventHandler(data: Record<string, unknown>): Promise<ActionResponse<Event>> {
   try {
@@ -108,8 +109,8 @@ async function updateEventHandler(data: Record<string, unknown>): Promise<Action
     revalidatePath("/dashboard/calendar")
 
     return { success: true, data: result };
-  } catch (error: any) {
-    return { success: false, error: error.message || EVENT.UNEXPECTED_ERROR };
+  } catch (error: unknown) {
+    return { success: false, error: normalizeActionError(error, EVENT.UNEXPECTED_ERROR) };
   }
 }
 
