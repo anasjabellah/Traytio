@@ -7,6 +7,7 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { MENU } from '@/lib/notify/messages';
 import { withActionGuard } from '@/lib/action-guard';
+import { normalizeActionError } from '@/lib/action-error';
 
 const getMenuByIdSchema = z.object({
   id: z.string().min(1),
@@ -50,7 +51,7 @@ async function getMenuByIdHandler(id: string): Promise<ActionResponse<Menu>> {
         },
       },
     });
-    if (!menu) throw new Error(MENU.NOT_FOUND);
+    if (!menu) return { success: false, error: MENU.NOT_FOUND };
     return {
       success: true,
       data: {
@@ -65,8 +66,8 @@ async function getMenuByIdHandler(id: string): Promise<ActionResponse<Menu>> {
         })),
       },
     };
-  } catch (e: any) {
-    return { success: false, error: e.message || MENU.UNEXPECTED_ERROR };
+  } catch (e: unknown) {
+    return { success: false, error: normalizeActionError(e, MENU.UNEXPECTED_ERROR) };
   }
 }
 

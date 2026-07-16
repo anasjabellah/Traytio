@@ -8,6 +8,7 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { MENU } from '@/lib/notify/messages';
 import { withActionGuard } from '@/lib/action-guard';
+import { normalizeActionError } from '@/lib/action-error';
 
 const getMenusSchema = z.object({
   search: z.string().max(100).optional(),
@@ -90,8 +91,8 @@ async function getMenusHandler(params: GetMenusParams): Promise<ActionResponse<P
 
     const totalPages = Math.ceil(total / limit);
     return { success: true, data: { data, total, page, limit, totalPages } };
-  } catch (e: any) {
-    return { success: false, error: e.message || MENU.FETCH_ERROR };
+  } catch (e: unknown) {
+    return { success: false, error: normalizeActionError(e, MENU.FETCH_ERROR) };
   }
 }
 

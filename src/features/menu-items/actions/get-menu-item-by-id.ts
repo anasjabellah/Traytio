@@ -7,6 +7,7 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
 import { MENU_ITEM } from '@/lib/notify/messages';
+import { normalizeActionError } from '@/lib/action-error';
 
 const getMenuItemByIdSchema = z.object({
   id: z.string().min(1),
@@ -33,10 +34,10 @@ async function getMenuItemByIdHandler(id: string): Promise<ActionResponse<MenuIt
         updatedAt: true,
       },
     });
-    if (!item) throw new Error(MENU_ITEM.NOT_FOUND);
+    if (!item) return { success: false, error: MENU_ITEM.NOT_FOUND };
     return { success: true, data: { ...item, unitPrice: Number(item.unitPrice) } };
-  } catch (e: any) {
-    return { success: false, error: e.message || MENU_ITEM.UNEXPECTED_ERROR };
+  } catch (e: unknown) {
+    return { success: false, error: normalizeActionError(e, MENU_ITEM.UNEXPECTED_ERROR) };
   }
 }
 

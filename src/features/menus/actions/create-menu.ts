@@ -8,6 +8,7 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { MENU } from '@/lib/notify/messages';
 import { withActionGuard } from '@/lib/action-guard';
+import { normalizeActionError } from '@/lib/action-error';
 
 async function createMenuHandler(data: CreateMenuInput): Promise<ActionResponse<Menu>> {
   try {
@@ -61,8 +62,8 @@ async function createMenuHandler(data: CreateMenuInput): Promise<ActionResponse<
       success: true,
       data: { ...menu, pricePerPerson: Number(menu.pricePerPerson) },
     };
-  } catch (e: any) {
-    return { success: false, error: e.message || MENU.CREATE.ERROR };
+  } catch (e: unknown) {
+    return { success: false, error: normalizeActionError(e, MENU.CREATE.ERROR) };
   }
 }
 

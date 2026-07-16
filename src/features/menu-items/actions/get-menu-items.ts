@@ -8,6 +8,7 @@ import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { MENU_ITEM } from '@/lib/notify/messages';
 import { withActionGuard } from '@/lib/action-guard';
+import { normalizeActionError } from '@/lib/action-error';
 
 const getMenuItemsSchema = z.object({
   search: z.string().max(100).optional(),
@@ -71,8 +72,8 @@ async function getMenuItemsHandler(
     const data = items.map(i => ({ ...i, unitPrice: Number(i.unitPrice), usageCount: i._count.menus }));
     const totalPages = Math.ceil(total / limit);
     return { success: true, data: { data, total, page, limit, totalPages } };
-  } catch (e: any) {
-    return { success: false, error: e.message || MENU_ITEM.FETCH_ERROR };
+  } catch (e: unknown) {
+    return { success: false, error: normalizeActionError(e, MENU_ITEM.FETCH_ERROR) };
   }
 }
 

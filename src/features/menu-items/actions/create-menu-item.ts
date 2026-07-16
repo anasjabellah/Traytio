@@ -7,6 +7,7 @@ import { createMenuItemSchema } from '@/features/menu-items/validations/create-m
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
+import { normalizeActionError } from '@/lib/action-error';
 import { MENU_ITEM } from '@/lib/notify/messages';
 
 async function createMenuItemHandler(
@@ -53,8 +54,8 @@ async function createMenuItemHandler(
       success: true,
       data: { ...item, unitPrice: Number(item.unitPrice) },
     };
-  } catch (e: any) {
-    return { success: false, error: e.message || MENU_ITEM.CREATE.ERROR };
+  } catch (e: unknown) {
+    return { success: false, error: normalizeActionError(e, MENU_ITEM.CREATE.ERROR) };
   }
 }
 

@@ -7,6 +7,7 @@ import type { ActionResponse } from '@/features/menu-items/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
+import { normalizeActionError } from '@/lib/action-error';
 import { MENU_ITEM } from '@/lib/notify/messages';
 
 const deleteMenuItemSchema = z.object({
@@ -25,8 +26,8 @@ async function deleteMenuItemHandler(id: string): Promise<ActionResponse> {
     await prisma.menuItem.delete({ where: { id, organizationId } });
     revalidatePath("/dashboard/menu-items")
     return { success: true };
-  } catch (e: any) {
-    return { success: false, error: e.message || MENU_ITEM.DELETE.ERROR };
+  } catch (e: unknown) {
+    return { success: false, error: normalizeActionError(e, MENU_ITEM.DELETE.ERROR) };
   }
 }
 
