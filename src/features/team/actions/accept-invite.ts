@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { auth } from "@clerk/nextjs/server"
 import { withActionGuard } from "@/lib/action-guard"
 import { AUTH } from "@/lib/notify/messages"
+import { normalizeActionError } from "@/lib/action-error"
 import { revalidatePath } from "next/cache"
 
 const acceptInviteSchema = z.object({
@@ -66,7 +67,7 @@ async function acceptInviteHandler(token: string) {
     revalidatePath("/dashboard")
     return { success: true, data: { organizationName: invitation.organization.name } }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : AUTH.ACCEPT.ERROR }
+    return { success: false, error: normalizeActionError(err, AUTH.ACCEPT.ERROR) }
   }
 }
 

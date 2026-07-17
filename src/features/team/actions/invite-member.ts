@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { resend, resendFromEmail } from "@/lib/resend"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { AUTH } from "@/lib/notify/messages"
+import { normalizeActionError } from "@/lib/action-error"
 import { OrgRole } from "@prisma/client"
 import { withActionGuard } from "@/lib/action-guard"
 import { revalidatePath } from "next/cache"
@@ -112,7 +113,7 @@ async function inviteMemberHandler(input: { email: string; role: OrgRole }) {
     return { success: true }
   } catch (err) {
     console.error("[inviteMember] Error:", err)
-    return { success: false, error: err instanceof Error ? err.message : AUTH.INVITE.ERROR }
+    return { success: false, error: normalizeActionError(err, AUTH.INVITE.ERROR) }
   }
 }
 

@@ -4,6 +4,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { AUTH } from "@/lib/notify/messages"
+import { normalizeActionError } from "@/lib/action-error"
 import { OrgRole } from "@prisma/client"
 import { withActionGuard } from "@/lib/action-guard"
 import { revalidatePath } from "next/cache"
@@ -65,7 +66,7 @@ async function transferOwnershipHandler(targetMemberId: string) {
     revalidatePath("/dashboard/settings/team")
     return { success: true }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : AUTH.OWNERSHIP.TRANSFER_ERROR }
+    return { success: false, error: normalizeActionError(err, AUTH.OWNERSHIP.TRANSFER_ERROR) }
   }
 }
 

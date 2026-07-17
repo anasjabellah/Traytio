@@ -4,6 +4,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { AUTH } from "@/lib/notify/messages"
+import { normalizeActionError } from "@/lib/action-error"
 import { withActionGuard } from "@/lib/action-guard"
 import { revalidatePath } from "next/cache"
 
@@ -55,7 +56,7 @@ async function removeMemberHandler(memberId: string) {
     revalidatePath("/dashboard/settings/team")
     return { success: true }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : AUTH.MEMBER.REMOVE_ERROR }
+    return { success: false, error: normalizeActionError(err, AUTH.MEMBER.REMOVE_ERROR) }
   }
 }
 

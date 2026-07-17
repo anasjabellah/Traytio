@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { getCurrentMembership } from "@/lib/assert-role"
 import { AUTH } from "@/lib/notify/messages"
+import { normalizeActionError } from "@/lib/action-error"
 import { withActionGuard } from "@/lib/action-guard"
 import { PERMISSIONS } from "@/lib/permissions"
 import { buildMonthKeys, buildMonthlySparkline } from "@/features/dashboard/lib/kpi-engine"
@@ -108,7 +109,7 @@ async function getTeamHandler(params?: { page?: number; limit?: number }) {
 
     return { success: true, data: { members: serializedMembers, invitations: serializedInvitations, stats, pagination } }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : AUTH.FETCH_ERROR }
+    return { success: false, error: normalizeActionError(err, AUTH.FETCH_ERROR) }
   }
 }
 

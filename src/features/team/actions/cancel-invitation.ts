@@ -4,6 +4,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { AUTH } from "@/lib/notify/messages"
+import { normalizeActionError } from "@/lib/action-error"
 import { withActionGuard } from "@/lib/action-guard"
 import { revalidatePath } from "next/cache"
 
@@ -36,7 +37,7 @@ async function cancelInvitationHandler(invitationId: string) {
     revalidatePath("/dashboard/settings/team")
     return { success: true }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : AUTH.INVITATION.CANCEL_ERROR }
+    return { success: false, error: normalizeActionError(err, AUTH.INVITATION.CANCEL_ERROR) }
   }
 }
 

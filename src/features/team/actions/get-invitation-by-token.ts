@@ -4,6 +4,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { withActionGuard } from "@/lib/action-guard"
 import { AUTH } from "@/lib/notify/messages"
+import { normalizeActionError } from "@/lib/action-error"
 
 const getInvitationByTokenSchema = z.object({
   token: z.string().min(1),
@@ -34,7 +35,7 @@ async function getInvitationByTokenHandler(token: string) {
       },
     }
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : AUTH.FETCH_ERROR }
+    return { success: false, error: normalizeActionError(err, AUTH.FETCH_ERROR) }
   }
 }
 
