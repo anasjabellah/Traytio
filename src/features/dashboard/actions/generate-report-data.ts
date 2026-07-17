@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
+import { normalizeActionError } from '@/lib/action-error';
+import { COMMON } from '@/lib/notify/messages';
 
 export type ReportRow = {
   number: string;
@@ -165,7 +167,7 @@ async function generateReportDataHandler(filters: ReportFilters): Promise<{
   } catch (error: unknown) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'An error occurred',
+      error: normalizeActionError(error, COMMON.UNEXPECTED_ERROR),
     };
   }
 }

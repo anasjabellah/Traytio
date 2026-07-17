@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
+import { normalizeActionError } from '@/lib/action-error';
+import { COMMON } from '@/lib/notify/messages';
 import type { CommandeStatus } from '@prisma/client';
 import type { DashboardData } from '@/features/dashboard/types';
 import { buildMonthlySparkline, buildMonthlySparklineFromMap } from '@/features/dashboard/lib/kpi-engine';
@@ -340,7 +342,7 @@ async function getDashboardDataHandler(): Promise<{
       },
     };
   } catch (error: unknown) {
-    return { success: false, error: error instanceof Error ? error.message : 'An error occurred' };
+    return { success: false, error: normalizeActionError(error, COMMON.UNEXPECTED_ERROR) };
   }
 }
 

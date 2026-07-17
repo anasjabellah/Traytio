@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
+import { normalizeActionError } from '@/lib/action-error';
+import { COMMON } from '@/lib/notify/messages';
 import type { ActivityFeedItem, ActivityFeedResponse, ActivityType, ActivityPagination } from '@/features/activity/types';
 
 const ACTION_TO_TYPE: Record<string, ActivityType> = {
@@ -97,7 +99,7 @@ async function getActivityHandler(params?: { page?: number; limit?: number }): P
       data: { items, stats: { totalToday, totalWeek, totalMonth }, pagination },
     };
   } catch (error: unknown) {
-    return { success: false, error: error instanceof Error ? error.message : 'An error occurred' };
+    return { success: false, error: normalizeActionError(error, COMMON.UNEXPECTED_ERROR) };
   }
 }
 
