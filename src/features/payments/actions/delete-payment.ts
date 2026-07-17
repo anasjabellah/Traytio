@@ -7,6 +7,7 @@ import { getOrganizationId } from "@/lib/get-organization-id"
 import { assertCan } from "@/lib/assert-role"
 import { withActionGuard } from "@/lib/action-guard"
 import { PAYMENT } from "@/lib/notify/messages"
+import { normalizeActionError } from "@/lib/action-error"
 import { recalculateCommandeBalances } from "@/features/financial/recalculate-commande-balances"
 import type { CommandePaymentStatus } from "@prisma/client"
 
@@ -87,7 +88,7 @@ async function deletePaymentHandler(paymentId: string) {
       paymentStatus: updated?.paymentStatus as CommandePaymentStatus,
     }
   } catch (err: unknown) {
-    return { success: false as const, error: err instanceof Error ? err.message : PAYMENT.DELETE.ERROR }
+    return { success: false as const, error: normalizeActionError(err, PAYMENT.DELETE.ERROR) }
   }
 }
 

@@ -5,6 +5,7 @@ import { getOrganizationId } from "@/lib/get-organization-id"
 import { assertCan } from "@/lib/assert-role"
 import { withActionGuard } from "@/lib/action-guard"
 import { PAYMENT } from "@/lib/notify/messages"
+import { normalizeActionError } from "@/lib/action-error"
 import { recalculateCommandeBalances } from "@/features/financial/recalculate-commande-balances"
 import { recordPaymentSchema } from "@/features/payments/validations/payment-schemas"
 import type { PaymentMethod, CommandePaymentStatus } from "@prisma/client"
@@ -111,7 +112,7 @@ async function recordPaymentHandler(input: unknown) {
       paymentStatus: updated?.paymentStatus as CommandePaymentStatus,
     }
   } catch (err: unknown) {
-    return { success: false as const, error: err instanceof Error ? err.message : PAYMENT.CREATE.ERROR }
+    return { success: false as const, error: normalizeActionError(err, PAYMENT.CREATE.ERROR) }
   }
 }
 

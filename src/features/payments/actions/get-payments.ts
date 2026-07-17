@@ -6,6 +6,7 @@ import { getOrganizationId } from "@/lib/get-organization-id"
 import { assertCan } from "@/lib/assert-role"
 import { withActionGuard } from "@/lib/action-guard"
 import { PAYMENT } from "@/lib/notify/messages"
+import { normalizeActionError } from "@/lib/action-error"
 import { PAYMENT_DEFAULT_PAGE_SIZE } from "@/features/payments/constants"
 import type { ActionResponse, PaginatedPayments, PaymentWithCommande, PaymentStats } from "@/features/payments/types"
 import type { Prisma } from "@prisma/client"
@@ -194,7 +195,7 @@ async function getPaymentsHandler(params?: {
       data: { data, stats, total, page, limit, totalPages },
     }
   } catch (e: any) {
-    return { success: false, error: e.message || PAYMENT.FETCH_ERROR }
+    return { success: false, error: normalizeActionError(e, PAYMENT.FETCH_ERROR) }
   }
 }
 
