@@ -8,6 +8,7 @@ import { assertCan } from "@/lib/assert-role"
 import { withActionGuard } from "@/lib/action-guard"
 import { updateInvoiceStatusSchema } from "@/features/invoices/validations/invoice-schemas"
 import { INVOICE } from "@/lib/notify/messages"
+import { normalizeActionError } from "@/lib/action-error"
 import type { ActionResponse, Invoice, InvoiceWithCommande } from "@/features/invoices/types"
 
 const commandeIdSchema = z.object({
@@ -119,11 +120,11 @@ async function createQuoteFromCommandeHandler(commandeId: string): Promise<Actio
       if (isPrismaP2002(err)) {
         continue
       }
-      return { success: false, error: err instanceof Error ? err.message : INVOICE.CREATE.QUOTE.ERROR }
+      return { success: false, error: normalizeActionError(err, INVOICE.CREATE.QUOTE.ERROR) }
     }
   }
 
-  return { success: false, error: lastError instanceof Error ? lastError.message : INVOICE.CREATE.QUOTE.ERROR_RETRIES }
+  return { success: false, error: normalizeActionError(lastError, INVOICE.CREATE.QUOTE.ERROR_RETRIES) }
 }
 
 export const createQuoteFromCommande = withActionGuard(createQuoteFromCommandeHandler, { name: 'invoices:create' })
@@ -192,11 +193,11 @@ async function createInvoiceFromCommandeHandler(commandeId: string): Promise<Act
       if (isPrismaP2002(err)) {
         continue
       }
-      return { success: false, error: err instanceof Error ? err.message : INVOICE.CREATE.INVOICE.ERROR }
+      return { success: false, error: normalizeActionError(err, INVOICE.CREATE.INVOICE.ERROR) }
     }
   }
 
-  return { success: false, error: lastError instanceof Error ? lastError.message : INVOICE.CREATE.INVOICE.ERROR_RETRIES }
+  return { success: false, error: normalizeActionError(lastError, INVOICE.CREATE.INVOICE.ERROR_RETRIES) }
 }
 
 export const createInvoiceFromCommande = withActionGuard(createInvoiceFromCommandeHandler, { name: 'invoices:create' })
@@ -226,7 +227,7 @@ async function getInvoiceByIdHandler(id: string): Promise<ActionResponse<Invoice
 
     return { success: true, data: serializeInvoice(invoice) }
   } catch (err: unknown) {
-    return { success: false, error: err instanceof Error ? err.message : INVOICE.UNEXPECTED_ERROR }
+    return { success: false, error: normalizeActionError(err, INVOICE.UNEXPECTED_ERROR) }
   }
 }
 
@@ -292,12 +293,12 @@ async function getInvoicesHandler(params: {
         page,
         limit,
         hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
-    }
-  } catch (err: unknown) {
-    return { success: false, error: err instanceof Error ? err.message : INVOICE.UNEXPECTED_ERROR }
-  }
+    hasPreviousPage: page > 1,
+  },
+}
+} catch (err: unknown) {
+  return { success: false, error: normalizeActionError(err, INVOICE.UNEXPECTED_ERROR) }
+}
 }
 
 export const getInvoices = withActionGuard(getInvoicesHandler, { name: 'invoices:read' })
@@ -342,7 +343,7 @@ async function updateInvoiceStatusHandler(
 
     return { success: true, data: serializeInvoice(invoice) }
   } catch (err: unknown) {
-    return { success: false, error: err instanceof Error ? err.message : INVOICE.UPDATE.STATUS.ERROR }
+    return { success: false, error: normalizeActionError(err, INVOICE.UPDATE.STATUS.ERROR) }
   }
 }
 
@@ -421,11 +422,11 @@ async function convertQuoteToInvoiceHandler(quoteId: string): Promise<ActionResp
       if (isPrismaP2002(err)) {
         continue
       }
-      return { success: false, error: err instanceof Error ? err.message : INVOICE.CONVERT.ERROR }
+      return { success: false, error: normalizeActionError(err, INVOICE.CONVERT.ERROR) }
     }
   }
 
-  return { success: false, error: lastError instanceof Error ? lastError.message : INVOICE.CONVERT.ERROR_RETRIES }
+  return { success: false, error: normalizeActionError(lastError, INVOICE.CONVERT.ERROR_RETRIES) }
 }
 
 export const convertQuoteToInvoice = withActionGuard(convertQuoteToInvoiceHandler, { name: 'invoices:create' })
