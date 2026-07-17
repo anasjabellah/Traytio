@@ -39,4 +39,4 @@ async function getInvitationByTokenHandler(token: string) {
   }
 }
 
-export const getInvitationByToken = withActionGuard(getInvitationByTokenHandler, { name: 'team:read' })
+export const getInvitationByToken = withActionGuard(getInvitationByTokenHandler, { name: 'team:read', public: true })

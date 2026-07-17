@@ -71,4 +71,4 @@ async function acceptInviteHandler(token: string) {
   }
 }
 
-export const acceptInvite = withActionGuard(acceptInviteHandler, { name: 'team:accept' })
+export const acceptInvite = withActionGuard(acceptInviteHandler, { name: 'team:accept', public: true })
