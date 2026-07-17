@@ -359,7 +359,7 @@ model Invoice {
   id             String        @id @default(cuid())
   organizationId String
   commandeId     String?
-  number         String        @unique // e.g., INV-2024-001
+  number         String        // e.g., INV-2024-001
   type           InvoiceType   @default(DEVIS)
   status         InvoiceStatus @default(DRAFT)
   issueDate      DateTime      @default(now())
@@ -376,6 +376,7 @@ model Invoice {
   commande     Commande?    @relation(fields: [commandeId], references: [id], onDelete: SetNull)
   payments     Payment[]
 
+  @@unique([organizationId, number])
   @@index([organizationId])
   @@index([commandeId])
   @@index([organizationId, dueDate])
