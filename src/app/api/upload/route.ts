@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import cloudinary from '@/lib/cloudinary';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { withApiGuard } from '@/lib/api-guard';
 import { AUTH } from '@/lib/notify/messages';
 
 const ALLOWED_MIME_TYPES = [
@@ -32,7 +33,7 @@ function hasBlockedExtension(filename: string): boolean {
   return BLOCKED_EXTENSIONS.some((ext) => lower.endsWith(ext));
 }
 
-export async function POST(request: Request) {
+async function uploadApi(request: Request) {
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -94,3 +95,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Erreur lors du téléchargement' }, { status: 500 });
   }
 }
+
+export const POST = withApiGuard(uploadApi);

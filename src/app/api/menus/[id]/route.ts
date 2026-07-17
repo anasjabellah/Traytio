@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getMenuById } from '@/features/menus/actions/get-menu-by-id';
 import { updateMenu } from '@/features/menus/actions/update-menu';
 import { deleteMenu } from '@/features/menus/actions/delete-menu';
+import { withApiGuard } from '@/lib/api-guard';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -16,7 +17,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function updateMenuApi(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const data = await request.json();
@@ -30,7 +31,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function deleteMenuApi(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const response = await deleteMenu(id);
@@ -42,3 +43,6 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     return NextResponse.json({ error: err?.message || 'Server error' }, { status: 500 });
   }
 }
+
+export const PUT = withApiGuard(updateMenuApi);
+export const DELETE = withApiGuard(deleteMenuApi);

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { createCommande } from "@/features/commandes/actions/create-commande"
+import { withApiGuard } from "@/lib/api-guard"
 
-export async function POST(request: Request) {
+async function createCommandeApi(request: Request) {
   try {
     const data = await request.json()
     const response = await createCommande(data)
@@ -13,3 +14,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: err?.message ?? "Invalid request" }, { status: 400 })
   }
 }
+
+export const POST = withApiGuard(createCommandeApi)

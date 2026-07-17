@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getEvents } from '@/features/events/actions/get-events';
 import { createEvent } from '@/features/events/actions/create-event';
+import { withApiGuard } from '@/lib/api-guard';
 
 // GET /api/events - list events with optional query params (search, page, limit, sortBy, sortOrder)
 export async function GET(request: Request) {
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
 }
 
 // POST /api/events - create a new event
-export async function POST(request: Request) {
+async function createEventApi(request: Request) {
   try {
     const data = await request.json();
     const resp = await createEvent(data);
@@ -31,3 +32,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: e.message ?? 'Invalid request' }, { status: 400 });
   }
 }
+
+export const POST = withApiGuard(createEventApi);

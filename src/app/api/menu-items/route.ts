@@ -1,6 +1,7 @@
 // src/app/api/menu-items/route.ts
 
 import { NextResponse } from 'next/server';
+import { withApiGuard } from '@/lib/api-guard';
 import { getMenuItems } from '@/features/menu-items/actions/get-menu-items';
 import { createMenuItem } from '@/features/menu-items/actions/create-menu-item';
 
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
 }
 
 // POST /api/menu-items - create new menu item
-export async function POST(request: Request) {
+async function createMenuItemApi(request: Request) {
   try {
     const data = await request.json();
     const response = await createMenuItem(data);
@@ -55,3 +56,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export const POST = withApiGuard(createMenuItemApi);

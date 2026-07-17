@@ -13,6 +13,7 @@ export const COMMON = {
   OPERATION_FAILED: "L'opération a échoué.",
   ERROR: "Erreur.",
   FETCH_ERROR: "Erreur lors du chargement.",
+  FORBIDDEN_ORIGIN: "Requête refusée : origine non autorisée.",
   REPORT: {
     DATE_REQUIRED: "Veuillez sélectionner une date de début.",
     GENERATE_ERROR: "Erreur lors de la génération du rapport.",

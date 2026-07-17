@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { withApiGuard } from '@/lib/api-guard';
 import { getMenus } from '@/features/menus/actions/get-menus';
 import { createMenu } from '@/features/menus/actions/create-menu';
 
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+async function createMenuApi(request: Request) {
   try {
     const data = await request.json();
     const response = await createMenu(data);
@@ -41,3 +42,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: err?.message || 'Invalid request' }, { status: 400 });
   }
 }
+
+export const POST = withApiGuard(createMenuApi);

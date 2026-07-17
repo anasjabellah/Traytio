@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getOrganizationId } from "@/lib/get-organization-id";
+import { withApiGuard } from "@/lib/api-guard";
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: Request) {
+async function createClientApi(request: Request) {
   try {
     const organizationId = await getOrganizationId();
     if (!organizationId) {
@@ -66,3 +67,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export const POST = withApiGuard(createClientApi);
