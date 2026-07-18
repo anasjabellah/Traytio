@@ -7,6 +7,15 @@ import { COMMON } from '@/lib/notify/messages'
 const MAX_REQUESTS = 10
 const WINDOW_MS = 10_000
 
+// Read/view actions are not state-changing and are invoked during page
+// rendering (Server Action reads carry an Origin header that varies by
+// deployment/preview/port). Applying a same-origin CSRF check to them rejects
+// legitimate same-origin reads, so the origin gate is enforced only on writes.
+function isWriteAction(name: string): boolean {
+  const action = name.split(':')[1] ?? ''
+  return action !== 'read' && action !== 'view'
+}
+
 export function withActionGuard<T extends (...args: any[]) => Promise<any>>(
   fn: T,
   config: { name: string; /**
@@ -26,9 +35,9 @@ export function withActionGuard<T extends (...args: any[]) => Promise<any>>(
     }
 
     // Second security gate: CSRF — reject cross-origin state-changing requests.
-    // Server Actions are always POST; assertSameOrigin defaults to "POST".
-    // Applies to both authenticated and explicitly public actions.
-    if (!(await assertSameOrigin())) {
+    // Only enforced on writes; reads/views are safe and may render from
+    // deployments whose Origin differs from NEXT_PUBLIC_APP_URL.
+    if (isWriteAction(config.name) && !(await assertSameOrigin())) {
       return { success: false, error: COMMON.FORBIDDEN_ORIGIN }
     }
 
