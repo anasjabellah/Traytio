@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
 import { Webhook } from 'svix'
-import { OrgRole } from '@prisma/client'
+import { OrgRole, Prisma } from '@prisma/client'
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
@@ -34,39 +34,52 @@ export async function POST(req: Request) {
   }
 
   if (evt.type === 'user.created') {
+    const { id, email_addresses, first_name, last_name } = evt.data
+    const email = email_addresses?.[0]?.email_address ?? ''
+    const displayName = `${first_name ?? ''} ${last_name ?? ''}`.trim()
+    const orgName = displayName.length > 0
+      ? `${displayName}'s Organisation`
+      : 'Mon Organisation'
+
+    // Idempotency: if this Clerk user was already provisioned, skip silently.
+    const existing = await prisma.user.findUnique({ where: { clerkId: id } })
+    if (existing) {
+      return new Response('OK', { status: 200 })
+    }
+
     try {
-      const { id, email_addresses, first_name, last_name } = evt.data
-      const email = email_addresses?.[0]?.email_address ?? ''
-      const displayName = `${first_name ?? ''} ${last_name ?? ''}`.trim()
-      const orgName = displayName.length > 0
-        ? `${displayName}'s Organisation`
-        : 'Mon Organisation'
+      await prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+          data: {
+            clerkId: id,
+            email,
+            firstName: first_name ?? null,
+            lastName: last_name ?? null,
+          },
+        })
 
-      const user = await prisma.user.create({
-        data: {
-          clerkId: id,
-          email,
-          firstName: first_name ?? null,
-          lastName: last_name ?? null,
-        }
-      })
+        const org = await tx.organization.create({
+          data: {
+            name: orgName,
+            slug: `org-${id.slice(0, 8)}-${Date.now()}`,
+            email,
+          },
+        })
 
-      const org = await prisma.organization.create({
-        data: {
-          name: orgName,
-          slug: `org-${id.slice(0, 8)}-${Date.now()}`,
-          email,
-        }
-      })
-
-      await prisma.userOrganization.create({
-        data: {
-          userId: user.id,
-          organizationId: org.id,
-          role: OrgRole.OWNER,
-        }
+        await tx.userOrganization.create({
+          data: {
+            userId: user.id,
+            organizationId: org.id,
+            role: OrgRole.OWNER,
+          },
+        })
       })
     } catch (err) {
+      // A duplicate delivery that raced past the idempotency check still hits the
+      // unique constraint — treat it as a harmless retry, not a failure.
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        return new Response('OK', { status: 200 })
+      }
       console.error('[clerk-webhook] user.created failed:', err)
       return new Response('Failed to create user resources', { status: 500 })
     }
