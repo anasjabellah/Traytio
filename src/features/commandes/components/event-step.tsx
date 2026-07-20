@@ -50,7 +50,7 @@ export function EventStep(props: any) {
   return (
     <div className="space-y-5">
       <div className="grid sm:grid-cols-2 gap-4">
-        <PremiumField label="Nom de l'événement" value={eventName} onChange={setEventName} placeholder="Mariage Lambert" />
+        <PremiumField label="Nom de l'événement" value={eventName} onChange={setEventName} placeholder="Nom de l'événement" />
         <label className="block">
           <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Type d'événement</div>
           <div className="flex flex-wrap gap-1.5 rounded-2xl border border-border bg-surface-soft p-1.5">

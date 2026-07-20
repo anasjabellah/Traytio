@@ -42,7 +42,7 @@ export function SummaryPanel(props: {
 
         <div className="mt-3 font-display text-2xl leading-tight">{eventName || "Nouvel événement"}</div>
         <div className="text-xs text-muted-foreground mt-0.5">
-          {client?.name || "Aucun client"} · {new Date(eventDate).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} · {guests} tables
+          {client?.name || "Aucun client"} · {eventDate ? new Date(eventDate).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "Date à définir"} · {guests} tables
         </div>
         {packName && (
           <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-gradient-gold text-gold-foreground px-2.5 py-0.5 text-[10px] font-medium">

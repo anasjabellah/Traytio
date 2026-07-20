@@ -17,12 +17,12 @@ export function useCommandeForm() {
   const [showClientPanel, setShowClientPanel] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<ClientEventSummary | "new" | null>(null);
 
-  const [eventName, setEventName] = useState("Mariage Lambert");
-  const [eventType, setEventType] = useState("Mariage");
-  const [eventDate, setEventDate] = useState("2026-10-12");
-  const [startTime, setStartTime] = useState("18:30");
-  const [endTime, setEndTime] = useState("01:00");
-  const [location, setLocation] = useState("Château de Vaux-le-Vicomte");
+  const [eventName, setEventName] = useState("");
+  const [eventType, setEventType] = useState("");
+  const [eventDate, setEventDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [location, setLocation] = useState("");
   const [guests, setGuests] = useState(0);
   const [budget, setBudget] = useState(0);
   const [eventStatus, setEventStatus] = useState<string | null>(null);
@@ -47,13 +47,7 @@ export function useCommandeForm() {
   const [attachments, setAttachments] = useState<any[]>([]);
   const [internalNotes, setInternalNotes] = useState("");
   const [clientNotes, setClientNotes] = useState("");
-  const [tasks, setTasks] = useState([
-    { id: "t1", label: "Commander les fleurs (pivoines)", done: true },
-    { id: "t2", label: "Confirmer DJ pour 21h", done: false },
-    { id: "t3", label: "Préparer la pièce montée — vendredi", done: false },
-    { id: "t4", label: "Confirmer transport équipement", done: false },
-    { id: "t5", label: "Réserver les tables Golden Round", done: false },
-  ]);
+  const [tasks, setTasks] = useState<any[]>([]);
 
   const { data: clients, isLoading: clientsLoading } = useQuery({
     queryKey: ["commande-clients"],
