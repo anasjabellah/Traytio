@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
