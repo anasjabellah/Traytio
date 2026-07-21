@@ -46,6 +46,8 @@ type CommandesPageResult = {
   stats: CommandeStats;
 };
 
+type StatusAgg = { status: string; _count: number; _sum: { totalAmount: number | null; remainingAmount: number | null } };
+
 async function getCommandesPageHandler(params: GetCommandesParams): Promise<ActionResponse<CommandesPageResult>> {
   try {
     const organizationId = await getOrganizationId();
@@ -98,7 +100,9 @@ async function getCommandesPageHandler(params: GetCommandesParams): Promise<Acti
       event: { select: { name: true, status: true } },
     } satisfies Prisma.CommandeSelect;
 
-    const [total, commandes, currentGroups, prevGroups, currentUpcoming, prevUpcoming, sparklineRows] = await Promise.all([
+    // 7 original queries → 3: count, findMany (paginated list), sparklineRows (8-month historical).
+    // groupBy months (Q3/Q4) and upcoming counts (Q5/Q6) are derived from sparklineRows in JS.
+    const [total, commandes, sparklineRows] = await Promise.all([
       prisma.commande.count({ where }),
       prisma.commande.findMany({
         where,
@@ -107,36 +111,35 @@ async function getCommandesPageHandler(params: GetCommandesParams): Promise<Acti
         skip,
         take: limit,
       }),
-      // Current month stats: groupBy status (aggregated at DB level)
-      prisma.commande.groupBy({
-        by: ['status'],
-        where: { organizationId, createdAt: { gte: monthStart } },
-        _count: true,
-        _sum: { totalAmount: true, remainingAmount: true },
-      }),
-      // Previous month stats: groupBy status
-      prisma.commande.groupBy({
-        by: ['status'],
-        where: { organizationId, createdAt: { gte: prevMonthStart, lt: monthStart } },
-        _count: true,
-        _sum: { totalAmount: true, remainingAmount: true },
-      }),
-      // Current month upcoming count (eventDate filter, not groupable)
-      prisma.commande.count({
-        where: { organizationId, createdAt: { gte: monthStart }, eventDate: { gt: now }, status: { not: 'CANCELLED' } },
-      }),
-      // Previous month upcoming count
-      prisma.commande.count({
-        where: { organizationId, createdAt: { gte: prevMonthStart, lt: monthStart }, eventDate: { gt: now }, status: { not: 'CANCELLED' } },
-      }),
-      // Historical data for monthly perf arrays (last 8 months)
       prisma.commande.findMany({
         where: { organizationId, createdAt: { gte: new Date(now.getFullYear(), now.getMonth() - 7, 1) } },
         select: { totalAmount: true, remainingAmount: true, status: true, eventDate: true, createdAt: true },
       }),
     ]);
 
-    type StatusAgg = { status: string; _count: number; _sum: { totalAmount: number | null; remainingAmount: number | null } };
+    // Derive monthly status aggregates from sparklineRows (replaces 2 groupBy queries)
+    const aggregateByStatus = (rows: typeof sparklineRows) => {
+      const map = new Map<string, { _count: number; _sum: { totalAmount: number; remainingAmount: number } }>();
+      for (const row of rows) {
+        const existing = map.get(row.status) ?? { _count: 0, _sum: { totalAmount: 0, remainingAmount: 0 } };
+        existing._count += 1;
+        existing._sum.totalAmount += Number(row.totalAmount);
+        existing._sum.remainingAmount += Number(row.remainingAmount);
+        map.set(row.status, existing);
+      }
+      return Array.from(map.entries()).map(([s, a]) => ({ status: s, ...a }));
+    };
+
+    const currentGroups = aggregateByStatus(sparklineRows.filter(r => r.createdAt >= monthStart));
+    const prevGroups = aggregateByStatus(sparklineRows.filter(r => r.createdAt >= prevMonthStart && r.createdAt < monthStart));
+
+    // Derive upcoming counts from sparklineRows (replaces 2 count queries)
+    const currentUpcoming = sparklineRows.filter(
+      r => r.createdAt >= monthStart && r.eventDate && new Date(r.eventDate) > now && r.status !== 'CANCELLED',
+    ).length;
+    const prevUpcoming = sparklineRows.filter(
+      r => r.createdAt >= prevMonthStart && r.createdAt < monthStart && r.eventDate && new Date(r.eventDate) > now && r.status !== 'CANCELLED',
+    ).length;
 
     const calcStats = (groups: StatusAgg[], upcomingCount: number) => {
       const total = groups.reduce((s, g) => s + g._count, 0);
@@ -230,8 +233,8 @@ async function getCommandesPageHandler(params: GetCommandesParams): Promise<Acti
         limit,
         totalPages,
         stats: {
-          currentMonth: calcStats(currentGroups as unknown as StatusAgg[], currentUpcoming),
-          previousMonth: calcStats(prevGroups as unknown as StatusAgg[], prevUpcoming),
+          currentMonth: calcStats(currentGroups as StatusAgg[], currentUpcoming),
+          previousMonth: calcStats(prevGroups as StatusAgg[], prevUpcoming),
           perfTotal,
           perfActive,
           perfUpcoming,

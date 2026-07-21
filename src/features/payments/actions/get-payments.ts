@@ -83,65 +83,42 @@ async function getPaymentsHandler(params?: {
       },
     } satisfies Prisma.PaymentInclude
 
-    // NOTE: collectedAgg, refundedAgg, monthlyAgg, previousMonthlyAgg, pendingCount, and
-    // historicalRows (8-mo sparkline data) duplicate aggregates already computed in the
-    // dashboard's getDashboardData(). If that action runs before this one, these could be
-    // cached/reused instead of re-queried. Evaluate centralizing in a shared stats service
-    // or passing via React Query cache when the payment list is visited from the dashboard.
-    const [items, total, collectedAgg, refundedAgg, monthlyAgg, previousMonthlyAgg, pendingCount, historicalRows] =
-      await prisma.$transaction(async (tx) => {
-        const p = await tx.payment.findMany({
-          where,
-          include,
-          orderBy: { createdAt: "desc" },
-          skip,
-          take: limit,
-        })
+    // NOTE: all-time collected/refunded and pendingCount come from a single groupBy.
+    // Monthly aggregates (this month, previous month) are derived from the 8-month
+    // historical fetch in JS. This reduces the original 8 sequential queries to 4
+    // parallel queries, eliminating ~4 round-trips (~200ms at current RTT).
+    const [items, total, statusAgg, historicalRows] = await Promise.all([
+      prisma.payment.findMany({
+        where,
+        include,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.payment.count({ where }),
+      prisma.payment.groupBy({
+        by: ['status'],
+        where: { organizationId, status: { in: ["COMPLETED", "REFUNDED", "PENDING"] } },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      prisma.payment.findMany({
+        where: { organizationId, createdAt: { gte: historicalStart } },
+        select: { createdAt: true, amount: true, status: true },
+      }),
+    ])
 
-        const total = await tx.payment.count({ where })
+    const collectedAgg = statusAgg.find(g => g.status === "COMPLETED")
+    const refundedAgg = statusAgg.find(g => g.status === "REFUNDED")
+    const pendingGroup = statusAgg.find(g => g.status === "PENDING")
+    const pendingCount = pendingGroup?._count ?? 0
 
-        const collected = await tx.payment.aggregate({
-          where: { organizationId, status: "COMPLETED" },
-          _sum: { amount: true },
-        })
-
-        const refunded = await tx.payment.aggregate({
-          where: { organizationId, status: "REFUNDED" },
-          _sum: { amount: true },
-        })
-
-        const monthly = await tx.payment.aggregate({
-          where: {
-            organizationId,
-            status: "COMPLETED",
-            createdAt: { gte: startOfMonth },
-          },
-          _sum: { amount: true },
-        })
-
-        const previousMonthly = await tx.payment.aggregate({
-          where: {
-            organizationId,
-            status: "COMPLETED",
-            createdAt: {
-              gte: startOfPreviousMonth,
-              lt: startOfMonth,
-            },
-          },
-          _sum: { amount: true },
-        })
-
-        const pending = await tx.payment.count({
-          where: { organizationId, status: "PENDING" },
-        })
-
-        const historical = await tx.payment.findMany({
-          where: { organizationId, createdAt: { gte: historicalStart } },
-          select: { createdAt: true, amount: true, status: true },
-        })
-
-        return [p, total, collected, refunded, monthly, previousMonthly, pending, historical] as const
-      })
+    const monthlyRevenue = historicalRows
+      .filter(r => r.status === "COMPLETED" && r.createdAt >= startOfMonth)
+      .reduce((s, r) => s + Number(r.amount), 0)
+    const previousMonthRevenue = historicalRows
+      .filter(r => r.status === "COMPLETED" && r.createdAt >= startOfPreviousMonth && r.createdAt < startOfMonth)
+      .reduce((s, r) => s + Number(r.amount), 0)
 
     const data: PaymentWithCommande[] = items.map((p: PaymentWithCommandeRaw) => ({
       id: p.id,
@@ -182,11 +159,11 @@ async function getPaymentsHandler(params?: {
     )
 
     const stats: PaymentStats = {
-      totalCollected: Number(collectedAgg._sum.amount ?? 0),
-      totalRefunded: Number(refundedAgg._sum.amount ?? 0),
-      monthlyRevenue: Number(monthlyAgg._sum.amount ?? 0),
+      totalCollected: Number(collectedAgg?._sum.amount ?? 0),
+      totalRefunded: Number(refundedAgg?._sum.amount ?? 0),
+      monthlyRevenue,
       pendingCount,
-      previousMonthRevenue: Number(previousMonthlyAgg._sum.amount ?? 0),
+      previousMonthRevenue,
       perfCollected,
       perfRevenue,
       perfRefunded,
