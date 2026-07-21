@@ -10,7 +10,7 @@ import { COMMANDE } from '@/lib/notify/messages';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
 import { normalizeActionError } from '@/lib/action-error';
-import { buildMonthlySparkline, buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
+import { buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
 
 export type CommandeStats = {
   currentMonth: {
@@ -157,48 +157,66 @@ async function getCommandesPageHandler(params: GetCommandesParams): Promise<Acti
       return { total, active, upcomingCount, revenue, remaining, conversionRate };
     };
 
-    const buildMonthlyConversionRate = (rows: typeof sparklineRows, keys: string[]): number[] => {
-      const monthBuckets = new Map<string, { nonDraft: number; converted: number }>();
+    const buildAllSparklines = (
+      rows: typeof sparklineRows,
+      keys: string[],
+      referenceDate: Date,
+    ) => {
+      const total = new Map<string, number>();
+      const active = new Map<string, number>();
+      const upcoming = new Map<string, number>();
+      const revenue = new Map<string, number>();
+      const remaining = new Map<string, number>();
+      const convNonDraft = new Map<string, number>();
+      const convConverted = new Map<string, number>();
+
       for (const row of rows) {
         const d = new Date(row.createdAt);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        const bucket = monthBuckets.get(key) ?? { nonDraft: 0, converted: 0 };
+
+        total.set(key, (total.get(key) ?? 0) + 1);
+
+        if (!['CANCELLED', 'DELIVERED', 'DRAFT'].includes(row.status)) {
+          active.set(key, (active.get(key) ?? 0) + 1);
+        }
+
+        if (row.eventDate && new Date(row.eventDate) > referenceDate && row.status !== 'CANCELLED') {
+          upcoming.set(key, (upcoming.get(key) ?? 0) + 1);
+        }
+
+        if (row.status !== 'CANCELLED') {
+          revenue.set(key, (revenue.get(key) ?? 0) + Number(row.totalAmount));
+        }
+
+        remaining.set(key, (remaining.get(key) ?? 0) + Number(row.remainingAmount));
+
         if (row.status !== 'DRAFT') {
-          bucket.nonDraft += 1;
+          convNonDraft.set(key, (convNonDraft.get(key) ?? 0) + 1);
           if (!['DRAFT', 'CANCELLED', 'QUOTED'].includes(row.status)) {
-            bucket.converted += 1;
+            convConverted.set(key, (convConverted.get(key) ?? 0) + 1);
           }
         }
-        monthBuckets.set(key, bucket);
       }
-      return keys.map((key) => {
-        const b = monthBuckets.get(key);
-        if (!b || b.nonDraft === 0) return 0;
-        return Math.round((b.converted / b.nonDraft) * 100);
-      });
+
+      return {
+        perfTotal: keys.map((k) => Math.round(total.get(k) ?? 0)),
+        perfActive: keys.map((k) => Math.round(active.get(k) ?? 0)),
+        perfUpcoming: keys.map((k) => Math.round(upcoming.get(k) ?? 0)),
+        perfRevenue: keys.map((k) => Math.round(revenue.get(k) ?? 0)),
+        perfRemaining: keys.map((k) => Math.round(remaining.get(k) ?? 0)),
+        perfConversion: keys.map((k) => {
+          const nd = convNonDraft.get(k) ?? 0;
+          if (nd === 0) return 0;
+          return Math.round(((convConverted.get(k) ?? 0) / nd) * 100);
+        }),
+      };
     };
 
     const monthKeys = buildMonthKeys(8);
 
-    const perfTotal = buildMonthlySparkline(sparklineRows, monthKeys);
-
-    const perfActive = buildMonthlySparkline(sparklineRows, monthKeys, (r) =>
-      !['CANCELLED', 'DELIVERED', 'DRAFT'].includes(r.status) ? 1 : 0,
-    );
-
-    const perfUpcoming = buildMonthlySparkline(sparklineRows, monthKeys, (r) =>
-      r.eventDate && new Date(r.eventDate) > now && r.status !== 'CANCELLED' ? 1 : 0,
-    );
-
-    const perfRevenue = buildMonthlySparkline(sparklineRows, monthKeys, (r) =>
-      r.status !== 'CANCELLED' ? Number(r.totalAmount) : 0,
-    );
-
-    const perfRemaining = buildMonthlySparkline(sparklineRows, monthKeys, (r) =>
-      Number(r.remainingAmount),
-    );
-
-    const perfConversion = buildMonthlyConversionRate(sparklineRows, monthKeys);
+    const {
+      perfTotal, perfActive, perfUpcoming, perfRevenue, perfRemaining, perfConversion,
+    } = buildAllSparklines(sparklineRows, monthKeys, now);
 
     const result: Commande[] = commandes.map(serializeCommande);
     const totalPages = Math.ceil(total / limit);

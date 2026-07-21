@@ -83,6 +83,11 @@ async function getPaymentsHandler(params?: {
       },
     } satisfies Prisma.PaymentInclude
 
+    // NOTE: collectedAgg, refundedAgg, monthlyAgg, previousMonthlyAgg, pendingCount, and
+    // historicalRows (8-mo sparkline data) duplicate aggregates already computed in the
+    // dashboard's getDashboardData(). If that action runs before this one, these could be
+    // cached/reused instead of re-queried. Evaluate centralizing in a shared stats service
+    // or passing via React Query cache when the payment list is visited from the dashboard.
     const [items, total, collectedAgg, refundedAgg, monthlyAgg, previousMonthlyAgg, pendingCount, historicalRows] =
       await prisma.$transaction(async (tx) => {
         const p = await tx.payment.findMany({

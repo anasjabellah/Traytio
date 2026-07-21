@@ -24,7 +24,11 @@ async function getTeamHandler(params?: { page?: number; limit?: number }) {
     const limit = Math.max(1, Math.min(100, params?.limit ?? TEAM_DEFAULT_PAGE_SIZE))
     const skip = (page - 1) * limit
 
-    const [total, members, invitations] = await Promise.all([
+    const monthKeys = buildMonthKeys(8)
+    const historicalStart = new Date()
+    historicalStart.setMonth(historicalStart.getMonth() - 8)
+
+    const [total, members, invitations, historicalMembers, historicalInvitations] = await Promise.all([
       prisma.userOrganization.count({
         where: { organizationId: membership.organizationId },
       }),
@@ -42,6 +46,20 @@ async function getTeamHandler(params?: { page?: number; limit?: number }) {
       prisma.invitation.findMany({
         where: { organizationId: membership.organizationId },
         orderBy: { createdAt: "desc" },
+      }),
+      prisma.userOrganization.findMany({
+        where: {
+          organizationId: membership.organizationId,
+          createdAt: { gte: historicalStart },
+        },
+        select: { createdAt: true, role: true },
+      }),
+      prisma.invitation.findMany({
+        where: {
+          organizationId: membership.organizationId,
+          createdAt: { gte: historicalStart },
+        },
+        select: { createdAt: true },
       }),
     ])
 
@@ -69,26 +87,6 @@ async function getTeamHandler(params?: { page?: number; limit?: number }) {
       createdAt: inv.createdAt.toISOString(),
       expiresAt: inv.expiresAt.toISOString(),
     }))
-
-    const monthKeys = buildMonthKeys(8)
-    const historicalStart = new Date()
-    historicalStart.setMonth(historicalStart.getMonth() - 8)
-
-    const historicalMembers = await prisma.userOrganization.findMany({
-      where: {
-        organizationId: membership.organizationId,
-        createdAt: { gte: historicalStart },
-      },
-      select: { createdAt: true, role: true },
-    })
-
-    const historicalInvitations = await prisma.invitation.findMany({
-      where: {
-        organizationId: membership.organizationId,
-        createdAt: { gte: historicalStart },
-      },
-      select: { createdAt: true },
-    })
 
     const stats: TeamStats = {
       totalMembers: serializedMembers.length,

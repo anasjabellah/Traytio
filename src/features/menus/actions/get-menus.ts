@@ -39,8 +39,9 @@ async function getMenusHandler(params: GetMenusParams): Promise<ActionResponse<P
       where.isActive = isActive;
     }
 
-    const total = await prisma.menu.count({ where });
-    const menus = await prisma.menu.findMany({
+    const [total, menus] = await Promise.all([
+      prisma.menu.count({ where }),
+      prisma.menu.findMany({
       where,
       select: {
         id: true,
@@ -75,7 +76,8 @@ async function getMenusHandler(params: GetMenusParams): Promise<ActionResponse<P
       orderBy: { [sortBy]: sortOrder },
       skip,
       take: limit,
-    });
+    }),
+    ]);
 
     const data: Menu[] = menus.map((m: any) => ({
       ...m,

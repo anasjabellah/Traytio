@@ -268,11 +268,13 @@ async function getInvoicesHandler(params: {
       prisma.invoice.count({ where }),
       prisma.invoice.findMany({
         where,
-        include: {
+        select: {
+          id: true, type: true, number: true, status: true, issueDate: true,
+          dueDate: true, totalAmount: true, paidAmount: true, createdAt: true,
           commande: {
-            include: {
-              client: { select: { id: true, name: true, email: true, phone: true, address: true, city: true, postalCode: true, company: true, siret: true } },
-              items: true,
+            select: {
+              number: true,
+              client: { select: { name: true } },
             },
           },
         },
@@ -282,23 +284,59 @@ async function getInvoicesHandler(params: {
       }),
     ])
 
+    const data = invoices.map((inv) => ({
+      id: inv.id,
+      organizationId: '',
+      commandeId: null,
+      number: inv.number,
+      type: inv.type as "DEVIS" | "FACTURE",
+      status: inv.status as Invoice["status"],
+      issueDate: inv.issueDate,
+      dueDate: inv.dueDate,
+      totalAmount: Number(inv.totalAmount),
+      paidAmount: Number(inv.paidAmount),
+      notes: null,
+      pdfUrl: null,
+      createdAt: inv.createdAt,
+      updatedAt: inv.createdAt,
+      commande: inv.commande
+        ? {
+            id: '',
+            number: inv.commande.number ?? '',
+            status: '',
+            totalAmount: 0,
+            acompteAmount: 0,
+            paidAmount: 0,
+            remainingAmount: 0,
+            transportFees: null,
+            deliveryFees: null,
+            equipmentFees: null,
+            discountType: null,
+            discountValue: null,
+            discountAmount: null,
+            taxRate: null,
+            taxLabel: null,
+            taxAmount: null,
+            notes: null,
+            clientNotes: null,
+            items: [],
+            client: inv.commande.client
+              ? { id: '', name: inv.commande.client.name ?? '', email: null, phone: null, address: null, city: null, postalCode: null, company: null, siret: null }
+              : null,
+            event: null,
+          }
+        : null,
+    }))
+
     const totalPages = Math.max(1, Math.ceil(total / limit))
 
     return {
       success: true,
-      data: {
-        data: invoices.map(serializeInvoice),
-        total,
-        totalPages,
-        page,
-        limit,
-        hasNextPage: page < totalPages,
-    hasPreviousPage: page > 1,
-  },
-}
-} catch (err: unknown) {
-  return { success: false, error: normalizeActionError(err, INVOICE.UNEXPECTED_ERROR) }
-}
+      data: { data, total, totalPages, page, limit, hasNextPage: page < totalPages, hasPreviousPage: page > 1 },
+    }
+  } catch (err: unknown) {
+    return { success: false, error: normalizeActionError(err, INVOICE.UNEXPECTED_ERROR) }
+  }
 }
 
 export const getInvoices = withActionGuard(getInvoicesHandler, { name: 'invoices:read' })
