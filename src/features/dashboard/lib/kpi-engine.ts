@@ -29,13 +29,16 @@ export function emptySparkline(months: number = 8): number[] {
   return new Array(months).fill(1);
 }
 
+import { tzMonthKey } from '@/lib/date-utils';
+
 /** Build month-key list for the last N months ending at (now). */
 export function buildMonthKeys(months: number = 8, now?: Date): string[] {
-  const ref = now ?? new Date();
+  const [curY, curM] = tzMonthKey(now ?? new Date()).split('-').map(Number);
   const keys: string[] = [];
   for (let i = months - 1; i >= 0; i--) {
-    const m = new Date(ref.getFullYear(), ref.getMonth() - i, 1);
-    keys.push(`${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, '0')}`);
+    let y = curY, m = curM - i;
+    while (m <= 0) { y--; m += 12; }
+    keys.push(`${y}-${String(m).padStart(2, '0')}`);
   }
   return keys;
 }
@@ -51,8 +54,7 @@ export function buildMonthlySparkline<T extends { createdAt: Date }>(
 ): number[] {
   const map = new Map<string, number>();
   for (const row of rows) {
-    const d = new Date(row.createdAt);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const key = tzMonthKey(new Date(row.createdAt));
     const val = extractValue ? extractValue(row) : 1;
     map.set(key, (map.get(key) ?? 0) + val);
   }

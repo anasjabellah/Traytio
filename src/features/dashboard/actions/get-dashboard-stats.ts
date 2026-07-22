@@ -9,6 +9,7 @@ import { COMMON } from '@/lib/notify/messages';
 import type { CommandeStatus } from '@prisma/client';
 import type { DashboardData } from '@/features/dashboard/types';
 import { buildMonthlySparkline, buildMonthlySparklineFromMap } from '@/features/dashboard/lib/kpi-engine';
+import { tzDateKey, tzMonthKey } from '@/lib/date-utils';
 
 const COMMANDE_ACTIVE_STATUSES: CommandeStatus[] = ['QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'READY'];
 const COMMANDE_REVENUE_STATUSES = { notIn: ['CANCELLED'] as CommandeStatus[] };
@@ -28,11 +29,14 @@ async function getDashboardDataHandler(): Promise<{
     const endOfToday = new Date(currentYear, now.getMonth(), now.getDate() + 1);
     const twentyFourMonthsAgo = new Date(currentYear, now.getMonth() - 23, 1);
 
-    // Last 8 months for perf charts
+    // Last 8 months for perf charts (timezone-aware month keys)
+    const [curTzY, curTzM] = tzDateKey(new Date()).split('-').map(Number);
     const last8Months: { key: string; start: Date }[] = [];
     for (let i = 7; i >= 0; i--) {
-      const m = new Date(currentYear, now.getMonth() - i, 1);
-      last8Months.push({ key: `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, '0')}`, start: m });
+      let y = curTzY, m = curTzM - i;
+      while (m <= 0) { y--; m += 12; }
+      const key = `${y}-${String(m).padStart(2, '0')}`;
+      last8Months.push({ key, start: new Date(y, m - 1, 1) });
     }
     const eightMonthsAgo = last8Months[0].start;
     const monthKeys = last8Months.map((m) => m.key);
@@ -163,8 +167,8 @@ async function getDashboardDataHandler(): Promise<{
 
     for (const cmd of allRevenueData) {
       const d = new Date(cmd.createdAt);
-      const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const dayKey = tzDateKey(d);
+      const monthKey = tzMonthKey(d);
       const val = Number(cmd.totalAmount);
       const paid = Number(cmd.paidAmount);
       dailyMap.set(dayKey, (dailyMap.get(dayKey) || 0) + val);
@@ -184,7 +188,7 @@ async function getDashboardDataHandler(): Promise<{
     for (let i = 13; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
-      const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const dayKey = tzDateKey(d);
       const val = dailyMap.get(dayKey) || 0;
       if (i >= 7) weekPrevious += val;
       else weekCurrent += val;
@@ -280,7 +284,7 @@ async function getDashboardDataHandler(): Promise<{
     const clientCountMap = new Map<string, number>();
     for (const row of (clientCountsRaw as Array<{ month: Date; count: bigint }>)) {
       const d = new Date(row.month);
-      clientCountMap.set(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, Number(row.count));
+      clientCountMap.set(tzMonthKey(d), Number(row.count));
     }
     const clientCountsPerMonth = buildMonthlySparklineFromMap(clientCountMap, monthKeys);
 

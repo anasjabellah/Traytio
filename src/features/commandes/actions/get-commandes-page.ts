@@ -11,6 +11,7 @@ import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
 import { normalizeActionError } from '@/lib/action-error';
 import { buildMonthKeys } from '@/features/dashboard/lib/kpi-engine';
+import { tzMonthKey } from '@/lib/date-utils';
 
 export type CommandeStats = {
   currentMonth: {
@@ -174,8 +175,7 @@ async function getCommandesPageHandler(params: GetCommandesParams): Promise<Acti
       const convConverted = new Map<string, number>();
 
       for (const row of rows) {
-        const d = new Date(row.createdAt);
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const key = tzMonthKey(new Date(row.createdAt));
 
         total.set(key, (total.get(key) ?? 0) + 1);
 

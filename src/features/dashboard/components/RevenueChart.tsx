@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { usePrivacyMode, SensitiveValue } from '@/components/privacy-mode';
 import { mad } from '@/features/dashboard/constants';
+import { tzDateKey, tzMonthKey } from '@/lib/date-utils';
 
 function calcGrowth(current: number, previous: number): number {
   if (previous === 0 && current === 0) return 0;
@@ -38,7 +39,7 @@ export const RevenueChart = memo(function RevenueChart({
     for (let i = 59; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const key = tzDateKey(d);
       const val = revenueMaps.daily[key] || 0;
       if (i >= 30) previous += val;
       else current += val;
@@ -60,7 +61,7 @@ export const RevenueChart = memo(function RevenueChart({
     const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
     for (let i = 23; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const key = tzMonthKey(d);
       const val = revenueMaps.monthly[key] || 0;
       if (i >= 12) previous += val;
       else current += val;
