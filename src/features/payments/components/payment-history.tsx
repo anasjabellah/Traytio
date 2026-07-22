@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Trash2, Receipt, Ban, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
-import { DeletePaymentDialog } from "./delete-payment-dialog";
+import dynamic from "next/dynamic";
+const DeletePaymentDialog = dynamic(() => import("./delete-payment-dialog").then((m) => m.DeletePaymentDialog), { loading: () => null });
 import type { PaymentSummary } from "@/features/commandes/types";
 import { METHOD_BADGES } from "@/features/payments/constants";
 import { formatCurrency } from "@/lib/utils";

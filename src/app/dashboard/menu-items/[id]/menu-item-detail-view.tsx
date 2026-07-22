@@ -10,8 +10,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRole } from "@/hooks/use-role";
-import { EditMenuItemDialog } from "@/features/menu-items/components/edit-menu-item-dialog";
-import { DeleteMenuItemDialog } from "@/features/menu-items/components/delete-menu-item-dialog";
+import dynamic from "next/dynamic";
+const EditMenuItemDialog = dynamic(() => import("@/features/menu-items/components/edit-menu-item-dialog").then((m) => m.EditMenuItemDialog), { loading: () => null });
+const DeleteMenuItemDialog = dynamic(() => import("@/features/menu-items/components/delete-menu-item-dialog").then((m) => m.DeleteMenuItemDialog), { loading: () => null });
 import type { MenuItem } from "@/features/menu-items/types";
 import { formatCurrency } from "@/lib/utils";
 import { CATEGORY_LABELS, CATEGORY_BADGE_COLORS } from "@/features/menu-items/constants";

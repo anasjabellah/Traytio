@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Plus, Calendar as CalendarIcon, FileText, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EyeToggle } from '@/components/privacy-mode';
-import { ReportModal } from '@/features/dashboard/components/report-modal';
+import dynamic from 'next/dynamic';
+const ReportModal = dynamic(() => import('@/features/dashboard/components/report-modal').then((m) => m.ReportModal), { loading: () => null });
 
 export const DashboardHeader = memo(function DashboardHeader() {
   const router = useRouter();

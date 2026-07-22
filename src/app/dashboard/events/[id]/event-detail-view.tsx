@@ -11,8 +11,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRole } from "@/hooks/use-role";
-import { EditEventDialog } from "@/features/events/components/edit-event-dialog";
-import { DeleteEventDialog } from "@/features/events/components/delete-event-dialog";
+import dynamic from "next/dynamic";
+const EditEventDialog = dynamic(() => import("@/features/events/components/edit-event-dialog").then((m) => m.EditEventDialog), { loading: () => null });
+const DeleteEventDialog = dynamic(() => import("@/features/events/components/delete-event-dialog").then((m) => m.DeleteEventDialog), { loading: () => null });
 import type { EventDetail } from "@/features/events/types";
 
 const mad = (n: number) =>

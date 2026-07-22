@@ -17,9 +17,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { notify } from "@/lib/notify";
 import { COMMANDE } from "@/lib/notify/messages";
-import { DeleteCommandeDialog } from "@/features/commandes/components/delete-commande-dialog";
+import dynamic from "next/dynamic";
+const DeleteCommandeDialog = dynamic(() => import("@/features/commandes/components/delete-commande-dialog").then((m) => m.DeleteCommandeDialog), { loading: () => null });
 import { PaymentCard } from "@/features/payments/components/payment-card";
-import { AddPaymentDialog } from "@/features/payments/components/add-payment-dialog";
+const AddPaymentDialog = dynamic(() => import("@/features/payments/components/add-payment-dialog").then((m) => m.AddPaymentDialog), { loading: () => null });
 import { PaymentHistory } from "@/features/payments/components/payment-history";
 import { createQuoteFromCommande, createInvoiceFromCommande, getInvoices, updateInvoiceStatus, convertQuoteToInvoice } from "@/features/invoices/actions/invoice-actions";
 import { CATEGORY_LABELS } from "@/features/menu-items/constants";

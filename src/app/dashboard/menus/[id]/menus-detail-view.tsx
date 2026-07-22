@@ -11,8 +11,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRole } from "@/hooks/use-role";
-import { EditMenuDialog } from "@/features/menus/components/edit-menu-dialog";
-import { DeleteMenuDialog } from "@/features/menus/components/delete-menu-dialog";
+import dynamic from "next/dynamic";
+const EditMenuDialog = dynamic(() => import("@/features/menus/components/edit-menu-dialog").then((m) => m.EditMenuDialog), { loading: () => null });
+const DeleteMenuDialog = dynamic(() => import("@/features/menus/components/delete-menu-dialog").then((m) => m.DeleteMenuDialog), { loading: () => null });
 import type { Menu } from "@/features/menus/types";
 import { formatCurrency } from "@/lib/utils";
 import { CATEGORY_LABELS, CATEGORY_ICONS, CATEGORY_BADGE_COLORS } from "@/features/menus/constants";

@@ -12,13 +12,14 @@ import { PrivacyModeProvider } from '@/components/privacy-mode'
 import { useCalendarData } from '@/features/calendar/hooks/use-calendar-data'
 import { CalendarView } from '@/features/calendar/components/CalendarView'
 import { MiniCalendar } from '@/features/dashboard/components/MiniCalendar'
-import { EventDetailSheet } from '@/features/calendar/components/EventDetailSheet'
+import dynamic from 'next/dynamic'
+const EventDetailSheet = dynamic(() => import('@/features/calendar/components/EventDetailSheet').then((m) => m.EventDetailSheet), { loading: () => null })
+const CreateEventDialog = dynamic(() => import('@/features/events/components/create-event-dialog').then((m) => m.CreateEventDialog), { loading: () => null })
+const DeleteEventDialog = dynamic(() => import('@/features/events/components/delete-event-dialog').then((m) => m.DeleteEventDialog), { loading: () => null })
 import { EventsHeader } from '@/features/events/components/EventsHeader'
 import { EventsStats } from '@/features/events/components/EventsStats'
 import { EventsFilters } from '@/features/events/components/EventsFilters'
 import { computeKpi } from '@/features/dashboard/lib/kpi-engine'
-import { CreateEventDialog } from '@/features/events/components/create-event-dialog'
-import { DeleteEventDialog } from '@/features/events/components/delete-event-dialog'
 import { updateEvent } from '@/features/events/actions/update-event'
 import { duplicateEvent } from '@/features/events/actions/duplicate-event'
 import type { Event } from '@/features/events/types'

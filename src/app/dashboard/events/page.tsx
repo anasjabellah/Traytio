@@ -13,9 +13,10 @@ import { EventsFilters } from '@/features/events/components/EventsFilters';
 import { EventsGrid } from '@/features/events/components/EventsGrid';
 import { EventsSidebar } from '@/features/events/components/EventsSidebar';
 import { EventsCalendar } from '@/features/events/components/EventsCalendar';
-import { CreateEventDialog } from '@/features/events/components/create-event-dialog';
-import { EditEventDialog } from '@/features/events/components/edit-event-dialog';
-import { DeleteEventDialog } from '@/features/events/components/delete-event-dialog';
+import dynamic from 'next/dynamic';
+const CreateEventDialog = dynamic(() => import('@/features/events/components/create-event-dialog').then((m) => m.CreateEventDialog), { loading: () => null });
+const EditEventDialog = dynamic(() => import('@/features/events/components/edit-event-dialog').then((m) => m.EditEventDialog), { loading: () => null });
+const DeleteEventDialog = dynamic(() => import('@/features/events/components/delete-event-dialog').then((m) => m.DeleteEventDialog), { loading: () => null });
 import type { Event } from '@/features/events/types';
 import type { ViewMode } from '@/features/events/constants';
 

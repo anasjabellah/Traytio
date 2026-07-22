@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -36,12 +36,20 @@ export function PrivacyModeProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const value = useMemo(
+    () => ({
+      isPrivacyMode,
+      toggle,
+    }),
+    [isPrivacyMode, toggle],
+  );
+
   if (!hydrated) {
     return <>{children}</>;
   }
 
   return (
-    <PrivacyModeContext.Provider value={{ isPrivacyMode, toggle }}>
+    <PrivacyModeContext.Provider value={value}>
       {children}
     </PrivacyModeContext.Provider>
   );

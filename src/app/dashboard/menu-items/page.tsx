@@ -20,9 +20,10 @@ import { useMenuItemForm } from '@/features/menu-items/hooks/use-menu-item-form'
 import { MenuItemsTable } from '@/features/menu-items/components/menu-items-table';
 import { MenuItemCard } from '@/features/menu-items/components/MenuItemCard';
 import { Pagination } from '@/components/ui/pagination';
-import { CreateMenuItemDialog } from '@/features/menu-items/components/create-menu-item-dialog';
-import { EditMenuItemDialog } from '@/features/menu-items/components/edit-menu-item-dialog';
-import { DeleteMenuItemDialog } from '@/features/menu-items/components/delete-menu-item-dialog';
+import dynamic from 'next/dynamic';
+const CreateMenuItemDialog = dynamic(() => import('@/features/menu-items/components/create-menu-item-dialog').then((m) => m.CreateMenuItemDialog), { loading: () => null });
+const EditMenuItemDialog = dynamic(() => import('@/features/menu-items/components/edit-menu-item-dialog').then((m) => m.EditMenuItemDialog), { loading: () => null });
+const DeleteMenuItemDialog = dynamic(() => import('@/features/menu-items/components/delete-menu-item-dialog').then((m) => m.DeleteMenuItemDialog), { loading: () => null });
 import type { MenuItem, MenuItemCategory } from '@/features/menu-items/types';
 import { CATEGORY_LABELS, CATEGORY_BADGE_COLORS } from '@/features/menu-items/constants';
 import { formatCurrency } from '@/lib/utils';

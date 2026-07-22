@@ -10,9 +10,10 @@ import { ClientsStats } from '@/features/clients/components/ClientsStats';
 import { ClientsToolbar } from '@/features/clients/components/ClientsToolbar';
 import { ClientsGrid } from '@/features/clients/components/ClientsGrid';
 import { ClientsSidebar } from '@/features/clients/components/ClientsSidebar';
-import { CreateClientDialog } from '@/features/clients/components/create-client-dialog';
-import { EditClientDialog } from '@/features/clients/components/edit-client-dialog';
-import { DeleteClientDialog } from '@/features/clients/components/delete-client-dialog';
+import dynamic from 'next/dynamic';
+const CreateClientDialog = dynamic(() => import('@/features/clients/components/create-client-dialog').then((m) => m.CreateClientDialog), { loading: () => null });
+const EditClientDialog = dynamic(() => import('@/features/clients/components/edit-client-dialog').then((m) => m.EditClientDialog), { loading: () => null });
+const DeleteClientDialog = dynamic(() => import('@/features/clients/components/delete-client-dialog').then((m) => m.DeleteClientDialog), { loading: () => null });
 import { PrivacyModeProvider } from '@/components/privacy-mode';
 import type { ClientWithStats, Client } from '@/features/clients/types';
 
