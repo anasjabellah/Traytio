@@ -42,8 +42,8 @@ async function getDashboardDataHandler(): Promise<{
     const monthKeys = last8Months.map((m) => m.key);
 
     const [
-      revenueAgg,
-      allRevenueData,
+      paymentAgg,
+      paymentRows,
       clientCount,
       activeCommandesCount,
       pendingAgg,
@@ -61,16 +61,17 @@ async function getDashboardDataHandler(): Promise<{
       clientCountsRaw,
       perfCommandeRows,
       perfDepositRows,
+      yearCommandeRows,
     ] = await Promise.all([
-      // All-time revenue/payments aggregate (lightweight, no row data)
-      prisma.commande.aggregate({
-        where: { organizationId, status: COMMANDE_REVENUE_STATUSES },
-        _sum: { totalAmount: true, paidAmount: true },
+      // All-time revenue from actual payments (not commande totals)
+      prisma.payment.aggregate({
+        where: { organizationId, status: 'COMPLETED' },
+        _sum: { amount: true },
       }),
-      // Extended fetch for chart analytics (24-month window)
-      prisma.commande.findMany({
-        where: { organizationId, status: COMMANDE_REVENUE_STATUSES, createdAt: { gte: twentyFourMonthsAgo } },
-        select: { totalAmount: true, paidAmount: true, createdAt: true },
+      // Payment rows for chart analytics (24-month window)
+      prisma.payment.findMany({
+        where: { organizationId, status: 'COMPLETED', createdAt: { gte: twentyFourMonthsAgo } },
+        select: { amount: true, createdAt: true },
       }),
       prisma.client.count({ where: { organizationId } }),
       prisma.commande.count({
@@ -158,27 +159,31 @@ async function getDashboardDataHandler(): Promise<{
         where: { organizationId, remainingAmount: { gt: 0 }, status: { in: ['CONFIRMED', 'IN_PROGRESS'] }, createdAt: { gte: eightMonthsAgo } },
         select: { createdAt: true, remainingAmount: true },
       }),
+      // Lightweight year commande data for business health metrics (order values)
+      prisma.commande.findMany({
+        where: { organizationId, status: COMMANDE_REVENUE_STATUSES, createdAt: { gte: startOfYear } },
+        select: { totalAmount: true, paidAmount: true, createdAt: true },
+      }),
     ]);
 
-    // ── Revenue maps (single pass over allRevenueData) ──
+    // ── Revenue maps (single pass over paymentRows) ──
     const dailyMap = new Map<string, number>();
     const monthlyMap = new Map<string, number>();
     const paidMonthlyMap = new Map<string, number>();
 
-    for (const cmd of allRevenueData) {
-      const d = new Date(cmd.createdAt);
+    for (const pmt of paymentRows) {
+      const d = new Date(pmt.createdAt);
       const dayKey = tzDateKey(d);
       const monthKey = tzMonthKey(d);
-      const val = Number(cmd.totalAmount);
-      const paid = Number(cmd.paidAmount);
+      const val = Number(pmt.amount);
       dailyMap.set(dayKey, (dailyMap.get(dayKey) || 0) + val);
       monthlyMap.set(monthKey, (monthlyMap.get(monthKey) || 0) + val);
-      paidMonthlyMap.set(monthKey, (paidMonthlyMap.get(monthKey) || 0) + paid);
+      paidMonthlyMap.set(monthKey, (paidMonthlyMap.get(monthKey) || 0) + val);
     }
 
     // ── Totals from the all-time aggregate ──
-    const totalRevenue = Math.round(Number(revenueAgg._sum?.totalAmount || 0));
-    const paymentsReceived = Math.round(Number(revenueAgg._sum?.paidAmount || 0));
+    const totalRevenue = Math.round(Number(paymentAgg._sum?.amount || 0));
+    const paymentsReceived = totalRevenue;
 
     // ── Revenue analytics (week pre-computed; month/year computed lazily on client) ──
     const weekData: number[] = [];
@@ -207,9 +212,6 @@ async function getDashboardDataHandler(): Promise<{
       paidMonthly: Object.fromEntries(paidMonthlyMap),
     };
 
-    // ── Current-year subset for business health ──
-    const yearRevenueData = allRevenueData.filter((c) => new Date(c.createdAt) >= startOfYear);
-
     // ── Activity feed ──
     const activity: DashboardData['activity'] = [];
     for (const a of recentActivities) {
@@ -234,27 +236,23 @@ async function getDashboardDataHandler(): Promise<{
     }
 
     // ── Business health ──
-    const paidCommandes = yearRevenueData.filter((c) => c.totalAmount);
+    const paidCommandes = yearCommandeRows.filter((c) => c.totalAmount);
     const avgEventValue =
       paidCommandes.length > 0
         ? Math.round(paidCommandes.reduce((s, c) => s + Number(c.totalAmount), 0) / paidCommandes.length)
         : 0;
-    const totalAcompte = yearRevenueData.reduce((s, c) => s + Number(c.paidAmount), 0);
+    const totalAcompte = yearCommandeRows.reduce((s, c) => s + Number(c.paidAmount), 0);
     const avgDeposit =
       paidCommandes.length > 0 ? Math.round(totalAcompte / paidCommandes.length) : 0;
-    const thisMonthRevenue = yearRevenueData
-      .filter((c) => new Date(c.createdAt) >= startOfMonth)
-      .reduce((s, c) => s + Number(c.totalAmount), 0);
-    const lastMonthStart = new Date(currentYear, now.getMonth() - 1, 1);
-    const lastMonthRevenue = yearRevenueData
-      .filter((c) => {
-        const d = new Date(c.createdAt);
-        return d >= lastMonthStart && d < startOfMonth;
-      })
-      .reduce((s, c) => s + Number(c.totalAmount), 0);
+    // Monthly revenue growth based on actual payment data
+    const thisMonthKey = tzMonthKey(now);
+    const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthKey = tzMonthKey(lastMonthDate);
+    const thisMonthRev = monthlyMap.get(thisMonthKey) || 0;
+    const lastMonthRev = monthlyMap.get(lastMonthKey) || 0;
     const monthlyGrowth =
-      lastMonthRevenue > 0
-        ? Math.round(((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
+      lastMonthRev > 0
+        ? Math.round(((thisMonthRev - lastMonthRev) / lastMonthRev) * 100)
         : 0;
 
     const topMenuItem = topItemAgg.length > 0 ? topItemAgg[0].name : null;
