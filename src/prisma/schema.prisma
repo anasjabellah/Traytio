@@ -155,7 +155,7 @@ model Event {
   @@index([clientId])
   @@index([organizationId, createdAt])
   @@index([organizationId, startDate, endDate])
-  @@index([organizationId, startDate])
+  @@index([organizationId, status])
   @@map("events")
 }
 
@@ -182,6 +182,7 @@ model Menu {
 
   @@index([organizationId])
   @@index([organizationId, createdAt])
+  @@index([organizationId, isActive])
   @@map("menus")
 }
 
@@ -265,6 +266,7 @@ model Commande {
   @@index([eventId, createdAt])
   @@index([organizationId, status])
   @@index([organizationId, createdAt])
+  @@index([organizationId, status, createdAt])
   @@map("commandes")
 }
 
@@ -410,6 +412,7 @@ model Payment {
   @@index([commandeId])
   @@index([invoiceId])
   @@index([organizationId, createdAt])
+  @@index([organizationId, status, createdAt])
   @@map("payments")
 }
 
@@ -464,6 +467,7 @@ model MenuItem {
   commandeItems CommandeItem[]
 
   @@index([organizationId])
+  @@index([organizationId, isActive])
   @@map("menu_items")
 }
 
@@ -480,7 +484,6 @@ model Invitation {
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  @@index([token])
   @@index([organizationId])
   @@index([email])
   @@index([organizationId, createdAt])
