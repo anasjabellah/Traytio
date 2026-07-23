@@ -1,5 +1,3 @@
-"use client"
-
 import { ArrowLeft, Sparkles } from "lucide-react";
 
 export function PageHeader({ title, description }: { title?: React.ReactNode; description?: string }) {

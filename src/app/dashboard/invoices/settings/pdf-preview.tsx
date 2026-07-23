@@ -1,5 +1,3 @@
-"use client"
-
 type PreviewProps = {
   companyName: string
   companyAddress: string

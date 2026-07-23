@@ -1,5 +1,3 @@
-"use client"
-
 import {
   Shield, Building2, Activity, BarChart3, Database, Flag, Settings, Eye,
 } from "lucide-react"
