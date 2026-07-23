@@ -1,64 +1,56 @@
+import { Ratelimit } from "@upstash/ratelimit";
+import { ensureRedis } from "./rate-limit/client";
+
 type RateLimitResult = {
-  ok: boolean
-  remaining: number
-  resetInMs: number
-}
+  ok: boolean;
+  remaining: number;
+  resetInMs: number;
+};
 
 type RateLimitConfig = {
-  maxRequests: number
-  windowMs: number
+  maxRequests: number;
+  windowMs: number;
+};
+
+const limiters = new Map<string, Ratelimit>();
+let redisAvailable: boolean | null = null;
+
+function getLimiter(config: RateLimitConfig): Ratelimit | null {
+  if (redisAvailable === false) return null;
+
+  const key = `${config.maxRequests}:${config.windowMs}`;
+  let limiter = limiters.get(key);
+  if (!limiter) {
+    const redis = ensureRedis();
+    if (!redis) {
+      redisAvailable = false;
+      return null;
+    }
+    redisAvailable = true;
+    limiter = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(config.maxRequests, `${config.windowMs}ms`),
+      prefix: "ratelimit:action",
+    });
+    limiters.set(key, limiter);
+  }
+  return limiter;
 }
 
-class InMemoryRateLimiter {
-  private store = new Map<string, number[]>()
-  private cleanupTimer: ReturnType<typeof setInterval> | null = null
-
-  constructor() {
-    this.cleanupTimer = setInterval(() => this.cleanup(), 60_000)
-    if (this.cleanupTimer && typeof this.cleanupTimer === 'object' && 'unref' in this.cleanupTimer) {
-      this.cleanupTimer.unref()
-    }
+export async function checkRateLimit(
+  key: string,
+  config: RateLimitConfig
+): Promise<RateLimitResult> {
+  const limiter = getLimiter(config);
+  if (!limiter) {
+    return { ok: true, remaining: Infinity, resetInMs: 0 };
   }
-
-  check(key: string, { maxRequests, windowMs }: RateLimitConfig): RateLimitResult {
-    const now = Date.now()
-    const timestamps = this.store.get(key) ?? []
-    const valid = timestamps.filter(t => now - t < windowMs)
-
-    if (valid.length >= maxRequests) {
-      this.store.set(key, valid)
-      return { ok: false, remaining: 0, resetInMs: windowMs - (now - valid[0]) }
-    }
-
-    valid.push(now)
-    this.store.set(key, valid)
-    return { ok: true, remaining: maxRequests - valid.length, resetInMs: 0 }
-  }
-
-  private cleanup() {
-    const now = Date.now()
-    for (const [key, timestamps] of this.store.entries()) {
-      const valid = timestamps.filter(t => now - t < 60_000)
-      if (valid.length === 0) {
-        this.store.delete(key)
-      } else {
-        this.store.set(key, valid)
-      }
-    }
-  }
-
-  destroy() {
-    if (this.cleanupTimer) {
-      clearInterval(this.cleanupTimer)
-      this.cleanupTimer = null
-    }
-  }
+  const { success, remaining, reset } = await limiter.limit(key);
+  return {
+    ok: success,
+    remaining,
+    resetInMs: Math.max(0, reset - Date.now()),
+  };
 }
 
-const limiter = new InMemoryRateLimiter()
-
-export function checkRateLimit(key: string, config: RateLimitConfig): RateLimitResult {
-  return limiter.check(key, config)
-}
-
-export type { RateLimitResult, RateLimitConfig }
+export type { RateLimitResult, RateLimitConfig };

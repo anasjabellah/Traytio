@@ -43,7 +43,7 @@ export function withActionGuard<T extends (...args: any[]) => Promise<unknown>>(
 
     const key = userId ? `${userId}:${config.name}` : `anon:${config.name}`
 
-    const result = checkRateLimit(key, { maxRequests: MAX_REQUESTS, windowMs: WINDOW_MS })
+    const result = await checkRateLimit(key, { maxRequests: MAX_REQUESTS, windowMs: WINDOW_MS })
     if (!result.ok) {
       return { success: false, error: 'Trop de requêtes. Veuillez réessayer dans quelques instants.' }
     }
