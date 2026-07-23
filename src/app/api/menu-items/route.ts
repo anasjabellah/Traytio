@@ -32,8 +32,9 @@ export async function GET(request: Request) {
       { error: response.error ?? 'Failed to fetch menu items' },
       { status: 400 }
     );
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Server error' }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -49,9 +50,10 @@ async function createMenuItemApi(request: Request) {
       { error: response.error ?? 'Failed to create menu item' },
       { status: 400 }
     );
-  } catch (err: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Invalid request';
     return NextResponse.json(
-      { error: err?.message || 'Invalid request' },
+      { error: message },
       { status: 400 }
     );
   }

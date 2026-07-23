@@ -14,7 +14,7 @@ import { notify } from '@/lib/notify';
 import { MENU } from '@/lib/notify/messages';
 import { updateMenu } from '@/features/menus/actions/update-menu';
 import { createMenuSchema } from '@/features/menus/validations/create-menu-schema';
-import type { Menu } from '@/features/menus/types';
+import type { Menu, UpdateMenuInput } from '@/features/menus/types';
 import { X } from 'lucide-react';
 import { MenuForm } from './menu-form';
 
@@ -34,13 +34,13 @@ export function EditMenuDialog({ menu, open, onClose, onSuccess }: EditMenuDialo
     resolver: zodResolver(createMenuSchema),
     defaultValues: menu ? {
       name: menu.name ?? '',
-      category: menu.category ?? undefined as any,
-      pricePerPerson: Number(menu.pricePerPerson) ?? undefined as any,
+      category: menu.category ?? undefined,
+      pricePerPerson: Number(menu.pricePerPerson) ?? undefined,
       minPersons: menu.minPersons ?? 1,
-      maxPersons: menu.maxPersons ?? undefined as any,
+      maxPersons: menu.maxPersons ?? undefined,
       isActive: menu.isActive ?? true,
       description: menu.description ?? '',
-      menuItems: (menu.menuItems || []).map((mi: any) => ({
+      menuItems: (menu.menuItems || []).map((mi) => ({
         menuItemId: mi.menuItemId ?? mi.menuItem?.id ?? '',
         defaultQty: mi.defaultQty ?? 1,
       })),
@@ -48,11 +48,11 @@ export function EditMenuDialog({ menu, open, onClose, onSuccess }: EditMenuDialo
     mode: 'onTouched',
   });
 
-  const handleUpdate = async (values: any) => {
+  const handleUpdate = async (values: FormValues) => {
     if (!menu) return;
     setIsSubmitting(true);
     try {
-      const resp = await updateMenu({ id: menu.id, ...values });
+      const resp = await updateMenu({ id: menu.id, ...values } as UpdateMenuInput);
       if (resp.success) {
         notify.success(MENU.UPDATE.SUCCESS);
         onSuccess?.();
@@ -60,8 +60,8 @@ export function EditMenuDialog({ menu, open, onClose, onSuccess }: EditMenuDialo
       } else {
         notify.error(resp.error ?? MENU.UPDATE.ERROR);
       }
-    } catch (e: any) {
-      notify.error(e.message ?? MENU.UNEXPECTED_ERROR);
+    } catch (e: unknown) {
+      notify.error(e instanceof Error ? e.message : MENU.UNEXPECTED_ERROR);
     } finally {
       setIsSubmitting(false);
     }

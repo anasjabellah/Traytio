@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
+import type { Prisma, MenuItemCategory } from '@prisma/client';
 import type { ActionResponse, GetMenuItemsParams, PaginatedMenuItems } from '@/features/menu-items/types';
 import { MENU_ITEM_DEFAULT_PAGE_SIZE } from '@/features/menu-items/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
@@ -36,12 +37,12 @@ async function getMenuItemsHandler(
     } = params;
     const skip = (page - 1) * limit;
 
-    const where: any = { organizationId };
+    const where: Prisma.MenuItemWhereInput = { organizationId };
     if (search) {
       where.OR = [{ name: { contains: search, mode: 'insensitive' } }];
     }
     if (params.category && params.category !== 'ALL') {
-      where.category = params.category;
+      where.category = params.category as MenuItemCategory;
     }
     if (params.isActive !== undefined) {
       where.isActive = params.isActive;

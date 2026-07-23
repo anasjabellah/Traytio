@@ -55,7 +55,7 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
         const res = await fetch('/api/menu-items?limit=200');
         const json = await res.json();
         const list = (json?.data ?? json ?? []) as AvailableItem[];
-        setAvailableItems(list.map((i: any) => ({ ...i, unitPrice: Number(i.unitPrice) })));
+        setAvailableItems(list.map((i) => ({ ...i, unitPrice: Number(i.unitPrice) })));
       } catch (e) {
         console.error('Failed to load menu items', e);
       } finally {

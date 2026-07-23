@@ -1,12 +1,12 @@
 "use client"
 
-import { useRef, useState, useEffect, useMemo, useCallback } from "react";
+import { useRef, useState, useEffect, useMemo, useCallback, type Dispatch, type SetStateAction } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, Trash2, FileText, FileImage, Eye, X, Maximize2, Download } from "lucide-react";
 import { notify } from "@/lib/notify";
 import { COMMANDE } from "@/lib/notify/messages";
 
-type PersistedAttachment = { id: string; name: string; url: string; type?: string | null };
+type PersistedAttachment = { id?: string; name: string; url: string; type?: string | null };
 
 function ext(name: string) {
   const i = name.lastIndexOf(".");
@@ -31,7 +31,9 @@ function fmtSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function AttachmentsStep({ attachments, setAttachments }: { attachments: any[]; setAttachments: (a: any[]) => void }) {
+type Attachment = File | PersistedAttachment;
+
+export function AttachmentsStep({ attachments, setAttachments }: { attachments: Attachment[]; setAttachments: Dispatch<SetStateAction<Attachment[]>> }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
   const [previewIdx, setPreviewIdx] = useState<number | null>(null);

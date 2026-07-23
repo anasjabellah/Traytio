@@ -57,7 +57,7 @@ async function getMenuByIdHandler(id: string): Promise<ActionResponse<Menu>> {
       data: {
         ...menu,
         pricePerPerson: Number(menu.pricePerPerson),
-        menuItems: menu.menuItems?.map((mi: any) => ({
+        menuItems: menu.menuItems?.map((mi) => ({
           ...mi,
           menuItem: {
             ...mi.menuItem,

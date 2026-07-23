@@ -23,7 +23,7 @@ type CreateEventDialogProps = {
 export function CreateEventDialog({ open, onOpenChange, onSuccess, defaultValues }: CreateEventDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleCreate = async (values: any) => {
+  const handleCreate = async (values: Record<string, unknown>) => {
     setIsSubmitting(true);
     try {
       const response = await createEvent(values);
@@ -34,8 +34,8 @@ export function CreateEventDialog({ open, onOpenChange, onSuccess, defaultValues
       } else {
         notify.error(response.error || EVENT.CREATE.ERROR);
       }
-    } catch (err: any) {
-      notify.error(err.message || EVENT.UNEXPECTED_ERROR);
+    } catch (err: unknown) {
+      notify.error(err instanceof Error ? err.message : EVENT.UNEXPECTED_ERROR);
     } finally {
       setIsSubmitting(false);
     }
@@ -55,7 +55,7 @@ export function CreateEventDialog({ open, onOpenChange, onSuccess, defaultValues
 
         {/* SCROLLABLE CONTENT */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
-          <EventForm mode="create" onSubmit={handleCreate} isLoading={isSubmitting} defaultValues={defaultValues as any} />
+          <EventForm mode="create" onSubmit={handleCreate} isLoading={isSubmitting} defaultValues={defaultValues} />
         </div>
 
         {/* FIXED FOOTER */}

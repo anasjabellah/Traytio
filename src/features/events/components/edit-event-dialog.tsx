@@ -22,7 +22,7 @@ interface EditEventDialogProps {
 export function EditEventDialog({ event, open, onClose, onSuccess }: EditEventDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleUpdate = async (values: any) => {
+  const handleUpdate = async (values: Record<string, unknown>) => {
     if (!event) return;
     setIsSubmitting(true);
     try {
@@ -34,8 +34,8 @@ export function EditEventDialog({ event, open, onClose, onSuccess }: EditEventDi
       } else {
         notify.error(response.error || EVENT.UPDATE.ERROR);
       }
-    } catch (err: any) {
-      notify.error(err.message || EVENT.UNEXPECTED_ERROR);
+    } catch (err: unknown) {
+      notify.error(err instanceof Error ? err.message : EVENT.UNEXPECTED_ERROR);
     } finally {
       setIsSubmitting(false);
     }

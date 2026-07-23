@@ -1,8 +1,12 @@
 "use client"
 
+import { type Dispatch, type SetStateAction } from "react";
 import { Percent } from "lucide-react";
 
-export function DiscountStep({ discountType, setDiscountType, discountValue, setDiscountValue }: any) {
+export function DiscountStep({ discountType, setDiscountType, discountValue, setDiscountValue }: {
+  discountType: string; setDiscountType: Dispatch<SetStateAction<string>>;
+  discountValue: number; setDiscountValue: Dispatch<SetStateAction<number>>;
+}) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
       <div className="flex gap-1 rounded-full border border-border bg-surface-soft p-1 shrink-0">

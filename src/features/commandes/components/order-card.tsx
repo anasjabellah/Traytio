@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Calendar, Users, Eye, Pencil, Trash2, ArrowRight, Sparkles } from 'lucide-react';
+import { Calendar, Users, Eye, Pencil, Trash2, ArrowRight, Sparkles, type LucideIcon } from 'lucide-react';
 import { useRole } from '@/hooks/use-role';
 import { COMMANDE_STATUS_LABELS, COMMANDE_STATUS_STYLES } from '@/features/commandes/constants';
 import type { Commande } from '@/features/commandes/types';
@@ -17,7 +17,7 @@ interface OrderCardProps {
   onDelete: (cmd: Commande) => void;
 }
 
-function ActionBtn({ icon: Icon, label, onClick, hover }: { icon: any; label: string; onClick?: () => void; hover?: string }) {
+function ActionBtn({ icon: Icon, label, onClick, hover }: { icon: LucideIcon; label: string; onClick?: () => void; hover?: string }) {
   return (
     <button
       onClick={(e) => { e.stopPropagation(); onClick?.(); }}

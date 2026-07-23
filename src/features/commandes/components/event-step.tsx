@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, type Dispatch, type SetStateAction } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, Clock, MapPin, Wallet, Phone, CheckCircle2, AlertTriangle, Minus, Plus } from "lucide-react";
 import { EVENT_TYPES } from "@/features/commandes/data/mock-data";
@@ -32,14 +32,27 @@ const STATUS_LABELS: Record<string, string> = {
   IN_PROGRESS: 'En cours', COMPLETED: 'Terminé', CANCELLED: 'Annulé',
 };
 
-export function EventStep(props: any) {
-  const {
-    eventName, setEventName, eventType, setEventType, eventDate, setEventDate,
-    startTime, setStartTime, endTime, setEndTime, location, setLocation,
-    guests, setGuests, budget, setBudget, eventStatus, setEventStatus,
-    contactPerson, setContactPerson,
-    contactPhone, setContactPhone, eventNotes, setEventNotes, dateAvailable,
-  } = props;
+export function EventStep({
+  eventName, setEventName, eventType, setEventType, eventDate, setEventDate,
+  startTime, setStartTime, endTime, setEndTime, location, setLocation,
+  guests, setGuests, budget, setBudget, eventStatus, setEventStatus,
+  contactPerson, setContactPerson,
+  contactPhone, setContactPhone, eventNotes, setEventNotes, dateAvailable,
+}: {
+  eventName: string; setEventName: Dispatch<SetStateAction<string>>;
+  eventType: string; setEventType: Dispatch<SetStateAction<string>>;
+  eventDate: string; setEventDate: Dispatch<SetStateAction<string>>;
+  startTime: string; setStartTime: Dispatch<SetStateAction<string>>;
+  endTime: string; setEndTime: Dispatch<SetStateAction<string>>;
+  location: string; setLocation: Dispatch<SetStateAction<string>>;
+  guests: number; setGuests: Dispatch<SetStateAction<number>>;
+  budget: number; setBudget: Dispatch<SetStateAction<number>>;
+  eventStatus: string | null; setEventStatus: Dispatch<SetStateAction<string | null>>;
+  contactPerson: string; setContactPerson: Dispatch<SetStateAction<string>>;
+  contactPhone: string; setContactPhone: Dispatch<SetStateAction<string>>;
+  eventNotes: string; setEventNotes: Dispatch<SetStateAction<string>>;
+  dateAvailable: boolean;
+}) {
 
   const [guestCountDraft, setGuestCountDraft] = useState<string>(String(guests ?? 10));
 

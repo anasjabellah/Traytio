@@ -104,7 +104,8 @@ export function CreateMenuItemDialog({ open, onOpenChange, onSuccess }: CreateMe
     resolver: zodResolver(createMenuItemSchema),
     defaultValues: {
       name: '',
-      unitPrice: undefined,
+      category: '' as any,
+      unitPrice: undefined as any,
       unit: '',
       isActive: true,
       notes: '',
@@ -113,7 +114,7 @@ export function CreateMenuItemDialog({ open, onOpenChange, onSuccess }: CreateMe
     mode: 'onTouched',
   });
 
-  const handleCreate = async (values: any) => {
+  const handleCreate = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
       const resp = await createMenuItem(values);
@@ -125,8 +126,8 @@ export function CreateMenuItemDialog({ open, onOpenChange, onSuccess }: CreateMe
       } else {
         notify.error(resp.error || MENU_ITEM.CREATE.ERROR);
       }
-    } catch (e: any) {
-      notify.error(e.message ?? MENU_ITEM.UNEXPECTED_ERROR);
+    } catch (e: unknown) {
+      notify.error(e instanceof Error ? e.message : MENU_ITEM.UNEXPECTED_ERROR);
     } finally {
       setIsSubmitting(false);
     }

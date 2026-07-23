@@ -15,7 +15,7 @@ function Row({ label, value, muted, accent }: { label: string; value: number; mu
 
 export function SummaryPanel(props: {
   client: Client | null; eventName: string; eventDate: string; guests: number;
-  packName?: string; selectedList: any[]; itemsSubtotal: number; extrasTotal: number;
+  packName?: string; selectedList: { id: string; item: { emoji?: string; name: string; price: number }; qty: number }[]; itemsSubtotal: number; extrasTotal: number;
   discountAmount: number; total: number; deposit: number; remaining: number;
   budget: number; budgetUsed: number; overBudget: boolean;
 }) {
@@ -55,7 +55,7 @@ export function SummaryPanel(props: {
             {selectedList.length === 0 && (
               <div className="text-xs text-muted-foreground py-4 text-center">Aucun article sélectionné.</div>
             )}
-            {selectedList.map((s: any) => (
+            {selectedList.map((s) => (
               <motion.div
                 key={s.id}
                 layout

@@ -39,15 +39,15 @@ export function useCommandeForm() {
   const [equipment, setEquipment] = useState(0);
   const [extraService, setExtraService] = useState(0);
 
-  const [discountType, setDiscountType] = useState<"percent" | "fixed">("percent");
+  const [discountType, setDiscountType] = useState<string>("percent");
   const [discountValue, setDiscountValue] = useState(0);
 
   const [acompteAmount, setAcompteAmount] = useState(0);
 
-  const [attachments, setAttachments] = useState<any[]>([]);
+  const [attachments, setAttachments] = useState<(File | { id?: string; name: string; url: string; type?: string | null })[]>([]);
   const [internalNotes, setInternalNotes] = useState("");
   const [clientNotes, setClientNotes] = useState("");
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<{ id: string; label: string; done: boolean }[]>([]);
 
   const { data: clients, isLoading: clientsLoading } = useQuery({
     queryKey: ["commande-clients"],

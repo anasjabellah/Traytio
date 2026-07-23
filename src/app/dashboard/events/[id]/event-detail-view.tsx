@@ -560,7 +560,7 @@ function TableIcon({ className }: { className?: string }) {
 
 /* ---------------- Sub-components ---------------- */
 
-function KpiCard({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string; accent?: boolean }) {
+function KpiCard({ icon: Icon, label, value, accent }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string; accent?: boolean }) {
   return (
     <motion.div
       whileHover={{ y: -2 }}
@@ -580,7 +580,7 @@ function KpiCard({ icon: Icon, label, value, accent }: { icon: any; label: strin
   );
 }
 
-function InfoItem({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function InfoItem({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
   const isMissing = value.includes("non") || value.includes("Non") || value.includes("Aucun");
   return (
     <div className="flex items-start gap-3">

@@ -23,8 +23,8 @@ export function useClients(search?: string) {
         if (!res.ok) throw new Error("Failed to load clients");
         const json = await res.json();
         setClients(Array.isArray(json) ? json : json.data ?? []);
-      } catch (e: any) {
-        setError(e.message);
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Unknown error');
       } finally {
         setLoading(false);
       }

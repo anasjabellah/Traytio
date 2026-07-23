@@ -35,7 +35,7 @@ async function getCommandeAllMenuItemsHandler() {
       notes: item.notes,
       imageUrl: item.imageUrl,
     }))
-  } catch (err: any) {
+  } catch (err: unknown) {
     return { error: normalizeActionError(err, COMMANDE.FETCH_ERROR_ITEMS) }
   }
 }

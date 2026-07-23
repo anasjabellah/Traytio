@@ -15,7 +15,7 @@ import { notify } from '@/lib/notify';
 import { MENU } from '@/lib/notify/messages';
 import { createMenu } from '@/features/menus/actions/create-menu';
 import { createMenuSchema } from '@/features/menus/validations/create-menu-schema';
-import type { Menu } from '@/features/menus/types';
+import type { Menu, CreateMenuInput } from '@/features/menus/types';
 import { MenuForm } from './menu-form';
 import { CATEGORY_LABELS, CATEGORY_ICONS, CATEGORY_BADGE_COLORS } from '@/features/menus/constants';
 import { X, Sparkles } from 'lucide-react';
@@ -32,7 +32,7 @@ type FormValues = z.input<typeof createMenuSchema>;
 function LivePreview() {
   const [name, category, pricePerPerson, minPersons, maxPersons, isActive, menuItems] = useWatch<FormValues>({
     name: ['name', 'category', 'pricePerPerson', 'minPersons', 'maxPersons', 'isActive', 'menuItems'],
-  }) as [string | undefined, string | undefined, number | undefined, number | undefined, number | undefined, boolean | undefined, any[] | undefined];
+  }) as [string | undefined, string | undefined, number | undefined, number | undefined, number | undefined, boolean | undefined, { menuItemId: string; defaultQty: number }[] | undefined];
 
   const catLabel = category ? CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS] || category : '';
   const catColor = category ? CATEGORY_BADGE_COLORS[category as keyof typeof CATEGORY_BADGE_COLORS] : '';
@@ -105,7 +105,7 @@ function LivePreview() {
             <div>
               <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Inclus</span>
               <div className="mt-1 flex flex-wrap gap-1">
-                {preview.map((item: any, i: number) => (
+                {preview.map((item: { displayName?: string; defaultQty?: number }, i: number) => (
                   <span key={i} className="inline-flex items-center gap-0.5 rounded-full bg-white px-1.5 py-0.5 text-[10px] text-muted-foreground shadow-sm border border-border">
                     📦 {item.displayName || `Article ${i + 1}`} <span className="text-foreground/40">×{item.defaultQty}</span>
                   </span>
@@ -129,21 +129,21 @@ export function CreateMenuDialog({ open, onOpenChange, onSuccess }: CreateMenuDi
     resolver: zodResolver(createMenuSchema),
     defaultValues: {
       name: '',
-      category: undefined as any,
-      pricePerPerson: undefined as any,
+      category: undefined,
+      pricePerPerson: undefined,
       minPersons: 1,
-      maxPersons: undefined as any,
+      maxPersons: undefined,
       isActive: true,
       description: '',
       menuItems: [],
-    },
+    } as unknown as FormValues,
     mode: 'onTouched',
   });
 
-  const handleCreate = async (values: any) => {
+  const handleCreate = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      const resp = await createMenu(values);
+      const resp = await createMenu(values as CreateMenuInput);
       if (resp.success && resp.data) {
         notify.success(MENU.CREATE.SUCCESS);
         onSuccess?.(resp.data);
@@ -152,8 +152,8 @@ export function CreateMenuDialog({ open, onOpenChange, onSuccess }: CreateMenuDi
       } else {
         notify.error(resp.error || MENU.CREATE.ERROR);
       }
-    } catch (e: any) {
-      notify.error(e.message ?? MENU.UNEXPECTED_ERROR);
+    } catch (e: unknown) {
+      notify.error(e instanceof Error ? e.message : MENU.UNEXPECTED_ERROR);
     } finally {
       setIsSubmitting(false);
     }

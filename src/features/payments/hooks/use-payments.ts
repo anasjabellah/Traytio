@@ -48,8 +48,8 @@ export function usePayments(initialLimit = PAYMENT_DEFAULT_PAGE_SIZE, method?: s
       } else {
         setError(result.error ?? PAYMENT.ERROR_GENERIC);
       }
-    } catch (e: any) {
-      setError(e.message ?? PAYMENT.UNEXPECTED_ERROR);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : PAYMENT.UNEXPECTED_ERROR);
     } finally {
       setIsLoading(false);
       fetchingRef.current = false;

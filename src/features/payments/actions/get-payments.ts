@@ -176,7 +176,7 @@ async function getPaymentsHandler(params?: {
       success: true,
       data: { data, stats, total, page, limit, totalPages },
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     return { success: false, error: normalizeActionError(e, PAYMENT.FETCH_ERROR) }
   }
 }

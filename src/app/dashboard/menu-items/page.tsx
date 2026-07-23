@@ -426,7 +426,7 @@ function MenuItemsPageContent() {
 
 /* ---------------- KPI ---------------- */
 
-function KpiCard({ label, value, icon: Icon, accent, gold }: { label: string; value: number; icon: any; accent: string; gold?: boolean }) {
+function KpiCard({ label, value, icon: Icon, accent, gold }: { label: string; value: number; icon: React.ComponentType<{ className?: string }>; accent: string; gold?: boolean }) {
   const v = useCounter(value);
   return (
     <motion.div
@@ -537,7 +537,7 @@ function GridView({ items, loading, onView, onEdit, onDuplicate, onArchive, onDe
   );
 }
 
-function CardAction({ icon: Icon, label, onClick, red }: { icon: any; label: string; onClick?: () => void; red?: boolean }) {
+function CardAction({ icon: Icon, label, onClick, red }: { icon: React.ComponentType<{ className?: string }>; label: string; onClick?: () => void; red?: boolean }) {
   return (
     <button onClick={(e) => { e.stopPropagation(); onClick?.(); }} title={label}
       className={cn('grid h-8 w-8 place-items-center rounded-lg bg-white text-gray-900 shadow-soft backdrop-blur transition', red ? 'hover:bg-red-600 hover:text-white' : 'hover:bg-black hover:text-white')}
@@ -608,7 +608,7 @@ function Sidebar({ items, onView }: { items: MenuItem[]; onView: (i: MenuItem) =
   );
 }
 
-function Panel({ title, icon: Icon, gold, children }: { title: string; icon: any; gold?: boolean; children: React.ReactNode }) {
+function Panel({ title, icon: Icon, gold, children }: { title: string; icon: React.ComponentType<{ className?: string }>; gold?: boolean; children: React.ReactNode }) {
   return (
     <div className={cn('rounded-2xl border border-border/60 bg-card p-4 shadow-soft', gold && 'ring-1 ring-[var(--gold)]/30')}>
       <div className="flex items-center gap-2 text-sm font-medium text-foreground">
@@ -621,7 +621,7 @@ function Panel({ title, icon: Icon, gold, children }: { title: string; icon: any
 }
 
 function SidebarRow({ icon: Icon, name, sub, right, onClick }: {
-  icon: any; name: string; sub: string; right: string; onClick: () => void;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; name: string; sub: string; right: string; onClick: () => void;
 }) {
   return (
     <button onClick={onClick} className="flex w-full items-center gap-3 rounded-lg p-1.5 text-left transition hover:bg-[var(--surface-soft)]">
@@ -677,7 +677,7 @@ function NoResultsEmpty({ query, onClear }: { query: string; onClear: () => void
   );
 }
 
-function StatCard({ label, value, icon: Icon, gold, small }: { label: string; value: string | React.ReactNode; icon: any; gold?: boolean; small?: boolean }) {
+function StatCard({ label, value, icon: Icon, gold, small }: { label: string; value: string | React.ReactNode; icon: React.ComponentType<{ className?: string }>; gold?: boolean; small?: boolean }) {
   return (
     <div className={cn('rounded-xl border border-border/60 bg-card p-3', gold && 'ring-1 ring-[var(--gold)]/40 bg-gradient-to-br from-[var(--gold-soft)]/40 to-card')}>
       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">

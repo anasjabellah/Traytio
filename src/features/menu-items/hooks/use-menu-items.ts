@@ -46,8 +46,8 @@ export function useMenuItems(initialLimit = MENU_ITEM_DEFAULT_PAGE_SIZE, categor
       } else {
         setError(resp.error ?? MENU_ITEM.FETCH_ERROR);
       }
-    } catch (e: any) {
-      setError(e.message ?? MENU_ITEM.UNEXPECTED_ERROR);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : MENU_ITEM.UNEXPECTED_ERROR);
     } finally {
       setIsLoading(false);
       fetchingRef.current = false;

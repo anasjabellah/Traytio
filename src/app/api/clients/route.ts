@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getOrganizationId } from "@/lib/get-organization-id";
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(20, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
     const skip = (page - 1) * limit;
 
-    const where: any = { organizationId };
+    const where: Prisma.ClientWhereInput = { organizationId };
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },

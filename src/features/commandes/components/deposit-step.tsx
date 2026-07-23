@@ -1,8 +1,12 @@
 "use client"
 
+import { type Dispatch, type SetStateAction } from "react";
 import { FinancialCard } from "./financial-card";
 
-export function DepositStep({ acompteAmount, setAcompteAmount, total, remaining }: any) {
+export function DepositStep({ acompteAmount, setAcompteAmount, total, remaining }: {
+  acompteAmount: number; setAcompteAmount: Dispatch<SetStateAction<number>>;
+  total: number; deposit: number; remaining: number;
+}) {
   return (
     <div className="space-y-5">
       <div>

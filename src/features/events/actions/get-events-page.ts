@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import type { Prisma } from '@prisma/client';
+import type { Prisma, EventStatus, EventType } from '@prisma/client';
 import type { ActionResponse, Event } from '@/features/events/types';
 import { EVENT_DEFAULT_PAGE_SIZE } from '@/features/events/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
@@ -83,7 +83,7 @@ function mapEvent(event: any): Event {
 
   let totalPaid = 0;
   let totalDue = 0;
-  const commandes = (event.commandes || []).map((c: any) => {
+  const commandes = ((event.commandes ?? []) as { paidAmount: unknown; remainingAmount: unknown; totalAmount: unknown }[]).map((c) => {
     const paid = Number(c.paidAmount ?? 0);
     const remaining = Number(c.remainingAmount ?? 0);
     totalPaid += paid;
@@ -205,8 +205,8 @@ async function getEventsPageHandler(params: GetEventsPageParams): Promise<Action
       ];
     }
 
-    if (status) where.status = status as any;
-    if (type) where.type = type as any;
+    if (status) where.status = status as EventStatus;
+    if (type) where.type = type as EventType;
 
     if (dateFrom || dateTo) {
       where.startDate = {};
@@ -215,10 +215,10 @@ async function getEventsPageHandler(params: GetEventsPageParams): Promise<Action
     }
 
     if (budgetMin !== undefined && budgetMin !== '') {
-      where.budget = { ...((where.budget as object) || {}), gte: Number(budgetMin) };
+      where.budget = { ...((where.budget as Prisma.DecimalFilter) || {}), gte: Number(budgetMin) };
     }
     if (budgetMax !== undefined && budgetMax !== '') {
-      where.budget = { ...((where.budget as object) || {}), lte: Number(budgetMax) };
+      where.budget = { ...((where.budget as Prisma.DecimalFilter) || {}), lte: Number(budgetMax) };
     }
 
     const now = new Date();

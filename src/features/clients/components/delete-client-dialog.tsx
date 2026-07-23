@@ -33,8 +33,8 @@ export function DeleteClientDialog({
       } else {
         notify.error(resp.error || CLIENT.DELETE.ERROR);
       }
-    } catch (e: any) {
-      notify.error(e.message ?? CLIENT.DELETE.ERROR);
+    } catch (e: unknown) {
+      notify.error(e instanceof Error ? e.message : CLIENT.DELETE.ERROR);
     } finally {
       setIsDeleting(false);
     }

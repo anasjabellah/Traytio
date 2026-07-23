@@ -28,8 +28,8 @@ export function DeleteMenuDialog({ open, onOpenChange, menu, onSuccess }: Delete
       } else {
         notify.error(resp.error || MENU.DELETE.ERROR);
       }
-    } catch (e: any) {
-      notify.error(e.message ?? MENU.UNEXPECTED_ERROR);
+    } catch (e: unknown) {
+      notify.error(e instanceof Error ? e.message : MENU.UNEXPECTED_ERROR);
     } finally {
       setIsDeleting(false);
     }

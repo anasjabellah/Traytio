@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
+import type { Prisma, MenuCategory } from '@prisma/client';
 import type { ActionResponse, Menu, PaginatedMenus, GetMenusParams } from '@/features/menus/types';
 import { MENU_DEFAULT_PAGE_SIZE } from '@/features/menus/constants';
 import { getOrganizationId } from '@/lib/get-organization-id';
@@ -28,12 +29,12 @@ async function getMenusHandler(params: GetMenusParams): Promise<ActionResponse<P
     const { search, page = 1, limit = MENU_DEFAULT_PAGE_SIZE, sortBy = 'createdAt', sortOrder = 'desc', category, isActive } = params;
     const skip = (page - 1) * limit;
 
-    const where: any = { organizationId };
+    const where: Prisma.MenuWhereInput = { organizationId };
     if (search) {
       where.OR = [{ name: { contains: search, mode: 'insensitive' } }];
     }
     if (category) {
-      where.category = category;
+      where.category = category as MenuCategory;
     }
     if (isActive !== undefined) {
       where.isActive = isActive;
@@ -79,10 +80,10 @@ async function getMenusHandler(params: GetMenusParams): Promise<ActionResponse<P
     }),
     ]);
 
-    const data: Menu[] = menus.map((m: any) => ({
+    const data: Menu[] = menus.map((m) => ({
       ...m,
       pricePerPerson: Number(m.pricePerPerson),
-      menuItems: m.menuItems?.map((mi: any) => ({
+      menuItems: m.menuItems?.map((mi) => ({
         ...mi,
         menuItem: {
           ...mi.menuItem,

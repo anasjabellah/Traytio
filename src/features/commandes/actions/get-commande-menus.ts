@@ -56,7 +56,7 @@ async function getCommandeMenusHandler() {
         defaultQty: mi.defaultQty,
       })),
     }))
-  } catch (err: any) {
+  } catch (err: unknown) {
     return { error: normalizeActionError(err, COMMANDE.FETCH_ERROR_MENUS) }
   }
 }

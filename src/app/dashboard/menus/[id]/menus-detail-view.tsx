@@ -383,7 +383,7 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
 
 /* ---------------- Sub-components ---------------- */
 
-function KpiCard({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string; accent?: boolean }) {
+function KpiCard({ icon: Icon, label, value, accent }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string; accent?: boolean }) {
   return (
     <motion.div
       whileHover={{ y: -2 }}
@@ -427,7 +427,7 @@ function TableIcon({ className }: { className?: string }) {
   );
 }
 
-function InfoItem({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function InfoItem({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
   const isMissing = value.includes("non") || value.includes("Non") || value.includes("Aucun") || value.includes("Indisponible");
   return (
     <div className="flex items-start gap-3">

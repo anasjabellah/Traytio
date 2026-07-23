@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { Plus, X, Check, ListChecks } from "lucide-react";
 
-export function TasksStep({ tasks, setTasks }: { tasks: any[]; setTasks: (t: any[]) => void }) {
+type Task = { id: string; label: string; done: boolean };
+
+export function TasksStep({ tasks, setTasks }: { tasks: Task[]; setTasks: Dispatch<SetStateAction<Task[]>> }) {
   const [newTask, setNewTask] = useState("");
   const toggle = (id: string) => setTasks(tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
   const add = () => {

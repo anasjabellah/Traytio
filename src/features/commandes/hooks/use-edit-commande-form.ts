@@ -73,7 +73,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
   const [equipment, setEquipment] = useState(commande.equipmentFees ?? 0);
   const [extraService, setExtraService] = useState(0);
 
-  const [discountType, setDiscountType] = useState<"percent" | "fixed">(
+  const [discountType, setDiscountType] = useState<string>(
     commande.discountType === "FIXED" ? "fixed" : "percent"
   );
   const [discountValue, setDiscountValue] = useState(commande.discountValue ?? 0);
@@ -85,8 +85,10 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
     label: t.title,
     done: t.isDone,
   }));
-  const [attachments, setAttachments] = useState<any[]>(
-    (commande.attachments ?? []).map(a => ({ name: a.name, size: "", url: a.url, type: a.type }))
+  type PersistedAttachment = { id?: string; name: string; url: string; type?: string | null };
+  type Attachment = File | PersistedAttachment;
+  const [attachments, setAttachments] = useState<Attachment[]>(
+    (commande.attachments ?? []).map(a => ({ id: a.id, name: a.name, size: "", url: a.url, type: a.type }))
   );
   const [internalNotes, setInternalNotes] = useState(commande.internalNotes ?? "");
   const [clientNotes, setClientNotes] = useState(commande.clientNotes ?? "");
@@ -265,7 +267,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
         notes: eventNotes || null,
         internalNotes: internalNotes || null,
         clientNotes: clientNotes || null,
-        status: commande.status as any,
+        status: commande.status,
         items,
       });
       if (!result.success) return { success: false as const, error: result.error ?? COMMANDE.UPDATE.ERROR };
@@ -324,8 +326,8 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
   const handlers = {
     setQty, setNote, toggleItem, applyPack,
     handleClientChange,
-    handleSelectEvent: undefined as any,
-    handleCreateNewEvent: undefined as any,
+    handleSelectEvent: undefined,
+    handleCreateNewEvent: undefined,
   };
 
   return {

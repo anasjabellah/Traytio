@@ -7,8 +7,6 @@ interface MagneticButtonProps {
   children: ReactNode;
   className?: string;
   href?: string;
-  // Allow any additional props (e.g., type, onClick, etc.)
-  [key: string]: any;
 }
 
 export const MagneticButton = forwardRef<HTMLElement, MagneticButtonProps>((props, ref) => {

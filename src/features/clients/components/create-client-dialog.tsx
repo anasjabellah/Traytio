@@ -22,7 +22,7 @@ type CreateClientDialogProps = {
 export function CreateClientDialog({ open, onOpenChange, onSuccess }: CreateClientDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleCreate = async (values: any) => {
+  const handleCreate = async (values: Record<string, unknown>) => {
     setIsSubmitting(true);
     try {
       const response = await createClient(values);
@@ -33,8 +33,8 @@ export function CreateClientDialog({ open, onOpenChange, onSuccess }: CreateClie
       } else {
         notify.error(response.error || CLIENT.CREATE.ERROR);
       }
-    } catch (err: any) {
-      notify.error(err.message || CLIENT.CREATE.ERROR);
+    } catch (err: unknown) {
+      notify.error(err instanceof Error ? err.message : CLIENT.CREATE.ERROR);
     } finally {
       setIsSubmitting(false);
     }

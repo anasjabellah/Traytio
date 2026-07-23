@@ -46,7 +46,7 @@ async function getCommandeClientsHandler(search?: string) {
       address: c.address ?? null,
       vip: false,
     }))
-  } catch (err: any) {
+  } catch (err: unknown) {
     return { error: normalizeActionError(err, COMMANDE.FETCH_ERROR_CLIENTS) }
   }
 }

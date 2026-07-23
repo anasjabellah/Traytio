@@ -9,8 +9,8 @@ export async function GET(request: Request) {
   const search = url.searchParams.get('search') ?? undefined;
   const page = url.searchParams.get('page') ? Number(url.searchParams.get('page')) : undefined;
   const limit = url.searchParams.get('limit') ? Number(url.searchParams.get('limit')) : undefined;
-  const sortBy = url.searchParams.get('sortBy') as any ?? undefined;
-  const sortOrder = url.searchParams.get('sortOrder') as any ?? undefined;
+  const sortBy = (url.searchParams.get('sortBy') ?? undefined) as "name" | "createdAt" | "budget" | "startDate" | undefined;
+  const sortOrder = (url.searchParams.get('sortOrder') ?? undefined) as "asc" | "desc" | undefined;
 
   const resp = await getEvents({ search, page, limit, sortBy, sortOrder });
   if (resp.success && resp.data) {
@@ -28,8 +28,9 @@ async function createEventApi(request: Request) {
       return NextResponse.json(resp.data, { status: 201 });
     }
     return NextResponse.json({ error: resp.error ?? 'Failed to create event' }, { status: 400 });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message ?? 'Invalid request' }, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Invalid request';
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 

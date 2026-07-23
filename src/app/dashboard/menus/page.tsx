@@ -348,7 +348,7 @@ function MenusPageContent() {
 
 /* ---------------- KPI ---------------- */
 
-function KpiCard({ label, value, icon: Icon, accent, gold, delay }: { label: string; value: number; icon: any; accent: string; gold?: boolean; delay?: number }) {
+function KpiCard({ label, value, icon: Icon, accent, gold, delay }: { label: string; value: number; icon: React.ComponentType<{ className?: string }>; accent: string; gold?: boolean; delay?: number }) {
   const v = useCounter(value);
   return (
     <motion.div
@@ -596,7 +596,7 @@ function TableIcon({ className }: { className?: string }) {
   );
 }
 
-function StatBox({ icon: Icon, label, value }: { icon?: any; label: string; value: string }) {
+function StatBox({ icon: Icon, label, value }: { icon?: React.ComponentType<{ className?: string }>; label: string; value: string }) {
   return (
     <div className="rounded-lg border border-stone-100 bg-white px-2.5 py-2">
       <div className="flex items-center gap-[3px] text-[10px] font-medium uppercase tracking-[0.16em] text-stone-400">
@@ -610,7 +610,7 @@ function StatBox({ icon: Icon, label, value }: { icon?: any; label: string; valu
 
 /* ---------------- Icon button ---------------- */
 
-function IconBtn({ children, danger, ...props }: any) {
+function IconBtn({ children, danger, ...props }: { children: React.ReactNode; danger?: boolean; [key: string]: unknown }) {
   return (
     <button {...props} className={cn(
       'grid h-8 w-8 place-items-center rounded-lg border border-stone-200 bg-white text-stone-500 transition-all duration-200 shadow-sm',
@@ -702,7 +702,7 @@ function Sidebar({ menus, onView }: { menus: Menu[]; onView: (m: Menu) => void }
   );
 }
 
-function Panel({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {
+function Panel({ title, icon: Icon, children }: { title: string; icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; children: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-soft">
       <div className="flex items-center gap-2.5 text-sm font-medium text-foreground">
@@ -715,7 +715,7 @@ function Panel({ title, icon: Icon, children }: { title: string; icon: any; chil
 }
 
 function SidebarRow({ icon: Icon, bg, name, sub, right, onClick }: {
-  icon: any; bg: string; name: string; sub: string; right: string; onClick: () => void;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; bg: string; name: string; sub: string; right: string; onClick: () => void;
 }) {
   return (
     <button onClick={onClick} className="flex w-full items-center gap-3 rounded-lg p-1.5 text-left transition hover:bg-[var(--surface-soft)]">

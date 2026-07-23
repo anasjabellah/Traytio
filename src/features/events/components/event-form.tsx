@@ -104,7 +104,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
       params.set('limit', '50');
       const res = await fetch(`/api/clients?${params}`);
       const json = await res.json();
-      const list = (Array.isArray(json) ? json : json.data ?? []).map((c: any) => ({ label: c.name, value: c.id }));
+      const list = (Array.isArray(json) ? json : json.data ?? []).map((c: { name: string; id: string }) => ({ label: c.name, value: c.id }));
       setClients(list);
     } catch (e) {
       console.error('Failed to load clients', e);

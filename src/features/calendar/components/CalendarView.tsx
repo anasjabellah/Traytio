@@ -312,7 +312,7 @@ export const CalendarView = memo(function CalendarView({
       marginBottom: '0',
       borderRadius: '0.5rem',
       border: 'none',
-      whiteSpace: 'normal' as any,
+      whiteSpace: 'normal' as const,
     },
     '.fc .fc-event': {
       border: 'none',

@@ -16,7 +16,7 @@ function isWriteAction(name: string): boolean {
   return action !== 'read' && action !== 'view'
 }
 
-export function withActionGuard<T extends (...args: any[]) => Promise<any>>(
+export function withActionGuard<T extends (...args: any[]) => Promise<unknown>>(
   fn: T,
   config: { name: string; /**
    * Opt-out for the authentication gate.
@@ -26,7 +26,7 @@ export function withActionGuard<T extends (...args: any[]) => Promise<any>>(
    */
   public?: boolean }
 ): T {
-  return (async (...args: any[]) => {
+  return (async (...args: Parameters<T>) => {
     const { userId } = await auth()
 
     // First security gate: block anonymous callers unless explicitly public.

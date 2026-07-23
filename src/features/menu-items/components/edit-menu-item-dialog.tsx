@@ -41,9 +41,10 @@ export function EditMenuItemDialog({ item, open, onClose, onSuccess }: Props) {
       isActive: item.isActive,
       notes: item.notes ?? '',
       imageUrl: item.imageUrl ?? '',
-    } as any : {
+    } as FormValues : {
       name: '',
-      unitPrice: undefined,
+      category: '' as any,
+      unitPrice: undefined as any,
       unit: '',
       isActive: true,
       notes: '',
@@ -52,7 +53,7 @@ export function EditMenuItemDialog({ item, open, onClose, onSuccess }: Props) {
     mode: 'onTouched',
   });
 
-  const handleUpdate = async (values: any) => {
+  const handleUpdate = async (values: FormValues) => {
     if (!item) return;
     setIsSubmitting(true);
     try {
@@ -64,8 +65,8 @@ export function EditMenuItemDialog({ item, open, onClose, onSuccess }: Props) {
       } else {
         notify.error(resp.error ?? MENU_ITEM.UPDATE.ERROR);
       }
-    } catch (e: any) {
-      notify.error(e.message ?? MENU_ITEM.UNEXPECTED_ERROR);
+    } catch (e: unknown) {
+      notify.error(e instanceof Error ? e.message : MENU_ITEM.UNEXPECTED_ERROR);
     } finally {
       setIsSubmitting(false);
     }

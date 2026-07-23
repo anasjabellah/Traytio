@@ -28,8 +28,8 @@ export function DeleteEventDialog({ open, onOpenChange, event, onSuccess }: Dele
       } else {
         notify.error(resp.error || EVENT.DELETE.ERROR);
       }
-    } catch (e: any) {
-      notify.error(e.message ?? EVENT.UNEXPECTED_ERROR);
+    } catch (e: unknown) {
+      notify.error(e instanceof Error ? e.message : EVENT.UNEXPECTED_ERROR);
     } finally {
       setIsDeleting(false);
     }

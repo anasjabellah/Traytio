@@ -33,7 +33,7 @@ async function getCommandeMenuItemsHandler() {
       category: item.category,
       unit: item.unit ?? null,
     }))
-  } catch (err: any) {
+  } catch (err: unknown) {
     return { error: normalizeActionError(err, COMMANDE.FETCH_ERROR_ITEMS) }
   }
 }

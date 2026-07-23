@@ -9,7 +9,7 @@ import { serializeCommande, serializeCommandeItem } from "@/features/commandes/l
 import { COMMANDE } from "@/lib/notify/messages"
 import { withActionGuard } from "@/lib/action-guard"
 import { normalizeActionError } from "@/lib/action-error"
-import type { CommandeStatus, EventType, EventStatus, DiscountType } from "@prisma/client";
+import type { CommandeStatus, EventType, EventStatus, DiscountType, Prisma } from "@prisma/client";
 
 function isPrismaP2002(err: unknown): boolean {
   return typeof err === 'object' && err !== null && 'code' in err && (err as { code: string }).code === 'P2002'
@@ -17,7 +17,7 @@ function isPrismaP2002(err: unknown): boolean {
 
 const MAX_NUMBER_RETRIES = 5
 
-async function nextCommandeNumber(tx: any, organizationId: string): Promise<string> {
+async function nextCommandeNumber(tx: Prisma.TransactionClient, organizationId: string): Promise<string> {
   const year = new Date().getFullYear()
   const result: Array<{ last_number: bigint }> = await tx.$queryRaw`
     INSERT INTO "commande_number_counters" ("organizationId", "year", "lastNumber")

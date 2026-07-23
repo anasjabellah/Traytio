@@ -32,7 +32,7 @@ export function EditClientSheet({ open, onOpenChange, client, onSuccess }: EditC
     [client?.id],
   );
 
-  const handleUpdate = async (values: any) => {
+  const handleUpdate = async (values: Record<string, unknown>) => {
     setIsSubmitting(true);
     try {
       const response = await updateClient(client.id, values);
@@ -43,8 +43,8 @@ export function EditClientSheet({ open, onOpenChange, client, onSuccess }: EditC
       } else {
         notify.error(response.error || CLIENT.UPDATE.ERROR);
       }
-    } catch (err: any) {
-      notify.error(err.message || CLIENT.UPDATE.ERROR);
+    } catch (err: unknown) {
+      notify.error(err instanceof Error ? err.message : CLIENT.UPDATE.ERROR);
     } finally {
       setIsSubmitting(false);
     }

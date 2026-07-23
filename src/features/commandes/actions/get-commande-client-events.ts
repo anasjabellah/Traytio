@@ -66,7 +66,7 @@ async function getCommandeClientEventsHandler(clientId: string) {
       notes: event.notes,
       status: event.status,
     }))
-  } catch (err: any) {
+  } catch (err: unknown) {
     return { error: normalizeActionError(err, COMMANDE.FETCH_ERROR_EVENTS) }
   }
 }

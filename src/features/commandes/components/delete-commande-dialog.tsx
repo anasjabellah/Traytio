@@ -30,8 +30,8 @@ export function DeleteCommandeDialog({ commande, open, onOpenChange, onSuccess }
       } else {
         setError(resp.error ?? 'Une erreur est survenue');
       }
-    } catch (e: any) {
-      setError(e.message ?? 'Une erreur est survenue');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }
