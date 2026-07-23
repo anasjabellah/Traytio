@@ -13,6 +13,16 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${siteUrl}/accept-invite`,
   },
+  openGraph: {
+    title: "Accepter l'invitation — TUR",
+    description: "Acceptez votre invitation à rejoindre une organisation sur TUR.",
+    url: `${siteUrl}/accept-invite`,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Accepter l'invitation — TUR",
+    description: "Acceptez votre invitation à rejoindre une organisation sur TUR.",
+  },
 };
 
 export default function AcceptInvitePage() {

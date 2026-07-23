@@ -19,6 +19,11 @@ export const metadata: Metadata = {
     description: "Créez votre compte TUR.",
     url: `${siteUrl}/sign-up`,
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Créer un compte — TUR",
+    description: "Créez votre compte TUR.",
+  },
 };
 
 export default function SignUpPage() {
