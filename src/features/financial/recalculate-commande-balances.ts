@@ -33,6 +33,7 @@ export async function recalculateCommandeBalances(
       select: {
         totalAmount: true,
         acompteAmount: true,
+        clientId: true,
       },
     });
 
@@ -61,6 +62,22 @@ export async function recalculateCommandeBalances(
       where: { commandeId },
       data: { paidAmount },
     });
+
+    // Recalculate client totalSpent from all non-cancelled commandes
+    if (commande.clientId) {
+      const clientAgg = await tx.commande.aggregate({
+        where: {
+          clientId: commande.clientId,
+          status: { notIn: ["CANCELLED"] },
+        },
+        _sum: { paidAmount: true },
+      });
+      const totalSpent = Number(clientAgg._sum.paidAmount ?? 0);
+      await tx.client.update({
+        where: { id: commande.clientId },
+        data: { totalSpent },
+      });
+    }
   };
 
   if ("$transaction" in client) {

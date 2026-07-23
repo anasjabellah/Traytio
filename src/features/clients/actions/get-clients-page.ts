@@ -178,7 +178,7 @@ async function getClientsPageHandler(params: GetClientsPageParams): Promise<Acti
       }),
       prisma.commande.findMany({
         where: { organizationId, createdAt: { gte: historicalStart } },
-        select: { createdAt: true, totalAmount: true },
+        select: { createdAt: true, totalAmount: true, paidAmount: true },
       }),
       prisma.client.findMany({
         where: { ...where, lastOrderAt: { gte: historicalStart } },
@@ -223,7 +223,7 @@ async function getClientsPageHandler(params: GetClientsPageParams): Promise<Acti
     const perfTotal = buildMonthlySparkline(historicalClients, monthKeys);
     const perfNew30d = buildMonthlySparkline(historicalClients, monthKeys);
     const perfCommandes = buildMonthlySparkline(historicalCommandes, monthKeys);
-    const perfRevenue = buildMonthlySparkline(historicalCommandes, monthKeys, r => Number(r.totalAmount));
+    const perfRevenue = buildMonthlySparkline(historicalCommandes, monthKeys, r => Number(r.paidAmount));
     const perfActive = buildMonthlySparkline(
       activeClientsWithOrders.map(c => ({ createdAt: c.lastOrderAt! })),
       monthKeys,
