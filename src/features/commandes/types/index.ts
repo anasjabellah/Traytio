@@ -144,7 +144,8 @@ export type GetCommandesParams = {
   limit?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
-  status?: string;
+  status?: string[];
+  eventType?: string;
   clientId?: string;
   eventId?: string;
 };

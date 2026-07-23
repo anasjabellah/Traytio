@@ -45,16 +45,15 @@ const EVENT_TYPE_CHIPS = ['WEDDING', 'CORPORATE', 'BIRTHDAY', 'ANNIVERSARY', 'HO
 export default function CommandesPage() {
   const router = useRouter();
   const {
-    commandes, isLoading, pagination,
-    handleSearch, handlePageChange, handleLimitChange, refresh,
+    commandes, isLoading, pagination, statusFilters, eventType,
+    handleSearch, toggleStatus, clearStatusFilters, handleEventTypeFilter,
+    handlePageChange, handleLimitChange, refresh,
     dbStats,
   } = useCommandes();
   const [deleteTarget, setDeleteTarget] = useState<Commande | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [localSearch, setLocalSearch] = useState('');
   const [showEventTypeFilters, setShowEventTypeFilters] = useState(false);
-  const [eventTypeFilter, setEventTypeFilter] = useState<string | null>(null);
-  const [selectedStatuses, setSelectedStatuses] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>('table');
 
   useEffect(() => {
@@ -103,15 +102,6 @@ export default function CommandesPage() {
       }
   }, [deleteTarget, refresh]);
 
-  const toggleStatus = (key: string) => {
-    setSelectedStatuses(prev => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  };
-
   const stats = useMemo(() => {
     const c = dbStats?.currentMonth;
     const totalKpi = computeKpi(dbStats?.perfTotal ?? []);
@@ -131,17 +121,6 @@ export default function CommandesPage() {
     ];
   }, [dbStats]);
 
-  const filteredByEventType = useMemo(() => {
-    let result = commandes;
-    if (eventTypeFilter) {
-      result = result.filter(c => c.eventType === eventTypeFilter);
-    }
-    if (selectedStatuses.size > 0) {
-      result = result.filter(c => selectedStatuses.has(c.status));
-    }
-    return result;
-  }, [commandes, eventTypeFilter, selectedStatuses]);
-
   const upcomingEvents = useMemo(() => {
     return commandes
       .filter(c => c.eventDate && new Date(c.eventDate) >= new Date() && c.status !== 'CANCELLED')
@@ -156,10 +135,6 @@ export default function CommandesPage() {
       .slice(0, 5);
   }, [commandes]);
 
-  const toggleEventType = (type: string) => {
-    setEventTypeFilter(prev => prev === type ? null : type);
-  };
-
   const c = dbStats?.currentMonth;
   const subtitleParts = [
     (c?.active ?? 0) > 0 && `${c?.active} commande${(c?.active ?? 0) > 1 ? 's' : ''} active${(c?.active ?? 0) > 1 ? 's' : ''}`,
@@ -167,7 +142,7 @@ export default function CommandesPage() {
     (c?.upcomingCount ?? 0) > 0 && `${c?.upcomingCount} événement${(c?.upcomingCount ?? 0) > 1 ? 's' : ''} à venir`,
   ].filter(Boolean);
 
-  const activeFilterCount = selectedStatuses.size + (eventTypeFilter ? 1 : 0);
+  const activeFilterCount = statusFilters.length + (eventType ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-[var(--surface-soft)] text-foreground">
@@ -275,9 +250,9 @@ export default function CommandesPage() {
           {/* Status filter chips */}
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => setSelectedStatuses(new Set())}
+              onClick={clearStatusFilters}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                selectedStatuses.size === 0
+                statusFilters.length === 0
                   ? 'border-[var(--gold-deep)] bg-[var(--gold-soft)]/20 text-[var(--gold-deep)]'
                   : 'border-border/60 text-muted-foreground hover:border-border hover:text-foreground bg-background'
               }`}
@@ -289,7 +264,7 @@ export default function CommandesPage() {
                 key={key}
                 onClick={() => toggleStatus(key)}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                  selectedStatuses.has(key)
+                  statusFilters.includes(key)
                     ? 'border-[var(--gold-deep)] bg-[var(--gold-soft)]/20 text-[var(--gold-deep)]'
                     : 'border-border/60 text-muted-foreground hover:border-border hover:text-foreground bg-background'
                 }`}
@@ -313,9 +288,9 @@ export default function CommandesPage() {
                   {EVENT_TYPE_CHIPS.map(key => (
                     <button
                       key={key}
-                      onClick={() => toggleEventType(key)}
+                      onClick={() => handleEventTypeFilter(eventType === key ? null : key)}
                       className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                        eventTypeFilter === key
+                        eventType === key
                           ? 'border-[var(--gold-deep)] bg-[var(--gold-soft)]/20 text-[var(--gold-deep)]'
                           : 'border-border/60 text-muted-foreground hover:border-border hover:text-foreground bg-background'
                       }`}
@@ -353,11 +328,11 @@ export default function CommandesPage() {
                         <h3 className="font-display text-xl mt-0.5">Toutes les commandes</h3>
                       </div>
                       <span className="text-xs text-muted-foreground/60">
-                        {isLoading ? '…' : `${filteredByEventType.length} résultat${filteredByEventType.length > 1 ? 's' : ''}`}
+                        {isLoading ? '…' : `${commandes.length} résultat${commandes.length > 1 ? 's' : ''}`}
                       </span>
                     </div>
                     <CommandesTable
-                      data={filteredByEventType}
+                      data={commandes}
                       loading={isLoading}
                       onView={handleView}
                       onEdit={handleEdit}
@@ -385,11 +360,11 @@ export default function CommandesPage() {
                       <h3 className="font-display text-xl mt-0.5">Toutes les commandes</h3>
                     </div>
                     <span className="text-xs text-muted-foreground/60">
-                      {isLoading ? '…' : `${filteredByEventType.length} résultat${filteredByEventType.length > 1 ? 's' : ''}`}
+                      {isLoading ? '…' : `${commandes.length} résultat${commandes.length > 1 ? 's' : ''}`}
                     </span>
                   </div>
                   <MobileOrderCards
-                    data={filteredByEventType}
+                    data={commandes}
                     loading={isLoading}
                     onView={handleView}
                     onEdit={handleEdit}
@@ -425,11 +400,11 @@ export default function CommandesPage() {
                     <h3 className="font-display text-xl mt-0.5">Aperçu des commandes</h3>
                   </div>
                   <span className="text-xs text-muted-foreground/60">
-                    {isLoading ? '…' : `${filteredByEventType.length} commande${filteredByEventType.length > 1 ? 's' : ''}`}
+                    {isLoading ? '…' : `${commandes.length} commande${commandes.length > 1 ? 's' : ''}`}
                   </span>
                 </div>
                 <CommandesGrid
-                  data={filteredByEventType}
+                  data={commandes}
                   loading={isLoading}
                   onView={handleView}
                   onEdit={handleEdit}
@@ -443,7 +418,7 @@ export default function CommandesPage() {
               <>
                 <div className="hidden md:block">
                   <CommandesCalendar
-                    data={filteredByEventType}
+                    data={commandes}
                     loading={isLoading}
                     onView={handleView}
                     onEdit={handleEdit}

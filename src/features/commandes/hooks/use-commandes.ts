@@ -22,7 +22,8 @@ export function useCommandes(initialLimit = 10) {
   const fetchingRef = useRef(false);
 
   const [search, setSearch] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
+  const [eventType, setEventType] = useState<string | null>(null);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
     limit: initialLimit,
@@ -37,7 +38,8 @@ export function useCommandes(initialLimit = 10) {
     setError(null);
     const params = {
       search: search || undefined,
-      status: statusFilter || undefined,
+      status: statusFilters.length > 0 ? statusFilters : undefined,
+      eventType: eventType || undefined,
       page: pagination.page,
       limit: pagination.limit,
     };
@@ -69,7 +71,7 @@ export function useCommandes(initialLimit = 10) {
       fetchingRef.current = false;
       setIsLoading(false);
     }
-  }, [search, statusFilter, pagination.page, pagination.limit]);
+  }, [search, statusFilters, eventType, pagination.page, pagination.limit]);
 
   useEffect(() => {
     startTransition(() => { fetch(); });
@@ -80,8 +82,21 @@ export function useCommandes(initialLimit = 10) {
     setPagination(prev => ({ ...prev, page: 1 }));
   }, []);
 
-  const handleStatusFilter = useCallback((status: string | null) => {
-    setStatusFilter(status);
+  const toggleStatus = useCallback((status: string) => {
+    setStatusFilters(prev => {
+      if (prev.includes(status)) return prev.filter(s => s !== status);
+      return [...prev, status];
+    });
+    setPagination(prev => ({ ...prev, page: 1 }));
+  }, []);
+
+  const clearStatusFilters = useCallback(() => {
+    setStatusFilters([]);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  }, []);
+
+  const handleEventTypeFilter = useCallback((type: string | null) => {
+    setEventType(type);
     setPagination(prev => ({ ...prev, page: 1 }));
   }, []);
 
@@ -99,8 +114,9 @@ export function useCommandes(initialLimit = 10) {
   }, [fetch]);
 
   return {
-    commandes, isLoading, error, pagination, search, statusFilter,
-    handleSearch, handleStatusFilter, handlePageChange, handleLimitChange, refresh,
+    commandes, isLoading, error, pagination, search, statusFilters, eventType,
+    handleSearch, toggleStatus, clearStatusFilters, handleEventTypeFilter,
+    handlePageChange, handleLimitChange, refresh,
     dbStats,
   } as const;
 }

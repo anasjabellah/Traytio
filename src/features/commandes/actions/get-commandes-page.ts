@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import type { Prisma, CommandeStatus } from '@prisma/client';
+import type { Prisma, CommandeStatus, EventType } from '@prisma/client';
 import type { ActionResponse, Commande, GetCommandesParams } from '@/features/commandes/types';
 import { serializeCommande } from '@/features/commandes/lib/serialize-commande';
 import { COMMANDE_DEFAULT_PAGE_SIZE } from '@/features/commandes/constants';
@@ -56,14 +56,18 @@ async function getCommandesPageHandler(params: GetCommandesParams): Promise<Acti
 
     const {
       search, page = 1, limit = COMMANDE_DEFAULT_PAGE_SIZE,
-      sortBy = 'createdAt', sortOrder = 'desc', status,
+      sortBy = 'createdAt', sortOrder = 'desc', status, eventType,
     } = params;
 
     const skip = (page - 1) * limit;
     const where: Prisma.CommandeWhereInput = { organizationId };
 
-    if (status) {
-      where.status = status as CommandeStatus;
+    if (status && status.length > 0) {
+      where.status = { in: status as CommandeStatus[] };
+    }
+
+    if (eventType) {
+      where.eventType = eventType as EventType;
     }
 
     if (search) {
