@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, startTransition } from 'react
 import { PartyPopper, Calendar as CalendarIcon, CheckCircle2, Wallet, Users } from 'lucide-react';
 import { getEventsPage } from '@/features/events/actions/get-events-page';
 import type { Event } from '@/features/events/types';
-import type { EventsPageStats, EventsPageAlert } from '@/features/events/actions/get-events-page';
+import type { EventsPageStats, EventsPageAlert, EventsPageResult } from '@/features/events/actions/get-events-page';
 import { EVENT_DEFAULT_PAGE_SIZE } from '@/features/events/constants';
 import { computeKpi } from '@/features/dashboard/lib/kpi-engine';
 import { useNotificationStore } from '@/stores/notification-store';
@@ -26,22 +26,23 @@ export type FilterParams = {
   budgetMax?: string;
 };
 
-export function useEvents(initialLimit = EVENT_DEFAULT_PAGE_SIZE, filterParams?: FilterParams) {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+export function useEvents(initialData?: EventsPageResult | null, filterParams?: FilterParams) {
+  const [events, setEvents] = useState<Event[]>(initialData?.events ?? []);
+  const [isLoading, setIsLoading] = useState<boolean>(!initialData);
   const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState<EventsPageStats | null>(null);
-  const [todayEvents, setTodayEvents] = useState<Event[]>([]);
-  const [upcomingSorted, setUpcomingSorted] = useState<Event[]>([]);
-  const [alerts, setAlerts] = useState<EventsPageAlert[]>([]);
+  const [stats, setStats] = useState<EventsPageStats | null>(initialData?.stats ?? null);
+  const [todayEvents, setTodayEvents] = useState<Event[]>(initialData?.todayEvents ?? []);
+  const [upcomingSorted, setUpcomingSorted] = useState<Event[]>(initialData?.upcomingSorted ?? []);
+  const [alerts, setAlerts] = useState<EventsPageAlert[]>(initialData?.alerts ?? []);
 
   const fetchingRef = useRef(false);
+  const isInitialMount = useRef(true);
   const [search, setSearch] = useState<string>('');
   const [pagination, setPagination] = useState<Pagination>({
-    page: 1,
-    limit: initialLimit,
-    total: 0,
-    totalPages: 0,
+    page: initialData?.page ?? 1,
+    limit: initialData?.limit ?? EVENT_DEFAULT_PAGE_SIZE,
+    total: initialData?.total ?? 0,
+    totalPages: initialData?.totalPages ?? 0,
   });
 
   const fetch = useCallback(async () => {
@@ -87,8 +88,12 @@ export function useEvents(initialLimit = EVENT_DEFAULT_PAGE_SIZE, filterParams?:
   }, [search, pagination.page, pagination.limit, filterParams]);
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      if (initialData) return;
+    }
     startTransition(() => { fetch(); });
-  }, [fetch]);
+  }, [fetch, initialData]);
 
   useEffect(() => {
     const setNotifications = useNotificationStore.getState().setNotifications;
