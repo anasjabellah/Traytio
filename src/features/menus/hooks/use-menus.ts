@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, startTransition } from 'react';
 import { getMenus } from '@/features/menus/actions/get-menus';
 import { MENU_DEFAULT_PAGE_SIZE } from '@/features/menus/constants';
-import type { Menu } from '@/features/menus/types';
+import type { Menu, PaginatedMenus } from '@/features/menus/types';
 import { MENU } from '@/lib/notify/messages';
 
 type Pagination = {
@@ -14,21 +14,22 @@ type Pagination = {
 };
 
 export function useMenus(
-  initialLimit = MENU_DEFAULT_PAGE_SIZE,
+  initialData?: PaginatedMenus | null,
   category?: string,
   isActive?: boolean | undefined,
 ) {
-  const [menus, setMenus] = useState<Menu[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [menus, setMenus] = useState<Menu[]>(initialData?.data ?? []);
+  const [isLoading, setIsLoading] = useState<boolean>(!initialData);
   const [error, setError] = useState<string | null>(null);
   const fetchingRef = useRef(false);
+  const isInitialMount = useRef(true);
 
   const [search, setSearch] = useState<string>('');
   const [pagination, setPagination] = useState<Pagination>({
-    page: 1,
-    limit: initialLimit,
-    total: 0,
-    totalPages: 0,
+    page: initialData?.page ?? 1,
+    limit: initialData?.limit ?? MENU_DEFAULT_PAGE_SIZE,
+    total: initialData?.total ?? 0,
+    totalPages: initialData?.totalPages ?? 0,
   });
 
   const fetch = useCallback(async () => {
@@ -68,8 +69,12 @@ export function useMenus(
   }, [search, pagination.page, pagination.limit, category, isActive]);
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      if (initialData) return;
+    }
     startTransition(() => { fetch(); });
-  }, [fetch]);
+  }, [fetch, initialData]);
 
   const handleSearch = useCallback((q: string) => {
     setSearch(q);
