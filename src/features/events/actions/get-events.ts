@@ -75,7 +75,7 @@ async function getEventsHandler(params: GetEventsParams): Promise<ActionResponse
     const [firstYear, firstMonth] = monthKeys[0].split('-').map(Number);
     const historicalStart = new Date(firstYear, firstMonth - 1, 1);
 
-    const [total, events, historicalRows] = await prisma.$transaction([
+    const [total, events, historicalRows] = await Promise.all([
       prisma.event.count({ where }),
       prisma.event.findMany({
         where,

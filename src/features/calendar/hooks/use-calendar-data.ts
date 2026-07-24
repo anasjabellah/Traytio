@@ -23,23 +23,43 @@ export type CalendarStats = {
   perfPayments: number[]
 }
 
-export function useCalendarData() {
-  const [events, setEvents] = useState<Event[]>([])
-  const [loading, setLoading] = useState(true)
+export type CalendarInitialData = {
+  events: Event[]
+  perfData: {
+    perfTotal: number[]
+    perfWeek: number[]
+    perfMonth: number[]
+    perfBudget: number[]
+    perfPayments: number[]
+  }
+  dateRange: { from: string; to: string }
+}
+
+export function useCalendarData(initialData?: CalendarInitialData | null) {
+  const [events, setEvents] = useState<Event[]>(initialData?.events ?? [])
+  const [loading, setLoading] = useState(!initialData)
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<CalendarFilters>({})
-  const [dateRange, setDateRange] = useState<{ from: string; to: string } | null>(null)
-  const [everHadEvents, setEverHadEvents] = useState(false)
+  const [dateRange, setDateRange] = useState<{ from: string; to: string } | null>(
+    initialData?.dateRange ?? null,
+  )
+  const [everHadEvents, setEverHadEvents] = useState(
+    initialData ? initialData.events.length > 0 : false,
+  )
   const [perfData, setPerfData] = useState<{
     perfTotal: number[]
     perfWeek: number[]
     perfMonth: number[]
     perfBudget: number[]
     perfPayments: number[]
-  } | null>(null)
+  } | null>(initialData?.perfData ?? null)
   const mounted = useRef(false)
   const fetchingRef = useRef(false)
-  const lastFetchedKey = useRef('')
+  const lastFetchedKey = useRef(
+    initialData
+      ? `${initialData.dateRange.from}|${initialData.dateRange.to}|${JSON.stringify({})}`
+      : '',
+  )
 
   const fetchEvents = useCallback(
     async (from: string, to: string, currentFilters: CalendarFilters) => {

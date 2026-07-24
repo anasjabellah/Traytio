@@ -10,6 +10,7 @@ import type { DatesSetArg, EventDropArg, DateSelectArg } from '@fullcalendar/cor
 import type { EventResizeDoneArg } from '@fullcalendar/interaction'
 import { PrivacyModeProvider } from '@/components/privacy-mode'
 import { useCalendarData } from '@/features/calendar/hooks/use-calendar-data'
+import type { CalendarInitialData } from '@/features/calendar/hooks/use-calendar-data'
 import { CalendarView } from '@/features/calendar/components/CalendarView'
 import { MiniCalendar } from '@/features/dashboard/components/MiniCalendar'
 import dynamic from 'next/dynamic'
@@ -24,11 +25,11 @@ import { updateEvent } from '@/features/events/actions/update-event'
 import { duplicateEvent } from '@/features/events/actions/duplicate-event'
 import type { Event } from '@/features/events/types'
 
-export function CalendarPage() {
+export function CalendarPage({ initialData }: { initialData?: CalendarInitialData | null }) {
   const router = useRouter()
   const {
     events, allEvents, loading, error, stats, filters, setFilters, setDateRange, refresh, everHadEvents,
-  } = useCalendarData()
+  } = useCalendarData(initialData)
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -51,7 +52,6 @@ export function CalendarPage() {
     if (!filters.search) setSearchInput('')
   }, [filters.search])
 
-  // Close context menu on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -64,7 +64,6 @@ export function CalendarPage() {
     }
   }, [contextMenu])
 
-  // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const target = e.target as HTMLElement
@@ -383,7 +382,6 @@ export function CalendarPage() {
           onDelete={handleDeleteRequest}
         />
 
-        {/* Context menu */}
         {contextMenu && (
           <div
             ref={menuRef}
