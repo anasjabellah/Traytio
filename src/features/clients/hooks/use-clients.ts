@@ -7,7 +7,7 @@ import { CLIENT_DEFAULT_PAGE_SIZE } from '@/features/clients/constants';
 import { CLIENT } from '@/lib/notify/messages';
 import { computeKpi } from '@/features/dashboard/lib/kpi-engine';
 import type { ClientWithStats } from '@/features/clients/types';
-import type { ClientStats, ActivityItem, GetClientsPageParams } from '@/features/clients/actions/get-clients-page';
+import type { ClientStats, ActivityItem, GetClientsPageParams, ClientsPageResult } from '@/features/clients/actions/get-clients-page';
 
 type Pagination = {
   page: number;
@@ -16,21 +16,22 @@ type Pagination = {
   totalPages: number;
 };
 
-export function useClients(initialLimit = CLIENT_DEFAULT_PAGE_SIZE, sortBy?: string) {
-  const [clients, setClients] = useState<ClientWithStats[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+export function useClients(initialData?: ClientsPageResult | null, sortBy?: string) {
+  const [clients, setClients] = useState<ClientWithStats[]>(initialData?.clients ?? []);
+  const [isLoading, setIsLoading] = useState<boolean>(!initialData);
   const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState<ClientStats | null>(null);
-  const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [stats, setStats] = useState<ClientStats | null>(initialData?.stats ?? null);
+  const [activity, setActivity] = useState<ActivityItem[]>(initialData?.activity ?? []);
 
   const fetchingRef = useRef(false);
+  const isInitialMount = useRef(true);
 
   const [search, setSearch] = useState<string>('');
   const [pagination, setPagination] = useState<Pagination>({
-    page: 1,
-    limit: initialLimit,
-    total: 0,
-    totalPages: 0,
+    page: initialData?.page ?? 1,
+    limit: initialData?.limit ?? CLIENT_DEFAULT_PAGE_SIZE,
+    total: initialData?.total ?? 0,
+    totalPages: initialData?.totalPages ?? 0,
   });
 
   const sortOrder = sortBy === 'name' ? 'asc' : 'desc';
@@ -70,8 +71,12 @@ export function useClients(initialLimit = CLIENT_DEFAULT_PAGE_SIZE, sortBy?: str
   }, [search, pagination.page, pagination.limit, sortBy, sortOrder]);
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      if (initialData) return;
+    }
     startTransition(() => { fetch(); });
-  }, [fetch]);
+  }, [fetch, initialData]);
 
   const handleSearch = useCallback((q: string) => {
     setSearch(q);
