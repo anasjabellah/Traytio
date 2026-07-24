@@ -2,9 +2,13 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { getActivity } from '@/features/activity/actions/get-activity';
-import type { ActivityPagination } from '@/features/activity/types';
+import type { ActivityFeedResponse, ActivityPagination } from '@/features/activity/types';
 
-export function useActivityFeed(page = 1, limit = 20) {
+export function useActivityFeed(
+  initialData?: ActivityFeedResponse | null,
+  page = 1,
+  limit = 20,
+) {
   const query = useQuery({
     queryKey: ['activity-feed', page, limit] as const,
     queryFn: async () => {
@@ -12,6 +16,7 @@ export function useActivityFeed(page = 1, limit = 20) {
       if (res.success && res.data) return res.data;
       throw new Error(res.error ?? 'Erreur lors du chargement de l\'activité');
     },
+    initialData: initialData ?? undefined,
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
