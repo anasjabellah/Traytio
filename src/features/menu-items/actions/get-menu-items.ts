@@ -48,27 +48,29 @@ async function getMenuItemsHandler(
       where.isActive = params.isActive;
     }
 
-    const total = await prisma.menuItem.count({ where });
-    const items = await prisma.menuItem.findMany({
-      where,
-      select: {
-        id: true,
-        organizationId: true,
-        name: true,
-        category: true,
-        unitPrice: true,
-        unit: true,
-        isActive: true,
-        notes: true,
-        createdAt: true,
-        updatedAt: true,
-        imageUrl: true,
-        _count: { select: { menus: true } },
-      },
-      orderBy: { [sortBy]: sortOrder },
-      skip,
-      take: limit,
-    });
+    const [total, items] = await Promise.all([
+      prisma.menuItem.count({ where }),
+      prisma.menuItem.findMany({
+        where,
+        select: {
+          id: true,
+          organizationId: true,
+          name: true,
+          category: true,
+          unitPrice: true,
+          unit: true,
+          isActive: true,
+          notes: true,
+          createdAt: true,
+          updatedAt: true,
+          imageUrl: true,
+          _count: { select: { menus: true } },
+        },
+        orderBy: { [sortBy]: sortOrder },
+        skip,
+        take: limit,
+      }),
+    ]);
 
     const data = items.map(i => ({ ...i, unitPrice: Number(i.unitPrice), usageCount: i._count.menus }));
     const totalPages = Math.ceil(total / limit);
