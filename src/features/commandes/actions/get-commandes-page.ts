@@ -38,7 +38,7 @@ export type CommandeStats = {
   perfConversion: number[];
 };
 
-type CommandesPageResult = {
+export type CommandesPageResult = {
   commandes: Commande[];
   total: number;
   page: number;

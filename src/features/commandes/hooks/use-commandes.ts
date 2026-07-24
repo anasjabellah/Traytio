@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, startTransition } from 'react
 import { getCommandesPage } from '@/features/commandes/actions/get-commandes-page';
 import { COMMANDE } from '@/lib/notify/messages';
 import type { Commande } from '@/features/commandes/types';
-import type { CommandeStats } from '@/features/commandes/actions/get-commandes-page';
+import type { CommandeStats, CommandesPageResult } from '@/features/commandes/actions/get-commandes-page';
 
 type Pagination = {
   page: number;
@@ -13,22 +13,23 @@ type Pagination = {
   totalPages: number;
 };
 
-export function useCommandes(initialLimit = 10) {
-  const [commandes, setCommandes] = useState<Commande[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+export function useCommandes(initialData?: CommandesPageResult | null) {
+  const [commandes, setCommandes] = useState<Commande[]>(initialData?.commandes ?? []);
+  const [isLoading, setIsLoading] = useState<boolean>(!initialData);
   const [error, setError] = useState<string | null>(null);
-  const [dbStats, setDbStats] = useState<CommandeStats | null>(null);
+  const [dbStats, setDbStats] = useState<CommandeStats | null>(initialData?.stats ?? null);
 
   const fetchingRef = useRef(false);
+  const isInitialMount = useRef(true);
 
   const [search, setSearch] = useState<string>('');
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [eventType, setEventType] = useState<string | null>(null);
   const [pagination, setPagination] = useState<Pagination>({
-    page: 1,
-    limit: initialLimit,
-    total: 0,
-    totalPages: 0,
+    page: initialData?.page ?? 1,
+    limit: initialData?.limit ?? 10,
+    total: initialData?.total ?? 0,
+    totalPages: initialData?.totalPages ?? 0,
   });
 
   const fetch = useCallback(async () => {
@@ -74,8 +75,12 @@ export function useCommandes(initialLimit = 10) {
   }, [search, statusFilters, eventType, pagination.page, pagination.limit]);
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      if (initialData) return;
+    }
     startTransition(() => { fetch(); });
-  }, [fetch]);
+  }, [fetch, initialData]);
 
   const handleSearch = useCallback((q: string) => {
     setSearch(q);
