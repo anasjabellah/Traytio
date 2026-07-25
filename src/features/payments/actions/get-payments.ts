@@ -87,7 +87,9 @@ async function getPaymentsHandler(params?: {
     // Monthly aggregates (this month, previous month) are derived from the 8-month
     // historical fetch in JS. This reduces the original 8 sequential queries to 4
     // parallel queries, eliminating ~4 round-trips (~200ms at current RTT).
-    const [items, total, statusAgg, historicalRows] = await Promise.all([
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+    const [items, total, statusAgg, historicalRows, methodAgg] = await Promise.all([
       prisma.payment.findMany({
         where,
         include,
@@ -104,7 +106,13 @@ async function getPaymentsHandler(params?: {
       }),
       prisma.payment.findMany({
         where: { organizationId, createdAt: { gte: historicalStart } },
-        select: { createdAt: true, amount: true, status: true },
+        select: { createdAt: true, amount: true, status: true, method: true },
+      }),
+      prisma.payment.groupBy({
+        by: ['method'],
+        where: { organizationId, status: "COMPLETED" },
+        _sum: { amount: true },
+        _count: true,
       }),
     ])
 
@@ -158,8 +166,48 @@ async function getPaymentsHandler(params?: {
       monthKeys,
     )
 
+    const todayRows = historicalRows.filter(r => r.createdAt >= todayStart)
+    const completedRows = historicalRows.filter(r => r.status === "COMPLETED")
+    const collectedTotal = Number(collectedAgg?._sum.amount ?? 0)
+    const collectedCount = collectedAgg?._count ?? 0
+    const completedCount = completedRows.length
+    const refundedCount = refundedAgg?._count ?? 0
+    const largest = completedRows.length > 0 ? Math.max(...completedRows.map(r => Number(r.amount))) : 0
+    const average = collectedCount > 0 ? Math.round(collectedTotal / collectedCount) : 0
+
+    const methodBreakdown = (methodAgg ?? []).map(g => ({
+      method: g.method,
+      count: g._count,
+      total: Number(g._sum.amount ?? 0),
+    }))
+
+    const insights: string[] = []
+    const totalPayments = completedCount + pendingCount + refundedCount
+    const paymentRate = totalPayments > 0 ? Math.round((completedCount / totalPayments) * 100) : 0
+    if (totalPayments > 0) {
+      insights.push(`${paymentRate}% des paiements sont complétés.`)
+    }
+    if (refundedCount === 0 && totalPayments > 0) {
+      insights.push("Aucun remboursement cette semaine.")
+    }
+    const cashShare = collectedTotal > 0
+      ? Math.round(((methodBreakdown.find(m => m.method === "CASH")?.total ?? 0) / collectedTotal) * 100)
+      : 0
+    if (cashShare > 0) {
+      insights.push(`Les paiements en espèces représentent ${cashShare}%.`)
+    }
+    if (monthlyRevenue > 0) {
+      insights.push(`${monthlyRevenue.toLocaleString('fr-FR')} MAD collectés ce mois.`)
+    }
+    if (pendingCount > 0) {
+      insights.push(`${pendingCount} paiement${pendingCount > 1 ? 's' : ''} en attente de validation.`)
+    }
+    if (largest > 0) {
+      insights.push(`Plus grand paiement: ${largest.toLocaleString('fr-FR')} MAD.`)
+    }
+
     const stats: PaymentStats = {
-      totalCollected: Number(collectedAgg?._sum.amount ?? 0),
+      totalCollected: collectedTotal,
       totalRefunded: Number(refundedAgg?._sum.amount ?? 0),
       monthlyRevenue,
       pendingCount,
@@ -168,6 +216,22 @@ async function getPaymentsHandler(params?: {
       perfRevenue,
       perfRefunded,
       perfPending,
+      todayPayments: {
+        count: todayRows.length,
+        total: todayRows.reduce((s, r) => s + Number(r.amount), 0),
+      },
+      methodBreakdown,
+      quickStats: {
+        averageAmount: average,
+        largestPayment: largest,
+        completedCount,
+        pendingCount,
+        refundedCount,
+      },
+      completedCount,
+      refundedCount,
+      largestPayment: largest,
+      insights,
     }
 
     const totalPages = Math.ceil(total / limit)

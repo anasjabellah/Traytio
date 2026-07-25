@@ -23,6 +23,13 @@ export type PaymentStats = {
   perfRevenue: number[];
   perfRefunded: number[];
   perfPending: number[];
+  todayPayments: { count: number; total: number };
+  methodBreakdown: Array<{ method: string; count: number; total: number }>;
+  quickStats: { averageAmount: number; largestPayment: number; completedCount: number; pendingCount: number; refundedCount: number };
+  completedCount: number;
+  refundedCount: number;
+  largestPayment: number;
+  insights: string[];
 };
 
 export type GetPaymentsParams = {
