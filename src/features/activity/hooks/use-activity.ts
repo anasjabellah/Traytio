@@ -17,6 +17,7 @@ export function useActivityFeed(
       throw new Error(res.error ?? 'Erreur lors du chargement de l\'activité');
     },
     initialData: initialData ?? undefined,
+    initialDataUpdatedAt: Date.now(),
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: false,
   });

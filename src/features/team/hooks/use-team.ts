@@ -4,9 +4,16 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getTeam } from '@/features/team/actions/get-team';
 import { computeKpi } from '@/features/dashboard/lib/kpi-engine';
-import type { TeamStats, TeamPagination } from '@/features/team/types';
+import type { TeamMember, TeamInvitation, TeamStats, TeamPagination } from '@/features/team/types';
 
-export function useTeam(page = 1, limit = 20) {
+type TeamQueryData = {
+  members: TeamMember[];
+  invitations: TeamInvitation[];
+  stats: TeamStats;
+  pagination: TeamPagination;
+};
+
+export function useTeam(page = 1, limit = 20, initialData?: TeamQueryData | null) {
   const queryKey = ['team', page, limit] as const;
 
   const query = useQuery({
@@ -16,6 +23,8 @@ export function useTeam(page = 1, limit = 20) {
       if (res.success && res.data) return res.data;
       throw new Error(res.error ?? 'Erreur lors du chargement de l\'équipe');
     },
+    initialData: initialData ?? undefined,
+    initialDataUpdatedAt: Date.now(),
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
