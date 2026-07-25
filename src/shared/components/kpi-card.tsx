@@ -78,6 +78,8 @@ export type KpiCardProps = {
   value: number;
   /** When set, the value is displayed as MAD currency. */
   prefix?: string;
+  /** Text appended after the value (e.g. "%"). */
+  suffix?: string;
   /** Percentage change (e.g. 12.5). */
   delta: number;
   trend: 'up' | 'down';
@@ -86,6 +88,8 @@ export type KpiCardProps = {
   accent?: boolean;
   delay?: number;
   sensitive?: boolean;
+  /** When true, hides the trend badge and sparkline. */
+  hideTrend?: boolean;
   /** Secondary info rendered below the value (e.g. "6 confirmés · 3 à venir"). */
   secondary?: React.ReactNode;
   /** Collection rate 0-100 shown as a thin progress bar. */
@@ -96,6 +100,7 @@ export function KpiCard({
   label,
   value,
   prefix,
+  suffix,
   delta,
   trend,
   spark,
@@ -103,13 +108,14 @@ export function KpiCard({
   accent = false,
   delay = 0,
   sensitive = false,
+  hideTrend = false,
   secondary,
   progress,
 }: KpiCardProps) {
-  const counted = useCounter(value, 1400);
+  const counted = useCounter(value, 400);
   const display = prefix
     ? formatMAD(Math.round(counted))
-    : Math.round(counted).toLocaleString('fr-FR');
+    : Math.round(counted).toLocaleString('fr-FR') + (suffix ?? '');
   const up = trend === 'up';
   const { isPrivacyMode } = usePrivacyMode();
   const sparkId = `kpi-${label.normalize('NFD').replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '-').toLowerCase()}`;
@@ -120,7 +126,7 @@ export function KpiCard({
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
-        duration: 0.5,
+        duration: 0.2,
         delay,
         ease: [0.22, 1, 0.36, 1] as const,
       }}
@@ -167,30 +173,32 @@ export function KpiCard({
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(progress, 100)}%` }}
-            transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
+            transition={{ duration: 0.3, delay: 0, ease: 'easeOut' }}
             className="h-full rounded-full bg-gradient-gold"
           />
         </div>
       )}
 
-      <div className={`flex items-end justify-between gap-3 ${hasExtraContent ? 'mt-3' : 'mt-4'}`}>
-        <div
-          className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md ${
-            up
-              ? 'text-emerald-700 bg-emerald-50'
-              : 'text-rose-700 bg-rose-50'
-          }`}
-        >
-          {up ? (
-            <TrendingUp className="size-3" />
-          ) : (
-            <TrendingDown className="size-3" />
-          )}
-          {delta > 0 ? '+' : ''}
-          {delta}%
+      {!hideTrend && (
+        <div className={`flex items-end justify-between gap-3 ${hasExtraContent ? 'mt-3' : 'mt-4'}`}>
+          <div
+            className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md ${
+              up
+                ? 'text-emerald-700 bg-emerald-50'
+                : 'text-rose-700 bg-rose-50'
+            }`}
+          >
+            {up ? (
+              <TrendingUp className="size-3" />
+            ) : (
+              <TrendingDown className="size-3" />
+            )}
+            {delta > 0 ? '+' : ''}
+            {delta}%
+          </div>
+          <Sparkline data={spark} up={up} id={sparkId} />
         </div>
-        <Sparkline data={spark} up={up} id={sparkId} />
-      </div>
+      )}
     </motion.div>
   );
 }

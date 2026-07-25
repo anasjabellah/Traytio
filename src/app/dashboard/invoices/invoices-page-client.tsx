@@ -1,17 +1,20 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef, startTransition } from "react"
+import { useState, useEffect, useCallback, useRef, startTransition, useMemo } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { motion } from "framer-motion"
 import { getInvoices, updateInvoiceStatus } from "@/features/invoices/actions/invoice-actions"
 import type { InvoiceWithCommande } from "@/features/invoices/types"
 import type { PaginatedResult } from "@/features/invoices/actions/invoice-actions"
-import { Search, Download, FileText, Sparkles, RefreshCw, Receipt, Settings, Loader2 } from "lucide-react"
+import type { InvoiceStats } from "@/features/invoices/lib/get-invoice-stats"
+import { Search, Download, FileText, Sparkles, RefreshCw, Receipt, Settings, Loader2, Wallet, Clock, TrendingUp, CircleDollarSign, AlertCircle, CheckCircle2, Send, Ban, Lightbulb, ReceiptText } from "lucide-react"
 import { InvoiceCard } from "@/features/invoices/components/InvoiceCard"
 import { PageGuard } from "@/components/ui/page-guard"
 import { Pagination } from "@/components/ui/pagination"
 import { STATUS_LABELS, STATUS_COLORS, TYPE_FILTERS } from "@/features/invoices/constants"
 import { formatCurrency } from "@/lib/utils"
+import { KpiCard } from "@/shared/components/kpi-card"
+import { computeKpi } from "@/features/dashboard/lib/kpi-engine"
 
 function SkeletonRows() {
   return (
@@ -38,19 +41,37 @@ function SkeletonRows() {
   )
 }
 
-interface InvoicesPageClientProps {
-  initialData?: PaginatedResult<InvoiceWithCommande> | null;
+function SkeletonKpi() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mb-8">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="rounded-2xl border border-border bg-card shadow-soft p-5 animate-pulse">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="size-9 rounded-lg bg-foreground/5" />
+            <div className="h-3 w-20 rounded bg-foreground/5" />
+          </div>
+          <div className="h-7 w-24 rounded bg-foreground/5 mb-2" />
+          <div className="h-2.5 w-16 rounded bg-foreground/5" />
+        </div>
+      ))}
+    </div>
+  )
 }
 
-export default function InvoicesPageClient({ initialData }: InvoicesPageClientProps) {
+interface InvoicesPageClientProps {
+  initialData?: PaginatedResult<InvoiceWithCommande> | null;
+  stats?: InvoiceStats | null;
+}
+
+export default function InvoicesPageClient({ initialData, stats }: InvoicesPageClientProps) {
   return (
     <PageGuard module="invoices" action="read">
-      <InvoicesPageContent initialData={initialData} />
+      <InvoicesPageContent initialData={initialData} stats={stats} />
     </PageGuard>
   )
 }
 
-function InvoicesPageContent({ initialData }: { initialData?: PaginatedResult<InvoiceWithCommande> | null }) {
+function InvoicesPageContent({ initialData, stats }: { initialData?: PaginatedResult<InvoiceWithCommande> | null; stats?: InvoiceStats | null }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -182,6 +203,50 @@ function InvoicesPageContent({ initialData }: { initialData?: PaginatedResult<In
     setUpdatingStatus(null)
   }, [refetch])
 
+  function hasValidTrend(spark: number[]): boolean {
+    return spark.length >= 2 && spark[spark.length - 2] > 0;
+  }
+
+  const totalKpi = useMemo(() => computeKpi(stats?.perfTotal ?? []), [stats?.perfTotal])
+  const totalTrendValid = useMemo(() => hasValidTrend(stats?.perfTotal ?? []), [stats?.perfTotal])
+  const collectedKpi = useMemo(() => computeKpi(stats?.perfCollected ?? []), [stats?.perfCollected])
+  const collectedTrendValid = useMemo(() => hasValidTrend(stats?.perfCollected ?? []), [stats?.perfCollected])
+  const remainingKpi = useMemo(() => computeKpi(stats?.perfRemaining ?? []), [stats?.perfRemaining])
+  const remainingTrendValid = useMemo(() => hasValidTrend(stats?.perfRemaining ?? []), [stats?.perfRemaining])
+  const countKpi = useMemo(() => computeKpi(stats?.perfCount ?? []), [stats?.perfCount])
+  const countTrendValid = useMemo(() => hasValidTrend(stats?.perfCount ?? []), [stats?.perfCount])
+
+  const paymentRateKpi = useMemo(() => {
+    const spark = stats?.perfCollected ?? []
+    if (spark.length < 2) return { delta: 0, trend: 'up' as const, spark: [] }
+    const current = spark[spark.length - 1]
+    const previous = spark[spark.length - 2]
+    const delta = previous > 0 ? Math.round(((current - previous) / previous) * 100) : 0
+    const direction: 'up' | 'down' = delta >= 0 ? 'up' : 'down'
+    return { delta, trend: direction, spark: [] }
+  }, [stats?.perfCollected])
+  const paymentRateTrendValid = useMemo(() => {
+    const spark = stats?.perfCollected ?? []
+    return spark.length >= 2 && spark[spark.length - 2] > 0
+  }, [stats?.perfCollected])
+
+  const sortedPending = useMemo(() => {
+    if (!stats?.pendingPaymentGroups) return []
+    return [...stats.pendingPaymentGroups].sort((a, b) => a.priority - b.priority)
+  }, [stats?.pendingPaymentGroups])
+
+  function formatTimeAgo(date: Date): string {
+    const diffMs = Date.now() - new Date(date).getTime()
+    const mins = Math.floor(diffMs / 60000)
+    if (mins < 1) return "à l'instant"
+    if (mins < 60) return `il y a ${mins} min`
+    const hours = Math.floor(mins / 60)
+    if (hours < 24) return `il y a ${hours}h`
+    const days = Math.floor(hours / 24)
+    if (days === 1) return 'hier'
+    return `il y a ${days} jours`
+  }
+
   return (
     <div className="min-h-screen bg-[var(--surface-soft)] text-foreground">
       <div className="pointer-events-none fixed inset-0 bg-gradient-mesh opacity-60" />
@@ -191,8 +256,8 @@ function InvoicesPageContent({ initialData }: { initialData?: PaginatedResult<In
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] as const }}
-          className="mb-8"
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] as const }}
+          className="mb-6"
         >
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--gold-soft)]/40 bg-[var(--gold-soft)]/10 text-[11px] font-medium text-[var(--gold-deep)] tracking-wide mb-4">
             <Sparkles className="size-3" strokeWidth={2} />
@@ -210,14 +275,65 @@ function InvoicesPageContent({ initialData }: { initialData?: PaginatedResult<In
           </div>
         </motion.div>
 
+        {/* ═══ KPI CARDS ═══ */}
+        {!stats ? (
+          <SkeletonKpi />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mb-8">
+            <KpiCard
+              label="Total facturé"
+              value={stats.totalInvoiced}
+              prefix="MAD"
+              icon={Receipt}
+              accent
+              {...totalKpi}
+              hideTrend={!totalTrendValid}
+            />
+            <KpiCard
+              label="Total encaissé"
+              value={stats.totalCollected}
+              prefix="MAD"
+              icon={Wallet}
+              accent
+              {...collectedKpi}
+              hideTrend={!collectedTrendValid}
+            />
+            <KpiCard
+              label="Reste à encaisser"
+              value={stats.totalRemaining}
+              prefix="MAD"
+              icon={Clock}
+              {...remainingKpi}
+              hideTrend={!remainingTrendValid}
+            />
+            <KpiCard
+              label="Nombre de documents"
+              value={stats.documentCount}
+              icon={FileText}
+              {...countKpi}
+              hideTrend={!countTrendValid}
+            />
+            <KpiCard
+              label="Taux de paiement"
+              value={stats.paymentRate}
+              suffix="%"
+              icon={TrendingUp}
+              progress={stats.paymentRate}
+              {...paymentRateKpi}
+              hideTrend={!paymentRateTrendValid}
+            />
+          </div>
+        )}
+
+        {/* ═══ FILTERS ═══ */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.14, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
+          transition={{ delay: 0.06, duration: 0.15, ease: [0.22, 1, 0.36, 1] as const }}
           className="mb-6"
         >
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft w-full sm:flex-1 transition-all focus-within:border-[var(--gold-deep)] focus-within:ring-1 focus-within:ring-[var(--gold-deep)]/20">
+            <div className="flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft w-full sm:max-w-sm xl:max-w-md transition-all focus-within:border-[var(--gold-deep)] focus-within:ring-1 focus-within:ring-[var(--gold-deep)]/20">
               <Search size={18} strokeWidth={1.8} className="text-muted-foreground shrink-0" />
               <input
                 value={search}
@@ -257,161 +373,369 @@ function InvoicesPageContent({ initialData }: { initialData?: PaginatedResult<In
           </div>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
-        >
-          {loading ? (
-            <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
-              <SkeletonRows />
-            </div>
-          ) : invoices.length === 0 ? (
-            <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <FileText className="size-12 text-muted-foreground/20 mb-4" strokeWidth={1.2} />
-                <p className="text-sm text-muted-foreground/60 font-medium">
-                  {search || typeFilter ? "Aucun document ne correspond à votre recherche" : "Aucun document trouvé"}
-                </p>
-                {(search || typeFilter) && (
-                  <button
-                    onClick={() => {
-                      setSearch("")
-                      router.push(pathname)
-                    }}
-                    className="mt-4 px-4 py-2 rounded-xl text-xs font-medium border border-border bg-card shadow-soft text-muted-foreground hover:text-foreground transition-all"
-                  >
-                    Réinitialiser les filtres
-                  </button>
+        {/* ═══ MAIN LAYOUT: TABLE + SIDEBAR ═══ */}
+        <div className="flex flex-col xl:flex-row xl:gap-6">
+          {/* LEFT: TABLE */}
+          <div className="w-full xl:w-[70%] min-w-0">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.15, ease: [0.22, 1, 0.36, 1] as const }}
+            >
+              {loading ? (
+                <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
+                  <SkeletonRows />
+                </div>
+              ) : invoices.length === 0 ? (
+                <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
+                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <FileText className="size-12 text-muted-foreground/20 mb-4" strokeWidth={1.2} />
+                    <p className="text-sm text-muted-foreground/60 font-medium">
+                      {search || typeFilter ? "Aucun document ne correspond à votre recherche" : "Aucun document trouvé"}
+                    </p>
+                    {(search || typeFilter) && (
+                      <button
+                        onClick={() => {
+                          setSearch("")
+                          router.push(pathname)
+                        }}
+                        className="mt-4 px-4 py-2 rounded-xl text-xs font-medium border border-border bg-card shadow-soft text-muted-foreground hover:text-foreground transition-all"
+                      >
+                        Réinitialiser les filtres
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="hidden md:block rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-border/20">
+                            <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-6 py-4">Document</th>
+                            <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Commande</th>
+                            <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Client</th>
+                            <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Date</th>
+                            <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Statut</th>
+                            <th className="text-right text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Montant</th>
+                            <th className="text-right text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Payé</th>
+                            <th className="text-center text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/5">
+                          {invoices.map((inv) => (
+                            <tr
+                              key={inv.id}
+                              onClick={() => handleRowClick(inv.id)}
+                              tabIndex={0}
+                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleRowClick(inv.id); } }}
+                              className="transition-colors hover:bg-foreground/[0.03] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-deep)]"
+                            >
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="size-8 rounded-lg bg-foreground/[0.04] flex items-center justify-center">
+                                    {inv.type === "DEVIS" ? (
+                                      <FileText className="size-4 text-blue-600" strokeWidth={1.8} />
+                                    ) : (
+                                      <Receipt className="size-4 text-[var(--gold-deep)]" strokeWidth={1.8} />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <div className="text-sm font-medium text-foreground">{inv.number}</div>
+                                    <div className="text-[10px] text-foreground/50">
+                                      {inv.type === "DEVIS" ? "Devis" : "Facture"}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-4 py-4">
+                                <span className="text-sm text-foreground/70">{inv.commande?.number ?? "—"}</span>
+                              </td>
+                              <td className="px-4 py-4">
+                                <span className="text-sm text-foreground/70">{inv.commande?.client?.name ?? "—"}</span>
+                              </td>
+                              <td className="px-4 py-4">
+                                <span className="text-sm text-foreground/70">
+                                  {new Date(inv.issueDate).toLocaleDateString("fr-FR")}
+                                </span>
+                              </td>
+                              <td className="px-4 py-4">
+                                <select
+                                  value={inv.status}
+                                  onClick={(e) => e.stopPropagation()}
+                                  onChange={(e) => handleStatusChange(inv.id, e.target.value)}
+                                  disabled={updatingStatus === inv.id}
+                                  className={`text-[11px] min-h-[44px] md:min-h-0 px-2 py-1 rounded-full font-semibold border-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${STATUS_COLORS[inv.status] ?? "bg-gray-100 text-gray-500"}`}
+                                  aria-busy={updatingStatus === inv.id}
+                                >
+                                  {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                                    <option key={key} value={key}>{label}</option>
+                                  ))}
+                                </select>
+                              </td>
+                              <td className="px-4 py-4 text-right">
+                                <span className="text-sm font-semibold tabular-nums text-foreground">{formatCurrency(inv.totalAmount)}</span>
+                              </td>
+                              <td className="px-4 py-4 text-right">
+                                <span className="text-sm tabular-nums text-emerald-600">{formatCurrency(inv.paidAmount)}</span>
+                              </td>
+                              <td className="px-4 py-4">
+                                <div className="flex items-center justify-center gap-1">
+                                  <button
+                                    onClick={(e) => handleDownload(e, inv)}
+                                    disabled={downloading === inv.id}
+                                    className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:size-8 rounded-lg border border-border bg-white hover:bg-foreground/[0.02] text-foreground/60 hover:text-foreground transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Télécharger"
+                                    aria-busy={downloading === inv.id}
+                                  >
+                                    {downloading === inv.id ? <Loader2 className="size-3.5 animate-spin" strokeWidth={1.8} /> : <Download className="size-3.5" strokeWidth={1.8} />}
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <Pagination
+                      page={page}
+                      totalPages={totalPages}
+                      total={total}
+                      limit={limit}
+                      onPageChange={handlePageChange}
+                      onLimitChange={handleLimitChange}
+                      itemLabel="document"
+                      loading={loading}
+                    />
+                  </div>
+
+                  <div className="md:hidden space-y-3">
+                    <div className="grid gap-3">
+                      {invoices.map((inv, index) => (
+                        <InvoiceCard key={inv.id} invoice={inv} index={index} onView={handleRowClick} onDownload={handleDownload} downloading={downloading} />
+                      ))}
+                    </div>
+
+                    <Pagination
+                      page={page}
+                      totalPages={totalPages}
+                      total={total}
+                      limit={limit}
+                      onPageChange={handlePageChange}
+                      onLimitChange={handleLimitChange}
+                      itemLabel="document"
+                      loading={loading}
+                    />
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </div>
+
+          {/* RIGHT: SIDEBAR */}
+          <div className="w-full xl:w-[30%] mt-6 xl:mt-0 space-y-5">
+            {/* CARD 1: Factures en attente */}
+            <motion.div
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.12, duration: 0.15, ease: [0.22, 1, 0.36, 1] as const }}
+              className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden"
+            >
+              <div className="px-5 py-4 border-b border-border/10">
+                <div className="flex items-center gap-2.5">
+                  <div className="size-7 rounded-lg bg-amber-50 flex items-center justify-center">
+                    <Clock className="size-3.5 text-amber-600" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">Factures en attente</h3>
+                    <p className="text-[11px] text-muted-foreground">
+                      {sortedPending.reduce((s, g) => s + g.count, 0)} document{sortedPending.reduce((s, g) => s + g.count, 0) > 1 ? 's' : ''} en attente
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-3 space-y-1">
+                {sortedPending.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <CheckCircle2 className="size-8 text-emerald-400 mb-2" strokeWidth={1.5} />
+                    <p className="text-xs text-muted-foreground/60">Aucune facture en attente</p>
+                  </div>
+                ) : (
+                  sortedPending.map((group) => {
+                    const iconMap: Record<string, { icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; color: string }> = {
+                      'En retard': { icon: AlertCircle, color: 'text-red-600' },
+                      'Partiellement payée': { icon: Clock, color: 'text-amber-600' },
+                      'En attente': { icon: Send, color: 'text-blue-600' },
+                    };
+                    const { icon: Icon, color: iconColor } = iconMap[group.label] ?? { icon: FileText, color: 'text-foreground/50' };
+                    return (
+                      <div
+                        key={group.label}
+                        className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-foreground/[0.03] transition-colors"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Icon className={`size-3.5 shrink-0 ${iconColor}`} strokeWidth={2} />
+                          <span className="text-[13px] font-medium text-foreground truncate">{group.label}</span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 ml-3">
+                          <span className="text-[13px] font-semibold tabular-nums text-foreground">{group.count}</span>
+                          <span className="text-[11px] text-muted-foreground tabular-nums">{formatCurrency(group.total)}</span>
+                        </div>
+                      </div>
+                    )
+                  })
                 )}
               </div>
-            </div>
-          ) : (
-            <>
-              <div className="hidden md:block rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border/20">
-                        <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-6 py-4">Document</th>
-                        <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Commande</th>
-                        <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Client</th>
-                        <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Date</th>
-                        <th className="text-left text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Statut</th>
-                        <th className="text-right text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Montant</th>
-                        <th className="text-right text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Payé</th>
-                        <th className="text-center text-[11px] uppercase tracking-[0.08em] text-foreground/50 font-semibold px-4 py-4">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/5">
-                      {invoices.map((inv) => (
-                        <tr
-                          key={inv.id}
-                          onClick={() => handleRowClick(inv.id)}
-                          tabIndex={0}
-                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleRowClick(inv.id); } }}
-                          className="transition-colors hover:bg-foreground/[0.03] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-deep)]"
-                        >
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2.5">
-                              <div className="size-8 rounded-lg bg-foreground/[0.04] flex items-center justify-center">
-                                {inv.type === "DEVIS" ? (
-                                  <FileText className="size-4 text-blue-600" strokeWidth={1.8} />
-                                ) : (
-                                  <Receipt className="size-4 text-[var(--gold-deep)]" strokeWidth={1.8} />
-                                )}
-                              </div>
-                              <div>
-                                <div className="text-sm font-medium text-foreground">{inv.number}</div>
-                                <div className="text-[10px] text-foreground/50">
-                                  {inv.type === "DEVIS" ? "Devis" : "Facture"}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-4">
-                            <span className="text-sm text-foreground/70">{inv.commande?.number ?? "—"}</span>
-                          </td>
-                          <td className="px-4 py-4">
-                            <span className="text-sm text-foreground/70">{inv.commande?.client?.name ?? "—"}</span>
-                          </td>
-                          <td className="px-4 py-4">
-                            <span className="text-sm text-foreground/70">
-                              {new Date(inv.issueDate).toLocaleDateString("fr-FR")}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4">
-                            <select
-                              value={inv.status}
-                              onClick={(e) => e.stopPropagation()}
-                              onChange={(e) => handleStatusChange(inv.id, e.target.value)}
-                              disabled={updatingStatus === inv.id}
-                              className={`text-[11px] min-h-[44px] md:min-h-0 px-2 py-1 rounded-full font-semibold border-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${STATUS_COLORS[inv.status] ?? "bg-gray-100 text-gray-500"}`}
-                              aria-busy={updatingStatus === inv.id}
-                            >
-                              {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                                <option key={key} value={key}>{label}</option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="px-4 py-4 text-right">
-                            <span className="text-sm font-semibold tabular-nums text-foreground">{formatCurrency(inv.totalAmount)}</span>
-                          </td>
-                          <td className="px-4 py-4 text-right">
-                            <span className="text-sm tabular-nums text-emerald-600">{formatCurrency(inv.paidAmount)}</span>
-                          </td>
-                          <td className="px-4 py-4">
-                            <div className="flex items-center justify-center gap-1">
-                              <button
-                                onClick={(e) => handleDownload(e, inv)}
-                                disabled={downloading === inv.id}
-                                className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:size-8 rounded-lg border border-border bg-white hover:bg-foreground/[0.02] text-foreground/60 hover:text-foreground transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="Télécharger"
-                                aria-busy={downloading === inv.id}
-                              >
-                                {downloading === inv.id ? <Loader2 className="size-3.5 animate-spin" strokeWidth={1.8} /> : <Download className="size-3.5" strokeWidth={1.8} />}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+            </motion.div>
+
+            {/* CARD 2: Activité récente */}
+            <motion.div
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.16, duration: 0.15, ease: [0.22, 1, 0.36, 1] as const }}
+              className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden"
+            >
+              <div className="px-5 py-4 border-b border-border/10">
+                <div className="flex items-center gap-2.5">
+                  <div className="size-7 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <Sparkles className="size-3.5 text-blue-600" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">Activité récente</h3>
+                    <p className="text-[11px] text-muted-foreground">Derniers documents mis à jour</p>
+                  </div>
                 </div>
-
-                <Pagination
-                  page={page}
-                  totalPages={totalPages}
-                  total={total}
-                  limit={limit}
-                  onPageChange={handlePageChange}
-                  onLimitChange={handleLimitChange}
-                  itemLabel="document"
-                  loading={loading}
-                />
               </div>
+              <div className="p-3 space-y-1">
+                {!stats?.recentActivity || stats.recentActivity.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Ban className="size-8 text-muted-foreground/20 mb-2" strokeWidth={1.5} />
+                    <p className="text-xs text-muted-foreground/60">Aucune activité récente</p>
+                  </div>
+                ) : (
+                  stats.recentActivity.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => router.push(`/dashboard/invoices/${item.id}`)}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-foreground/[0.03] transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="size-6 rounded-md bg-foreground/[0.04] flex items-center justify-center shrink-0">
+                          {item.type === "DEVIS" ? (
+                            <FileText className="size-3 text-blue-500" strokeWidth={2} />
+                          ) : (
+                            <Receipt className="size-3 text-[var(--gold-deep)]" strokeWidth={2} />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[13px] font-medium text-foreground truncate">{item.number}</p>
+                          <span className={`inline-block text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                            STATUS_COLORS[item.status] ?? 'bg-gray-100 text-gray-500'
+                          }`}>
+                            {STATUS_LABELS[item.status] ?? item.status}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-[11px] text-muted-foreground shrink-0 ml-3">
+                        {formatTimeAgo(item.updatedAt)}
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
+            </motion.div>
 
-              <div className="md:hidden space-y-3">
-                <div className="grid gap-3">
-                  {invoices.map((inv, index) => (
-                    <InvoiceCard key={inv.id} invoice={inv} index={index} onView={handleRowClick} onDownload={handleDownload} downloading={downloading} />
-                  ))}
+            {/* CARD 3: Stats rapides */}
+            <motion.div
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, duration: 0.15, ease: [0.22, 1, 0.36, 1] as const }}
+              className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden"
+            >
+              <div className="px-5 py-4 border-b border-border/10">
+                <div className="flex items-center gap-2.5">
+                  <div className="size-7 rounded-lg bg-emerald-50 flex items-center justify-center">
+                    <CircleDollarSign className="size-3.5 text-emerald-600" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">Stats rapides</h3>
+                    <p className="text-[11px] text-muted-foreground">Indicateurs clés</p>
+                  </div>
                 </div>
-
-                <Pagination
-                  page={page}
-                  totalPages={totalPages}
-                  total={total}
-                  limit={limit}
-                  onPageChange={handlePageChange}
-                  onLimitChange={handleLimitChange}
-                  itemLabel="document"
-                  loading={loading}
-                />
               </div>
-            </>
-          )}
-        </motion.div>
+              <div className="p-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-1">Montant moyen</p>
+                    <p className="text-sm font-semibold tabular-nums text-foreground">
+                      {stats ? formatCurrency(stats.quickStats.averageAmount) : '—'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-1">Documents payés</p>
+                    <p className="text-sm font-semibold tabular-nums text-emerald-600">
+                      {stats?.quickStats.paidCount ?? '—'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-1">Plus grosse facture</p>
+                    <p className="text-sm font-semibold tabular-nums text-foreground">
+                      {stats ? formatCurrency(stats.largestInvoice) : '—'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-1">Brouillons</p>
+                    <p className="text-sm font-semibold tabular-nums text-foreground">
+                      {stats?.quickStats.draftCount ?? '—'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* CARD 4: Insights */}
+            <motion.div
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.24, duration: 0.15, ease: [0.22, 1, 0.36, 1] as const }}
+              className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden"
+            >
+              <div className="px-5 py-4 border-b border-border/10">
+                <div className="flex items-center gap-2.5">
+                  <div className="size-7 rounded-lg bg-indigo-50 flex items-center justify-center">
+                    <Lightbulb className="size-3.5 text-indigo-600" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">Insights</h3>
+                    <p className="text-[11px] text-muted-foreground">Analyse rapide</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-3">
+                {!stats || stats.insights.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-6 text-center">
+                    <ReceiptText className="size-7 text-muted-foreground/20 mb-2" strokeWidth={1.5} />
+                    <p className="text-xs text-muted-foreground/60">Aucune donnée disponible</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {stats.insights.map((insight, i) => (
+                      <div
+                        key={i}
+                        className="flex items-start gap-2.5 px-3 py-2 rounded-xl bg-foreground/[0.02]"
+                      >
+                        <div className="size-1.5 rounded-full bg-[var(--gold-deep)] mt-1.5 shrink-0" />
+                        <p className="text-[12px] text-foreground/80 leading-relaxed">{insight}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        </div>
 
         <footer className="mt-16 mb-6 flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-2">

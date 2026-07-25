@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-export function useCounter(target: number, duration = 1200) {
+export function useCounter(target: number, duration = 400) {
   const [v, setV] = useState(0);
   useEffect(() => {
     let raf = 0;
