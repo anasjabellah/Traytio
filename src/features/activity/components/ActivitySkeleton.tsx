@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function ActivitySkeleton() {
   return (
-    <div className="animate-pulse space-y-6">
+    <div className="space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {Array.from({ length: 3 }).map((_, i) => (
