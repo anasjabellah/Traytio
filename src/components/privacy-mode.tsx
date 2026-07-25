@@ -18,14 +18,12 @@ const PrivacyModeContext = createContext<PrivacyModeContextValue>({
 
 export function PrivacyModeProvider({ children }: { children: ReactNode }) {
   const [isPrivacyMode, setIsPrivacyMode] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === 'true') {
       setIsPrivacyMode(true);
     }
-    setHydrated(true);
   }, []);
 
   const toggle = useCallback(() => {
@@ -43,10 +41,6 @@ export function PrivacyModeProvider({ children }: { children: ReactNode }) {
     }),
     [isPrivacyMode, toggle],
   );
-
-  if (!hydrated) {
-    return <>{children}</>;
-  }
 
   return (
     <PrivacyModeContext.Provider value={value}>
