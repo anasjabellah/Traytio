@@ -49,39 +49,40 @@ export const TodayEventsWidget = memo(function TodayEventsWidget({ events }: { e
 
 export const ActivityFeedWidget = memo(function ActivityFeedWidget({ activity }: { activity: DashboardData['activity'] }) {
   const { isPrivacyMode } = usePrivacyMode();
-  const visible = activity.slice(0, 5);
-  const hasMore = activity.length > 5;
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
-      <div className="flex items-center justify-between mb-4">
+    <div className="rounded-2xl border border-border bg-card shadow-soft p-5 flex flex-col h-[380px]">
+      <div className="flex items-center justify-between mb-4 shrink-0">
         <div>
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Temps r&eacute;el</div>
           <h3 className="font-display text-xl mt-1">Activit&eacute; r&eacute;cente</h3>
         </div>
       </div>
-      <div className={`relative space-y-3${hasMore ? ' overflow-y-auto max-h-[240px] pr-1' : ''}`}>
-        <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border" />
-        {visible.length === 0 && (
-          <div className="py-6 text-center text-xs text-muted-foreground">Aucune activit&eacute; r&eacute;cente</div>
-        )}
-        {visible.map((f, i) => (
-          <motion.div key={i}
-            initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-            className="relative pl-6">
-            <CircleDot className="absolute left-0 top-1 size-3.5 text-[var(--gold-deep)] bg-card rounded-full" />
-            <div className="text-xs leading-snug">
-              <span className="font-medium">{f.who}</span>{" "}
-              <span className="text-muted-foreground">{f.action}</span>{" "}
-              {f.financial ? (
-                <SensitiveValue hidden={isPrivacyMode} as="span" className="font-medium">{f.target}</SensitiveValue>
-              ) : (
-                <span className="font-medium">{f.target}</span>
-              )}
-            </div>
-            <div className="text-[10px] text-muted-foreground mt-0.5">{f.time}</div>
-          </motion.div>
-        ))}
-      </div>
+      {activity.length === 0 ? (
+        <div className="py-6 text-center text-xs text-muted-foreground">Aucune activit&eacute; r&eacute;cente</div>
+      ) : (
+        <div className="flex-1 overflow-y-auto min-h-0 scrollbar-subtle pr-1 [mask-image:linear-gradient(to_bottom,black_92%,transparent_100%)]">
+          <div className="space-y-3 pt-1 relative">
+            <div className="absolute left-[7px] inset-y-1 w-px bg-border" />
+            {activity.map((f, i) => (
+              <motion.div key={i}
+                initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                className="relative pl-6">
+                <CircleDot className="absolute left-0 top-1 size-3.5 text-[var(--gold-deep)] bg-card rounded-full" />
+                <div className="text-xs leading-snug">
+                  <span className="font-medium">{f.who}</span>{" "}
+                  <span className="text-muted-foreground">{f.action}</span>{" "}
+                  {f.financial ? (
+                    <SensitiveValue hidden={isPrivacyMode} as="span" className="font-medium">{f.target}</SensitiveValue>
+                  ) : (
+                    <span className="font-medium">{f.target}</span>
+                  )}
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">{f.time}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 });

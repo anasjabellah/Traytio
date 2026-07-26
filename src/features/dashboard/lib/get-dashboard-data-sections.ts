@@ -385,7 +385,7 @@ export const fetchSidebarSection = cache(async () => {
       prisma.commandeActivity.findMany({
         where: { commande: { organizationId } },
         orderBy: { createdAt: 'desc' },
-        take: 5,
+        take: 15,
         select: { id: true, action: true, description: true, createdAt: true },
       }),
       prisma.commande.findMany({
