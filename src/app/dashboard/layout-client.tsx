@@ -1,4 +1,5 @@
 import { TopBar } from "@/components/dashboard/top-bar"
+import { ScrollToTop } from "@/components/scroll-to-top"
 
 export default function DashboardLayoutClient({
   children,
@@ -7,6 +8,7 @@ export default function DashboardLayoutClient({
 }) {
   return (
     <>
+      <ScrollToTop />
       <TopBar />
       {children}
     </>
