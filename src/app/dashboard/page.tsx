@@ -10,7 +10,6 @@ import { UpcomingEvents } from '@/features/dashboard/components/UpcomingEvents';
 import { MiniCalendar } from '@/features/dashboard/components/MiniCalendar';
 import { BusinessHealth } from '@/features/dashboard/components/BusinessHealth';
 import { QuickActions } from '@/features/dashboard/components/QuickActions';
-import { PerformanceCharts } from '@/features/dashboard/components/PerformanceCharts';
 import { DashboardSidebar } from '@/features/dashboard/components/DashboardSidebar';
 import {
   fetchKpiSection,
@@ -19,7 +18,6 @@ import {
   fetchPaymentsSection,
   fetchUpcomingEventsSection,
   fetchBusinessHealthSection,
-  fetchPerformanceSection,
   fetchSidebarSection,
 } from '@/features/dashboard/lib/get-dashboard-data-sections';
 
@@ -173,10 +171,6 @@ async function DashboardShell() {
             </div>
 
             <QuickActions />
-
-            <Suspense fallback={<StatFallback />}>
-              <PerformanceSection />
-            </Suspense>
           </div>
 
           <Suspense fallback={<SidebarFallback />}>
@@ -235,12 +229,6 @@ async function BusinessHealthSection() {
   const health = await fetchBusinessHealthSection();
   if (!health) return null;
   return <BusinessHealth health={health} />;
-}
-
-async function PerformanceSection() {
-  const data = await fetchPerformanceSection();
-  if (!data) return null;
-  return <PerformanceCharts {...data} />;
 }
 
 async function SidebarSection() {

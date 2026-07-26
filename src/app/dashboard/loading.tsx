@@ -141,8 +141,6 @@ export default function DashboardLoading() {
                 <StatCardSkeleton />
               </div>
             </div>
-
-            <StatCardSkeleton />
           </div>
 
           <SidebarSkeleton />
