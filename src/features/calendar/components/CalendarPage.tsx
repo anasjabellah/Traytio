@@ -1,17 +1,16 @@
 'use client'
 
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Calendar, CalendarCheck, CalendarRange, Wallet, Banknote, ExternalLink, Pencil, Copy, Trash2 } from 'lucide-react'
+import { Calendar, CalendarCheck, CalendarRange, Wallet, Banknote } from 'lucide-react'
 import { notify } from '@/lib/notify'
 import { EVENT } from '@/lib/notify/messages'
 import { motion } from 'framer-motion'
-import type { DatesSetArg, EventDropArg, DateSelectArg } from '@fullcalendar/core'
-import type { EventResizeDoneArg } from '@fullcalendar/interaction'
 import { PrivacyModeProvider } from '@/components/privacy-mode'
 import { useCalendarData } from '@/features/calendar/hooks/use-calendar-data'
 import type { CalendarInitialData } from '@/features/calendar/hooks/use-calendar-data'
-import { CalendarView } from '@/features/calendar/components/CalendarView'
+import { EventManager } from '@/components/ui/event-manager'
+import type { CalendarEvent } from '@/components/ui/event-manager'
 import { MiniCalendar } from '@/features/dashboard/components/MiniCalendar'
 import dynamic from 'next/dynamic'
 const EventDetailSheet = dynamic(() => import('@/features/calendar/components/EventDetailSheet').then((m) => m.EventDetailSheet), { loading: () => null })
@@ -24,6 +23,39 @@ import { computeKpi } from '@/features/dashboard/lib/kpi-engine'
 import { updateEvent } from '@/features/events/actions/update-event'
 import { duplicateEvent } from '@/features/events/actions/duplicate-event'
 import type { Event } from '@/features/events/types'
+import { EVENT_TYPE_LABELS } from '@/features/events/constants'
+
+const eventTypeToColor: Record<string, string> = {
+  WEDDING: 'rose',
+  CORPORATE: 'blue',
+  BIRTHDAY: 'purple',
+  ANNIVERSARY: 'amber',
+  HOLIDAY: 'orange',
+  OTHER: 'gray',
+}
+
+const eventColors = [
+  { name: 'Mariage', value: 'rose', bg: 'bg-rose-500', text: 'text-rose-700' },
+  { name: 'Corporate', value: 'blue', bg: 'bg-blue-500', text: 'text-blue-700' },
+  { name: 'Anniversaire', value: 'purple', bg: 'bg-purple-500', text: 'text-purple-700' },
+  { name: 'Anniversaire', value: 'amber', bg: 'bg-amber-500', text: 'text-amber-700' },
+  { name: 'Gala', value: 'orange', bg: 'bg-orange-500', text: 'text-orange-700' },
+  { name: 'Autre', value: 'gray', bg: 'bg-gray-500', text: 'text-gray-700' },
+]
+
+function eventToCalendarEvent(event: Event): CalendarEvent {
+  const color = eventTypeToColor[event.type] || 'gray'
+  return {
+    id: event.id,
+    title: event.name,
+    description: event.notes || event.location || undefined,
+    startTime: new Date(event.startDate),
+    endTime: event.endDate ? new Date(event.endDate) : new Date(event.startDate),
+    color,
+    category: EVENT_TYPE_LABELS[event.type] || 'Autre',
+    tags: event.clientName ? [event.clientName] : undefined,
+  }
+}
 
 export function CalendarPage({ initialData }: { initialData?: CalendarInitialData | null }) {
   const router = useRouter()
@@ -37,8 +69,23 @@ export function CalendarPage({ initialData }: { initialData?: CalendarInitialDat
   const [createDefaults, setCreateDefaults] = useState<Record<string, unknown> | undefined>(undefined)
   const [showFilters, setShowFilters] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Event | null>(null)
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; event: Event } | null>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
+
+  const [paymentFilter, setPaymentFilter] = useState<string | null>(null)
+  const [dateFromFilter, setDateFromFilter] = useState('')
+  const [dateToFilter, setDateToFilter] = useState('')
+  const [budgetMinFilter, setBudgetMinFilter] = useState('')
+  const [budgetMaxFilter, setBudgetMaxFilter] = useState('')
+
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      paymentStatus: paymentFilter || undefined,
+      dateFrom: dateFromFilter || undefined,
+      dateTo: dateToFilter || undefined,
+      budgetMin: budgetMinFilter ? Number(budgetMinFilter) : undefined,
+      budgetMax: budgetMaxFilter ? Number(budgetMaxFilter) : undefined,
+    }))
+  }, [paymentFilter, dateFromFilter, dateToFilter, budgetMinFilter, budgetMaxFilter, setFilters])
 
   const [searchInput, setSearchInput] = useState('')
   useEffect(() => {
@@ -53,18 +100,6 @@ export function CalendarPage({ initialData }: { initialData?: CalendarInitialDat
   }, [filters.search])
 
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setContextMenu(null)
-      }
-    }
-    if (contextMenu) {
-      document.addEventListener('mousedown', handleClick)
-      return () => document.removeEventListener('mousedown', handleClick)
-    }
-  }, [contextMenu])
-
-  useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const target = e.target as HTMLElement
       const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable
@@ -77,7 +112,6 @@ export function CalendarPage({ initialData }: { initialData?: CalendarInitialDat
           break
         case 'Escape':
           setSheetOpen(false)
-          setContextMenu(null)
           break
         case 'Enter':
           if (selectedEvent && !sheetOpen) {
@@ -97,69 +131,27 @@ export function CalendarPage({ initialData }: { initialData?: CalendarInitialDat
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedEvent, sheetOpen, deleteTarget])
 
-  const handleDatesSet = useCallback(
-    (arg: DatesSetArg) => {
-      setDateRange({ from: arg.startStr, to: arg.endStr })
-    },
-    [setDateRange],
-  )
-
   const handleEventClick = useCallback((event: Event) => {
     setSelectedEvent(event)
     setSheetOpen(true)
   }, [])
 
-  const handleDateSelect = useCallback((arg: DateSelectArg) => {
-    const startDate = new Date(arg.startStr)
-    const endDate = new Date(arg.startStr)
-    endDate.setHours(endDate.getHours() + 2)
-    setCreateDefaults({
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-    } as unknown as Record<string, unknown>)
-    setCreateOpen(true)
-  }, [])
+  const handleCalendarEventClick = useCallback((calendarEvent: CalendarEvent) => {
+    const event = allEvents.find((e) => e.id === calendarEvent.id)
+    if (event) handleEventClick(event)
+  }, [allEvents, handleEventClick])
 
-  const handleRightClick = useCallback((event: Event, e: React.MouseEvent) => {
-    e.preventDefault()
-    setContextMenu({ x: e.clientX, y: e.clientY, event })
-  }, [])
-
-  const handleEventDrop = useCallback(async (arg: EventDropArg) => {
-    const eventId = arg.event.id
-    const newStart = arg.event.start
-    const newEnd = arg.event.end
-    if (!newStart) return
+  const handleEventUpdate = useCallback(async (id: string, updated: Partial<CalendarEvent>) => {
     const result = await updateEvent({
-      id: eventId,
-      startDate: newStart.toISOString(),
-      endDate: newEnd ? newEnd.toISOString() : undefined,
+      id,
+      startDate: updated.startTime instanceof Date ? updated.startTime.toISOString() : undefined,
+      endDate: updated.endTime instanceof Date ? updated.endTime.toISOString() : undefined,
     } as unknown as Record<string, unknown>)
     if (result.success) {
       notify.success(EVENT.DRAG.DROP_SUCCESS)
       refresh()
     } else {
       notify.error(result.error || EVENT.DRAG.DROP_ERROR)
-      arg.revert()
-    }
-  }, [refresh])
-
-  const handleEventResize = useCallback(async (arg: EventResizeDoneArg) => {
-    const eventId = arg.event.id
-    const newEnd = arg.event.end
-    const newStart = arg.event.start
-    if (!newStart || !newEnd) return
-    const result = await updateEvent({
-      id: eventId,
-      startDate: newStart.toISOString(),
-      endDate: newEnd.toISOString(),
-    } as unknown as Record<string, unknown>)
-    if (result.success) {
-      notify.success(EVENT.DRAG.RESIZE_SUCCESS)
-      refresh()
-    } else {
-      notify.error(result.error || EVENT.DRAG.RESIZE_ERROR)
-      arg.revert()
     }
   }, [refresh])
 
@@ -170,12 +162,10 @@ export function CalendarPage({ initialData }: { initialData?: CalendarInitialDat
 
   const handleDeleteRequest = useCallback((event: Event) => {
     setSheetOpen(false)
-    setContextMenu(null)
     setTimeout(() => setDeleteTarget(event), 300)
   }, [])
 
   const handleDuplicate = useCallback(async (event: Event) => {
-    setContextMenu(null)
     const result = await duplicateEvent(event.id)
     if (result.success) {
       notify.success(EVENT.DUPLICATE.SUCCESS)
@@ -186,7 +176,6 @@ export function CalendarPage({ initialData }: { initialData?: CalendarInitialDat
   }, [refresh])
 
   const handleOpenEvent = useCallback((event: Event) => {
-    setContextMenu(null)
     setSheetOpen(false)
     router.push(`/dashboard/events/${event.id}`)
   }, [router])
@@ -204,6 +193,9 @@ export function CalendarPage({ initialData }: { initialData?: CalendarInitialDat
     { label: 'Budget total', value: stats.totalBudget, prefix: 'MAD', icon: Wallet, sensitive: true, ...budgetKpi },
     { label: 'Encaissé', value: stats.totalPaid, prefix: 'MAD', icon: Banknote, sensitive: true, ...paymentsKpi },
   ], [stats, totalKpi, weekKpi, monthKpi, budgetKpi, paymentsKpi])
+
+  const calendarEvents = useMemo(() => events.map(eventToCalendarEvent), [events])
+  const eventCategories = useMemo(() => Object.values(EVENT_TYPE_LABELS), [])
 
   if (error && allEvents.length === 0) {
     return (
@@ -259,24 +251,23 @@ export function CalendarPage({ initialData }: { initialData?: CalendarInitialDat
               onStatusFilterChange={(v) => setFilters((prev) => ({ ...prev, status: v || undefined }))}
               typeFilter={filters.type || null}
               onTypeFilterChange={(v) => setFilters((prev) => ({ ...prev, type: v || undefined }))}
-              paymentFilter={null}
-              onPaymentFilterChange={() => {}}
-              dateFrom=""
-              onDateFromChange={() => {}}
-              dateTo=""
-              onDateToChange={() => {}}
-              budgetMin=""
-              onBudgetMinChange={() => {}}
-              budgetMax=""
-              onBudgetMaxChange={() => {}}
+              paymentFilter={paymentFilter}
+              onPaymentFilterChange={setPaymentFilter}
+              dateFrom={dateFromFilter}
+              onDateFromChange={setDateFromFilter}
+              dateTo={dateToFilter}
+              onDateToChange={setDateToFilter}
+              budgetMin={budgetMinFilter}
+              onBudgetMinChange={setBudgetMinFilter}
+              budgetMax={budgetMaxFilter}
+              onBudgetMaxChange={setBudgetMaxFilter}
               viewMode="calendar"
               onViewModeChange={(v) => { if (v === 'table') router.push('/dashboard/events') }}
               showFilters={showFilters}
               onToggleFilters={() => setShowFilters((s) => !s)}
               onRefresh={refresh}
-              onResetFilters={() => { setFilters({}); setSearchInput('') }}
+              onResetFilters={() => { setFilters({}); setSearchInput(''); setPaymentFilter(null); setDateFromFilter(''); setDateToFilter(''); setBudgetMinFilter(''); setBudgetMaxFilter('') }}
               filteredCount={events.length}
-              searchMaxWidth="max-w-[580px] lg:max-w-[620px]"
               hideViewToggle
             />
           </motion.div>
@@ -288,9 +279,9 @@ export function CalendarPage({ initialData }: { initialData?: CalendarInitialDat
             className="mt-10"
           >
             {events.length === 0 && !loading && (!everHadEvents || filters.status || filters.type || filters.search) ? (
-              <div className="hidden md:flex flex-col items-center justify-center min-h-[420px] text-center rounded-2xl border border-border bg-card shadow-soft">
-                <div className="size-20 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/60 border border-amber-200/60 flex items-center justify-center mb-5 shadow-sm">
-                  <Calendar className="size-8 text-amber-400" strokeWidth={1.5} />
+              <div className="flex flex-col items-center justify-center min-h-[420px] text-center rounded-2xl border border-border bg-card shadow-soft">
+                <div className="size-20 rounded-2xl bg-gradient-to-br from-gold-soft/60 to-gold-soft/20 border border-gold/20 flex items-center justify-center mb-5 shadow-sm">
+                  <Calendar className="size-8 text-gold" strokeWidth={1.5} />
                 </div>
                 <h3 className="text-xl font-display font-semibold text-foreground mb-2">
                   {filters.status || filters.type || filters.search
@@ -321,25 +312,15 @@ export function CalendarPage({ initialData }: { initialData?: CalendarInitialDat
               </div>
             ) : (
               <div className="relative">
-                {loading && (
-                  <div className="hidden md:flex absolute inset-0 z-20 items-center justify-center bg-card/60 backdrop-blur-[1px] rounded-2xl">
-                    <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
-                      <div className="size-4 rounded-full border-2 border-gold border-t-transparent animate-spin" />
-                      Mise à jour...
-                    </div>
-                  </div>
-                )}
                 <div className="hidden md:block">
-                  <CalendarView
-                    events={events}
-                    onDatesSet={handleDatesSet}
-                    onEventClick={handleEventClick}
-                    onDateSelect={handleDateSelect}
-                    onEventRightClick={handleRightClick}
-                    loading={loading}
-                    thisMonthCount={stats.thisMonth}
-                    onEventDrop={handleEventDrop}
-                    onEventResize={handleEventResize}
+                  <EventManager
+                    events={calendarEvents}
+                    onEventClick={handleCalendarEventClick}
+                    onNewEvent={() => { setCreateDefaults(undefined); setCreateOpen(true) }}
+                    onEventUpdate={handleEventUpdate}
+                    categories={eventCategories}
+                    colors={eventColors}
+                    hideFilters
                   />
                 </div>
                 <div className="block md:hidden">
@@ -381,44 +362,6 @@ export function CalendarPage({ initialData }: { initialData?: CalendarInitialDat
           onEdit={handleEdit}
           onDelete={handleDeleteRequest}
         />
-
-        {contextMenu && (
-          <div
-            ref={menuRef}
-            style={{ position: 'fixed', left: contextMenu.x, top: contextMenu.y, zIndex: 9999 }}
-            className="w-44 rounded-xl border border-border/60 bg-card shadow-xl py-1.5 overflow-hidden"
-          >
-            <button
-              onClick={() => handleOpenEvent(contextMenu.event)}
-              className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-foreground hover:bg-muted/40 transition-colors"
-            >
-              <ExternalLink className="size-3.5 text-muted-foreground/60" strokeWidth={1.5} />
-              Ouvrir
-            </button>
-            <button
-              onClick={() => { setContextMenu(null); handleEdit(contextMenu.event) }}
-              className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-foreground hover:bg-muted/40 transition-colors"
-            >
-              <Pencil className="size-3.5 text-muted-foreground/60" strokeWidth={1.5} />
-              Modifier
-            </button>
-            <button
-              onClick={() => handleDuplicate(contextMenu.event)}
-              className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-foreground hover:bg-muted/40 transition-colors"
-            >
-              <Copy className="size-3.5 text-muted-foreground/60" strokeWidth={1.5} />
-              Dupliquer
-            </button>
-            <div className="h-px bg-border/30 my-1" />
-            <button
-              onClick={() => handleDeleteRequest(contextMenu.event)}
-              className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-destructive hover:bg-destructive/5 transition-colors"
-            >
-              <Trash2 className="size-3.5" strokeWidth={1.5} />
-              Supprimer
-            </button>
-          </div>
-        )}
       </div>
     </PrivacyModeProvider>
   )

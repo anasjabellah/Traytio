@@ -8,6 +8,11 @@ export type CalendarFilters = {
   status?: string
   type?: string
   search?: string
+  paymentStatus?: string
+  dateFrom?: string
+  dateTo?: string
+  budgetMin?: number
+  budgetMax?: number
 }
 
 export type CalendarStats = {
@@ -79,6 +84,9 @@ export function useCalendarData(initialData?: CalendarInitialData | null) {
           status: currentFilters.status as Event['status'],
           type: currentFilters.type as Event['type'],
           search: currentFilters.search,
+          paymentStatus: currentFilters.paymentStatus as Event['paymentStatus'],
+          budgetMin: currentFilters.budgetMin,
+          budgetMax: currentFilters.budgetMax,
         })
 
         if (!mounted.current) return
@@ -121,7 +129,7 @@ export function useCalendarData(initialData?: CalendarInitialData | null) {
     if (dateRange) {
       fetchEvents(dateRange.from, dateRange.to, filters)
     }
-  }, [dateRange?.from, dateRange?.to, filters.status, filters.type, filters.search, fetchEvents])
+  }, [dateRange?.from, dateRange?.to, filters.status, filters.type, filters.search, filters.paymentStatus, filters.dateFrom, filters.dateTo, filters.budgetMin, filters.budgetMax, fetchEvents])
 
   useEffect(() => {
     const handleFocus = () => {
@@ -132,7 +140,7 @@ export function useCalendarData(initialData?: CalendarInitialData | null) {
     }
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
-  }, [dateRange?.from, dateRange?.to, filters.status, filters.type, filters.search, fetchEvents])
+  }, [dateRange?.from, dateRange?.to, filters.status, filters.type, filters.search, filters.paymentStatus, filters.dateFrom, filters.dateTo, filters.budgetMin, filters.budgetMax, fetchEvents])
 
   const appliedFilters = useMemo(() => {
     return events.filter((e) => {
