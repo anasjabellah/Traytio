@@ -56,12 +56,12 @@ export interface EventManagerProps {
 }
 
 const defaultColors = [
-  { name: "Blue", value: "blue", bg: "bg-blue-500", text: "text-blue-700" },
-  { name: "Green", value: "green", bg: "bg-green-500", text: "text-green-700" },
-  { name: "Purple", value: "purple", bg: "bg-purple-500", text: "text-purple-700" },
+  { name: "Bleu", value: "blue", bg: "bg-blue-500", text: "text-blue-700" },
+  { name: "Vert", value: "green", bg: "bg-green-500", text: "text-green-700" },
+  { name: "Violet", value: "purple", bg: "bg-purple-500", text: "text-purple-700" },
   { name: "Orange", value: "orange", bg: "bg-orange-500", text: "text-orange-700" },
-  { name: "Pink", value: "pink", bg: "bg-pink-500", text: "text-pink-700" },
-  { name: "Red", value: "red", bg: "bg-red-500", text: "text-red-700" },
+  { name: "Rose", value: "pink", bg: "bg-pink-500", text: "text-pink-700" },
+  { name: "Rouge", value: "red", bg: "bg-red-500", text: "text-red-700" },
 ]
 
 export function EventManager({
@@ -71,11 +71,11 @@ export function EventManager({
   onEventDelete,
   onEventClick: externalEventClick,
   onNewEvent: externalNewEvent,
-  categories = ["Meeting", "Task", "Reminder", "Personal"],
+  categories = ["Réunion", "Tâche", "Rappel", "Personnel"],
   colors = defaultColors,
   defaultView = "month",
   className,
-  availableTags = ["Important", "Urgent", "Work", "Personal", "Team", "Client"],
+  availableTags = ["Important", "Urgent", "Travail", "Personnel", "Équipe", "Client"],
   hideFilters = false,
 }: EventManagerProps) {
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents)
@@ -281,30 +281,30 @@ export function EventManager({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <h2 className="text-xl font-semibold sm:text-2xl">
             {view === "month" &&
-              currentDate.toLocaleDateString("en-US", {
+              currentDate.toLocaleDateString("fr-FR", {
                 month: "long",
                 year: "numeric",
               })}
             {view === "week" &&
-              `Week of ${currentDate.toLocaleDateString("en-US", {
+              `Semaine du ${currentDate.toLocaleDateString("fr-FR", {
                 month: "short",
                 day: "numeric",
               })}`}
             {view === "day" &&
-              currentDate.toLocaleDateString("en-US", {
+              currentDate.toLocaleDateString("fr-FR", {
                 weekday: "long",
                 month: "long",
                 day: "numeric",
                 year: "numeric",
               })}
-            {view === "list" && "All Events"}
+            {view === "list" && "Liste"}
           </h2>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={() => navigateDate("prev")} className="h-8 w-8">
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
-              Today
+              Aujourd'hui
             </Button>
             <Button variant="outline" size="icon" onClick={() => navigateDate("next")} className="h-8 w-8">
               <ChevronRight className="h-4 w-4" />
@@ -322,25 +322,25 @@ export function EventManager({
                 <SelectItem value="month">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    Month View
+                    Mois
                   </div>
                 </SelectItem>
                 <SelectItem value="week">
                   <div className="flex items-center gap-2">
                     <Grid3x3 className="h-4 w-4" />
-                    Week View
+                    Semaine
                   </div>
                 </SelectItem>
                 <SelectItem value="day">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    Day View
+                    Jour
                   </div>
                 </SelectItem>
                 <SelectItem value="list">
                   <div className="flex items-center gap-2">
                     <List className="h-4 w-4" />
-                    List View
+                    Liste
                   </div>
                 </SelectItem>
               </SelectContent>
@@ -355,7 +355,7 @@ export function EventManager({
               className="h-8"
             >
               <Calendar className="h-4 w-4" />
-              <span className="ml-1">Month</span>
+              <span className="ml-1">Mois</span>
             </Button>
             <Button
               variant={view === "week" ? "secondary" : "ghost"}
@@ -364,7 +364,7 @@ export function EventManager({
               className="h-8"
             >
               <Grid3x3 className="h-4 w-4" />
-              <span className="ml-1">Week</span>
+              <span className="ml-1">Semaine</span>
             </Button>
             <Button
               variant={view === "day" ? "secondary" : "ghost"}
@@ -373,7 +373,7 @@ export function EventManager({
               className="h-8"
             >
               <Clock className="h-4 w-4" />
-              <span className="ml-1">Day</span>
+              <span className="ml-1">Jour</span>
             </Button>
             <Button
               variant={view === "list" ? "secondary" : "ghost"}
@@ -382,13 +382,13 @@ export function EventManager({
               className="h-8"
             >
               <List className="h-4 w-4" />
-              <span className="ml-1">List</span>
+              <span className="ml-1">Liste</span>
             </Button>
           </div>
 
           <Button onClick={handleNewEventClick} className="w-full sm:w-auto">
             <Plus className="mr-2 size-3.5" />
-            New Event
+            Nouvel événement
           </Button>
         </div>
       </div>
@@ -398,7 +398,7 @@ export function EventManager({
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search events..."
+              placeholder="Rechercher un événement..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -421,7 +421,7 @@ export function EventManager({
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap flex-shrink-0 bg-transparent">
                     <Filter className="h-4 w-4" />
-                    Colors
+                    Couleurs
                     {selectedColors.length > 0 && (
                       <Badge variant="secondary" className="ml-1 h-5 px-1.5">
                         {selectedColors.length}
@@ -430,7 +430,7 @@ export function EventManager({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-48">
-                  <DropdownMenuLabel>Filter by Color</DropdownMenuLabel>
+                  <DropdownMenuLabel>Filtrer par couleur</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {colors.map((color) => (
                     <DropdownMenuCheckboxItem
@@ -455,7 +455,7 @@ export function EventManager({
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap flex-shrink-0 bg-transparent">
                     <Filter className="h-4 w-4" />
-                    Tags
+                    Étiquettes
                     {selectedTags.length > 0 && (
                       <Badge variant="secondary" className="ml-1 h-5 px-1.5">
                         {selectedTags.length}
@@ -464,7 +464,7 @@ export function EventManager({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-48">
-                  <DropdownMenuLabel>Filter by Tag</DropdownMenuLabel>
+                  <DropdownMenuLabel>Filtrer par étiquette</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {availableTags.map((tag) => (
                     <DropdownMenuCheckboxItem
@@ -484,7 +484,7 @@ export function EventManager({
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap flex-shrink-0 bg-transparent">
                     <Filter className="h-4 w-4" />
-                    Categories
+                    Catégories
                     {selectedCategories.length > 0 && (
                       <Badge variant="secondary" className="ml-1 h-5 px-1.5">
                         {selectedCategories.length}
@@ -493,7 +493,7 @@ export function EventManager({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-48">
-                  <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
+                  <DropdownMenuLabel>Filtrer par catégorie</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {categories.map((category) => (
                     <DropdownMenuCheckboxItem
@@ -514,7 +514,7 @@ export function EventManager({
               {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-2 whitespace-nowrap flex-shrink-0">
                   <X className="h-4 w-4" />
-                  Clear Filters
+                  Effacer les filtres
                 </Button>
               )}
             </div>
@@ -525,7 +525,7 @@ export function EventManager({
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2 bg-transparent">
                   <Filter className="h-4 w-4" />
-                  Colors
+                  Couleurs
                   {selectedColors.length > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 px-1">
                       {selectedColors.length}
@@ -534,7 +534,7 @@ export function EventManager({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel>Filter by Color</DropdownMenuLabel>
+                <DropdownMenuLabel>Filtrer par couleur</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {colors.map((color) => (
                   <DropdownMenuCheckboxItem
@@ -559,7 +559,7 @@ export function EventManager({
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2 bg-transparent">
                   <Filter className="h-4 w-4" />
-                  Tags
+                  Étiquettes
                   {selectedTags.length > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 px-1">
                       {selectedTags.length}
@@ -568,7 +568,7 @@ export function EventManager({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel>Filter by Tag</DropdownMenuLabel>
+                <DropdownMenuLabel>Filtrer par étiquette</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {availableTags.map((tag) => (
                   <DropdownMenuCheckboxItem
@@ -588,7 +588,7 @@ export function EventManager({
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2 bg-transparent">
                   <Filter className="h-4 w-4" />
-                  Categories
+                  Catégories
                   {selectedCategories.length > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 px-1">
                       {selectedCategories.length}
@@ -597,7 +597,7 @@ export function EventManager({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
+                <DropdownMenuLabel>Filtrer par catégorie</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {categories.map((category) => (
                   <DropdownMenuCheckboxItem
@@ -618,7 +618,7 @@ export function EventManager({
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-2">
                 <X className="h-4 w-4" />
-                Clear
+                Effacer
               </Button>
             )}
           </div>
@@ -627,7 +627,7 @@ export function EventManager({
 
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground">Active filters:</span>
+          <span className="text-sm text-muted-foreground">Filtres actifs :</span>
           {selectedColors.map((colorValue) => {
             const color = getColorClasses(colorValue)
             return (
@@ -715,15 +715,15 @@ export function EventManager({
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{isCreating ? "Create Event" : "Event Details"}</DialogTitle>
+            <DialogTitle>{isCreating ? "Créer un événement" : "Détails de l'événement"}</DialogTitle>
             <DialogDescription>
-              {isCreating ? "Add a new event to your calendar" : "View and edit event details"}
+              {isCreating ? "Ajouter un nouvel événement" : "Consulter et modifier les détails"}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">Titre</Label>
               <Input
                 id="title"
                 value={isCreating ? newEvent.title : selectedEvent?.title}
@@ -732,7 +732,7 @@ export function EventManager({
                     ? setNewEvent((prev) => ({ ...prev, title: e.target.value }))
                     : setSelectedEvent((prev) => (prev ? { ...prev, title: e.target.value } : null))
                 }
-                placeholder="Event title"
+                placeholder="Titre de l'événement"
               />
             </div>
 
@@ -746,14 +746,14 @@ export function EventManager({
                     ? setNewEvent((prev) => ({ ...prev, description: e.target.value }))
                     : setSelectedEvent((prev) => (prev ? { ...prev, description: e.target.value } : null))
                 }
-                placeholder="Event description"
+                placeholder="Description de l'événement"
                 rows={3}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startTime">Start Time</Label>
+                <Label htmlFor="startTime">Heure de début</Label>
                 <Input
                   id="startTime"
                   type="datetime-local"
@@ -782,7 +782,7 @@ export function EventManager({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="endTime">End Time</Label>
+                <Label htmlFor="endTime">Heure de fin</Label>
                 <Input
                   id="endTime"
                   type="datetime-local"
@@ -811,7 +811,7 @@ export function EventManager({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category">Catégorie</Label>
                 <Select
                   value={isCreating ? newEvent.category : selectedEvent?.category}
                   onValueChange={(v) => {
@@ -822,7 +822,7 @@ export function EventManager({
                   }}
                 >
                   <SelectTrigger id="category">
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder="Sélectionner une catégorie" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
@@ -835,7 +835,7 @@ export function EventManager({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="color">Color</Label>
+                <Label htmlFor="color">Couleur</Label>
                 <Select
                   value={isCreating ? newEvent.color : selectedEvent?.color}
                   onValueChange={(v) => {
@@ -846,7 +846,7 @@ export function EventManager({
                   }}
                 >
                   <SelectTrigger id="color">
-                    <SelectValue placeholder="Select color" />
+                    <SelectValue placeholder="Sélectionner une couleur" />
                   </SelectTrigger>
                   <SelectContent>
                     {colors.map((color) => (
@@ -863,7 +863,7 @@ export function EventManager({
             </div>
 
             <div className="space-y-2">
-              <Label>Tags</Label>
+              <Label>Étiquettes</Label>
               <div className="flex flex-wrap gap-2">
                 {availableTags.map((tag) => {
                   const isSelected = isCreating ? newEvent.tags?.includes(tag) : selectedEvent?.tags?.includes(tag)
@@ -885,7 +885,7 @@ export function EventManager({
           <DialogFooter>
             {!isCreating && (
               <Button variant="destructive" onClick={() => selectedEvent && handleDeleteEvent(selectedEvent.id)}>
-                Delete
+                Supprimer
               </Button>
             )}
             <Button
@@ -896,10 +896,10 @@ export function EventManager({
                 setSelectedEvent(null)
               }}
             >
-              Cancel
+              Annuler
             </Button>
             <Button onClick={isCreating ? handleCreateEvent : handleUpdateEvent}>
-              {isCreating ? "Create" : "Save"}
+              {isCreating ? "Créer" : "Enregistrer"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1007,7 +1007,7 @@ function EventCard({
   }, [])
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("en-US", {
+    return date.toLocaleTimeString("fr-FR", {
       hour: "2-digit",
       minute: "2-digit",
     })
@@ -1200,7 +1200,7 @@ function MonthView({
   return (
     <Card className="overflow-hidden">
       <div className="grid grid-cols-7 border-b">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+        {["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"].map((day) => (
           <div key={day} className="border-r p-2 text-center text-xs font-medium last:border-r-0 sm:text-sm">
             <span className="hidden sm:inline">{day}</span>
             <span className="sm:hidden">{day.charAt(0)}</span>
@@ -1245,7 +1245,7 @@ function MonthView({
                   />
                 ))}
                 {dayEvents.length > 3 && (
-                  <div className="text-[10px] text-muted-foreground sm:text-xs">+{dayEvents.length - 3} more</div>
+                  <div className="text-[10px] text-muted-foreground sm:text-xs">+{dayEvents.length - 3}</div>
                 )}
               </div>
             </div>
@@ -1300,16 +1300,16 @@ function WeekView({
   return (
     <Card className="overflow-auto">
       <div className="grid grid-cols-8 border-b">
-        <div className="border-r p-2 text-center text-xs font-medium sm:text-sm">Time</div>
+        <div className="border-r p-2 text-center text-xs font-medium sm:text-sm">Heure</div>
         {weekDays.map((day) => (
           <div
             key={day.toISOString()}
             className="border-r p-2 text-center text-xs font-medium last:border-r-0 sm:text-sm"
           >
-            <div className="hidden sm:block">{day.toLocaleDateString("en-US", { weekday: "short" })}</div>
-            <div className="sm:hidden">{day.toLocaleDateString("en-US", { weekday: "narrow" })}</div>
+            <div className="hidden sm:block">{day.toLocaleDateString("fr-FR", { weekday: "short" })}</div>
+            <div className="sm:hidden">{day.toLocaleDateString("fr-FR", { weekday: "narrow" })}</div>
             <div className="text-[10px] text-muted-foreground sm:text-xs">
-              {day.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              {day.toLocaleDateString("fr-FR", { month: "short", day: "numeric" })}
             </div>
           </div>
         ))}
@@ -1435,7 +1435,7 @@ function ListView({
 
   const groupedEvents = sortedEvents.reduce(
     (acc, event) => {
-      const dateKey = event.startTime.toLocaleDateString("en-US", {
+      const dateKey = event.startTime.toLocaleDateString("fr-FR", {
         weekday: "long",
         year: "numeric",
         month: "long",
@@ -1490,12 +1490,12 @@ function ListView({
                         <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground sm:gap-4 sm:text-xs">
                           <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {event.startTime.toLocaleTimeString("en-US", {
+                            {event.startTime.toLocaleTimeString("fr-FR", {
                               hour: "2-digit",
                               minute: "2-digit",
                             })}{" "}
                             -{" "}
-                            {event.endTime.toLocaleTimeString("en-US", {
+                            {event.endTime.toLocaleTimeString("fr-FR", {
                               hour: "2-digit",
                               minute: "2-digit",
                             })}
@@ -1519,7 +1519,7 @@ function ListView({
           </div>
         ))}
         {sortedEvents.length === 0 && (
-          <div className="py-12 text-center text-sm text-muted-foreground sm:text-base">No events found</div>
+          <div className="py-12 text-center text-sm text-muted-foreground sm:text-base">Aucun événement trouvé</div>
         )}
       </div>
     </Card>
