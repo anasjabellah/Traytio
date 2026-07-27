@@ -59,7 +59,7 @@ export function useCalendarData(initialData?: CalendarInitialData | null) {
     perfPayments: number[]
   } | null>(initialData?.perfData ?? null)
   const mounted = useRef(false)
-  const fetchingRef = useRef(false)
+  const fetchEpoch = useRef(0)
   const lastFetchedKey = useRef(
     initialData
       ? `${initialData.dateRange.from}|${initialData.dateRange.to}|${JSON.stringify({})}`
@@ -70,8 +70,7 @@ export function useCalendarData(initialData?: CalendarInitialData | null) {
     async (from: string, to: string, currentFilters: CalendarFilters) => {
       const key = `${from}|${to}|${JSON.stringify(currentFilters)}`
       if (key === lastFetchedKey.current) return
-      if (fetchingRef.current) return
-      fetchingRef.current = true
+      const epoch = ++fetchEpoch.current
       lastFetchedKey.current = key
       setLoading(true)
       setError(null)
@@ -89,7 +88,7 @@ export function useCalendarData(initialData?: CalendarInitialData | null) {
           budgetMax: currentFilters.budgetMax,
         })
 
-        if (!mounted.current) return
+        if (!mounted.current || epoch !== fetchEpoch.current) return
 
         if (result.success && result.data) {
           setEvents(result.data.data)
@@ -106,13 +105,14 @@ export function useCalendarData(initialData?: CalendarInitialData | null) {
           setEvents([])
         }
       } catch {
-        if (mounted.current) {
+        if (mounted.current && epoch === fetchEpoch.current) {
           setError('Erreur lors du chargement')
           setEvents([])
         }
       } finally {
-        fetchingRef.current = false
-        setLoading(false)
+        if (epoch === fetchEpoch.current) {
+          setLoading(false)
+        }
       }
     },
     [],
@@ -194,7 +194,7 @@ export function useCalendarData(initialData?: CalendarInitialData | null) {
 
   const refresh = useCallback(() => {
     if (dateRange) {
-      lastFetchedKey.current = ''
+      fetchEpoch.current += 1
       fetchEvents(dateRange.from, dateRange.to, filters)
     }
   }, [dateRange, filters, fetchEvents])

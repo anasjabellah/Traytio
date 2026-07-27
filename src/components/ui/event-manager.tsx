@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useRef, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -96,6 +97,10 @@ export function EventManager({
   const [selectedColors, setSelectedColors] = useState<string[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+
+  React.useEffect(() => {
+    setEvents(initialEvents)
+  }, [initialEvents])
 
   const filteredEvents = useMemo(() => {
     return events.filter((event) => {
@@ -382,7 +387,7 @@ export function EventManager({
           </div>
 
           <Button onClick={handleNewEventClick} className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="mr-2 size-3.5" />
             New Event
           </Button>
         </div>
@@ -903,6 +908,69 @@ export function EventManager({
   )
 }
 
+function HoverPortal({
+  triggerRef,
+  onShow,
+  onHide,
+  children,
+}: {
+  triggerRef: React.RefObject<HTMLDivElement | null>
+  onShow: () => void
+  onHide: () => void
+  children: React.ReactNode
+}) {
+  const [style, setStyle] = useState<React.CSSProperties>({
+    position: "fixed",
+    top: -9999,
+    left: -9999,
+    zIndex: 9999,
+  })
+  const cardRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const trigger = triggerRef.current
+    if (!trigger) return
+
+    const r = trigger.getBoundingClientRect()
+    const ew = 256
+    const eh = 200
+    const sb = window.innerHeight - r.bottom
+    const sa = r.top
+    const sr = window.innerWidth - r.left
+    const sl = r.right
+
+    let top = sb >= eh + 8 || sb >= sa ? r.bottom + 4 : Math.max(8, r.top - eh - 4)
+    let left = sr >= ew ? r.left : sl >= ew ? r.right - ew : Math.max(8, window.innerWidth - ew - 8)
+
+    const raf = requestAnimationFrame(() => {
+      const el = cardRef.current
+      if (!el) return
+      const w = el.offsetWidth
+      const h = el.offsetHeight
+      top = sb >= h + 8 || sb >= sa ? r.bottom + 4 : Math.max(8, r.top - h - 4)
+      left = sr >= w ? r.left : sl >= w ? r.right - w : Math.max(8, window.innerWidth - w - 8)
+      top = Math.max(8, Math.min(top, window.innerHeight - h - 8))
+      left = Math.max(8, left)
+      setStyle({ position: "fixed", top, left, zIndex: 9999 })
+    })
+
+    return () => cancelAnimationFrame(raf)
+  }, [triggerRef])
+
+  return createPortal(
+    <div
+      ref={cardRef}
+      style={style}
+      onMouseEnter={onShow}
+      onMouseLeave={onHide}
+      className="animate-in fade-in slide-in-from-top-2 duration-200"
+    >
+      {children}
+    </div>,
+    document.body,
+  )
+}
+
 function EventCard({
   event,
   onEventClick,
@@ -920,6 +988,23 @@ function EventCard({
 }) {
   const [isHovered, setIsHovered] = useState(false)
   const colorClasses = getColorClasses(event.color)
+  const cardRef = useRef<HTMLDivElement>(null)
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  const showCard = useCallback(() => {
+    clearTimeout(hideTimerRef.current)
+    setIsHovered(true)
+  }, [])
+
+  const hideCard = useCallback(() => {
+    clearTimeout(hideTimerRef.current)
+    setIsHovered(false)
+  }, [])
+
+  const scheduleHide = useCallback(() => {
+    clearTimeout(hideTimerRef.current)
+    hideTimerRef.current = setTimeout(() => setIsHovered(false), 150)
+  }, [])
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString("en-US", {
@@ -928,15 +1013,48 @@ function EventCard({
     })
   }
 
+  const hoverCard = isHovered && (
+    <HoverPortal triggerRef={cardRef} onShow={showCard} onHide={hideCard}>
+      <Card className="border-2 p-3 shadow-xl w-64">
+        <div className="space-y-2">
+          <div className="flex items-start justify-between gap-2">
+            <h4 className="font-semibold text-sm leading-tight">{event.title}</h4>
+            <div className={cn("h-3 w-3 rounded-full flex-shrink-0", colorClasses.bg)} />
+          </div>
+          {event.description && <p className="text-xs text-muted-foreground line-clamp-2">{event.description}</p>}
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            <span>
+              {formatTime(event.startTime)} - {formatTime(event.endTime)}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {event.category && (
+              <Badge variant="secondary" className="text-[10px] h-5">
+                {event.category}
+              </Badge>
+            )}
+            {event.tags?.map((tag) => (
+              <Badge key={tag} variant="outline" className="text-[10px] h-5">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </Card>
+    </HoverPortal>
+  )
+
   if (variant === "compact") {
     return (
       <div
+        ref={cardRef}
         draggable
         onDragStart={() => onDragStart(event)}
         onDragEnd={onDragEnd}
         onClick={() => onEventClick(event)}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={showCard}
+        onMouseLeave={scheduleHide}
         className="relative cursor-pointer"
       >
         <div
@@ -944,42 +1062,12 @@ function EventCard({
             "rounded px-1.5 py-0.5 text-xs font-medium transition-all duration-300",
             colorClasses.bg,
             "text-white truncate animate-in fade-in slide-in-from-top-1",
-            isHovered && "scale-105 shadow-lg z-10",
+            isHovered && "shadow-lg ring-1 ring-white/30 z-10",
           )}
         >
           {event.title}
         </div>
-        {isHovered && (
-          <div className="absolute left-0 top-full z-50 mt-1 w-64 animate-in fade-in slide-in-from-top-2 duration-200">
-            <Card className="border-2 p-3 shadow-xl">
-              <div className="space-y-2">
-                <div className="flex items-start justify-between gap-2">
-                  <h4 className="font-semibold text-sm leading-tight">{event.title}</h4>
-                  <div className={cn("h-3 w-3 rounded-full flex-shrink-0", colorClasses.bg)} />
-                </div>
-                {event.description && <p className="text-xs text-muted-foreground line-clamp-2">{event.description}</p>}
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3" />
-                  <span>
-                    {formatTime(event.startTime)} - {formatTime(event.endTime)}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {event.category && (
-                    <Badge variant="secondary" className="text-[10px] h-5">
-                      {event.category}
-                    </Badge>
-                  )}
-                  {event.tags?.map((tag) => (
-                    <Badge key={tag} variant="outline" className="text-[10px] h-5">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </Card>
-          </div>
-        )}
+        {hoverCard}
       </div>
     )
   }
@@ -991,13 +1079,13 @@ function EventCard({
         onDragStart={() => onDragStart(event)}
         onDragEnd={onDragEnd}
         onClick={() => onEventClick(event)}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={showCard}
+        onMouseLeave={scheduleHide}
         className={cn(
           "cursor-pointer rounded-lg p-3 transition-all duration-300",
           colorClasses.bg,
-          "text-white animate-in fade-in slide-in-from-left-2",
-          isHovered && "scale-[1.03] shadow-2xl ring-2 ring-white/50",
+          "text-white",
+          isHovered && "shadow-xl ring-2 ring-white/40",
         )}
       >
         <div className="font-semibold">{event.title}</div>
@@ -1006,32 +1094,19 @@ function EventCard({
           <Clock className="h-3 w-3" />
           {formatTime(event.startTime)} - {formatTime(event.endTime)}
         </div>
-        {isHovered && (
-          <div className="mt-2 flex flex-wrap gap-1 animate-in fade-in slide-in-from-bottom-1 duration-200">
-            {event.category && (
-              <Badge variant="secondary" className="text-xs">
-                {event.category}
-              </Badge>
-            )}
-            {event.tags?.map((tag) => (
-              <Badge key={tag} variant="outline" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
       </div>
     )
   }
 
   return (
     <div
+      ref={cardRef}
       draggable
       onDragStart={() => onDragStart(event)}
       onDragEnd={onDragEnd}
       onClick={() => onEventClick(event)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={showCard}
+      onMouseLeave={scheduleHide}
       className="relative"
     >
       <div
@@ -1039,14 +1114,14 @@ function EventCard({
           "cursor-pointer rounded px-2 py-1 text-xs font-medium transition-all duration-300",
           colorClasses.bg,
           "text-white animate-in fade-in slide-in-from-left-1",
-          isHovered && "scale-105 shadow-lg z-10",
+          isHovered && "shadow-lg ring-1 ring-white/30 z-10",
         )}
       >
         <div className="truncate">{event.title}</div>
       </div>
-      {isHovered && (
-        <div className="absolute left-0 top-full z-50 mt-1 w-72 animate-in fade-in slide-in-from-top-2 duration-200">
-          <Card className="border-2 p-4 shadow-xl">
+      {variant === "default" && isHovered && (
+        <HoverPortal triggerRef={cardRef} onShow={showCard} onHide={hideCard}>
+          <Card className="border-2 p-4 shadow-xl w-72">
             <div className="space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <h4 className="font-semibold leading-tight">{event.title}</h4>
@@ -1075,7 +1150,7 @@ function EventCard({
               </div>
             </div>
           </Card>
-        </div>
+        </HoverPortal>
       )}
     </div>
   )
