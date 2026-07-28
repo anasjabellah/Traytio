@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -110,6 +110,38 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
   const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null);
   const [convertingInvoice, setConvertingInvoice] = useState<string | null>(null);
   const [updatingInvoiceStatus, setUpdatingInvoiceStatus] = useState<string | null>(null);
+  const [highlightedDoc, setHighlightedDoc] = useState<string | null>(null);
+  const highlightTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [visibleCount, setVisibleCount] = useState(5);
+  const prevInvoicesLenRef = useRef(invoices.length);
+
+  useEffect(() => {
+    if (invoices.length !== prevInvoicesLenRef.current) {
+      prevInvoicesLenRef.current = invoices.length;
+      setVisibleCount(5);
+    }
+  }, [invoices.length]);
+
+  const sortedInvoices = useMemo(
+    () => [...invoices].sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()),
+    [invoices],
+  );
+
+  const hasMore = visibleCount < sortedInvoices.length;
+  const showCount = Math.min(visibleCount, sortedInvoices.length);
+
+  const scrollToNewDoc = useCallback(() => {
+    requestAnimationFrame(() => {
+      const cards = document.querySelectorAll<HTMLElement>('#invoices-section [data-doc-id]');
+      if (cards.length > 0) {
+        const id = cards[0].getAttribute('data-doc-id') ?? '';
+        setHighlightedDoc(id);
+        cards[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+        highlightTimerRef.current = setTimeout(() => setHighlightedDoc(null), 3000);
+      }
+    });
+  }, []);
 
   const fetchInvoices = useCallback(async () => {
     try {
@@ -136,6 +168,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
       if (result.success) {
         notify.success(COMMANDE.QUOTE.SUCCESS);
         await fetchInvoices();
+        scrollToNewDoc();
       } else {
         notify.error(result.error ?? COMMANDE.QUOTE.ERROR);
       }
@@ -144,7 +177,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
     } finally {
       setGenerating(null);
     }
-  }, [commande.id, fetchInvoices]);
+  }, [commande.id, fetchInvoices, scrollToNewDoc]);
 
   const handleGenerateInvoice = useCallback(async () => {
     setGenerating("invoice");
@@ -153,6 +186,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
       if (result.success) {
         notify.success(COMMANDE.INVOICE.SUCCESS);
         await fetchInvoices();
+        scrollToNewDoc();
       } else {
         notify.error(result.error ?? COMMANDE.INVOICE.ERROR);
       }
@@ -161,7 +195,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
     } finally {
       setGenerating(null);
     }
-  }, [commande.id, fetchInvoices]);
+  }, [commande.id, fetchInvoices, scrollToNewDoc]);
 
   const handleDownloadInvoice = useCallback(async (invoice: InvoiceWithCommande) => {
     setDownloadingInvoice(invoice.id);
@@ -806,7 +840,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
               transition={{ delay: 0.26, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
               className="rounded-2xl border border-border bg-card shadow-soft p-5"
             >
-              <div className="flex items-center gap-2.5 mb-4">
+              <div className="flex items-center gap-2.5 mb-5">
                 <div className="size-7 rounded-lg bg-foreground/[0.04] flex items-center justify-center">
                   <Sparkles className="size-3.5 text-foreground/70" strokeWidth={1.8} />
                 </div>
@@ -814,16 +848,21 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                 <span className="text-xs text-foreground/50 ml-auto">{activities.length} événement{activities.length > 1 ? "s" : ""}</span>
               </div>
               <div className="relative">
-                <div className="absolute left-[10px] top-2 bottom-2 w-px bg-border/40" />
+                <div className="absolute left-[9px] top-2 bottom-2 w-px bg-border/20" />
                 <div className="space-y-0">
                   {activities.map((a, i) => (
-                    <div key={i} className="relative flex items-start gap-3.5 pb-3.5 last:pb-0">
-                      <div className={`relative z-10 size-5 rounded-full ${a.bgColor} flex items-center justify-center shrink-0 mt-0.5 ring-2 ring-white`}>
-                        <a.icon className={`size-2.5 ${a.color}`} strokeWidth={3} />
+                    <div key={i} className="relative flex items-start gap-4 py-2.5 first:pt-0 last:pb-0 group cursor-default">
+                      <div className={`relative z-10 mt-0.5 size-4 rounded-full ${a.bgColor} flex items-center justify-center shrink-0 ring-[3px] ring-white transition-all duration-200 group-hover:scale-110 group-hover:shadow-sm`}>
+                        <a.icon className={`size-2 ${a.color}`} strokeWidth={3} />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm text-foreground">{a.label}</div>
-                        {a.time && <div className="text-[11px] text-foreground/50 mt-0.5">{a.time}</div>}
+                      <div className="flex-1 min-w-0 rounded-lg transition-all duration-200 group-hover:bg-foreground/[0.02] -mx-2.5 px-2.5 py-1">
+                        <div className="text-sm font-medium text-foreground">{a.label}</div>
+                        {a.time && (
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <Clock className="size-2.5 text-foreground/30 shrink-0" strokeWidth={1.5} />
+                            <span className="text-[11px] text-foreground/40">{a.time}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -833,10 +872,11 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
 
             {/* ─── INVOICES / QUOTES HISTORY ─── */}
             <motion.div
+              id="invoices-section"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
-              className="rounded-2xl border border-border bg-card shadow-soft p-5"
+              className="rounded-2xl border border-border bg-card shadow-soft p-5 scroll-mt-24"
             >
               <div className="flex items-center gap-2.5 mb-4">
                 <div className="size-7 rounded-lg bg-foreground/[0.04] flex items-center justify-center">
@@ -853,7 +893,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                 <div className="text-xs text-foreground/50 italic py-3">Aucun document généré</div>
               ) : (
                 <div className="space-y-2">
-                  {invoices.map((inv) => {
+                  {sortedInvoices.slice(0, visibleCount).map((inv) => {
                     const typeLabel = inv.type === "DEVIS" ? "Devis" : "Facture";
                     const statusLabels: Record<string, string> = {
                       DRAFT: "Brouillon", SENT: "Envoyé", VIEWED: "Vu",
@@ -868,7 +908,12 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                     return (
                       <div
                         key={inv.id}
-                        className="flex items-center justify-between gap-3 rounded-xl bg-foreground/[0.02] border border-border/30 p-3"
+                        data-doc-id={inv.id}
+                        className={`flex items-center justify-between gap-3 rounded-xl border p-3 transition-all duration-700 ${
+                          highlightedDoc === inv.id
+                            ? 'border-[var(--gold)]/40 bg-[var(--gold-soft)]/40 ring-2 ring-[var(--gold)]/20'
+                            : 'bg-foreground/[0.02] border-border/30'
+                        }`}
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
@@ -919,6 +964,14 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                       </div>
                     );
                   })}
+                  {hasMore && (
+                    <button
+                      onClick={() => setVisibleCount((c) => c + 5)}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-border/40 bg-transparent hover:bg-foreground/[0.02] hover:border-border/60 text-xs font-medium text-foreground/50 hover:text-foreground/70 transition-all"
+                    >
+                      Voir plus ({showCount} / {sortedInvoices.length} affichés)
+                    </button>
+                  )}
                 </div>
               )}
             </motion.div>
