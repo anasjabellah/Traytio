@@ -71,7 +71,7 @@ export function EditClientDialog({ client, open, onOpenChange, onSuccess }: Edit
         </DialogHeader>
 
         {/* SCROLLABLE CONTENT */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex-1 overflow-y-auto px-6 py-5" data-scroll-container>
           <ClientForm
             mode="edit"
             defaultValues={defaultValues}

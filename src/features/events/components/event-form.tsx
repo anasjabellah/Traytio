@@ -8,6 +8,7 @@ import { createEventSchema, validationErrorMap } from '@/features/events/validat
 import { AvailabilityCard } from '@/features/events/components/availability-card';
 import { checkEventConflicts } from '@/features/events/actions/check-event-conflicts';
 import type { ConflictEventInfo } from '@/features/events/actions/check-event-conflicts';
+import { scrollToFirstError } from '@/lib/scroll-to-first-error';
 
 type EventFormValues = z.input<typeof createEventSchema>;
 
@@ -193,16 +194,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
       }
       await onSubmit(adjusted);
     }, (errs) => {
-      setTimeout(() => {
-        const keys = Object.keys(errs);
-        if (keys.length > 0) {
-          const el = document.querySelector(`[data-field="${keys[0]}"]`);
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            (el.querySelector('input, button, textarea') as HTMLElement)?.focus();
-          }
-        }
-      }, 100);
+      scrollToFirstError(errs);
     })} className="space-y-6">
       {/* Header */}
       {/* <div className="flex items-center gap-4">
@@ -218,9 +210,9 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
       {/* Row 1: Name + Type */}
       <div className="grid sm:grid-cols-2 gap-4">
         {/* Name */}
-        <div>
+        <div data-field="name">
           <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Nom de l'événement *</div>
-          <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold">
+          <div className={`flex items-center gap-2 rounded-2xl border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold ${errors.name ? 'border-red-500' : 'border-border'}`}>
             <input
               {...register('name')}
               placeholder="Mariage Lambert"
@@ -231,9 +223,9 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
         </div>
 
         {/* Type pills */}
-        <div>
+        <div data-field="type">
           <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Type d'événement *</div>
-          <div className="flex flex-wrap gap-1.5 rounded-2xl border border-border bg-surface-soft p-1.5">
+          <div className={`flex flex-wrap gap-1.5 rounded-2xl border bg-surface-soft p-1.5 ${errors.type ? 'border-red-500' : 'border-border'}`}>
             {EVENT_TYPE_KEYS.map((label) => (
               <button
                 key={label}

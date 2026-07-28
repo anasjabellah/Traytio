@@ -54,7 +54,7 @@ export function CreateEventDialog({ open, onOpenChange, onSuccess, defaultValues
         </DialogHeader>
 
         {/* SCROLLABLE CONTENT */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex-1 overflow-y-auto px-6 py-5" data-scroll-container>
           <EventForm mode="create" onSubmit={handleCreate} isLoading={isSubmitting} defaultValues={defaultValues} />
         </div>
 

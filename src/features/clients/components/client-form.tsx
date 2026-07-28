@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Mail, Phone, MapPin, MapPinHouse, Building, FileText } from 'lucide-react';
 import { CLIENT } from "@/lib/notify/messages";
+import { scrollToFirstError } from '@/lib/scroll-to-first-error';
 
 const clientFormSchema = z.object({
   id: z.string().optional(),
@@ -73,16 +74,7 @@ export function ClientForm({ defaultValues = {}, onSubmit, isLoading = false, mo
     <form id="client-form" onSubmit={handleSubmit(async (values) => {
       await onSubmit(values);
     }, (errs) => {
-      setTimeout(() => {
-        const keys = Object.keys(errs);
-        if (keys.length > 0) {
-          const el = document.querySelector(`[data-field="${keys[0]}"]`);
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            (el.querySelector('input, button, textarea') as HTMLElement)?.focus();
-          }
-        }
-      }, 100);
+      scrollToFirstError(errs);
     })} className="space-y-6">
 
       {/* SECTION 1 — INFORMATIONS */}

@@ -54,7 +54,7 @@ export function CreateClientDialog({ open, onOpenChange, onSuccess }: CreateClie
         </DialogHeader>
 
         {/* SCROLLABLE CONTENT */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex-1 overflow-y-auto px-6 py-5" data-scroll-container>
           <ClientForm mode="create" onSubmit={handleCreate} isLoading={isSubmitting} onValidityChange={setCanSubmit} />
         </div>
 

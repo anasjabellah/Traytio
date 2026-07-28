@@ -52,7 +52,7 @@ export function EditEventDialog({ event, open, onClose, onSuccess }: EditEventDi
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex-1 overflow-y-auto px-6 py-5" data-scroll-container>
           {event && (
             <EventForm
               mode="create"
