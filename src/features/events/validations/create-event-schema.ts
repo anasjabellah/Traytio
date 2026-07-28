@@ -17,8 +17,8 @@ export const validationErrorMap: z.core.$ZodErrorMap = (issue) => {
 
 export const createEventSchema = z.object({
   name: z.string().min(2, { message: EVENT.VALIDATION.NAME_MIN_LENGTH }),
-  type: z.enum(['WEDDING', 'CORPORATE', 'BIRTHDAY', 'ANNIVERSARY', 'HOLIDAY', 'OTHER']),
-  status: z.enum(['DRAFT', 'PLANNED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']).default('DRAFT'),
+  type: z.enum(['WEDDING', 'CORPORATE', 'BIRTHDAY', 'ANNIVERSARY', 'HOLIDAY', 'OTHER'], { message: EVENT.VALIDATION.INVALID_TYPE }),
+  status: z.enum(['DRAFT', 'PLANNED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'], { message: "Veuillez sélectionner un statut valide." }).default('DRAFT'),
   startDate: z.coerce.date(),
   endDate: z.coerce.date(),
   location: z.string().optional(),

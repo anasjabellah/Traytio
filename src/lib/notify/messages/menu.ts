@@ -22,6 +22,7 @@ export const MENU = {
     NAME_MIN_LENGTH: VALIDATION.NAME_MIN_LENGTH,
     INVALID_NUMBER: VALIDATION.INVALID_NUMBER,
     PRICE_POSITIVE: VALIDATION.PRICE_POSITIVE,
+    CATEGORY_REQUIRED: "Veuillez sélectionner une catégorie.",
     MAX_TABLES_REQUIRED: "Le nombre maximum de tables est obligatoire.",
     MAX_TABLES_MIN_MAX: "Le nombre maximum de tables doit être supérieur ou égal au nombre minimum de tables.",
   },

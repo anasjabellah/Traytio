@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { COMMANDE } from '@/lib/notify/messages';
 
 export const commandeItemSchema = z.object({
   name: z.string().min(1),
@@ -26,7 +27,7 @@ export const createCommandeSchema = z.object({
   transportFees: z.number().min(0).nullable().optional(),
   deliveryFees: z.number().min(0).nullable().optional(),
   equipmentFees: z.number().min(0).nullable().optional(),
-  discountType: z.enum(['PERCENTAGE', 'FIXED']).nullable().optional(),
+  discountType: z.enum(['PERCENTAGE', 'FIXED'], { message: COMMANDE.VALIDATION.INVALID_DISCOUNT_TYPE }).nullable().optional(),
   discountValue: z.number().min(0).nullable().optional(),
   discountAmount: z.number().min(0).nullable().optional(),
   acomptePercent: z.number().int().min(0).max(100).nullable().optional(),
@@ -37,7 +38,7 @@ export const createCommandeSchema = z.object({
   notes: z.string().nullable().optional(),
   internalNotes: z.string().nullable().optional(),
   clientNotes: z.string().nullable().optional(),
-  status: z.enum(['DRAFT', 'QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'READY', 'DELIVERED', 'CANCELLED']).optional().default('DRAFT'),
+  status: z.enum(['DRAFT', 'QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'READY', 'DELIVERED', 'CANCELLED'], { message: COMMANDE.VALIDATION.INVALID_STATUS }).optional().default('DRAFT'),
   items: z.array(commandeItemSchema).optional().default([]),
 });
 

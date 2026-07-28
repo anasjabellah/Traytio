@@ -90,7 +90,7 @@ export function EditMenuDialog({ menu, open, onClose, onSuccess }: EditMenuDialo
               </button>
             </div>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto px-8 py-6">
+          <div className="flex-1 overflow-y-auto px-8 py-6" data-scroll-container>
             {menu && (
               <MenuForm mode="edit" onSubmit={handleUpdate} isLoading={isSubmitting} />
             )}

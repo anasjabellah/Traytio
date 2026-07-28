@@ -15,6 +15,7 @@ export const PAYMENT = {
     AMOUNT_REQUIRED: VALIDATION.INVALID_AMOUNT,
     DATE_REQUIRED: VALIDATION.INVALID_DATE,
     INVALID_DATA: COMMON.INVALID_DATA,
+    INVALID_METHOD: "Veuillez sélectionner un moyen de paiement valide.",
     AMOUNT_EXCEEDS_BALANCE: (amount: string, remaining: string) =>
       `Le montant (${amount} MAD) dépasse le solde restant (${remaining} MAD)`,
   },

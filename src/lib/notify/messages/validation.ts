@@ -13,6 +13,7 @@ export const VALIDATION = {
   INVALID_SIRET: "Numéro SIRET invalide.",
   INVALID_VALUE: "Valeur invalide.",
   INVALID_DATA: "Données invalides.",
+  INVALID_SELECTION: "Veuillez sélectionner une option valide.",
   PRICE_POSITIVE: "Le prix doit être supérieur à 0.",
   NAME_REQUIRED: "Nom requis.",
   PHONE_REQUIRED: "Numéro de téléphone requis.",

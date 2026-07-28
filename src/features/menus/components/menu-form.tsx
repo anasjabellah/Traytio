@@ -12,6 +12,7 @@ import { CATEGORY_LABELS as ITEM_CATEGORY_LABELS } from '@/features/menu-items/c
 import { X, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/utils';
+import { scrollToFirstError } from '@/lib/scroll-to-first-error';
 
 type MenuFormValues = z.input<typeof createMenuSchema>;
 
@@ -21,7 +22,8 @@ type MenuFormProps = {
   mode: 'create' | 'edit';
 };
 
-const inputClass = "flex items-center gap-2 rounded-2xl border border-border bg-white px-4 h-12 transition-all focus-within:border-gold focus-within:ring-1 focus-within:ring-gold/30";
+const inputClass = (error?: unknown) =>
+  `flex items-center gap-2 rounded-2xl border bg-white px-4 h-12 transition-all focus-within:border-gold focus-within:ring-1 focus-within:ring-gold/30 ${error ? 'border-red-500' : 'border-border'}`;
 
 
 
@@ -79,16 +81,16 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
   const groupedCategories = ['FOOD', 'DRINKS', 'DESSERTS', 'DECORATION', 'STAFF', 'ENTERTAINMENT', 'EXTRAS'];
 
   return (
-    <form id="menu-form" onSubmit={handleSubmit(async v => await onSubmit(v))} className="space-y-5">
+    <form id="menu-form" onSubmit={handleSubmit(async v => await onSubmit(v), errs => { scrollToFirstError(errs); })} className="space-y-5">
       {/* INFORMATIONS */}
       <div className="rounded-xl border border-border/60 bg-surface-soft p-5 space-y-4">
         <h3 className="text-xs uppercase tracking-[0.16em] text-muted-foreground font-semibold">
           Informations
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+          <div data-field="name">
             <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Nom *</div>
-            <div className={inputClass}>
+            <div className={inputClass(errors.name)}>
               <input
                 {...register('name')}
                 placeholder="Nom du menu"
@@ -97,7 +99,7 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
             </div>
             {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name.message?.toString()}</p>}
           </div>
-          <div>
+          <div data-field="category">
             <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Catégorie *</div>
             <Controller
               name="category"
@@ -108,7 +110,7 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
                 const CatIcon = field.value ? CATEGORY_ICONS[field.value as keyof typeof CATEGORY_ICONS] : null;
                 return (
                   <Select onValueChange={field.onChange} value={field.value ?? ''}>
-                    <SelectTrigger className="w-full text-sm px-4 py-0 gap-2 border border-border bg-white rounded-2xl !h-12 transition-all focus-visible:ring-1 focus-visible:ring-gold/30 focus-visible:border-gold">
+                    <SelectTrigger className={`w-full text-sm px-4 py-0 gap-2 border bg-white rounded-2xl !h-12 transition-all focus-visible:ring-1 focus-visible:ring-gold/30 focus-visible:border-gold ${errors.category ? 'border-red-500' : 'border-border'}`}>
                       {field.value ? (
                         <span className={cn('inline-block rounded-full px-2 py-0.5 text-xs font-medium', catColor)}>
                           {CatIcon && <CatIcon className="size-3.5 inline-block mr-1.5" />}
@@ -138,9 +140,9 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
             />
             {errors.category && <p className="text-xs text-red-600 mt-1">{errors.category.message?.toString()}</p>}
           </div>
-          <div>
+          <div data-field="pricePerPerson">
             <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Prix par table (MAD) *</div>
-            <div className={inputClass}>
+            <div className={inputClass(errors.pricePerPerson)}>
               <span className="text-sm text-muted-foreground">MAD</span>
               <input
                 type="number"
@@ -152,9 +154,9 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
             </div>
             {errors.pricePerPerson && <p className="text-xs text-red-600 mt-1">{errors.pricePerPerson.message?.toString()}</p>}
           </div>
-          <div>
+          <div data-field="minPersons">
             <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Min. tables</div>
-            <div className={inputClass}>
+            <div className={inputClass(errors.minPersons)}>
               <input
                 type="number"
                 placeholder="1"
@@ -163,9 +165,9 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
               />
             </div>
           </div>
-          <div>
+          <div data-field="maxPersons">
             <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Max. tables *</div>
-            <div className={inputClass}>
+            <div className={inputClass(errors.maxPersons)}>
               <input
                 type="number"
                 placeholder="10"

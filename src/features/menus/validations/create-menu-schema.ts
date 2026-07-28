@@ -12,7 +12,7 @@ export const baseMenuSchema = z.object({
     'BRUNCH',
     'DESSERT',
     'CUSTOM',
-  ]),
+  ], { message: MENU.VALIDATION.CATEGORY_REQUIRED }),
   pricePerPerson: z.number({ message: MENU.VALIDATION.INVALID_NUMBER }).positive({ message: MENU.VALIDATION.PRICE_POSITIVE }),
   minPersons: z.number().int().positive().default(1),
   maxPersons: z.number({ message: MENU.VALIDATION.MAX_TABLES_REQUIRED }).int().positive({ message: MENU.VALIDATION.MAX_TABLES_REQUIRED }),

@@ -67,5 +67,7 @@ export const COMMANDE = {
     ATTACHMENT_URL_REQUIRED: "L'URL est requise.",
     ATTACHMENT_TYPE_REQUIRED: "Le type est requis.",
     INVALID_INPUT: COMMON.INVALID_INPUT,
+    INVALID_DISCOUNT_TYPE: "Veuillez sélectionner un type de remise valide.",
+    INVALID_STATUS: "Veuillez sélectionner un statut valide.",
   },
 } as const;

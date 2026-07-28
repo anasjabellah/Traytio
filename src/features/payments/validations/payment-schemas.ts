@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { PAYMENT } from "@/lib/notify/messages";
 
-export const paymentMethodEnum = z.enum(["CASH", "CARD", "TRANSFER", "CHECK", "OTHER"]);
+export const paymentMethodEnum = z.enum(["CASH", "CARD", "TRANSFER", "CHECK", "OTHER"], { message: PAYMENT.VALIDATION.INVALID_METHOD });
 
 export const recordPaymentSchema = z.object({
   commandeId: z.string().min(1),

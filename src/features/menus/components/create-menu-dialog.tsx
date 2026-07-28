@@ -191,7 +191,7 @@ export function CreateMenuDialog({ open, onOpenChange, onSuccess }: CreateMenuDi
           </DialogHeader>
 
           {/* CONTENT: Form + Preview */}
-          <div className="flex-1 overflow-y-auto px-8 py-6">
+          <div className="flex-1 overflow-y-auto px-8 py-6" data-scroll-container>
             <div className="flex gap-8">
               <div className="flex-1 min-w-0">
                 <MenuForm mode="create" onSubmit={handleCreate} isLoading={isSubmitting} />
