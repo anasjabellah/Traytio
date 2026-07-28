@@ -61,7 +61,7 @@ export function Hero() {
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </a>
             <a
-              href="#demo"
+              href="/demo"
               className="group inline-flex items-center gap-2 rounded-full glass px-6 py-3.5 text-sm font-medium hover:shadow-soft transition-all"
             >
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-gold">

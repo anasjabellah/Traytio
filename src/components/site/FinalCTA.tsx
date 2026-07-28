@@ -36,7 +36,7 @@ export function FinalCTA() {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </a>
               <a
-                href="#demo"
+                href="/demo"
                 className="group inline-flex items-center gap-2 rounded-full glass-dark px-7 py-3.5 text-sm font-medium text-primary-foreground hover:bg-white/5 transition-colors"
               >
                 <CalendarDays className="h-4 w-4" />
