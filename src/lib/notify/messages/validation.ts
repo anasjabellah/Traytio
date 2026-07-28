@@ -14,6 +14,8 @@ export const VALIDATION = {
   INVALID_VALUE: "Valeur invalide.",
   INVALID_DATA: "Données invalides.",
   PRICE_POSITIVE: "Le prix doit être supérieur à 0.",
+  NAME_REQUIRED: "Nom requis.",
+  PHONE_REQUIRED: "Numéro de téléphone requis.",
   NAME_MIN_LENGTH: "Le nom doit contenir au moins 2 caractères.",
   FIELD_TOO_LONG: (field: string, max: number) => `Le champ ${field} est trop long (maximum ${max} caractères).`,
   FIELD_TOO_SHORT: (field: string, min: number) => `Le champ ${field} doit contenir au moins ${min} caractères.`,

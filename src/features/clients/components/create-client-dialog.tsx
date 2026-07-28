@@ -21,6 +21,7 @@ type CreateClientDialogProps = {
 
 export function CreateClientDialog({ open, onOpenChange, onSuccess }: CreateClientDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [canSubmit, setCanSubmit] = useState(false);
 
   const handleCreate = async (values: Record<string, unknown>) => {
     setIsSubmitting(true);
@@ -54,7 +55,7 @@ export function CreateClientDialog({ open, onOpenChange, onSuccess }: CreateClie
 
         {/* SCROLLABLE CONTENT */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
-          <ClientForm mode="create" onSubmit={handleCreate} isLoading={isSubmitting} />
+          <ClientForm mode="create" onSubmit={handleCreate} isLoading={isSubmitting} onValidityChange={setCanSubmit} />
         </div>
 
         {/* FIXED FOOTER */}
@@ -69,7 +70,7 @@ export function CreateClientDialog({ open, onOpenChange, onSuccess }: CreateClie
           <button
             type="submit"
             form="client-form"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !canSubmit}
             className="px-5 py-2 rounded-[0.75rem] bg-[#C9A96E] hover:bg-[#b8975e] text-white text-sm font-medium transition-colors disabled:opacity-50"
           >
             {isSubmitting ? 'Création...' : 'Créer le client'}

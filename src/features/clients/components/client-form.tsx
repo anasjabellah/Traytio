@@ -7,9 +7,9 @@ import { CLIENT } from "@/lib/notify/messages";
 
 const clientFormSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(2, { message: CLIENT.VALIDATION.NAME_MIN_LENGTH }),
+  name: z.string().trim().min(1, { message: CLIENT.VALIDATION.NAME_REQUIRED }),
   email: z.string().email({ message: CLIENT.VALIDATION.EMAIL_INVALID }).optional().or(z.literal('')),
-  phone: z.string().optional().or(z.literal('')),
+  phone: z.string().trim().min(1, { message: CLIENT.VALIDATION.PHONE_REQUIRED }),
   address: z.string().optional().or(z.literal('')),
   city: z.string().optional().or(z.literal('')),
   postalCode: z.string().optional().or(z.literal('')),
@@ -25,13 +25,15 @@ type ClientFormProps = {
   onSubmit: (values: ClientFormValues) => Promise<void>;
   isLoading?: boolean;
   mode: 'create' | 'edit';
+  onValidityChange?: (isValid: boolean) => void;
 };
 
-export function ClientForm({ defaultValues = {}, onSubmit, isLoading = false, mode }: ClientFormProps) {
+export function ClientForm({ defaultValues = {}, onSubmit, isLoading = false, mode, onValidityChange }: ClientFormProps) {
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<ClientFormValues>({
     resolver: zodResolver(clientFormSchema),
@@ -44,6 +46,15 @@ export function ClientForm({ defaultValues = {}, onSubmit, isLoading = false, mo
       reset(defaultValues);
     }
   }, [defaultValues?.name, reset]);
+
+  const nameVal = watch('name');
+  const phoneVal = watch('phone');
+
+  useEffect(() => {
+    const nameOk = (nameVal ?? '').trim().length > 0;
+    const phoneOk = (phoneVal ?? '').trim().length > 0;
+    onValidityChange?.(nameOk && phoneOk);
+  }, [nameVal, phoneVal, onValidityChange]);
 
   const inputClass = "flex items-center gap-2 rounded-2xl border border-border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold";
   const inputInnerClass = "flex-1 bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground";
@@ -97,7 +108,7 @@ export function ClientForm({ defaultValues = {}, onSubmit, isLoading = false, mo
           </div>
 
           <div data-field="phone">
-            <div className={labelClass}>Téléphone</div>
+            <div className={labelClass}>Téléphone *</div>
             <div className={inputClass}>
               <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
               <input {...register('phone')} placeholder="+33 1 23 45 67 89" className={inputInnerClass} />

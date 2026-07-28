@@ -22,6 +22,7 @@ type EditClientDialogProps = {
 
 export function EditClientDialog({ client, open, onOpenChange, onSuccess }: EditClientDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [canSubmit, setCanSubmit] = useState(true);
 
   const defaultValues = useMemo(
     () => ({
@@ -76,6 +77,7 @@ export function EditClientDialog({ client, open, onOpenChange, onSuccess }: Edit
             defaultValues={defaultValues}
             onSubmit={handleUpdate}
             isLoading={isSubmitting}
+            onValidityChange={setCanSubmit}
           />
         </div>
 
@@ -91,7 +93,7 @@ export function EditClientDialog({ client, open, onOpenChange, onSuccess }: Edit
           <button
             type="submit"
             form="client-form"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !canSubmit}
             className="px-5 py-2 rounded-[0.75rem] bg-[#C9A96E] hover:bg-[#b8975e] text-white text-sm font-medium transition-colors disabled:opacity-50"
           >
             {isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
