@@ -8,7 +8,6 @@ export const demoRequestSchema = z.object({
   phone: z.string().trim().min(1, { message: VALIDATION.PHONE_REQUIRED }),
   city: z.string().trim().min(1, { message: "Ville requise." }),
   country: z.string().trim().min(1, { message: "Pays requis." }),
-  businessType: z.string().min(1, { message: VALIDATION.INVALID_SELECTION }),
   companySize: z.string().min(1, { message: VALIDATION.INVALID_SELECTION }),
   monthlyEvents: z.string().min(1, { message: VALIDATION.INVALID_SELECTION }),
   message: z.string().optional().or(z.literal('')),
