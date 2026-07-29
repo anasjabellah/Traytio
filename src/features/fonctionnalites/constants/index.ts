@@ -20,9 +20,9 @@ import type { Module, WorkflowStep, Reason } from "../types";
 
 export const DASHBOARD_SHOWCASE = {
   recentActivity: [
-    { label: "Nouveau client : Marie K.", type: "client" as const },
-    { label: "Devis #1042 envoyé", type: "devis" as const },
-    { label: "Événement confirmé : 15/09", type: "event" as const },
+    { client: "Mariage Dubois", status: "Confirmé" as const, value: "84 000", date: "12 Oct" },
+    { client: "Gala Crédit Suisse", status: "En cours" as const, value: "129 000", date: "14 Oct" },
+    { client: "Cocktail Hermès", status: "Planifié" as const, value: "52 000", date: "16 Oct" },
   ],
   right: {
     items: [

@@ -1,31 +1,21 @@
 "use client";
 import { motion } from "framer-motion";
 import {
-  LayoutDashboard,
   CalendarCheck,
-  Users,
   FileText,
-  CreditCard,
-  Settings,
-  Bot,
-  Bell,
-  ChevronDown,
   TrendingUp,
-  Activity,
+  ArrowRight,
 } from "lucide-react";
 import { SectionLabel } from "@/components/site/ProblemSolution";
 import { DASHBOARD_SHOWCASE } from "../constants";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-const sidebarItems = [
-  { icon: LayoutDashboard, label: "Tableau de bord", active: true, badge: "" },
-  { icon: CalendarCheck, label: "Événements", active: false, badge: "24" },
-  { icon: Users, label: "Clients", active: false, badge: "" },
-  { icon: FileText, label: "Devis", active: false, badge: "12" },
-  { icon: CreditCard, label: "Factures", active: false, badge: "" },
-  { icon: Settings, label: "Paramètres", active: false, badge: "" },
-];
+const STATUS_STYLES: Record<string, string> = {
+  Confirmé: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50",
+  "En cours": "bg-blue-50 text-blue-700 ring-1 ring-blue-200/50",
+  Planifié: "bg-amber-50 text-amber-700 ring-1 ring-amber-200/50",
+};
 
 export function DashboardShowcase() {
   return (
@@ -40,131 +30,128 @@ export function DashboardShowcase() {
             className="lg:col-span-3"
           >
             <div className="relative rounded-2xl bg-[#faf7f2] shadow-lift border border-[#e8e2d8] overflow-hidden">
-              <div className="flex items-center gap-1.5 px-4 py-3 border-b border-[#e8e2d8] bg-[#f5f0e8]">
-                <span className="size-2.5 rounded-full bg-red-400/80" />
-                <span className="size-2.5 rounded-full bg-yellow-400/80" />
-                <span className="size-2.5 rounded-full bg-emerald-400/80" />
-                <div className="ml-4 flex-1 max-w-[12rem] rounded-md bg-[#ebe5db] px-3 py-1.5 text-[10px] text-muted-foreground text-center truncate">
-                  app.traytio.io/dashboard
-                </div>
-                <div className="flex-1" />
+              <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-[#e8e2d8] bg-[#f5f0e8]">
+                <span className="size-2 rounded-full bg-red-400/80" />
+                <span className="size-2 rounded-full bg-yellow-400/80" />
+                <span className="size-2 rounded-full bg-emerald-400/80" />
+                <span className="flex-1 text-center text-[10px] font-medium text-muted-foreground tracking-[0.15em]">
+                  TRAYTIO.APP/DASHBOARD
+                </span>
+                <div className="w-12" />
               </div>
 
-              <div className="flex h-[30rem] lg:h-[34rem]">
-                <div className="w-[11rem] shrink-0 border-r border-[#e8e2d8] bg-[#f0ebe3] p-3 hidden sm:flex flex-col gap-0.5">
-                  {sidebarItems.map((item) => (
-                    <div
-                      key={item.label}
-                      className={`flex items-center justify-between rounded-lg px-3 py-2 text-xs transition-all duration-200 ${
-                        item.active
-                          ? "bg-gold/15 text-gold font-medium"
-                          : "text-muted-foreground hover:text-foreground hover:bg-black/[0.03]"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <item.icon className="size-3.5 shrink-0" />
-                        <span>{item.label}</span>
-                      </div>
-                      {item.badge && (
-                        <span className="flex size-4 items-center justify-center rounded-full bg-black/[0.04] text-[9px] text-muted-foreground">
-                          {item.badge}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
+              <div className="p-5 lg:p-6 space-y-5 bg-[#f6f2eb]">
+                <div className="flex flex-col lg:flex-row gap-4">
+                  <div className="flex-[2] rounded-2xl bg-gradient-to-br from-[#1a1410] to-[#0d0a08] p-6 lg:p-7 relative overflow-hidden">
+                    <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-gold/10 blur-3xl pointer-events-none" />
+                    <div className="absolute inset-0 rounded-2xl ring-1 ring-white/[0.06] pointer-events-none" />
 
-                <div className="flex-1 flex flex-col p-5 gap-4 overflow-y-auto bg-[#f6f2eb]">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-foreground">Tableau de bord</h3>
-                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground bg-[#f0ebe3] rounded-md px-2.5 py-1.5 border border-[#e8e2d8]">
-                      Cette semaine
-                      <ChevronDown className="size-3" />
+                    <div className="relative">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs uppercase tracking-wider text-white/40">Revenus du mois</span>
+                        <span className="text-[10px] text-gold bg-gold/10 px-2 py-0.5 rounded-full font-medium ring-1 ring-gold/20">
+                          +18.5%
+                        </span>
+                      </div>
+                      <p className="font-display text-3xl lg:text-4xl tabular-nums text-white mt-0.5">42 800 MAD</p>
+
+                      <svg viewBox="0 0 280 64" className="w-full h-14 mt-5">
+                        <defs>
+                          <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#C9A96E" stopOpacity="0.35" />
+                            <stop offset="100%" stopColor="#C9A96E" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        <path
+                          d="M0,50 Q14,46 28,48 T56,42 T84,44 T112,36 T140,32 T168,26 T196,30 T224,22 T252,16 T280,12"
+                          fill="none"
+                          stroke="#C9A96E"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M0,50 Q14,46 28,48 T56,42 T84,44 T112,36 T140,32 T168,26 T196,30 T224,22 T252,16 T280,12 L280,64 L0,64 Z"
+                          fill="url(#chartGrad)"
+                        />
+                        <circle cx="280" cy="12" r="2.5" fill="#C9A96E" />
+                      </svg>
                     </div>
                   </div>
 
-                  <div className="rounded-xl bg-[#1a1612] p-5 border border-white/[0.08]">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <span className="text-[10px] text-white/50 uppercase tracking-wider flex items-center gap-1.5">
-                          <TrendingUp className="size-3 text-gold" />
-                          Revenus du mois
+                  <div className="flex-1 flex flex-col gap-3">
+                    <div className="flex-1 rounded-2xl border border-border bg-card shadow-soft p-5 hover:shadow-lift transition-shadow">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="size-10 rounded-xl bg-foreground/[0.04] flex items-center justify-center">
+                          <CalendarCheck className="size-4 text-gold-deep" />
+                        </div>
+                        <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md ring-1 ring-emerald-200/50">
+                          +18%
                         </span>
-                        <p className="text-2xl font-bold text-white mt-1">42 800 MAD</p>
                       </div>
-                      <span className="text-[10px] text-gold bg-gold/10 px-2 py-0.5 rounded-full font-medium">
-                        +18.5%
+                      <p className="font-display text-xl lg:text-2xl tabular-nums text-gradient-charcoal">24</p>
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground mt-1 block">
+                        Événements
                       </span>
                     </div>
-                    <svg viewBox="0 0 280 72" className="w-full h-[4.5rem]">
-                      <defs>
-                        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#C9A96E" stopOpacity="0.35" />
-                          <stop offset="100%" stopColor="#C9A96E" stopOpacity="0" />
-                        </linearGradient>
-                      </defs>
-                      <path
-                        d="M0,56 Q14,52 28,54 T56,48 T84,50 T112,42 T140,38 T168,32 T196,36 T224,28 T252,22 T280,18"
-                        fill="none"
-                        stroke="#C9A96E"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                      />
-                      <path
-                        d="M0,56 Q14,52 28,54 T56,48 T84,50 T112,42 T140,38 T168,32 T196,36 T224,28 T252,22 T280,18 L280,72 L0,72 Z"
-                        fill="url(#chartGrad)"
-                      />
-                      <circle cx="280" cy="18" r="2.5" fill="#C9A96E" />
-                    </svg>
-                  </div>
 
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="rounded-xl bg-white p-4 border border-[#e8e2d8]">
-                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Événements</span>
-                      <p className="text-xl font-bold text-foreground mt-1">24</p>
-                      <div className="flex items-center gap-1 mt-2">
-                        <span className="size-2 rounded-full bg-gold" />
-                        <span className="text-[10px] text-gold">+18%</span>
-                      </div>
-                    </div>
-                    <div className="rounded-xl bg-white p-4 border border-[#e8e2d8]">
-                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Devis</span>
-                      <p className="text-xl font-bold text-foreground mt-1">12</p>
-                      <div className="flex items-center gap-1 mt-2">
-                        <span className="size-2 rounded-full bg-gold" />
-                        <span className="text-[10px] text-gold">+8%</span>
-                      </div>
-                    </div>
-                    <div className="rounded-xl bg-white p-4 border border-[#e8e2d8]">
-                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Clients</span>
-                      <p className="text-xl font-bold text-foreground mt-1">18</p>
-                      <div className="flex items-center gap-1 mt-2">
-                        <span className="size-2 rounded-full bg-gold" />
-                        <span className="text-[10px] text-gold">+12%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-auto">
-                    <div className="flex items-center gap-1.5 mb-3">
-                      <Activity className="size-3 text-muted-foreground" />
-                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Activité récente</span>
-                    </div>
-                    <div className="space-y-2">
-                      {DASHBOARD_SHOWCASE.recentActivity.map((item) => (
-                        <div
-                          key={item.label}
-                          className="flex items-center gap-3 text-xs rounded-lg px-3 py-2 border border-[#e8e2d8] bg-white"
-                        >
-                          <span className="size-2 rounded-full shrink-0 bg-gold" />
-                          <span className="text-muted-foreground">{item.label}</span>
-                          <span className="ml-auto text-[10px] text-muted-foreground/60">
-                            {item.type === "client" ? "il y a 2 min" : item.type === "devis" ? "il y a 15 min" : "il y a 1 h"}
-                          </span>
+                    <div className="flex-1 rounded-2xl border border-border bg-card shadow-soft p-5 hover:shadow-lift transition-shadow">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="size-10 rounded-xl bg-foreground/[0.04] flex items-center justify-center">
+                          <FileText className="size-4 text-gold-deep" />
                         </div>
-                      ))}
+                        <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md ring-1 ring-emerald-200/50">
+                          +8%
+                        </span>
+                      </div>
+                      <p className="font-display text-xl lg:text-2xl tabular-nums text-gradient-charcoal">12</p>
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground mt-1 block">
+                        Devis
+                      </span>
                     </div>
                   </div>
+                </div>
+
+                <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
+                  <div className="flex items-center justify-between px-6 py-4">
+                    <div>
+                      <div className="text-xs uppercase tracking-wider text-muted-foreground">
+                        <TrendingUp className="size-3.5 inline mr-1.5 text-gold-deep" />
+                        Activité récente
+                      </div>
+                      <h3 className="font-display text-2xl mt-1">Commandes récentes</h3>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[10px] text-emerald-700 font-medium">Live</span>
+                    </div>
+                  </div>
+
+                  <div className="hidden lg:grid grid-cols-4 gap-4 px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground bg-foreground/[0.02] border-t border-border">
+                    <span>Client / Événement</span>
+                    <span className="text-center">Statut</span>
+                    <span className="text-center">Valeur</span>
+                    <span className="text-right">Date</span>
+                  </div>
+
+                  {DASHBOARD_SHOWCASE.recentActivity.map((item, i) => (
+                    <motion.div
+                      key={item.client}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.05 * i }}
+                      className="grid lg:grid-cols-4 gap-4 px-6 py-3.5 items-center border-b border-border last:border-b-0 hover:bg-foreground/[0.02] transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="size-1.5 rounded-full shrink-0 bg-gold" />
+                        <span className="text-sm font-medium text-foreground">{item.client}</span>
+                      </div>
+                      <span className={`text-[10px] text-center font-medium px-2 py-0.5 rounded-full ${STATUS_STYLES[item.status]}`}>
+                        {item.status}
+                      </span>
+                      <span className="text-sm tabular-nums text-foreground text-center font-medium">{item.value} MAD</span>
+                      <span className="text-xs text-muted-foreground text-right">{item.date}</span>
+                    </motion.div>
+                  ))}
                 </div>
               </div>
             </div>
