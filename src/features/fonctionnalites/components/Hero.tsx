@@ -17,12 +17,8 @@ export function FonctionnalitesHero() {
           transition={{ duration: 0.6 }}
           className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-xs font-medium text-muted-foreground"
         >
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inset-0 rounded-full bg-gold animate-ping opacity-75" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-gold-deep" />
-          </span>
-          Une plateforme, tout votre métier
           <Sparkles className="h-3 w-3 text-gold-deep" />
+          <span>Une plateforme, tout votre métier</span>
         </motion.div>
 
         <motion.h1
@@ -60,7 +56,7 @@ export function FonctionnalitesHero() {
           </Link>
           <a
             href="#modules"
-            className="group inline-flex items-center gap-2 rounded-full glass px-6 py-3.5 text-sm font-medium hover:shadow-soft transition-all"
+            className="group inline-flex items-center gap-2 rounded-full bg-white border border-border px-6 py-3.5 text-sm font-medium shadow-soft hover:shadow-lift hover:-translate-y-[1px] hover:border-[#d0c8bc] transition-all"
           >
             Explorer la plateforme
           </a>
