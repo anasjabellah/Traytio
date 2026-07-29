@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
 const links = [
-  { label: "Fonctionnalités", href: "#features" },
+  { label: "Fonctionnalités", href: "/fonctionnalites" },
   { label: "Tarifs", href: "#pricing" },
   { label: "Démo", href: "/demo" },
   { label: "Témoignages", href: "#testimonials" },
