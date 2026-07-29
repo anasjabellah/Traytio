@@ -7,6 +7,7 @@ import { Features } from "@/components/site/Features";
 // import { EventBuilder } from "@/components/site/EventBuilder";
 import { Pricing } from "@/components/site/Pricing";
 import { Testimonials } from "@/components/site/Testimonials";
+import { FAQ } from "@/components/site/FAQ";
 import { FinalCTA } from "@/components/site/FinalCTA";
 import { Footer } from "@/components/site/Footer";
 
@@ -92,6 +93,7 @@ export default function HomePage() {
       {/* <EventBuilder /> */}
       <Pricing />
       <Testimonials />
+      <FAQ />
       <FinalCTA />
       <Footer />
     </main>
