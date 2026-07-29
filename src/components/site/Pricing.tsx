@@ -1,38 +1,60 @@
 "use client";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Sparkles, ArrowRight } from "lucide-react";
 import { SectionLabel } from "./ProblemSolution";
 
+const formatAnnual = (m: number) => (m * 12).toLocaleString("fr-FR");
+
 const plans = [
   {
     name: "Starter",
-    price: "399",
-    suffix: "MAD",
-    per: "/mois",
-    desc: "Fonctionnalités essentielles pour petites structures.",
-    features: ["Jusqu'à 30 événements/mois", "CRM clients", "Devis & factures PDF", "Calendrier intelligent", "Support email"],
+    monthly: 299,
+    desc: "Fonctionnalités essentielles pour démarrer votre activité.",
+    features: [
+      "Jusqu'à 30 événements / mois",
+      "Gestion des clients",
+      "Devis & factures illimités",
+      "Calendrier des événements",
+      "Tableau de bord",
+      "Support par e-mail",
+    ],
     cta: "Commencer",
   },
   {
     name: "Professionnel",
-    price: "799",
-    suffix: "MAD",
-    per: "/mois",
-    desc: "Toutes les fonctionnalités + automatisations avancées.",
-    features: ["Événements illimités", "Event Builder IA", "WhatsApp intégré", "Analytics avancés", "Paiements automatisés", "Support prioritaire 24/7"],
+    monthly: 599,
+    desc: "Pour les traiteurs qui souhaitent développer leur activité.",
+    features: [
+      "Événements illimités",
+      "Gestion des équipes",
+      "Menus & prestations",
+      "Paiements & suivi financier",
+      "Tableau de bord avancé",
+      "Support prioritaire",
+    ],
     cta: "Commencer",
     featured: true,
   },
   {
     name: "Entreprise",
     price: "Sur devis",
-    desc: "Solutions personnalisées pour grands groupes.",
-    features: ["Multi-établissements", "API & intégrations sur mesure", "Onboarding dédié", "SLA & sécurité avancée", "Customer Success Manager"],
-    cta: "Nous contacter",
+    desc: "Solution sur mesure pour les grandes organisations.",
+    features: [
+      "Multi-établissements",
+      "Gestion de plusieurs équipes",
+      "Rôles & permissions avancés",
+      "Accompagnement personnalisé",
+      "Support prioritaire",
+      "Intégrations sur mesure",
+    ],
+    cta: "Demander un devis",
   },
 ];
 
 export function Pricing() {
+  const [annual, setAnnual] = useState(false);
+
   return (
     <section id="pricing" className="relative py-28 bg-surface-soft">
       <div className="mx-auto max-w-7xl px-6">
@@ -42,6 +64,25 @@ export function Pricing() {
             Un investissement, <span className="italic text-gradient-gold">jamais une dépense.</span>
           </h2>
           <p className="mt-5 text-lg text-muted-foreground">Choisissez le plan qui accompagne votre croissance.</p>
+
+          <div className="mt-8 inline-flex items-center rounded-full bg-card border border-border p-0.5 shadow-soft">
+            <button
+              onClick={() => setAnnual(false)}
+              className={`rounded-full px-4 py-2 text-xs font-medium transition-all ${
+                !annual ? "bg-foreground text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Mensuel
+            </button>
+            <button
+              onClick={() => setAnnual(true)}
+              className={`rounded-full px-4 py-2 text-xs font-medium transition-all ${
+                annual ? "bg-foreground text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Annuel <span className="text-gold-deep font-semibold">-15%</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -61,7 +102,7 @@ export function Pricing() {
               {p.featured && (
                 <>
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full bg-gradient-gold text-gold-foreground px-3 py-1 text-[10px] font-semibold uppercase tracking-wider shadow-gold">
-                    <Sparkles className="h-3 w-3" /> Le plus populaire
+                    <Sparkles className="h-3 w-3" /> LE PLUS POPULAIRE
                   </div>
                   <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-gradient-gold opacity-25 blur-3xl pointer-events-none" />
                 </>
@@ -73,10 +114,28 @@ export function Pricing() {
                 </div>
                 <p className={`mt-2 text-sm ${p.featured ? "text-primary-foreground/70" : "text-muted-foreground"}`}>{p.desc}</p>
 
-                <div className="mt-8 flex items-baseline gap-1">
-                  <span className="font-display text-5xl lg:text-6xl tracking-tight">{p.price}</span>
-                  {p.suffix && <span className="font-display text-3xl">{p.suffix}</span>}
-                  {p.per && <span className={`text-sm ${p.featured ? "text-primary-foreground/60" : "text-muted-foreground"}`}>{p.per}</span>}
+                <div className="mt-8">
+                  {p.monthly ? (
+                    <div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="font-display text-5xl lg:text-6xl tracking-tight">{p.monthly}</span>
+                        <span className="font-display text-3xl">MAD</span>
+                        <span className={`text-sm ${p.featured ? "text-primary-foreground/60" : "text-muted-foreground"}`}>/mois</span>
+                      </div>
+                      {annual && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className={`text-xs ${p.featured ? "text-primary-foreground/50" : "text-muted-foreground"}`}>
+                            Facturé {formatAnnual(p.monthly)} MAD/an
+                          </span>
+                          <span className="text-[10px] font-medium text-gold-deep bg-gold-soft px-2 py-0.5 rounded-full">
+                            Économisez 15%
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="font-display text-5xl lg:text-6xl tracking-tight">{p.price}</span>
+                  )}
                 </div>
 
                 <a
