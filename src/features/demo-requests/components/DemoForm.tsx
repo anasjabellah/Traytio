@@ -73,7 +73,7 @@ export function DemoForm({ onSuccess }: DemoFormProps) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="relative bg-card border border-border/50 shadow-soft rounded-2xl p-6 sm:p-8"
+      className="motion-safe relative bg-card border border-border/50 shadow-soft rounded-2xl p-6 sm:p-8"
       noValidate
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3.5">

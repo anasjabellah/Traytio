@@ -17,7 +17,7 @@ export function DemoStats() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
-        className="group relative rounded-2xl border border-border bg-card p-5 hover:shadow-lift transition-all overflow-hidden"
+        className="motion-safe group relative rounded-2xl border border-border bg-card p-5 hover:shadow-lift transition-all overflow-hidden"
       >
         <div className="absolute -top-16 -right-16 h-36 w-36 rounded-full bg-gradient-gold opacity-0 group-hover:opacity-15 blur-3xl transition-opacity" />
         <div className="relative flex items-start gap-4">
@@ -39,7 +39,7 @@ export function DemoStats() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
-        className="grid grid-cols-3 gap-px bg-border rounded-2xl overflow-hidden border border-border"
+        className="motion-safe grid grid-cols-3 gap-px bg-border rounded-2xl overflow-hidden border border-border"
       >
         {stats.map((s) => (
           <div key={s.label} className="bg-card p-4 text-center">
@@ -54,7 +54,7 @@ export function DemoStats() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
-        className="group relative rounded-2xl border border-border bg-card p-5 hover:shadow-lift transition-all overflow-hidden"
+        className="motion-safe group relative rounded-2xl border border-border bg-card p-5 hover:shadow-lift transition-all overflow-hidden"
       >
         <div className="absolute -top-16 -right-16 h-36 w-36 rounded-full bg-gradient-gold opacity-0 group-hover:opacity-15 blur-3xl transition-opacity" />
         <div className="relative">

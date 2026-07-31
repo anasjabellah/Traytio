@@ -513,6 +513,23 @@
   background: oklch(0.72 0.13 78 / 0.4);
 }
 
+/* === framer-motion safety net ===
+   Prevents permanently invisible content. Framer Motion bakes the `initial`
+   state (opacity:0) into SSR markup and animates it on the client. If the mount
+   animation is ever dropped (hydration race, rAF throttling, StrictMode
+   double-mount), the element would stay invisible forever. This CSS animation
+   runs after a delay longer than any entrance animation, forcing the element to
+   its final visible state regardless of Framer Motion's runtime state. */
+@keyframes motion-safe-reveal {
+  to {
+    opacity: 1;
+  }
+}
+
+.motion-safe {
+  animation: motion-safe-reveal 0.01s linear 1.5s forwards;
+}
+
 /* === prefers-reduced-motion — disable all animations for accessibility === */
 @media (prefers-reduced-motion: reduce) {
   *,

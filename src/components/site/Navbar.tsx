@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
-const links = [
+const links: { label: string; href: string; hash?: string }[] = [
   { label: "Accueil", href: "/" },
   { label: "Fonctionnalités", href: "/fonctionnalites" },
   { label: "Tarifs", href: "/tarifs" },
@@ -65,7 +65,7 @@ export function Navbar() {
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
-      className="fixed top-4 left-1/2 z-50 -translate-x-1/2 w-[min(1180px,calc(100%-2rem))]"
+      className="motion-safe fixed top-4 left-1/2 z-50 -translate-x-1/2 w-[min(1180px,calc(100%-2rem))]"
     >
       <nav aria-label="Navigation principale" className="glass-1 shadow-soft rounded-full pl-6 pr-2 py-2 flex items-center justify-between">
         <Link href="/" aria-label="Accueil TUR" className="flex items-center gap-2.5 group">

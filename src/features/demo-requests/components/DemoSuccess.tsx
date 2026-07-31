@@ -9,7 +9,7 @@ export function DemoSuccess() {
       initial={{ opacity: 0, scale: 0.96, y: 16 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="relative glass shadow-glass rounded-3xl p-8 sm:p-12 text-center overflow-hidden"
+      className="motion-safe relative glass shadow-glass rounded-3xl p-8 sm:p-12 text-center overflow-hidden"
     >
       <div className="absolute -top-24 left-1/2 -translate-x-1/2 size-64 rounded-full bg-gradient-gold opacity-30 blur-3xl pointer-events-none" />
 

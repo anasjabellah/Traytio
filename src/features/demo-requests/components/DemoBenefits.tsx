@@ -21,7 +21,7 @@ export function DemoBenefits() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4, delay: i * 0.05 }}
-          className="group relative flex items-start gap-4 rounded-2xl border border-border bg-card p-4 hover:shadow-soft transition-all"
+          className="motion-safe group relative flex items-start gap-4 rounded-2xl border border-border bg-card p-4 hover:shadow-soft transition-all"
         >
           <div className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface-soft border border-border text-foreground group-hover:bg-gradient-gold group-hover:text-gold-foreground group-hover:border-transparent transition-all">
             <b.icon className="size-4" />
