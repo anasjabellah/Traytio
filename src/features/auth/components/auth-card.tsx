@@ -9,7 +9,7 @@ export function AuthCard({ children }: { children: React.ReactNode }) {
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, delay: 0.15, ease }}
-      className="relative flex min-h-svh flex-col items-center justify-center px-4 py-28 sm:px-8 lg:py-14"
+      className="relative flex min-h-svh flex-col items-center justify-center px-4 py-28 sm:px-8 lg:h-svh lg:self-start lg:py-14"
     >
       {/* Mobile-only intro */}
       <div className="mb-8 w-full max-w-[480px] text-center md:hidden">

@@ -21,7 +21,6 @@ export function BrandPanel() {
       <div className="absolute -bottom-40 -right-32 h-[420px] w-[420px] rounded-full bg-gold/20 blur-3xl" />
 
       {/* Floating decorative shapes */}
-      <div className="absolute right-16 top-28 hidden h-16 w-16 rotate-6 animate-float-slow rounded-2xl bg-gradient-gold opacity-30 xl:block" />
       <div className="absolute left-10 top-1/2 hidden h-10 w-10 animate-float rounded-full border border-gold/30 bg-white/50 2xl:block" />
       <div className="absolute bottom-40 left-1/3 hidden h-6 w-6 animate-float rounded-full bg-gold-soft 2xl:block" />
 
@@ -49,7 +48,7 @@ export function BrandPanel() {
             </h1>
           </motion.div>
 
-          <ul className="mt-10 space-y-3.5">
+          <ul className="mt-10 grid grid-cols-2 gap-x-6 gap-y-3.5">
             {highlights.map((item, i) => (
               <motion.li
                 key={item}

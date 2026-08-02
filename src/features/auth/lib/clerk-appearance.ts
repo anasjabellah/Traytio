@@ -1,6 +1,6 @@
 const radius = "calc(0.75rem * 2.2)"; // --radius-3xl (26.4px)
-const shadowLift =
-  "0 12px 40px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04)";
+const cardShadow =
+  "0 1px 2px rgba(0,0,0,0.03), 0 12px 32px rgba(0,0,0,0.05)";
 
 /**
  * Shared Clerk appearance used by both <SignIn /> and <SignUp /> so the
@@ -36,17 +36,18 @@ export const authAppearance = {
       width: "100%",
     },
     card: {
-      boxShadow: shadowLift,
+      boxShadow: cardShadow,
       border: "1px solid rgba(226,226,226,0.7)",
       borderRadius: radius,
       backgroundColor: "#ffffff",
-      padding: "2.5rem 2.25rem",
+      padding: "1.5rem 2.25rem 1.75rem",
+      gap: "0",
     },
     logoBox: {
       display: "none",
     },
     header: {
-      marginBottom: "1.5rem",
+      marginBottom: "1.25rem",
       textAlign: "left",
     },
     headerTitle: {
@@ -62,6 +63,9 @@ export const authAppearance = {
       fontSize: "0.875rem",
       lineHeight: "1.6",
       marginTop: "0.5rem",
+    },
+    form: {
+      gap: "1.25rem",
     },
     formFieldLabel: {
       color: "#1a1a1a",
@@ -127,7 +131,7 @@ export const authAppearance = {
       fontWeight: 600,
     },
     dividerRow: {
-      margin: "1.5rem 0",
+      margin: "0.5rem 0",
     },
     dividerLine: {
       backgroundColor: "#e2e2e2",
@@ -157,8 +161,11 @@ export const authAppearance = {
       fontSize: "0.875rem",
       fontWeight: 500,
     },
+    main: {
+      gap: "0.75rem",
+    },
     footer: {
-      marginTop: "0.75rem",
+      marginTop: "0.625rem",
     },
     footerAction: {
       color: "#888888",
