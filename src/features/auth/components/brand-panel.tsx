@@ -17,21 +17,25 @@ export function BrandPanel() {
       {/* Background layers */}
       <div className="absolute inset-0 bg-gradient-mesh" />
       <div className="absolute inset-0 grid-bg" />
-      <div className="absolute -left-24 -top-32 h-[480px] w-[480px] rounded-full bg-gradient-gold opacity-25 blur-3xl" />
+      <motion.div
+        animate={{ y: [0, -10, 0], opacity: [0.25, 0.18, 0.25] }}
+        transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute -left-24 -top-32 h-[480px] w-[480px] rounded-full bg-gradient-gold blur-3xl"
+      />
       <div className="absolute -bottom-40 -right-32 h-[420px] w-[420px] rounded-full bg-gold/20 blur-3xl" />
 
       {/* Floating decorative shapes */}
       <div className="absolute left-10 top-1/2 hidden h-10 w-10 animate-float rounded-full border border-gold/30 bg-white/50 2xl:block" />
       <div className="absolute bottom-40 left-1/3 hidden h-6 w-6 animate-float rounded-full bg-gold-soft 2xl:block" />
 
-      <div className="relative z-10 flex h-full w-full flex-col justify-between px-8 pb-12 pt-28 lg:px-10 xl:px-16">
+      <div className="relative z-10 flex h-full w-full flex-col justify-between px-8 pb-6 pt-28 lg:px-10 xl:px-16">
         {/* Headline + highlights */}
         <div>
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.05 }}
-            className="max-w-xl"
+            className="max-w-2xl"
           >
             <div className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-xs font-medium text-muted-foreground">
               <span className="relative flex h-1.5 w-1.5">
@@ -48,7 +52,7 @@ export function BrandPanel() {
             </h1>
           </motion.div>
 
-          <ul className="mt-10 grid grid-cols-2 gap-x-6 gap-y-3.5">
+          <ul className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3.5">
             {highlights.map((item, i) => (
               <motion.li
                 key={item}
@@ -67,7 +71,7 @@ export function BrandPanel() {
         </div>
 
         {/* Mockup (desktop only) + trust */}
-        <div className="mt-12">
+        <div className="mt-[4.875rem]">
           <div className="hidden lg:block">
             <DashboardMockup />
           </div>

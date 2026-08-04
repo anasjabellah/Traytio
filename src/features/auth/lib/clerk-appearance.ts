@@ -1,6 +1,6 @@
 const radius = "calc(0.75rem * 2.2)"; // --radius-3xl (26.4px)
 const cardShadow =
-  "0 1px 2px rgba(0,0,0,0.03), 0 12px 32px rgba(0,0,0,0.05)";
+  "0 1px 3px rgba(0,0,0,0.02), 0 8px 24px rgba(0,0,0,0.04), 0 24px 48px -16px rgba(0,0,0,0.06)";
 
 /**
  * Shared Clerk appearance used by both <SignIn /> and <SignUp /> so the
@@ -40,7 +40,7 @@ export const authAppearance = {
       border: "1px solid rgba(226,226,226,0.7)",
       borderRadius: radius,
       backgroundColor: "#ffffff",
-      padding: "1.5rem 2.25rem 1.75rem",
+      padding: "1.5rem 2.25rem 0.25rem",
       gap: "0",
     },
     logoBox: {
@@ -104,13 +104,16 @@ export const authAppearance = {
       fontSize: "0.875rem",
       fontWeight: 600,
       boxShadow: "0 4px 14px rgba(212, 162, 76, 0.25)",
-      transition: "box-shadow 0.2s ease, filter 0.2s ease",
+      transition:
+        "box-shadow 0.2s ease, transform 0.2s ease, filter 0.2s ease",
       "&:hover": {
-        boxShadow: "0 8px 24px rgba(212, 162, 76, 0.35)",
+        boxShadow: "0 10px 28px rgba(212, 162, 76, 0.4)",
+        transform: "translateY(-2px)",
       },
       "&:disabled": {
         opacity: 0.7,
         boxShadow: "none",
+        transform: "none",
       },
     },
     formButtonReset: {
@@ -131,7 +134,7 @@ export const authAppearance = {
       fontWeight: 600,
     },
     dividerRow: {
-      margin: "0.5rem 0",
+      display: "none",
     },
     dividerLine: {
       backgroundColor: "#e2e2e2",
@@ -144,7 +147,7 @@ export const authAppearance = {
       fontWeight: 500,
     },
     socialButtonsRoot: {
-      gap: "0.75rem",
+      display: "none",
     },
     socialButtonsBlockButton: {
       backgroundColor: "#ffffff",
@@ -165,7 +168,11 @@ export const authAppearance = {
       gap: "0.75rem",
     },
     footer: {
-      marginTop: "0.625rem",
+      marginTop: "0",
+      padding: "0.375rem 0 0",
+    },
+    footerItem: {
+      display: "none",
     },
     footerAction: {
       color: "#888888",

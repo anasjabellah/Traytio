@@ -22,9 +22,9 @@ export function DashboardMockup() {
       <motion.div
         animate={{ y: [0, -8, 0] }}
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        className="relative glass shadow-glass rounded-3xl p-2.5"
+        className="relative glass shadow-lift ring-1 ring-white/20 rounded-3xl p-2.5"
       >
-        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
+        <div className="overflow-hidden rounded-2xl border border-white/25 bg-card">
           {/* Toolbar */}
           <div className="flex items-center justify-between border-b border-border/60 bg-surface-soft px-4 py-3">
             <div className="flex gap-1.5">
@@ -97,7 +97,7 @@ export function DashboardMockup() {
       <motion.div
         animate={{ y: [0, -10, 0] }}
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-        className="absolute -bottom-5 -right-4 w-44 rounded-2xl glass p-3.5 shadow-lift"
+        className="absolute -bottom-8 -right-4 w-44 rounded-2xl glass p-3.5 shadow-lift"
       >
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-gold">

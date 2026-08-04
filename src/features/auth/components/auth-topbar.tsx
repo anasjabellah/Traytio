@@ -19,9 +19,9 @@ export function AuthTopbar() {
         <LogoMark />
         <Link
           href="/"
-          className="inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary/80 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="group inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary/80 hover:text-gold-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-200 group-hover:-translate-x-1" />
           Retour à l&apos;accueil
         </Link>
       </nav>
