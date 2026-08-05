@@ -1,64 +1,14 @@
 "use client";
-import { useCallback } from "react";
-import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-
-const links: { label: string; href: string; hash?: string }[] = [
-  { label: "Accueil", href: "/" },
-  { label: "Fonctionnalités", href: "/fonctionnalites" },
-  { label: "Tarifs", href: "/tarifs" },
-  { label: "Démo", href: "/demo" },
-  { label: "Témoignages", href: "/temoignages" },
-  { label: "FAQ", href: "/faq" },
-  { label: "Contact", href: "/contact" },
-];
-
-function useHashScroll(hash?: string) {
-  const pathname = usePathname();
-
-  return useCallback(
-    (e: React.MouseEvent) => {
-      if (!hash) return;
-      if (pathname === "/") {
-        e.preventDefault();
-        const el = document.getElementById(hash);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }
-    },
-    [hash, pathname],
-  );
-}
-
-function NavLink({ href, hash, label, isActive }: { href: string; hash?: string; label: string; isActive: boolean }) {
-  const handleClick = useHashScroll(hash);
-
-  return (
-    <li>
-      <Link
-        href={href}
-        onClick={handleClick}
-        aria-current={isActive && href !== "/" ? "page" : undefined}
-        className={`px-4 py-2 rounded-full text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
-          isActive
-            ? "bg-secondary/80 text-foreground font-medium"
-            : "text-muted-foreground hover:text-foreground hover:bg-secondary/80"
-        }`}
-      >
-        {label}
-      </Link>
-    </li>
-  );
-}
+import { usePathname } from "next/navigation";
+import { siteNavLinks, NavLink, useHashScroll, isSiteLinkActive } from "@/components/site/site-nav";
+import { MobileNav } from "@/components/site/MobileNav";
 
 export function Navbar() {
   const pathname = usePathname();
   const handleCtaClick = useHashScroll("pricing");
-
-  const isActive = (href: string) => pathname === href;
 
   return (
     <motion.header
@@ -75,21 +25,24 @@ export function Navbar() {
           </span>
           <span className="font-display text-2xl tracking-tight">TUR</span>
         </Link>
-        <ul className="hidden md:flex items-center gap-1">
-          {links.map((l) => (
-            <NavLink key={l.href} href={l.href} hash={l.hash} label={l.label} isActive={isActive(l.href)} />
+        <ul className="hidden lg:flex items-center gap-1">
+          {siteNavLinks.map((l) => (
+            <NavLink key={l.href} href={l.href} hash={l.hash} label={l.label} isActive={isSiteLinkActive(pathname, l.href)} />
           ))}
         </ul>
-        <Link
-          href="/#pricing"
-          onClick={handleCtaClick}
-          className="group inline-flex items-center gap-2 rounded-full bg-foreground text-primary-foreground pl-5 pr-2 py-2 text-sm font-medium hover:bg-foreground/90 transition-colors"
-        >
-          Commencer
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-gold text-gold-foreground transition-transform group-hover:translate-x-0.5">
-            <ArrowRight className="h-3.5 w-3.5" />
-          </span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/#pricing"
+            onClick={handleCtaClick}
+            className="group inline-flex items-center gap-2 rounded-full bg-foreground text-primary-foreground pl-5 pr-2 py-2 text-sm font-medium hover:bg-foreground/90 transition-colors"
+          >
+            Commencer
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-gold text-gold-foreground transition-transform group-hover:translate-x-0.5">
+              <ArrowRight className="h-3.5 w-3.5" />
+            </span>
+          </Link>
+          <MobileNav />
+        </div>
       </nav>
     </motion.header>
   );
