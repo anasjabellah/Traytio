@@ -3,20 +3,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowRight, Check, LogIn, Play, X } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { ArrowRight, Check, X } from "lucide-react";
 import { Sheet, SheetTrigger, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { siteNavLinks, useHashScroll, isSiteLinkActive } from "@/components/site/site-nav";
 import { cn } from "@/lib/utils";
 
 const DRAWER_ID = "site-mobile-menu";
-const EASE = [0.16, 1, 0.3, 1] as const;
-
-const quickActions: { label: string; href: string; icon: LucideIcon; hash?: string }[] = [
-  { label: "Commencer", href: "/#pricing", icon: ArrowRight, hash: "pricing" },
-  { label: "Voir une démo", href: "/demo", icon: Play },
-  { label: "Se connecter", href: "/sign-in", icon: LogIn },
-];
+const EASE = [0.22, 1, 0.36, 1] as const;
 
 const trustPoints = ["Essai gratuit", "Sans engagement", "Configuration en 2 minutes"];
 
@@ -43,50 +36,24 @@ function MobileNavLink({
         onClick?.();
       }}
       aria-current={isActive && href !== "/" ? "page" : undefined}
-      className={cn(
-        "relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-        isActive
-          ? "bg-gold-soft text-gold-deep font-medium"
-          : "text-foreground/75 hover:bg-secondary/80 hover:text-foreground",
-      )}
+      className="group relative flex h-11 items-center rounded-xl px-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
     >
       {isActive && (
         <span
           aria-hidden="true"
-          className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-gold"
+          className="absolute left-[9px] top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-gold"
         />
       )}
-      {label}
-    </Link>
-  );
-}
-
-function MobileQuickLink({
-  label,
-  href,
-  icon: Icon,
-  hash,
-  onClick,
-}: {
-  label: string;
-  href: string;
-  icon: LucideIcon;
-  hash?: string;
-  onClick?: () => void;
-}) {
-  const handleClick = useHashScroll(hash);
-
-  return (
-    <Link
-      href={href}
-      onClick={(e) => {
-        handleClick(e);
-        onClick?.();
-      }}
-      className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-foreground/75 transition-colors hover:bg-secondary/80 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-    >
-      <Icon className="size-4 shrink-0 text-gold-deep" />
-      {label}
+      <span
+        className={cn(
+          "inline-flex items-center justify-center rounded-full px-6 py-2 text-sm transition-all duration-200",
+          isActive
+            ? "w-[72%] h-11 bg-gold-soft text-gold-deep font-medium"
+            : "text-foreground/80 group-hover:bg-secondary/70 group-hover:text-foreground",
+        )}
+      >
+        {label}
+      </span>
     </Link>
   );
 }
@@ -103,7 +70,7 @@ export function MobileNav() {
         <SheetTrigger
           aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
           aria-controls={DRAWER_ID}
-          className="inline-flex size-10 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="inline-flex size-10 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 max-[375px]:size-9"
         >
           <span className="relative block h-3.5 w-5" aria-hidden="true">
             <span
@@ -132,12 +99,12 @@ export function MobileNav() {
           side="right"
           showCloseButton={false}
           overlayClassName="bg-charcoal/45"
-          className="w-[85vw] max-w-[360px] gap-0 p-0 duration-300 ease-out"
+          className="data-[side=right]:w-[90vw] max-w-[420px] gap-0 p-0 duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
         >
           <SheetTitle className="sr-only">Menu principal</SheetTitle>
           <div className="flex h-full flex-col overflow-hidden">
-            <div className="flex items-center justify-between border-b border-border/10 px-4 py-2.5">
-              <Link href="/" onClick={close} aria-label="Accueil TUR" className="flex items-center gap-2.5 px-2 py-1">
+            <header className="flex shrink-0 items-center justify-between border-b border-border/10 px-4 pb-3 pt-6">
+              <Link href="/" onClick={close} aria-label="Accueil TUR" className="flex items-center gap-2.5 px-2">
                 <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-full bg-gradient-charcoal text-primary-foreground">
                   <span className="font-display text-lg leading-none">T</span>
                 </span>
@@ -147,15 +114,15 @@ export function MobileNav() {
                 type="button"
                 onClick={close}
                 aria-label="Fermer le menu"
-                className="inline-flex size-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary/80 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                className="inline-flex size-11 items-center justify-center rounded-full text-muted-foreground transition-all duration-200 hover:bg-secondary/80 hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
               >
                 <X className="size-6" />
               </button>
-            </div>
+            </header>
 
-            <div className="flex-1 overflow-y-auto px-2 py-4">
-              <nav aria-label="Navigation mobile">
-                <ul className="space-y-0.5">
+            <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
+              <nav aria-label="Navigation mobile" className="w-full">
+                <ul className="space-y-5">
                   {siteNavLinks.map((l, i) => (
                     <motion.li
                       key={l.href}
@@ -176,79 +143,51 @@ export function MobileNav() {
                 </ul>
               </nav>
 
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, ease: EASE, delay: siteNavLinks.length * 0.025 + 0.05 }}
-                className="motion-safe mt-4 border-t border-border/10 pt-4"
-              >
-                <p className="px-4 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                  Actions rapides
-                </p>
-                <ul className="space-y-0.5">
-                  {quickActions.map((a, i) => (
-                    <motion.li
-                      key={a.href + a.label}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, ease: EASE, delay: siteNavLinks.length * 0.025 + 0.05 + (i + 1) * 0.025 }}
-                      className="motion-safe"
+              <footer className="flex w-full flex-col items-center gap-5 border-t border-border/10 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-5">
+                <div className="flex w-full flex-col items-center gap-4">
+                  <motion.ul
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: EASE, delay: 0.2 }}
+                    className="motion-safe space-y-1.5"
+                  >
+                    {trustPoints.map((t) => (
+                      <li key={t} className="flex items-center gap-2 text-sm text-foreground/70">
+                        <Check className="size-3.5 shrink-0 text-gold-deep" />
+                        {t}
+                      </li>
+                    ))}
+                  </motion.ul>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: EASE, delay: 0.25 }}
+                    className="motion-safe w-full"
+                  >
+                    <Link
+                      href="/#pricing"
+                      onClick={(e) => {
+                        handleCtaClick(e);
+                        close();
+                      }}
+                      className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-gold py-3.5 text-sm font-semibold text-gold-foreground shadow-[0_4px_12px_rgba(212,162,76,0.16),0_16px_48px_rgba(212,162,76,0.28)] transition-all duration-200 hover:-translate-y-px hover:shadow-[0_6px_16px_rgba(212,162,76,0.20),0_20px_56px_rgba(212,162,76,0.38)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                     >
-                      <MobileQuickLink
-                        label={a.label}
-                        href={a.href}
-                        icon={a.icon}
-                        hash={a.hash}
-                        onClick={close}
-                      />
-                    </motion.li>
-                  ))}
-                </ul>
-              </motion.div>
-            </div>
+                      Commencer
+                      <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                    </Link>
+                  </motion.div>
+                </div>
 
-            <div className="flex flex-col gap-3 border-t border-border/10 px-5 pb-3 pt-4">
-              <motion.ul
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: EASE, delay: 0.2 }}
-                className="motion-safe space-y-1.5"
-              >
-                {trustPoints.map((t) => (
-                  <li key={t} className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Check className="size-3.5 shrink-0 text-gold-deep" />
-                    {t}
-                  </li>
-                ))}
-              </motion.ul>
-
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: EASE, delay: 0.25 }}
-                className="motion-safe"
-              >
-                <Link
-                  href="/#pricing"
-                  onClick={(e) => {
-                    handleCtaClick(e);
-                    close();
-                  }}
-                  className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-gold py-3.5 text-sm font-semibold text-gold-foreground shadow-gold transition-all hover:scale-[1.02] hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 active:scale-[0.99]"
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4, ease: "easeOut", delay: 0.3 }}
+                  className="motion-safe text-center text-xs text-neutral-400"
                 >
-                  Commencer
-                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-              </motion.div>
-
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, ease: "easeOut", delay: 0.3 }}
-                className="motion-safe pt-1 text-center text-[11px] text-muted-foreground/70"
-              >
-                © 2026 TUR
-              </motion.p>
+                  © 2026 TUR
+                </motion.p>
+              </footer>
             </div>
           </div>
         </SheetContent>

@@ -15,10 +15,10 @@ export function Navbar() {
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
-      className="motion-safe fixed top-4 left-1/2 z-50 -translate-x-1/2 w-[min(1180px,calc(100%-2rem))]"
+      className="motion-safe fixed inset-x-0 top-4 z-50 mx-auto w-[calc(100%-32px)] max-w-[520px] lg:max-w-none lg:w-[min(1180px,calc(100%-2rem))]"
     >
-      <nav aria-label="Navigation principale" className="glass-1 shadow-soft rounded-full pl-6 pr-2 py-2 flex items-center justify-between">
-        <Link href="/" aria-label="Accueil TUR" className="flex items-center gap-2.5 group">
+      <nav aria-label="Navigation principale" className="glass-1 shadow-soft rounded-full pl-6 pr-2 py-2 flex items-center justify-between max-[375px]:pl-3.5 max-[375px]:pr-1">
+        <Link href="/" aria-label="Accueil TUR" className="flex items-center gap-2.5 group max-[375px]:gap-2">
           <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-full bg-gradient-charcoal text-primary-foreground">
             <span className="font-display text-lg leading-none">T</span>
             <span className="absolute -inset-px rounded-full ring-1 ring-gold opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -30,11 +30,11 @@ export function Navbar() {
             <NavLink key={l.href} href={l.href} hash={l.hash} label={l.label} isActive={isSiteLinkActive(pathname, l.href)} />
           ))}
         </ul>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 max-[375px]:gap-1.5">
           <Link
             href="/#pricing"
             onClick={handleCtaClick}
-            className="group inline-flex items-center gap-2 rounded-full bg-foreground text-primary-foreground pl-5 pr-2 py-2 text-sm font-medium hover:bg-foreground/90 transition-colors"
+            className="group inline-flex items-center gap-2 rounded-full bg-foreground text-primary-foreground pl-5 pr-2 py-2 text-sm font-medium hover:bg-foreground/90 transition-colors max-[375px]:pl-3.5 max-[375px]:pr-1.5"
           >
             Commencer
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-gold text-gold-foreground transition-transform group-hover:translate-x-0.5">

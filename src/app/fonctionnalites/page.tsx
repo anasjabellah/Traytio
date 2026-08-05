@@ -23,7 +23,7 @@ export default function FonctionnalitesPage() {
   return (
     <>
       <Navbar />
-      <main>
+      <main className="min-h-screen bg-background text-foreground overflow-x-hidden">
         <FonctionnalitesHero />
         <DashboardShowcase />
         <PlatformModules />
