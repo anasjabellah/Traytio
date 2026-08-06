@@ -34,7 +34,7 @@ export function Navbar() {
           <Link
             href="/#pricing"
             onClick={handleCtaClick}
-            className="group inline-flex items-center gap-2 rounded-full bg-foreground text-primary-foreground pl-5 pr-2 py-2 text-sm font-medium hover:bg-foreground/90 transition-colors max-[375px]:pl-3.5 max-[375px]:pr-1.5"
+            className="group hidden lg:inline-flex items-center gap-2 rounded-full bg-foreground text-primary-foreground pl-5 pr-2 py-2 text-sm font-medium hover:bg-foreground/90 transition-colors max-[375px]:pl-3.5 max-[375px]:pr-1.5"
           >
             Commencer
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-gold text-gold-foreground transition-transform group-hover:translate-x-0.5">

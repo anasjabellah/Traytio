@@ -290,7 +290,11 @@
     -webkit-background-clip: text;
     background-clip: text;
 
+    padding-right: 0.25em;
+    margin-right: -0.25em;
+
     color: transparent;
+    -webkit-text-fill-color: transparent;
   }
 
   .text-gradient-charcoal {
@@ -299,7 +303,11 @@
     -webkit-background-clip: text;
     background-clip: text;
 
+    padding-right: 0.25em;
+    margin-right: -0.25em;
+
     color: transparent;
+    -webkit-text-fill-color: transparent;
   }
 
   .bg-gradient-charcoal { 
