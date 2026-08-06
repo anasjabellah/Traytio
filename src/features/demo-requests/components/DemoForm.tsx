@@ -27,8 +27,29 @@ type DemoFormProps = {
   onSuccess: () => void
 }
 
-const inputCls = "h-11 rounded-xl bg-background border-border/70 focus-visible:border-ring/60 focus-visible:ring-3 focus-visible:ring-ring/20 shadow-xs transition-all"
-const selectCls = "!h-11 w-full rounded-xl bg-background border-border/70 focus-visible:border-ring/60 focus-visible:ring-3 focus-visible:ring-ring/20 shadow-xs transition-all py-0"
+type FieldProps = {
+  id: string
+  label: string
+  error?: string
+  children: React.ReactNode
+  className?: string
+}
+
+function Field({ id, label, error, children, className }: FieldProps) {
+  return (
+    <div className={cn("flex flex-col gap-1.5", className)}>
+      <Label htmlFor={id} className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        {label}
+      </Label>
+      {children}
+      {error ? (
+        <p id={`${id}-error`} role="alert" className="text-xs text-destructive">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  )
+}
 
 export function DemoForm({ onSuccess }: DemoFormProps) {
   const [submitting, setSubmitting] = useState(false)
@@ -77,30 +98,83 @@ export function DemoForm({ onSuccess }: DemoFormProps) {
       noValidate
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3.5">
-        <Field label="Nom complet" error={errors.fullName?.message}>
-          <Input placeholder="Jean Dupont" {...register("fullName")} className={inputCls} />
+        <Field id="fullName" label="Nom complet" error={errors.fullName?.message}>
+          <Input
+            id="fullName"
+            type="text"
+            size="lg"
+            placeholder="Jean Dupont"
+            aria-invalid={errors.fullName ? true : undefined}
+            aria-describedby={errors.fullName ? "fullName-error" : undefined}
+            {...register("fullName")}
+          />
         </Field>
-        <Field label="Entreprise" error={errors.companyName?.message}>
-          <Input placeholder="Maison Dupont Traiteur" {...register("companyName")} className={inputCls} />
+        <Field id="companyName" label="Entreprise" error={errors.companyName?.message}>
+          <Input
+            id="companyName"
+            type="text"
+            size="lg"
+            placeholder="Maison Dupont Traiteur"
+            aria-invalid={errors.companyName ? true : undefined}
+            aria-describedby={errors.companyName ? "companyName-error" : undefined}
+            {...register("companyName")}
+          />
         </Field>
-        <Field label="Email professionnel" error={errors.email?.message}>
-          <Input type="email" placeholder="jean@maison-dupont.com" {...register("email")} className={inputCls} />
+        <Field id="email" label="Email professionnel" error={errors.email?.message}>
+          <Input
+            id="email"
+            type="email"
+            size="lg"
+            placeholder="jean@maison-dupont.com"
+            aria-invalid={errors.email ? true : undefined}
+            aria-describedby={errors.email ? "email-error" : undefined}
+            {...register("email")}
+          />
         </Field>
-        <Field label="Téléphone / WhatsApp" error={errors.phone?.message}>
-          <Input placeholder="+33 6 12 34 56 78" {...register("phone")} className={inputCls} />
+        <Field id="phone" label="Téléphone / WhatsApp" error={errors.phone?.message}>
+          <Input
+            id="phone"
+            type="tel"
+            size="lg"
+            placeholder="+33 6 12 34 56 78"
+            aria-invalid={errors.phone ? true : undefined}
+            aria-describedby={errors.phone ? "phone-error" : undefined}
+            {...register("phone")}
+          />
         </Field>
-        <Field label="Ville" error={errors.city?.message}>
-          <Input placeholder="Paris" {...register("city")} className={inputCls} />
+        <Field id="city" label="Ville" error={errors.city?.message}>
+          <Input
+            id="city"
+            type="text"
+            size="lg"
+            placeholder="Paris"
+            aria-invalid={errors.city ? true : undefined}
+            aria-describedby={errors.city ? "city-error" : undefined}
+            {...register("city")}
+          />
         </Field>
-        <Field label="Pays" error={errors.country?.message}>
-          <Input placeholder="France" {...register("country")} className={inputCls} />
+        <Field id="country" label="Pays" error={errors.country?.message}>
+          <Input
+            id="country"
+            type="text"
+            size="lg"
+            placeholder="France"
+            aria-invalid={errors.country ? true : undefined}
+            aria-describedby={errors.country ? "country-error" : undefined}
+            {...register("country")}
+          />
         </Field>
-        <Field label="Taille de l'entreprise" error={errors.companySize?.message}>
+        <Field id="companySize" label="Taille de l'entreprise" error={errors.companySize?.message}>
           <Select
             value={watch("companySize")}
             onValueChange={(v) => setValue("companySize", v ?? "", { shouldValidate: true })}
           >
-            <SelectTrigger className={selectCls}>
+            <SelectTrigger
+              id="companySize"
+              size="lg"
+              aria-invalid={errors.companySize ? true : undefined}
+              aria-describedby={errors.companySize ? "companySize-error" : undefined}
+            >
               <SelectValue placeholder="Sélectionner" />
             </SelectTrigger>
             <SelectContent>
@@ -110,12 +184,17 @@ export function DemoForm({ onSuccess }: DemoFormProps) {
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Événements par mois" error={errors.monthlyEvents?.message}>
+        <Field id="monthlyEvents" label="Événements par mois" error={errors.monthlyEvents?.message}>
           <Select
             value={watch("monthlyEvents")}
             onValueChange={(v) => setValue("monthlyEvents", v ?? "", { shouldValidate: true })}
           >
-            <SelectTrigger className={selectCls}>
+            <SelectTrigger
+              id="monthlyEvents"
+              size="lg"
+              aria-invalid={errors.monthlyEvents ? true : undefined}
+              aria-describedby={errors.monthlyEvents ? "monthlyEvents-error" : undefined}
+            >
               <SelectValue placeholder="Sélectionner" />
             </SelectTrigger>
             <SelectContent>
@@ -125,12 +204,16 @@ export function DemoForm({ onSuccess }: DemoFormProps) {
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Message (optionnel)" error={errors.message?.message} className="sm:col-span-2">
+        <Field id="message" label="Message (optionnel)" error={errors.message?.message} className="sm:col-span-2">
           <Textarea
+            id="message"
+            size="lg"
             rows={3}
             placeholder="Parlez-nous de votre activité, vos besoins, vos défis…"
+            aria-invalid={errors.message ? true : undefined}
+            aria-describedby={errors.message ? "message-error" : undefined}
             {...register("message")}
-            className="rounded-xl bg-background border-border/70 focus-visible:border-ring/60 focus-visible:ring-3 focus-visible:ring-ring/20 shadow-xs transition-all resize-none min-h-[90px]"
+            className="min-h-[90px] resize-none"
           />
         </Field>
       </div>
@@ -139,20 +222,24 @@ export function DemoForm({ onSuccess }: DemoFormProps) {
         <input
           type="checkbox"
           id="privacy"
+          name="privacyAccepted"
+          aria-required="true"
+          aria-invalid={errors.privacyAccepted ? true : undefined}
+          aria-describedby={errors.privacyAccepted ? "privacy-error" : undefined}
           checked={!!watch("privacyAccepted")}
           onChange={(e) => setValue("privacyAccepted", e.target.checked as unknown as true, { shouldValidate: true })}
           className="mt-0.5 size-4 rounded border-border accent-gold shrink-0"
         />
         <div>
           <label htmlFor="privacy" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
-            J'accepte la{" "}
+            J&apos;accepte la{" "}
             <a href="#" className="text-foreground font-medium underline underline-offset-2 decoration-border hover:decoration-foreground transition-all">
               politique de confidentialité
             </a>{" "}
             de TUR.
           </label>
           {errors.privacyAccepted?.message && (
-            <p className="mt-1 text-xs text-destructive">{errors.privacyAccepted.message}</p>
+            <p id="privacy-error" role="alert" className="mt-1 text-xs text-destructive">{errors.privacyAccepted.message}</p>
           )}
         </div>
       </div>
@@ -161,7 +248,8 @@ export function DemoForm({ onSuccess }: DemoFormProps) {
         <button
           type="submit"
           disabled={submitting}
-          className="group relative w-full inline-flex items-center justify-center gap-2.5 h-11 rounded-xl bg-foreground text-primary-foreground px-6 text-sm font-semibold shadow-lift hover:shadow-gold hover:opacity-90 active:translate-y-px transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:active:translate-y-0"
+          aria-busy={submitting}
+          className="group relative w-full inline-flex items-center justify-center gap-2.5 h-11 rounded-lg bg-foreground text-primary-foreground px-6 text-sm font-semibold shadow-lift hover:shadow-gold hover:opacity-90 active:translate-y-px transition-all focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:translate-y-0"
         >
           {submitting ? (
             <>
@@ -176,19 +264,9 @@ export function DemoForm({ onSuccess }: DemoFormProps) {
           )}
         </button>
         <p className="mt-2 text-center text-[10px] text-muted-foreground/50">
-          Aucun compte n'est créé. Un membre de notre équipe vous contactera après validation.
+          Aucun compte n&apos;est créé. Un membre de notre équipe vous contactera après validation.
         </p>
       </div>
     </motion.form>
-  )
-}
-
-function Field({ label, error, children, className }: { label: string; error?: string; children: React.ReactNode; className?: string }) {
-  return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
-      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</Label>
-      <div className="[&_input]:h-11 [&_input]:rounded-xl [&_input]:bg-background">{children}</div>
-      {error && <p className="text-xs text-destructive">{error}</p>}
-    </div>
   )
 }
