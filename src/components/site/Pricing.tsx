@@ -2,7 +2,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Sparkles, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { SectionLabel } from "./ProblemSolution";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const formatAnnual = (m: number) => (m * 12).toLocaleString("fr-FR");
 
@@ -11,6 +14,7 @@ const plans = [
     name: "Starter",
     monthly: 299,
     desc: "Fonctionnalités essentielles pour démarrer votre activité.",
+    href: "/demo",
     features: [
       "Jusqu'à 30 événements / mois",
       "Gestion des clients",
@@ -25,6 +29,7 @@ const plans = [
     name: "Professionnel",
     monthly: 599,
     desc: "Pour les traiteurs qui souhaitent développer leur activité.",
+    href: "/demo",
     features: [
       "Événements illimités",
       "Gestion des équipes",
@@ -40,6 +45,7 @@ const plans = [
     name: "Entreprise",
     price: "Sur devis",
     desc: "Solution sur mesure pour les grandes organisations.",
+    href: "/contact",
     features: [
       "Multi-établissements",
       "Gestion de plusieurs équipes",
@@ -52,31 +58,44 @@ const plans = [
   },
 ];
 
-export function Pricing() {
+type PricingProps = {
+  headingLevel?: 1 | 2;
+};
+
+export function Pricing({ headingLevel = 2 }: PricingProps) {
   const [annual, setAnnual] = useState(false);
+  const Heading = `h${headingLevel}` as "h1" | "h2";
 
   return (
     <section id="pricing" className="relative py-28 bg-surface-soft">
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <div className="flex justify-center"><SectionLabel>Tarifs</SectionLabel></div>
-          <h2 className="font-display text-5xl lg:text-6xl tracking-tight">
+          <Heading className="font-display text-5xl lg:text-6xl tracking-tight">
             Un investissement, <span className="italic text-gradient-gold">jamais une dépense.</span>
-          </h2>
+          </Heading>
           <p className="mt-5 text-lg text-muted-foreground">Choisissez le plan qui accompagne votre croissance.</p>
 
-          <div className="mt-8 inline-flex items-center rounded-full bg-card border border-border p-0.5 shadow-soft">
+          <div
+            className="mt-8 inline-flex items-center rounded-full bg-card border border-border p-0.5 shadow-soft"
+            role="group"
+            aria-label="Période de facturation"
+          >
             <button
+              type="button"
               onClick={() => setAnnual(false)}
-              className={`rounded-full px-4 py-2 text-xs font-medium transition-all ${
+              aria-pressed={!annual}
+              className={`rounded-full px-5 py-3.5 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-1 focus-visible:ring-offset-background ${
                 !annual ? "bg-foreground text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Mensuel
             </button>
             <button
+              type="button"
               onClick={() => setAnnual(true)}
-              className={`rounded-full px-4 py-2 text-xs font-medium transition-all ${
+              aria-pressed={annual}
+              className={`rounded-full px-5 py-3.5 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-1 focus-visible:ring-offset-background ${
                 annual ? "bg-foreground text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -95,7 +114,7 @@ export function Pricing() {
               transition={{ duration: 0.6, delay: i * 0.08 }}
               className={`relative group rounded-3xl p-8 transition-all ${
                 p.featured
-                  ? "bg-gradient-charcoal text-primary-foreground shadow-lift scale-105 lg:scale-105"
+                  ? "bg-gradient-charcoal text-primary-foreground shadow-lift lg:scale-105"
                   : "bg-card border border-border hover:shadow-lift"
               }`}
             >
@@ -138,17 +157,16 @@ export function Pricing() {
                   )}
                 </div>
 
-                <a
-                  href="#"
-                  className={`mt-8 group/btn inline-flex items-center justify-center gap-2 w-full rounded-full py-3 text-sm font-medium transition-all ${
-                    p.featured
-                      ? "bg-gradient-gold text-gold-foreground hover:shadow-gold"
-                      : "bg-foreground text-primary-foreground hover:bg-foreground/90"
-                  }`}
+                <Link
+                  href={p.href}
+                  className={cn(
+                    buttonVariants({ variant: p.featured ? "gold" : "charcoal", size: "xl" }),
+                    "group/btn mt-8 w-full"
+                  )}
                 >
                   {p.cta}
                   <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5" />
-                </a>
+                </Link>
 
                 <ul className="mt-8 space-y-3.5">
                   {p.features.map((f) => (
