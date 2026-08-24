@@ -4,9 +4,6 @@ import { assertSameOrigin } from './csrf'
 import { AUTH } from '@/lib/notify/messages'
 import { COMMON } from '@/lib/notify/messages'
 
-const MAX_REQUESTS = 10
-const WINDOW_MS = 10_000
-
 // Read/view actions are not state-changing and are invoked during page
 // rendering (Server Action reads carry an Origin header that varies by
 // deployment/preview/port). Applying a same-origin CSRF check to them rejects
@@ -43,9 +40,9 @@ export function withActionGuard<T extends (...args: any[]) => Promise<unknown>>(
 
     const key = userId ? `${userId}:${config.name}` : `anon:${config.name}`
 
-    const result = await checkRateLimit(key, { maxRequests: MAX_REQUESTS, windowMs: WINDOW_MS })
+    const result = await checkRateLimit(key, "action")
     if (!result.ok) {
-      return { success: false, error: 'Trop de requêtes. Veuillez réessayer dans quelques instants.' }
+      return { success: false, error: COMMON.RATE_LIMITED }
     }
 
     return fn(...args)
