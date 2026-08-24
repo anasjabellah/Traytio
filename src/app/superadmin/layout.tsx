@@ -11,8 +11,11 @@ export default async function SuperadminLayout({
   const { userId: clerkId } = await auth()
   if (!clerkId) redirect('/sign-in')
 
+  // SUPERADMIN is effectively user-level: grant access if the user holds the
+  // SUPERADMIN role in ANY of their organizations (never rely on an arbitrary
+  // "first" membership, which could wrongly block a multi-org superadmin).
   const membership = await prisma.userOrganization.findFirst({
-    where: { user: { clerkId } },
+    where: { user: { clerkId }, role: 'SUPERADMIN' },
     select: { role: true },
   })
 

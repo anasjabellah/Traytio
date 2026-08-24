@@ -619,3 +619,39 @@ enum DiscountType {
 
 // Need to add Decimal type support via Prisma
 // Add `npm install @prisma/client` and `prisma generate`
+
+// ==================== PUBLIC SUBMISSIONS ====================
+// Leads captured from the public Contact and Demo forms. These are intentionally
+// organization-agnostic: public visitors are not (and must not be) tied to an
+// authenticated organization. No passwords, secrets, or payment data are stored.
+
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("contact_submissions")
+}
+
+model DemoRequest {
+  id            String   @id @default(cuid())
+  fullName      String
+  companyName   String
+  email         String
+  phone         String
+  city          String
+  country       String
+  companySize   String
+  monthlyEvents String
+  message       String?
+  privacyAccepted Boolean @default(false)
+  status        String   @default("pending")
+  createdAt     DateTime @default(now())
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("demo_requests")
+}
