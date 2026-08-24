@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getOrganizationId } from "@/lib/get-organization-id";
-import { INVOICE } from "@/lib/notify/messages";
+import { assertCan } from "@/lib/assert-role";
+import { INVOICE, COMMON } from "@/lib/notify/messages";
 import { InvoicePDF } from "@/features/invoices/components/invoice-pdf";
 import { renderToBuffer } from "@react-pdf/renderer";
 
@@ -13,6 +14,8 @@ export async function GET(
     const { id } = await params;
 
     const organizationId = await getOrganizationId();
+
+    await assertCan("invoices", "read");
 
     const invoice = await prisma.invoice.findFirst({
       where: { id, organizationId },
@@ -143,6 +146,9 @@ export async function GET(
       },
     });
   } catch (err: unknown) {
+    if (err instanceof Error && err.message.startsWith("Forbidden:")) {
+      return NextResponse.json({ error: COMMON.FORBIDDEN_ORIGIN }, { status: 403 });
+    }
     const message = err instanceof Error ? err.message : INVOICE.UNEXPECTED_ERROR;
     console.error("[PDF ROUTE ERROR]", message);
     if (err instanceof Error && err.stack) {

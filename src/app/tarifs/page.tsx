@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "Tarifs — TUR",
   description:
     "Découvrez les offres TUR pour les traiteurs et professionnels du catering. Starter, Pro et Entreprise.",
+  alternates: {
+    canonical: "/tarifs",
+  },
 };
 
 export default function TarifsPage() {

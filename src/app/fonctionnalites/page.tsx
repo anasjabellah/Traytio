@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   title: "Fonctionnalités — Traytio",
   description:
     "Découvrez toutes les fonctionnalités Traytio : gestion d'événements, devis & factures, messagerie unifiée, paiements, analytics et automatisations. Conçu pour les traiteurs.",
+  alternates: {
+    canonical: "/fonctionnalites",
+  },
   openGraph: {
     title: "Fonctionnalités — Traytio",
     description:

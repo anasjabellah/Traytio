@@ -27,9 +27,6 @@ export const metadata: Metadata = {
     "SaaS traiteur",
     "TUR",
   ],
-  alternates: {
-    canonical: siteUrl,
-  },
   openGraph: {
     title: "TUR — Le système d'exploitation des traiteurs modernes",
     description:
