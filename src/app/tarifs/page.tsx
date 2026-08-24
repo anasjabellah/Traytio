@@ -5,7 +5,7 @@ import { TarifsFinalCTA } from "@/features/tarifs/components/final-cta";
 import { Footer } from "@/components/site/Footer";
 
 export const metadata: Metadata = {
-  title: "Tarifs — TUR",
+  title: "Tarifs",
   description:
     "Découvrez les offres TUR pour les traiteurs et professionnels du catering. Starter, Pro et Entreprise.",
   alternates: {

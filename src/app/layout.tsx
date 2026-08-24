@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     default: "TUR — Le système d'exploitation des traiteurs modernes",
-    template: "%s | TUR",
+    template: "%s | Traytio",
   },
   description:
     "Plateforme SaaS premium pour traiteurs et catering : clients, devis, commandes, événements et paiements dans une seule interface.",
@@ -54,25 +54,19 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "fr_FR",
-    siteName: "TUR",
-    title: "TUR — Le système d'exploitation des traiteurs modernes",
-    description:
-      "Plateforme SaaS premium pour traiteurs et catering. Remplacez WhatsApp, Excel et papier par une suite élégante et puissante.",
+    siteName: "Traytio",
     url: siteUrl,
     images: [
       {
         url: "/og-image.svg",
         width: 1200,
         height: 630,
-        alt: "TUR",
+        alt: "Traytio",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "TUR — Le système d'exploitation des traiteurs modernes",
-    description:
-      "Plateforme SaaS premium pour traiteurs et catering. Remplacez WhatsApp, Excel et papier par une suite élégante et puissante.",
     images: ["/og-image.svg"],
   },
 };

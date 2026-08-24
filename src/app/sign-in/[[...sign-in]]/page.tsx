@@ -14,16 +14,6 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${siteUrl}/sign-in`,
   },
-  openGraph: {
-    title: "Connexion — TUR",
-    description: "Connectez-vous à votre compte TUR.",
-    url: `${siteUrl}/sign-in`,
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Connexion — TUR",
-    description: "Connectez-vous à votre compte TUR.",
-  },
 };
 
 export default function SignInPage() {

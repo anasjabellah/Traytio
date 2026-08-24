@@ -9,16 +9,11 @@ import { WhyTraytio } from "@/features/fonctionnalites/components/WhyTraytio";
 import { FonctionnalitesFinalCTA } from "@/features/fonctionnalites/components/FinalCTA";
 
 export const metadata: Metadata = {
-  title: "Fonctionnalités — Traytio",
+  title: "Fonctionnalités",
   description:
     "Découvrez toutes les fonctionnalités Traytio : gestion d'événements, devis & factures, messagerie unifiée, paiements, analytics et automatisations. Conçu pour les traiteurs.",
   alternates: {
     canonical: "/fonctionnalites",
-  },
-  openGraph: {
-    title: "Fonctionnalités — Traytio",
-    description:
-      "Tout ce dont un traiteur a besoin — réuni au même endroit. Gestion d'événements, devis, factures, messagerie, paiements, analytics.",
   },
 };
 
