@@ -59,8 +59,13 @@ export async function checkRateLimit(
 ): Promise<RateLimitResult> {
   const limiter = getLimiter(category);
   if (!limiter) {
-    // Redis env not configured (dev/local). Limiting is disabled, not bypassed
-    // in production — see the runtime catch below for the fail-closed path.
+    if (process.env.NODE_ENV === "production") {
+      // Production misconfiguration: Redis env vars are missing. We must NOT
+      // silently allow unlimited writes, so fail closed (same path as a
+      // runtime Redis outage → rejected writes / HTTP 503 in `withApiGuard`).
+      return { ok: false, remaining: 0, resetInMs: 0, reason: "unavailable" };
+    }
+    // Dev/local without Redis: limiting disabled (not bypassed in production).
     return { ok: true, remaining: Infinity, resetInMs: 0, reason: "disabled" };
   }
 
