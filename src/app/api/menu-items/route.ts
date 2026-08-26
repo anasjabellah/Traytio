@@ -33,8 +33,8 @@ export async function GET(request: Request) {
       { status: 400 }
     );
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Server error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[api/menu-items] Unhandled error:", error);
+    return NextResponse.json({ error: "Erreur interne du serveur" }, { status: 500 });
   }
 }
 
@@ -51,9 +51,9 @@ async function createMenuItemApi(request: Request) {
       { status: 400 }
     );
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Invalid request';
+    console.error("[api/menu-items] Unhandled error:", error);
     return NextResponse.json(
-      { error: message },
+      { error: "Requête invalide" },
       { status: 400 }
     );
   }

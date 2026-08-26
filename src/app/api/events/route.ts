@@ -29,8 +29,8 @@ async function createEventApi(request: Request) {
     }
     return NextResponse.json({ error: resp.error ?? 'Failed to create event' }, { status: 400 });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Invalid request';
-    return NextResponse.json({ error: message }, { status: 400 });
+    console.error("[api/events] Unhandled error:", error);
+    return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
   }
 }
 

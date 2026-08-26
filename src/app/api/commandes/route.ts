@@ -11,8 +11,8 @@ async function createCommandeApi(request: Request) {
     }
     return NextResponse.json({ error: response.error ?? "Failed to create commande" }, { status: 400 })
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Invalid request";
-    return NextResponse.json({ error: message }, { status: 400 })
+    console.error("[api/commandes] Unhandled error:", error);
+    return NextResponse.json({ error: "Requête invalide" }, { status: 400 })
   }
 }
 

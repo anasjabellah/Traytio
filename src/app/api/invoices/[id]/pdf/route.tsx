@@ -149,11 +149,10 @@ export async function GET(
     if (err instanceof Error && err.message.startsWith("Forbidden:")) {
       return NextResponse.json({ error: COMMON.FORBIDDEN_ORIGIN }, { status: 403 });
     }
-    const message = err instanceof Error ? err.message : INVOICE.UNEXPECTED_ERROR;
-    console.error("[PDF ROUTE ERROR]", message);
+    console.error("[PDF ROUTE ERROR]", err instanceof Error ? err.message : INVOICE.UNEXPECTED_ERROR);
     if (err instanceof Error && err.stack) {
       console.error("[PDF ROUTE STACK]", err.stack);
     }
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: INVOICE.UNEXPECTED_ERROR }, { status: 500 });
   }
 }

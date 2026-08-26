@@ -26,8 +26,8 @@ export async function GET(request: Request) {
     }
     return NextResponse.json({ error: response.error ?? 'Failed to fetch menus' }, { status: 400 });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Server error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[api/menus] Unhandled error:", error);
+    return NextResponse.json({ error: "Erreur interne du serveur" }, { status: 500 });
   }
 }
 
@@ -40,8 +40,8 @@ async function createMenuApi(request: Request) {
     }
     return NextResponse.json({ error: response.error ?? 'Failed to create menu' }, { status: 400 });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Invalid request';
-    return NextResponse.json({ error: message }, { status: 400 });
+    console.error("[api/menus] Unhandled error:", error);
+    return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
   }
 }
 
