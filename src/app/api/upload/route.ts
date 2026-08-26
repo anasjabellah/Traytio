@@ -45,6 +45,16 @@ async function uploadApi(request: Request) {
       return NextResponse.json({ error: AUTH.ORGANIZATION_NOT_FOUND }, { status: 403 });
     }
 
+    // Reject oversized requests before buffering the entire multipart body.
+    // The per-file limits below are enforced after parsing, but without an
+    // up-front cap the raw body is read into memory first (memory-exhaustion
+    // DoS). 25 MB covers the 20 MB PDF ceiling plus multipart overhead.
+    const declaredLength = Number(request.headers.get("content-length") || 0);
+    const MAX_REQUEST_BYTES = 25 * 1024 * 1024;
+    if (declaredLength > MAX_REQUEST_BYTES) {
+      return NextResponse.json({ error: "Fichier trop volumineux" }, { status: 413 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as Blob | null;
     if (!file) {
