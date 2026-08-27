@@ -17,8 +17,16 @@ export async function POST(req: Request) {
     return new Response('Missing svix headers', { status: 400 })
   }
 
-  const payload = await req.json()
-  const body = JSON.stringify(payload)
+  // Pre-read protection: reject oversized declared request bodies before
+  // buffering. Chunked requests without Content-Length are not blocked here
+  // (Svix must still read the body to verify), so this is defense-in-depth only.
+  const declaredLength = Number(req.headers.get("content-length") || 0)
+  const MAX_WEBHOOK_BYTES = 1 * 1024 * 1024
+  if (declaredLength > MAX_WEBHOOK_BYTES) {
+    return new Response("Request body too large", { status: 413 })
+  }
+
+  const body = await req.text()
 
   const wh = new Webhook(WEBHOOK_SECRET)
   let evt: WebhookEvent
@@ -80,7 +88,9 @@ export async function POST(req: Request) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         return new Response('OK', { status: 200 })
       }
-      console.error('[clerk-webhook] user.created failed:', err)
+      console.error(
+        `[clerk-webhook] user.created failed: event=${evt.type} clerkId=${id ?? "unknown"} errorType=${err instanceof Error ? err.constructor.name : typeof err}`,
+      )
       return new Response('Failed to create user resources', { status: 500 })
     }
   }

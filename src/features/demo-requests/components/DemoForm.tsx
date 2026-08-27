@@ -172,6 +172,7 @@ export function DemoForm({ onSuccess }: DemoFormProps) {
             <SelectTrigger
               id="companySize"
               size="lg"
+              className="w-full min-w-0 text-base md:text-sm"
               aria-invalid={errors.companySize ? true : undefined}
               aria-describedby={errors.companySize ? "companySize-error" : undefined}
             >
@@ -192,6 +193,7 @@ export function DemoForm({ onSuccess }: DemoFormProps) {
             <SelectTrigger
               id="monthlyEvents"
               size="lg"
+              className="w-full min-w-0 text-base md:text-sm"
               aria-invalid={errors.monthlyEvents ? true : undefined}
               aria-describedby={errors.monthlyEvents ? "monthlyEvents-error" : undefined}
             >
