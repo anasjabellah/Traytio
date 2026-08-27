@@ -18,7 +18,6 @@ export default function TarifsPage() {
     <>
       <Navbar />
       <main className="min-h-screen bg-background text-foreground overflow-x-hidden">
-        <div className="pt-28" />
         <Pricing headingLevel={1} />
         <TarifsFinalCTA />
       </main>
