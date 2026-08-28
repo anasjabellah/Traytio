@@ -3,12 +3,13 @@ import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { siteNavLinks, NavLink, useHashScroll, isSiteLinkActive } from "@/components/site/site-nav";
+import { siteNavLinks, NavLink, isSiteLinkActive } from "@/components/site/site-nav";
 import { MobileNav } from "@/components/site/MobileNav";
+import { useAuth } from "@clerk/nextjs";
 
 export function Navbar() {
   const pathname = usePathname();
-  const handleCtaClick = useHashScroll("pricing");
+  const { isSignedIn } = useAuth();
 
   return (
     <motion.header
@@ -32,11 +33,10 @@ export function Navbar() {
         </ul>
         <div className="flex items-center gap-2 max-[375px]:gap-1.5">
           <Link
-            href="/#pricing"
-            onClick={handleCtaClick}
+            href={isSignedIn ? "/dashboard" : "/sign-in"}
             className="group hidden lg:inline-flex items-center gap-2 rounded-full bg-foreground text-primary-foreground pl-5 pr-2 py-2 text-sm font-medium hover:bg-foreground/90 transition-colors max-[375px]:pl-3.5 max-[375px]:pr-1.5"
           >
-            Commencer
+            {isSignedIn ? "Dashboard" : "Commencer"}
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-gold text-gold-foreground transition-transform group-hover:translate-x-0.5">
               <ArrowRight className="h-3.5 w-3.5" />
             </span>

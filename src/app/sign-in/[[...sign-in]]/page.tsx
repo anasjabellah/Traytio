@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SignIn } from "@clerk/nextjs";
 import { AuthLayout, authAppearance } from "@/features/auth";
+import { Navbar } from "@/components/site/Navbar";
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 
 export default function SignInPage() {
   return (
-    <AuthLayout>
+    <AuthLayout topbar={<Navbar />}>
       <SignIn appearance={authAppearance} />
     </AuthLayout>
   );
