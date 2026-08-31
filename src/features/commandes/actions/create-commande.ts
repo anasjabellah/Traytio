@@ -41,6 +41,34 @@ async function createCommandeHandler(input: unknown) {
   await assertCan('commandes', 'create')
   const organizationId = membership.organizationId
 
+  // ── Verify foreign-key ownership (client-provided refs must belong to this org) ──
+  const [clientRef, eventRef, menuRef] = await Promise.all([
+    prisma.client.findFirst({ where: { id: data.clientId, organizationId }, select: { id: true } }),
+    data.eventId
+      ? prisma.event.findFirst({ where: { id: data.eventId, organizationId }, select: { id: true } })
+      : Promise.resolve(null),
+    data.menuId
+      ? prisma.menu.findFirst({ where: { id: data.menuId, organizationId }, select: { id: true } })
+      : Promise.resolve(null),
+  ]);
+  if (!clientRef) return { success: false, error: "Invalid client for organization" };
+  if (data.eventId && !eventRef) return { success: false, error: "Invalid event for organization" };
+  if (data.menuId && !menuRef) return { success: false, error: "Invalid menu for organization" };
+
+  // Line-item menuItem references must also belong to this organization.
+  const menuItemIds = (data.items ?? [])
+    .map((i) => i.menuItemId)
+    .filter((id): id is string => Boolean(id));
+  if (menuItemIds.length > 0) {
+    const validMenuItems = await prisma.menuItem.findMany({
+      where: { id: { in: menuItemIds }, organizationId },
+      select: { id: true },
+    });
+    if (validMenuItems.length !== menuItemIds.length) {
+      return { success: false, error: "Invalid menu item for organization" };
+    }
+  }
+
   // ── Resolve eventId ──────────────────────────────────────────────
   let resolvedEventId = data.eventId ?? null;
 

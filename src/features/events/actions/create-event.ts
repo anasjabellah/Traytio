@@ -22,6 +22,16 @@ async function createEventHandler(data: Record<string, unknown>): Promise<Action
     const organizationId = await getOrganizationId();
     await assertCan('events', 'create');
 
+    if (validData.clientId) {
+      const clientRef = await prisma.client.findFirst({
+        where: { id: validData.clientId, organizationId },
+        select: { id: true },
+      });
+      if (!clientRef) {
+        return { success: false, error: "Invalid client for organization" };
+      }
+    }
+
     let endDate = validData.endDate;
     if (endDate && validData.startDate) {
       const e = new Date(endDate);

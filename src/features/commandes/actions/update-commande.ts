@@ -32,29 +32,60 @@ async function updateCommandeHandler(id: string, input: unknown): Promise<Action
 
     await assertCan('commandes', 'update', existing.createdById ?? undefined);
 
-    // ── Resolve eventId ──────────────────────────────────────────────
-    // 1. If eventId was provided, update the linked Event with new data.
-    // 2. If no eventId but event data exists, create an Event and link it.
-    // 3. If event data was cleared (no eventDate), leave eventId as null.
+    // ── Verify foreign-key ownership (client-provided refs must belong to this org) ──
+    const clientRef = await prisma.client.findFirst({
+      where: { id: data.clientId, organizationId },
+      select: { id: true },
+    });
+    if (!clientRef) {
+      return { success: false, error: "Invalid client for organization" };
+    }
 
     let resolvedEventId = existing.eventId;
 
     if (data.eventId) {
-      // User explicitly selected an existing event — link to it
+      // User explicitly selected an existing event — verify it belongs to this org.
+      const eventRef = await prisma.event.findFirst({
+        where: { id: data.eventId, organizationId },
+        select: { id: true },
+      });
+      if (!eventRef) {
+        return { success: false, error: "Invalid event for organization" };
+      }
       resolvedEventId = data.eventId;
     }
 
-    if (resolvedEventId && data.eventDate) {
-      // Update the linked Event with current form data
-      // Verify the event belongs to this organization before updating
-      const targetEvent = await prisma.event.findFirst({
-        where: { id: resolvedEventId, organizationId },
+    if (data.menuId) {
+      const menuRef = await prisma.menu.findFirst({
+        where: { id: data.menuId, organizationId },
         select: { id: true },
       });
-      if (!targetEvent) {
-        return { success: false, error: COMMANDE.EVENT_NOT_FOUND };
+      if (!menuRef) {
+        return { success: false, error: "Invalid menu for organization" };
       }
+    }
 
+    // Line-item menuItem references must also belong to this organization.
+    const menuItemIds = (data.items ?? [])
+      .map((i) => i.menuItemId)
+      .filter((id): id is string => Boolean(id));
+    if (menuItemIds.length > 0) {
+      const validMenuItems = await prisma.menuItem.findMany({
+        where: { id: { in: menuItemIds }, organizationId },
+        select: { id: true },
+      });
+      if (validMenuItems.length !== menuItemIds.length) {
+        return { success: false, error: "Invalid menu item for organization" };
+      }
+    }
+
+    // ── Resolve eventId ──────────────────────────────────────────────
+    // 1. If eventId was provided, it was already verified above.
+    // 2. If no eventId but event data exists, create an Event and link it.
+    // 3. If event data was cleared (no eventDate), leave eventId as null.
+
+    if (resolvedEventId && data.eventDate) {
+      // Update the linked Event with current form data (org-scoped by id + organizationId)
       await prisma.event.update({
         where: { id: resolvedEventId, organizationId },
         data: {

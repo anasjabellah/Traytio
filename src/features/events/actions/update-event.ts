@@ -23,6 +23,16 @@ async function updateEventHandler(data: Record<string, unknown>): Promise<Action
 
     const { id, ...validData } = parsed.data;
 
+    if (validData.clientId) {
+      const clientRef = await prisma.client.findFirst({
+        where: { id: validData.clientId, organizationId },
+        select: { id: true },
+      });
+      if (!clientRef) {
+        return { success: false, error: "Invalid client for organization" };
+      }
+    }
+
     let endDate = validData.endDate ? new Date(validData.endDate as Date) : undefined;
     if (endDate && validData.startDate) {
       const s = new Date(validData.startDate as Date);

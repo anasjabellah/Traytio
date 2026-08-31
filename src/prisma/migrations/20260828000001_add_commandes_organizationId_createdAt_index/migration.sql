@@ -1,0 +1,24 @@
+-- Forward-only migration.
+--
+-- Root cause: schema.prisma declares @@index([organizationId, createdAt]) on the
+-- Commande model. This index backs tenant-scoped, chronological queries such as the
+-- dashboard recent-commandes feed, client commande history, and paginated commande
+-- lists ordered by createdAt (e.g. get-commandes-page, get-clients-page commande
+-- subqueries, get-dashboard-data-sections). However, no migration in the history ever
+-- created this index on the "commandes" table, producing schema/migration drift: a
+-- database built via `prisma migrate deploy` would be missing it while the schema
+-- expects it.
+--
+-- The existing (organizationId, status, createdAt) index (20260723) does NOT satisfy
+-- plain organizationId + createdAt ordering, because `status` is interleaved between
+-- the two columns; Postgres cannot use it to avoid the sort step for queries that
+-- filter only by organizationId and order by createdAt. The dedicated index below is
+-- therefore required and is not redundant with the status-interleaved one.
+--
+-- This migration is idempotent (IF NOT EXISTS) and creates no data/table changes.
+-- Plain CREATE INDEX (not CONCURRENTLY) is used so the migration runs correctly
+-- inside the transaction wrapper that `prisma migrate deploy` applies, matching the
+-- convention used by 20260723_add_database_indexes.
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "commandes_organizationId_createdAt_idx" ON "commandes"("organizationId", "createdAt");
