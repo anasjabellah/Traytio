@@ -9,6 +9,7 @@ import { assertCan } from '@/lib/assert-role';
 import { MENU } from '@/lib/notify/messages';
 import { withActionGuard } from '@/lib/action-guard';
 import { normalizeActionError } from '@/lib/action-error';
+import { verifyBatchFkOwnership } from '@/lib/fk-ownership';
 
 async function updateMenuHandler(data: UpdateMenuInput): Promise<ActionResponse<Menu>> {
   try {
@@ -20,6 +21,15 @@ async function updateMenuHandler(data: UpdateMenuInput): Promise<ActionResponse<
     const organizationId = await getOrganizationId();
     await assertCan('menus', 'update');
     const { id, menuItems, ...rest } = validData;
+
+    // ── Verify foreign-key ownership (client-provided menuItemIds must belong to this org) ──
+    const menuItemIds = (menuItems ?? [])
+      .map((item) => item.menuItemId)
+      .filter((id): id is string => Boolean(id));
+    const fkError = await verifyBatchFkOwnership(
+      prisma.menuItem, menuItemIds, organizationId, 'menu item',
+    );
+    if (fkError) return fkError;
 
     const menu = await prisma.$transaction(async (tx) => {
       const updated = await tx.menu.update({

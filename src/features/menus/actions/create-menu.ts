@@ -9,6 +9,7 @@ import { assertCan } from '@/lib/assert-role';
 import { MENU } from '@/lib/notify/messages';
 import { withActionGuard } from '@/lib/action-guard';
 import { normalizeActionError } from '@/lib/action-error';
+import { verifyBatchFkOwnership } from '@/lib/fk-ownership';
 
 async function createMenuHandler(data: CreateMenuInput): Promise<ActionResponse<Menu>> {
   try {
@@ -19,6 +20,15 @@ async function createMenuHandler(data: CreateMenuInput): Promise<ActionResponse<
     const validData = parsed.data;
     const organizationId = await getOrganizationId();
     await assertCan('menus', 'create');
+
+    // ── Verify foreign-key ownership (client-provided menuItemIds must belong to this org) ──
+    const menuItemIds = (validData.menuItems ?? [])
+      .map((item) => item.menuItemId)
+      .filter((id): id is string => Boolean(id));
+    const fkError = await verifyBatchFkOwnership(
+      prisma.menuItem, menuItemIds, organizationId, 'menu item',
+    );
+    if (fkError) return fkError;
 
     const menu = await prisma.menu.create({
       data: {
