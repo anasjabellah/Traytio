@@ -8,16 +8,17 @@ const csp = [
   // 'unsafe-eval' is removed in production: no production dependency requires it
   // (Next.js prod build, Clerk, GSAP, Framer Motion and Recharts do not use eval/new Function).
   // It is kept only in development so Next.js Fast Refresh keeps working.
-  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"} https://${clerkFrontendHost} https://clerk.${clerkFrontendHost.replace(/^\*\./, "")}`,
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"} https://${clerkFrontendHost} https://clerk.${clerkFrontendHost.replace(/^\*\./, "")} https://challenges.cloudflare.com https://*.protect.clerk.com`,
   // 'unsafe-inline' is retained in style-src: the app relies on React inline style attributes
   // (style={{ ... }}) pervasively (progress bars, table column widths, chart hover, PDF preview).
   // Removing it would require migrating all dynamic inline styles to CSS classes / custom properties,
   // which is a larger refactor out of scope for this targeted hardening.
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://${clerkFrontendHost}`,
   `font-src 'self' https://fonts.gstatic.com https://${clerkFrontendHost}`,
-  `img-src 'self' data: blob: https://${clerkFrontendHost} https://res.cloudinary.com${cloudinaryCloudName ? `/${cloudinaryCloudName}` : ""} https://raw.githubusercontent.com`,
-  `connect-src 'self' https://${clerkFrontendHost} https://api.clerk.com https://res.cloudinary.com`,
-  `frame-src 'self' https://${clerkFrontendHost} https://clerk.${clerkFrontendHost.replace(/^\*\./, "")}`,
+  `img-src 'self' data: blob: https://${clerkFrontendHost} https://img.clerk.com https://res.cloudinary.com${cloudinaryCloudName ? `/${cloudinaryCloudName}` : ""} https://raw.githubusercontent.com`,
+  `connect-src 'self' https://${clerkFrontendHost} https://api.clerk.com https://*.protect.clerk.com:* https://res.cloudinary.com`,
+  `frame-src 'self' https://${clerkFrontendHost} https://clerk.${clerkFrontendHost.replace(/^\*\./, "")} https://challenges.cloudflare.com https://*.protect.clerk.com`,
+  "worker-src 'self' blob:",
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",

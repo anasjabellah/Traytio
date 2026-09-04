@@ -1,15 +1,46 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { getOrganizationId } from "@/lib/get-organization-id";
 import { assertCan } from "@/lib/assert-role";
-import { INVOICE, COMMON } from "@/lib/notify/messages";
+import { INVOICE, COMMON, AUTH } from "@/lib/notify/messages";
 import { InvoicePDF } from "@/features/invoices/components/invoice-pdf";
 import { renderToBuffer } from "@react-pdf/renderer";
+import {
+  buildRateLimitKey,
+  rateLimitExceededResponse,
+  rateLimitUnavailableResponse,
+} from "@/lib/api-guard";
+import { checkRateLimit } from "@/lib/rate-limiter";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(
-  _req: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  // The proxy middleware (src/proxy.ts) protects /api/**, so this route is only
+  // reachable by authenticated users. getOrganizationId()/assertCan() re-check
+  // auth + role server-side. We resolve the authenticated userId here only to
+  // build the per-user rate-limit key — never from client-supplied input.
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: AUTH.SESSION.UNAUTHORIZED }, { status: 401 });
+  }
+
+  // Apply the dedicated PDF rate limit BEFORE any expensive rendering. The
+  // check runs after auth but before renderToBuffer; a rejection never reaches
+  // renderToBuffer. Uses the same trusted IP mechanism + fail-closed semantics
+  // as the rest of the app (withApiGuard) — but applies to this GET route,
+  // which the write-only guard does not cover.
+  const rateLimitKey = buildRateLimitKey(request, userId, "pdf");
+  const rateLimit = await checkRateLimit(rateLimitKey, "pdf");
+  if (!rateLimit.ok) {
+    return rateLimit.reason === "unavailable"
+      ? rateLimitUnavailableResponse()
+      : rateLimitExceededResponse(rateLimit);
+  }
+
   try {
     const { id } = await params;
 

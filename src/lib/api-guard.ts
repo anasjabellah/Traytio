@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { assertSameOrigin } from "./csrf";
-import { checkRateLimit, type RateLimitCategory } from "./rate-limiter";
+import { checkRateLimit, type RateLimitCategory, type RateLimitResult } from "./rate-limiter";
 import { COMMON } from "@/lib/notify/messages";
 
 const WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
@@ -12,7 +12,7 @@ const WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
  * *additional* abuse signal — never as the sole identity, since it is
  * client-controllable. Authenticated routes are keyed primarily by user id.
  */
-function getClientIp(request: Request): string {
+export function getClientIp(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
     const ip = forwarded.split(",")[0]?.trim();
@@ -21,17 +21,37 @@ function getClientIp(request: Request): string {
   return request.headers.get("x-real-ip")?.trim() || "unknown";
 }
 
-function buildRateLimitKey(request: Request, userId: string | null, category: RateLimitCategory): string {
+export function buildRateLimitKey(request: Request, userId: string | null, category: RateLimitCategory): string {
   const ip = getClientIp(request);
   const identity = userId ? `user:${userId}` : `anon:${ip}`;
   return `${category}:${identity}:${ip}`;
 }
 
-function rateLimitHeaders(remaining: number, resetInMs: number): Headers {
+export function rateLimitHeaders(remaining: number, resetInMs: number): Headers {
   const headers = new Headers();
   headers.set("Retry-After", String(Math.ceil(resetInMs / 1000)));
   headers.set("X-RateLimit-Remaining", String(remaining));
   return headers;
+}
+
+/**
+ * Build the standard response for a rate-limit rejection, matching the format
+ * used by `withApiGuard`. Shared so GET-limited routes (e.g. PDF generation)
+ * return the same body + headers as every other limited endpoint.
+ */
+export function rateLimitExceededResponse(result: RateLimitResult): NextResponse {
+  return NextResponse.json(
+    { error: COMMON.RATE_LIMITED },
+    { status: 429, headers: rateLimitHeaders(result.remaining, result.resetInMs) },
+  );
+}
+
+/**
+ * Build the standard fail-closed response when the rate-limit backing store
+ * (Redis) is unavailable in production, matching `withApiGuard`.
+ */
+export function rateLimitUnavailableResponse(): NextResponse {
+  return NextResponse.json({ error: COMMON.RATE_LIMIT_UNAVAILABLE }, { status: 503 });
 }
 
 /**

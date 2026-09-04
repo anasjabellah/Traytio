@@ -1,7 +1,7 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { ensureRedis } from "./rate-limit/client";
 
-export type RateLimitCategory = "action" | "write" | "upload";
+export type RateLimitCategory = "action" | "write" | "upload" | "pdf";
 
 /**
  * Centralized rate-limit policy (requests per sliding window).
@@ -9,6 +9,12 @@ export type RateLimitCategory = "action" | "write" | "upload";
  * - action: server actions (read/write), strict because they run during render
  * - write:  normal authenticated CRUD API writes
  * - upload: resource-heavy Cloudinary uploads, stricter than CRUD
+ * - pdf:    CPU-heavy invoice PDF rendering (renderToBuffer). Tuned lower than
+ *           `write` because each request performs an expensive, uncached
+ *           @react-pdf/pdfkit render. Value is a conservative operational
+ *           default for availability protection — NOT derived from measured
+ *           usage (no rendering benchmark/telemetry exists in the repo). It is
+ *           intentionally centralized here so it is easy to tune operationally.
  *
  * Limits are intentionally centralized here — do not hardcode per-route limits.
  */
@@ -16,6 +22,7 @@ const CATEGORY_CONFIG: Record<RateLimitCategory, { max: number; window: `${numbe
   action: { max: 10, window: "10 s" },
   write: { max: 60, window: "1 m" },
   upload: { max: 10, window: "1 m" },
+  pdf: { max: 30, window: "1 m" },
 };
 
 export type RateLimitReason = "ok" | "limit" | "unavailable" | "disabled";
