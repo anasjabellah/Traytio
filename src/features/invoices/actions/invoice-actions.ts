@@ -366,7 +366,7 @@ async function updateInvoiceStatusHandler(
     }
 
     const invoice = await prisma.invoice.update({
-      where: { id },
+      where: { id, organizationId },
       data: { status: parsed.data.status },
       include: {
         commande: {

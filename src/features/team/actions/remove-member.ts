@@ -49,7 +49,7 @@ async function removeMemberHandler(memberId: string) {
       }
     }
 
-    await prisma.userOrganization.delete({ where: { id: memberId } })
+    await prisma.userOrganization.delete({ where: { id: memberId, organizationId: membership.organizationId } })
 
     // AUDIT_POINT: MEMBER_REMOVED — { targetUserId: target.userId, role: target.role }
 

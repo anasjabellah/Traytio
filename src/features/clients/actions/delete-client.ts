@@ -56,7 +56,7 @@ async function deleteClientHandler(id: string): Promise<ActionResponse<void>> {
 
     // Safe to delete
     await prisma.client.delete({
-      where: { id }
+      where: { id, organizationId }
     });
 
     revalidatePath("/dashboard/clients")

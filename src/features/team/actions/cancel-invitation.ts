@@ -30,7 +30,7 @@ async function cancelInvitationHandler(invitationId: string) {
       return { success: false, error: AUTH.INVITATION.NOT_FOUND }
     }
 
-    await prisma.invitation.delete({ where: { id: invitationId } })
+    await prisma.invitation.delete({ where: { id: invitationId, organizationId: membership.organizationId } })
 
     // AUDIT_POINT: INVITATION_CANCELLED — { email: invitation.email }
 

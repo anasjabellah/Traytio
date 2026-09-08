@@ -58,7 +58,7 @@ async function changeMemberRoleHandler(input: { memberId: string; newRole: OrgRo
     }
 
     await prisma.userOrganization.update({
-      where: { id: memberId },
+      where: { id: memberId, organizationId: membership.organizationId },
       data: { role: newRole },
     })
 

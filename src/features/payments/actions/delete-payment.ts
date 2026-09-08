@@ -51,7 +51,7 @@ async function deletePaymentHandler(paymentId: string) {
 
     await prisma.$transaction(async (tx) => {
       await tx.payment.delete({
-        where: { id: paymentId },
+        where: { id: paymentId, organizationId },
       })
 
       await recalculateCommandeBalances(tx, payment.commandeId)

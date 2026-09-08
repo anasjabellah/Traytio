@@ -52,11 +52,11 @@ async function transferOwnershipHandler(targetMemberId: string) {
 
     await prisma.$transaction(async (tx) => {
       await tx.userOrganization.update({
-        where: { id: currentMember.id },
+        where: { id: currentMember.id, organizationId: membership.organizationId },
         data: { role: "ADMIN" },
       })
       await tx.userOrganization.update({
-        where: { id: targetMemberId },
+        where: { id: targetMemberId, organizationId: membership.organizationId },
         data: { role: "OWNER" },
       })
     })

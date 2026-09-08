@@ -50,7 +50,7 @@ async function updateClientHandler(id: string, input: unknown): Promise<ActionRe
     }
 
     const client = await prisma.client.update({
-      where: { id },
+      where: { id, organizationId },
       data: {
         name,
         email: email ?? null,

@@ -45,7 +45,7 @@ async function deleteCommandeHandler(id: string): Promise<ActionResponse<void>> 
     }
 
     await prisma.commande.delete({
-      where: { id },
+      where: { id, organizationId },
     });
 
     revalidatePath("/dashboard/commandes")

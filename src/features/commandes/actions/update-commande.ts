@@ -132,7 +132,7 @@ async function updateCommandeHandler(id: string, input: unknown): Promise<Action
     const oldClientId = existing.clientId;
     await prisma.$transaction(async (tx) => {
       await tx.commande.update({
-        where: { id },
+        where: { id, organizationId },
         data: {
           clientId: data.clientId,
           eventId: resolvedEventId,
