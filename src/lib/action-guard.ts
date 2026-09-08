@@ -1,5 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
+import { headers } from 'next/headers'
 import { checkRateLimit } from './rate-limiter'
+import { getClientIp } from './ip'
 import { assertSameOrigin } from './csrf'
 import { AUTH } from '@/lib/notify/messages'
 import { COMMON } from '@/lib/notify/messages'
@@ -38,7 +40,9 @@ export function withActionGuard<T extends (...args: any[]) => Promise<unknown>>(
       return { success: false, error: COMMON.FORBIDDEN_ORIGIN }
     }
 
-    const key = userId ? `${userId}:${config.name}` : `anon:${config.name}`
+    const key = userId
+      ? `${userId}:${config.name}`
+      : `anon:${getClientIp(await headers())}:${config.name}`
 
     const result = await checkRateLimit(key, "action")
     if (!result.ok) {

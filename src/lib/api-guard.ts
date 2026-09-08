@@ -3,26 +3,14 @@ import { auth } from "@clerk/nextjs/server";
 import { assertSameOrigin } from "./csrf";
 import { checkRateLimit, type RateLimitCategory, type RateLimitResult } from "./rate-limiter";
 import { COMMON } from "@/lib/notify/messages";
+import { getClientIp } from "./ip";
 
 const WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
-/**
- * Derive a stable client IP. `x-forwarded-for` is set by the hosting proxy
- * (e.g. Vercel) and the first hop is the trusted edge IP; we use it only as an
- * *additional* abuse signal — never as the sole identity, since it is
- * client-controllable. Authenticated routes are keyed primarily by user id.
- */
-export function getClientIp(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) {
-    const ip = forwarded.split(",")[0]?.trim();
-    if (ip) return ip;
-  }
-  return request.headers.get("x-real-ip")?.trim() || "unknown";
-}
+export { getClientIp } from "./ip";
 
 export function buildRateLimitKey(request: Request, userId: string | null, category: RateLimitCategory): string {
-  const ip = getClientIp(request);
+  const ip = getClientIp(request.headers);
   const identity = userId ? `user:${userId}` : `anon:${ip}`;
   return `${category}:${identity}:${ip}`;
 }
