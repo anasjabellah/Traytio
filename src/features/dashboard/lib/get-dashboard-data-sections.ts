@@ -22,7 +22,7 @@ function formatTimeAgo(date: Date): string {
   return `il y a ${days} jours`;
 }
 
-function getTimeBase() {
+const getTimeBase = cache(() => {
   const now = new Date();
   const currentYear = now.getFullYear();
   const startOfYear = new Date(currentYear, 0, 1);
@@ -40,12 +40,45 @@ function getTimeBase() {
   const eightMonthsAgo = last8Months[0].start;
   const monthKeys = last8Months.map((m) => m.key);
   return { now, currentYear, startOfYear, startOfToday, endOfToday, twentyFourMonthsAgo, eightMonthsAgo, monthKeys };
-}
+});
 
 const getOrgAndCheck = cache(async () => {
   const organizationId = await getOrganizationId();
   await assertCan('dashboard', 'view');
   return organizationId;
+});
+
+const getCompletedPaymentRows = cache(async (organizationId: string, twentyFourMonthsAgo: Date) => {
+  return prisma.payment.findMany({
+    where: { organizationId, status: 'COMPLETED', createdAt: { gte: twentyFourMonthsAgo } },
+    select: { amount: true, createdAt: true },
+  });
+});
+
+const getPaymentAgg = cache(async (organizationId: string) => {
+  return prisma.payment.aggregate({
+    where: { organizationId, status: 'COMPLETED' },
+    _sum: { amount: true },
+  });
+});
+
+const getPendingAgg = cache(async (organizationId: string) => {
+  return prisma.commande.aggregate({
+    where: { organizationId, remainingAmount: { gt: 0 }, status: { in: ['CONFIRMED', 'IN_PROGRESS'] } },
+    _sum: { remainingAmount: true },
+  });
+});
+
+const getRecentCommandes = cache(async (organizationId: string) => {
+  return prisma.commande.findMany({
+    where: { organizationId },
+    orderBy: { createdAt: 'desc' },
+    take: 5,
+    select: {
+      id: true, number: true, createdAt: true, totalAmount: true, status: true,
+      client: { select: { name: true } },
+    },
+  });
 });
 
 function buildMonthMap(paymentRows: { amount: unknown; createdAt: Date }[]) {
@@ -78,17 +111,11 @@ export const fetchKpiSection = cache(async () => {
       perfCommandeRows,
       perfDepositRows,
     ] = await Promise.all([
-      prisma.payment.aggregate({ where: { organizationId, status: 'COMPLETED' }, _sum: { amount: true } }),
-      prisma.payment.findMany({
-        where: { organizationId, status: 'COMPLETED', createdAt: { gte: t.twentyFourMonthsAgo } },
-        select: { amount: true, createdAt: true },
-      }),
+      getPaymentAgg(organizationId),
+      getCompletedPaymentRows(organizationId, t.twentyFourMonthsAgo),
       prisma.client.count({ where: { organizationId } }),
       prisma.commande.count({ where: { organizationId, status: { in: COMMANDE_ACTIVE_STATUSES } } }),
-      prisma.commande.aggregate({
-        where: { organizationId, remainingAmount: { gt: 0 }, status: { in: ['CONFIRMED', 'IN_PROGRESS'] } },
-        _sum: { remainingAmount: true },
-      }),
+      getPendingAgg(organizationId),
       prisma.event.count({ where: { organizationId, status: 'CONFIRMED' } }),
       prisma.event.count({ where: { organizationId, status: 'COMPLETED' } }),
       prisma.event.findMany({
@@ -183,10 +210,7 @@ export const fetchRevenueChartSection = cache(async () => {
     const organizationId = await getOrgAndCheck();
     const t = getTimeBase();
 
-    const paymentRows = await prisma.payment.findMany({
-      where: { organizationId, status: 'COMPLETED', createdAt: { gte: t.twentyFourMonthsAgo } },
-      select: { amount: true, createdAt: true },
-    });
+    const paymentRows = await getCompletedPaymentRows(organizationId, t.twentyFourMonthsAgo);
 
     const dailyMap = new Map<string, number>();
     const monthlyMap = new Map<string, number>();
@@ -240,15 +264,7 @@ export const fetchRevenueChartSection = cache(async () => {
 export const fetchRecentCommandesSection = cache(async () => {
   try {
     const organizationId = await getOrgAndCheck();
-    const rows = await prisma.commande.findMany({
-      where: { organizationId },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-      select: {
-        id: true, number: true, createdAt: true, totalAmount: true, status: true,
-        client: { select: { name: true } },
-      },
-    });
+    const rows = await getRecentCommandes(organizationId);
     return rows.map((c) => ({
       id: c.id,
       number: c.number || c.id.slice(0, 8),
@@ -266,11 +282,8 @@ export const fetchPaymentsSection = cache(async () => {
   try {
     const organizationId = await getOrgAndCheck();
     const [paymentAgg, pendingAgg, totalBudgetAgg] = await Promise.all([
-      prisma.payment.aggregate({ where: { organizationId, status: 'COMPLETED' }, _sum: { amount: true } }),
-      prisma.commande.aggregate({
-        where: { organizationId, remainingAmount: { gt: 0 }, status: { in: ['CONFIRMED', 'IN_PROGRESS'] } },
-        _sum: { remainingAmount: true },
-      }),
+      getPaymentAgg(organizationId),
+      getPendingAgg(organizationId),
       prisma.event.aggregate({ where: { organizationId }, _sum: { budget: true } }),
     ]);
     const paid = Math.round(Number(paymentAgg._sum?.amount || 0));
@@ -314,10 +327,7 @@ export const fetchBusinessHealthSection = cache(async (): Promise<DashboardData[
     const t = getTimeBase();
 
     const [paymentRows, topItemAgg, bestClient, yearCommandeRows] = await Promise.all([
-      prisma.payment.findMany({
-        where: { organizationId, status: 'COMPLETED', createdAt: { gte: t.twentyFourMonthsAgo } },
-        select: { amount: true, createdAt: true },
-      }),
+      getCompletedPaymentRows(organizationId, t.twentyFourMonthsAgo),
       prisma.commandeItem.groupBy({
         by: ['name'],
         where: { commande: { organizationId } },
@@ -388,12 +398,7 @@ export const fetchSidebarSection = cache(async () => {
         take: 15,
         select: { id: true, action: true, description: true, createdAt: true },
       }),
-      prisma.commande.findMany({
-        where: { organizationId },
-        orderBy: { createdAt: 'desc' },
-        take: 5,
-        select: { id: true, number: true, createdAt: true },
-      }),
+      getRecentCommandes(organizationId),
       prisma.event.findMany({
         where: { organizationId, createdAt: { gte: t.startOfYear } },
         select: { status: true, budget: true, guestCount: true },
