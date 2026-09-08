@@ -192,7 +192,8 @@ async function getEventsPageHandler(params: GetEventsPageParams): Promise<Action
       status, type, dateFrom, dateTo, budgetMin, budgetMax,
     } = params;
 
-    const skip = (page - 1) * limit;
+    const safeLimit = Math.max(1, Math.min(100, limit));
+    const skip = (page - 1) * safeLimit;
 
     const where: Prisma.EventWhereInput = { organizationId };
 
@@ -250,7 +251,7 @@ async function getEventsPageHandler(params: GetEventsPageParams): Promise<Action
         select: eventSelect,
         orderBy: { [sortBy]: sortOrder },
         skip,
-        take: limit,
+        take: safeLimit,
       }),
       prisma.event.aggregate({ where, _sum: { budget: true } }),
       prisma.event.count({ where: { ...where, status: 'CONFIRMED' } }),
@@ -266,6 +267,7 @@ async function getEventsPageHandler(params: GetEventsPageParams): Promise<Action
         where: { ...where, startDate: { gte: todayStart, lt: tomorrowStart } },
         select: eventSelect,
         orderBy: { startDate: 'asc' },
+        take: 50,
       }),
       prisma.event.findMany({
         where: { ...where, startDate: { gt: now } },
@@ -329,7 +331,7 @@ async function getEventsPageHandler(params: GetEventsPageParams): Promise<Action
     };
 
     const alerts = computeAlerts(mappedEvents, now);
-    const totalPages = Math.ceil(total / limit);
+    const totalPages = Math.ceil(total / safeLimit);
 
     return {
       success: true,
@@ -337,7 +339,7 @@ async function getEventsPageHandler(params: GetEventsPageParams): Promise<Action
         events: mappedEvents,
         total,
         page,
-        limit,
+        limit: safeLimit,
         totalPages,
         stats,
         todayEvents: todayMapped,
