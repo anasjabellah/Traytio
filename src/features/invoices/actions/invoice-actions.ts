@@ -255,7 +255,9 @@ async function getInvoicesHandler(params: {
     const organizationId = await getOrganizationId()
     await assertCan('invoices', 'read')
     const { commandeId, type, search, page = 1, limit = 20 } = params
-    const skip = (page - 1) * limit
+    const safePage = Math.max(1, page)
+    const safeLimit = Math.max(1, Math.min(100, limit))
+    const skip = (safePage - 1) * safeLimit
 
     const where: Record<string, unknown> = { organizationId }
     if (commandeId) where.commandeId = commandeId
@@ -280,7 +282,7 @@ async function getInvoicesHandler(params: {
         },
         orderBy: { createdAt: "desc" },
         skip,
-        take: limit,
+        take: safeLimit,
       }),
     ])
 
@@ -328,11 +330,11 @@ async function getInvoicesHandler(params: {
         : null,
     }))
 
-    const totalPages = Math.max(1, Math.ceil(total / limit))
+    const totalPages = Math.max(1, Math.ceil(total / safeLimit))
 
     return {
       success: true,
-      data: { data, total, totalPages, page, limit, hasNextPage: page < totalPages, hasPreviousPage: page > 1 },
+      data: { data, total, totalPages, page: safePage, limit: safeLimit, hasNextPage: safePage < totalPages, hasPreviousPage: safePage > 1 },
     }
   } catch (err: unknown) {
     return { success: false, error: normalizeActionError(err, INVOICE.UNEXPECTED_ERROR) }

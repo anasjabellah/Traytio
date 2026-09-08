@@ -65,7 +65,9 @@ async function getClientsPageHandler(params: GetClientsPageParams): Promise<Acti
       sortBy = 'createdAt', sortOrder = 'desc',
     } = params;
 
-    const skip = (page - 1) * limit;
+    const safePage = Math.max(1, Math.trunc(Number(page) || 1));
+    const safeLimit = Math.max(1, Math.min(100, Math.trunc(Number(limit) || 1)));
+    const skip = (safePage - 1) * safeLimit;
     const where: Prisma.ClientWhereInput = { organizationId };
 
     if (search) {
@@ -106,7 +108,7 @@ async function getClientsPageHandler(params: GetClientsPageParams): Promise<Acti
         select: clientSelect,
         orderBy: { [sortBy]: sortOrder },
         skip,
-        take: limit,
+        take: safeLimit,
       }),
       prisma.client.aggregate({ where, _sum: { totalSpent: true } }),
       prisma.client.count({ where: { ...where, lastOrderAt: { gte: ninetyDaysAgo } } }),
@@ -316,15 +318,15 @@ async function getClientsPageHandler(params: GetClientsPageParams): Promise<Acti
     activities.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     const activity = activities.slice(0, 10);
 
-    const totalPages = Math.ceil(total / limit);
+    const totalPages = Math.ceil(total / safeLimit);
 
     return {
       success: true,
       data: {
         clients: clientWithStats,
         total,
-        page,
-        limit,
+        page: safePage,
+        limit: safeLimit,
         totalPages,
         stats,
         activity,
