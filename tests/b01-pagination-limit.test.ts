@@ -5,8 +5,9 @@
  *   - src/features/clients/actions/get-clients-page.ts
  *   - src/features/invoices/actions/invoice-actions.ts
  *   - src/features/commandes/actions/get-commandes-page.ts
+ *   - src/features/payments/actions/get-payments.ts
  *
- * All three server actions clamp `limit` at the input boundary to [1, 100] (the cap
+ * All four server actions clamp `limit` at the input boundary to [1, 100] (the cap
  * already used by get-activity.ts / get-team.ts) and feed ONLY the normalized
  * value into Prisma: `take: safeLimit`, `skip: (safePage - 1) * safeLimit`, with
  * `page` normalized to at least 1.
@@ -30,6 +31,7 @@ const MAX_LIMIT = 100
 const CLIENT_DEFAULT_PAGE_SIZE = 10
 const INVOICE_DEFAULT_PAGE_SIZE = 20
 const COMMANDE_DEFAULT_PAGE_SIZE = 10
+const PAYMENT_DEFAULT_PAGE_SIZE = 10
 
 // ── Input-boundary normalization (faithful replicas of the handlers) ──
 
@@ -49,6 +51,13 @@ function paginateInvoices(rawPage: number = 1, rawLimit: number = INVOICE_DEFAUL
 
 /** Mirrors get-commandes-page.ts: Number coercion + trunc + clamp [1, 100]. */
 function paginateCommandes(rawPage: unknown = 1, rawLimit: unknown = COMMANDE_DEFAULT_PAGE_SIZE) {
+  const page = Math.max(1, Math.trunc(Number(rawPage) || 1))
+  const limit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(Number(rawLimit) || 1)))
+  return { page, limit, skip: (page - 1) * limit }
+}
+
+/** Mirrors get-payments.ts: Number coercion + trunc + clamp [1, 100]. */
+function paginatePayments(rawPage: unknown = 1, rawLimit: unknown = PAYMENT_DEFAULT_PAGE_SIZE) {
   const page = Math.max(1, Math.trunc(Number(rawPage) || 1))
   const limit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(Number(rawLimit) || 1)))
   return { page, limit, skip: (page - 1) * limit }
@@ -103,6 +112,23 @@ function buildCommandesWhere(
   }
   if (opts.clientId) where.clientId = opts.clientId
   if (opts.eventId) where.eventId = opts.eventId
+  return where
+}
+
+function buildPaymentsWhere(
+  organizationId: string,
+  opts: { method?: string; status?: string; search?: string },
+) {
+  const where: Record<string, unknown> = { organizationId }
+  if (opts.method) where.method = opts.method
+  if (opts.status) where.status = opts.status
+  if (opts.search) {
+    where.OR = [
+      { reference: { contains: opts.search, mode: 'insensitive' } },
+      { notes: { contains: opts.search, mode: 'insensitive' } },
+      { commande: { number: { contains: opts.search, mode: 'insensitive' } } },
+    ]
+  }
   return where
 }
 
@@ -161,6 +187,35 @@ function commandesWire(
   const safeLimit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(Number(limit) || 1)))
   const skip = (safePage - 1) * safeLimit
   const where = buildCommandesWhere(organizationId, raw)
+  const tenantRows = dataset
+    .filter((r) => r.organizationId === organizationId)
+    .sort((a, b) => a.id.localeCompare(b.id))
+  return {
+    where,
+    skip,
+    take: safeLimit,
+    page: safePage,
+    limit: safeLimit,
+    rows: tenantRows.slice(skip, skip + safeLimit),
+    total: tenantRows.length,
+  }
+}
+
+function paymentsWire(
+  dataset: Array<{ id: string; organizationId: string }>,
+  organizationId: string,
+  raw: { page?: unknown; limit?: unknown; method?: string; status?: string; search?: string },
+): PrismaCall & {
+  page: number
+  limit: number
+  rows: Array<{ id: string; organizationId: string }>
+  total: number
+} {
+  const { page = 1, limit = PAYMENT_DEFAULT_PAGE_SIZE } = raw
+  const safePage = Math.max(1, Math.trunc(Number(page) || 1))
+  const safeLimit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(Number(limit) || 1)))
+  const skip = (safePage - 1) * safeLimit
+  const where = buildPaymentsWhere(organizationId, raw)
   const tenantRows = dataset
     .filter((r) => r.organizationId === organizationId)
     .sort((a, b) => a.id.localeCompare(b.id))
@@ -309,6 +364,60 @@ describe('B-01 getCommandesPage pagination cap', () => {
   })
 })
 
+// ── Tests: payments (get-payments.ts) ──
+
+describe('B-01 getPayments pagination cap', () => {
+  it('normal limits and pages keep working (defaults preserved)', () => {
+    const dflt = paginatePayments()
+    assert.deepEqual(dflt, { page: 1, limit: PAYMENT_DEFAULT_PAGE_SIZE, skip: 0 })
+
+    const p3 = paginatePayments(3, 25)
+    assert.deepEqual(p3, { page: 3, limit: 25, skip: 50 })
+  })
+
+  it('accepts the maximum limit of 100', () => {
+    const max = paginatePayments(1, 100)
+    assert.equal(max.limit, 100)
+    assert.equal(max.skip, 0)
+  })
+
+  it('safely caps values above the maximum (500 → 100)', () => {
+    const capped = paginatePayments(1, 500)
+    assert.equal(capped.limit, 100)
+  })
+
+  it('safely caps huge values and computes skip from the capped limit', () => {
+    const huge = paginatePayments(3, 1_000_000)
+    assert.equal(huge.limit, 100)
+    assert.equal(huge.skip, 200, 'skip must derive from the capped limit, not the raw value')
+  })
+
+  it('clamps page below 1 to 1', () => {
+    assert.equal(paginatePayments(0, PAYMENT_DEFAULT_PAGE_SIZE).page, 1)
+    assert.equal(paginatePayments(-5, PAYMENT_DEFAULT_PAGE_SIZE).page, 1)
+    assert.equal(paginatePayments(0, PAYMENT_DEFAULT_PAGE_SIZE).skip, 0)
+  })
+
+  it('keeps a very large page (no upper page cap), deriving skip from the capped limit', () => {
+    const huge = paginatePayments(1_000_000, 10)
+    assert.equal(huge.page, 1_000_000)
+    assert.equal(huge.limit, 10)
+    assert.equal(huge.skip, (1_000_000 - 1) * 10)
+  })
+
+  it('clamps sub-minimum limits to 1', () => {
+    assert.equal(paginatePayments(1, 0).limit, 1)
+    assert.equal(paginatePayments(1, -7).limit, 1)
+  })
+
+  it('normalizes fractional, string, zero and malformed input', () => {
+    assert.equal(paginatePayments(2.9, 10).page, 2, 'fractional page truncates safely')
+    assert.deepEqual(paginatePayments('2', '25'), { page: 2, limit: 25, skip: 25 }, 'numeric strings coerce')
+    assert.equal(paginatePayments('abc', 'xyz').limit, 1, 'non-numeric input falls back to the minimum')
+    assert.equal(paginatePayments('abc', 'xyz').page, 1)
+  })
+})
+
 // ── Tests: raw input → actual Prisma args (the production wiring) ──
 
 describe('B-01 Prisma take/skip only ever receives normalized values', () => {
@@ -395,6 +504,42 @@ describe('B-01 Prisma take/skip only ever receives normalized values', () => {
     assert.equal(call.take, 1)
   })
 
+  it('payments — raw limit 500 results in Prisma take: 100', () => {
+    const call = paymentsWire(dataset, 'org_a', { limit: 500 })
+    assert.equal(call.take, 100, 'take must be capped to 100')
+    assert.equal(call.skip, 0)
+  })
+
+  it('payments — raw limit 1,000,000 results in Prisma take: 100', () => {
+    const call = paymentsWire(dataset, 'org_a', { limit: 1_000_000 })
+    assert.equal(call.take, 100)
+  })
+
+  it('payments — normal limit 25 results in Prisma take: 25', () => {
+    const call = paymentsWire(dataset, 'org_a', { limit: 25 })
+    assert.equal(call.take, 25)
+  })
+
+  it('payments — default (no limit) results in Prisma take: 10', () => {
+    const call = paymentsWire(dataset, 'org_a', {})
+    assert.equal(call.take, PAYMENT_DEFAULT_PAGE_SIZE, 'default stays 10')
+    assert.equal(call.skip, 0)
+  })
+
+  it('payments — raw limit 1,000,000 with page 3 computes skip from the capped limit', () => {
+    const call = paymentsWire(dataset, 'org_a', { page: 3, limit: 1_000_000 })
+    assert.equal(call.take, 100)
+    assert.equal(call.skip, 200, 'skip = (page 3 - 1) × capped 100')
+  })
+
+  it('payments — page 0 and limit 0 normalize to page 1 / limit 1 before Prisma', () => {
+    const call = paymentsWire(dataset, 'org_a', { page: 0, limit: 0 })
+    assert.equal(call.page, 1)
+    assert.equal(call.limit, 1)
+    assert.equal(call.skip, 0)
+    assert.equal(call.take, 1)
+  })
+
   it('take and skip are always integers within Prisma constraints', () => {
     const calls = [
       clientsWire(dataset, 'org_a', { limit: 500 }),
@@ -403,6 +548,8 @@ describe('B-01 Prisma take/skip only ever receives normalized values', () => {
       invoicesWire(dataset, 'org_a', { page: 0, limit: 0 }),
       commandesWire(dataset, 'org_a', { limit: 1000 }),
       commandesWire(dataset, 'org_a', { page: 0, limit: 0 }),
+      paymentsWire(dataset, 'org_a', { limit: 1000 }),
+      paymentsWire(dataset, 'org_a', { page: 0, limit: 0 }),
     ]
     for (const c of calls) {
       assert.ok(Number.isInteger(c.take) && c.take >= 1 && c.take <= 100, `take ${c.take} must be int in [1,100]`)
@@ -471,5 +618,18 @@ describe('B-01 pagination remains tenant-scoped', () => {
     const call = commandesWire(dataset, 'org_a', { status: [] })
     assert.equal(call.where.organizationId, 'org_a')
     assert.equal(call.where.status, undefined)
+  })
+
+  it('payments wire always carries the server-derived organizationId and keeps filters', () => {
+    const dataset = buildDataset(100, 100)
+    const call = paymentsWire(dataset, 'org_a', {
+      method: 'CASH',
+      status: 'COMPLETED',
+      search: 'REF-2026',
+    })
+    assert.equal(call.where.organizationId, 'org_a')
+    assert.equal(call.where.method, 'CASH')
+    assert.equal(call.where.status, 'COMPLETED')
+    assert.equal((call.where.OR as Array<Record<string, unknown>>).length, 3)
   })
 })
