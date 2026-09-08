@@ -45,6 +45,7 @@ async function getTeamHandler(params?: { page?: number; limit?: number }) {
       }),
       prisma.invitation.findMany({
         where: { organizationId: membership.organizationId },
+        select: { id: true, email: true, role: true, createdAt: true, expiresAt: true },
         orderBy: { createdAt: "desc" },
       }),
       prisma.userOrganization.findMany({
@@ -83,7 +84,6 @@ async function getTeamHandler(params?: { page?: number; limit?: number }) {
       id: inv.id,
       email: inv.email,
       role: inv.role,
-      token: inv.token,
       createdAt: inv.createdAt.toISOString(),
       expiresAt: inv.expiresAt.toISOString(),
     }))

@@ -18,7 +18,6 @@ export type TeamInvitation = {
   id: string;
   email: string;
   role: OrgRole;
-  token: string;
   createdAt: string;
   expiresAt: string;
 };
