@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { createCommandeSchema } from '@/features/commandes/validations/create-commande-schema';
-import { recalculateCommandeBalances } from '@/features/financial/recalculate-commande-balances';
+import { recalculateCommandeBalances, recalculateClientTotalSpent } from '@/features/financial/recalculate-commande-balances';
 import type { ActionResponse } from '@/features/commandes/types';
 import { COMMANDE } from '@/lib/notify/messages';
 import { withActionGuard } from '@/lib/action-guard';
@@ -129,6 +129,7 @@ async function updateCommandeHandler(id: string, input: unknown): Promise<Action
     // event link (don't null it out — the Event still exists).
 
     // ── Update Commande ──────────────────────────────────────────────
+    const oldClientId = existing.clientId;
     await prisma.$transaction(async (tx) => {
       await tx.commande.update({
         where: { id },
@@ -173,6 +174,10 @@ async function updateCommandeHandler(id: string, input: unknown): Promise<Action
       });
 
       await recalculateCommandeBalances(tx, id);
+
+      if (oldClientId && oldClientId !== data.clientId) {
+        await recalculateClientTotalSpent(tx, oldClientId);
+      }
     });
 
     revalidatePath("/dashboard/commandes")

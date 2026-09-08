@@ -6,6 +6,24 @@ type TransactionClient = Omit<
   "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
 >;
 
+export async function recalculateClientTotalSpent(
+  client: TransactionClient,
+  clientId: string,
+): Promise<void> {
+  const clientAgg = await client.commande.aggregate({
+    where: {
+      clientId,
+      status: { notIn: ["CANCELLED"] },
+    },
+    _sum: { paidAmount: true },
+  });
+  const totalSpent = Number(clientAgg._sum.paidAmount ?? 0);
+  await client.client.update({
+    where: { id: clientId },
+    data: { totalSpent },
+  });
+}
+
 export async function recalculateCommandeBalances(
   client: PrismaClient,
   commandeId: string,
@@ -65,18 +83,7 @@ export async function recalculateCommandeBalances(
 
     // Recalculate client totalSpent from all non-cancelled commandes
     if (commande.clientId) {
-      const clientAgg = await tx.commande.aggregate({
-        where: {
-          clientId: commande.clientId,
-          status: { notIn: ["CANCELLED"] },
-        },
-        _sum: { paidAmount: true },
-      });
-      const totalSpent = Number(clientAgg._sum.paidAmount ?? 0);
-      await tx.client.update({
-        where: { id: commande.clientId },
-        data: { totalSpent },
-      });
+      await recalculateClientTotalSpent(tx, commande.clientId);
     }
   };
 
