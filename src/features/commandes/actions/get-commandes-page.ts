@@ -59,7 +59,11 @@ async function getCommandesPageHandler(params: GetCommandesParams): Promise<Acti
       sortBy = 'createdAt', sortOrder = 'desc', status, eventType,
     } = params;
 
-    const skip = (page - 1) * limit;
+    // Normalize pagination at the input boundary: page ≥ 1, limit capped [1, 100].
+    // Only the normalized values ever reach Prisma skip/take (and the response shape).
+    const safePage = Math.max(1, Math.trunc(Number(page) || 1));
+    const safeLimit = Math.max(1, Math.min(100, Math.trunc(Number(limit) || 1)));
+    const skip = (safePage - 1) * safeLimit;
     const where: Prisma.CommandeWhereInput = { organizationId };
 
     if (status && status.length > 0) {
@@ -114,7 +118,7 @@ async function getCommandesPageHandler(params: GetCommandesParams): Promise<Acti
         select,
         orderBy: { [sortBy]: sortOrder },
         skip,
-        take: limit,
+        take: safeLimit,
       }),
       prisma.commande.findMany({
         where: { organizationId, createdAt: { gte: new Date(now.getFullYear(), now.getMonth() - 7, 1) } },
@@ -226,15 +230,15 @@ async function getCommandesPageHandler(params: GetCommandesParams): Promise<Acti
     } = buildAllSparklines(sparklineRows, monthKeys, now);
 
     const result: Commande[] = commandes.map(serializeCommande);
-    const totalPages = Math.ceil(total / limit);
+    const totalPages = Math.ceil(total / safeLimit);
 
     return {
       success: true,
       data: {
         commandes: result,
         total,
-        page,
-        limit,
+        page: safePage,
+        limit: safeLimit,
         totalPages,
         stats: {
           currentMonth: calcStats(currentGroups as StatusAgg[], currentUpcoming),

@@ -4,10 +4,12 @@
  * Verifies the fix in:
  *   - src/features/clients/actions/get-clients-page.ts
  *   - src/features/invoices/actions/invoice-actions.ts
+ *   - src/features/commandes/actions/get-commandes-page.ts
  *
- * Both server actions clamp `limit` at the input boundary to [1, 100] (the cap
+ * All three server actions clamp `limit` at the input boundary to [1, 100] (the cap
  * already used by get-activity.ts / get-team.ts) and feed ONLY the normalized
- * value into Prisma: `take: safeLimit`, `skip: (safePage - 1) * safeLimit`.
+ * value into Prisma: `take: safeLimit`, `skip: (safePage - 1) * safeLimit`, with
+ * `page` normalized to at least 1.
  * Tenant scoping is unchanged: `organizationId` is server-derived and injected
  * into the where clause.
  *
@@ -27,6 +29,7 @@ import assert from 'node:assert/strict'
 const MAX_LIMIT = 100
 const CLIENT_DEFAULT_PAGE_SIZE = 10
 const INVOICE_DEFAULT_PAGE_SIZE = 20
+const COMMANDE_DEFAULT_PAGE_SIZE = 10
 
 // ── Input-boundary normalization (faithful replicas of the handlers) ──
 
@@ -41,6 +44,13 @@ function paginateClients(rawPage: unknown = 1, rawLimit: unknown = CLIENT_DEFAUL
 function paginateInvoices(rawPage: number = 1, rawLimit: number = INVOICE_DEFAULT_PAGE_SIZE) {
   const page = Math.max(1, rawPage)
   const limit = Math.max(1, Math.min(MAX_LIMIT, rawLimit))
+  return { page, limit, skip: (page - 1) * limit }
+}
+
+/** Mirrors get-commandes-page.ts: Number coercion + trunc + clamp [1, 100]. */
+function paginateCommandes(rawPage: unknown = 1, rawLimit: unknown = COMMANDE_DEFAULT_PAGE_SIZE) {
+  const page = Math.max(1, Math.trunc(Number(rawPage) || 1))
+  const limit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(Number(rawLimit) || 1)))
   return { page, limit, skip: (page - 1) * limit }
 }
 
@@ -67,6 +77,32 @@ function buildInvoicesWhere(
   if (opts.commandeId) where.commandeId = opts.commandeId
   if (opts.type) where.type = opts.type
   if (opts.search) where.number = { contains: opts.search, mode: 'insensitive' }
+  return where
+}
+
+function buildCommandesWhere(
+  organizationId: string,
+  opts: {
+    search?: string
+    status?: string[]
+    eventType?: string
+    clientId?: string
+    eventId?: string
+  },
+) {
+  const where: Record<string, unknown> = { organizationId }
+  if (opts.status && opts.status.length > 0) where.status = { in: opts.status }
+  if (opts.eventType) where.eventType = opts.eventType
+  if (opts.search) {
+    where.OR = [
+      { number: { contains: opts.search, mode: 'insensitive' } },
+      { client: { name: { contains: opts.search, mode: 'insensitive' } } },
+      { client: { phone: { contains: opts.search, mode: 'insensitive' } } },
+      { event: { name: { contains: opts.search, mode: 'insensitive' } } },
+    ]
+  }
+  if (opts.clientId) where.clientId = opts.clientId
+  if (opts.eventId) where.eventId = opts.eventId
   return where
 }
 
@@ -108,6 +144,35 @@ function invoicesWire(
     .filter((r) => r.organizationId === organizationId)
     .sort((a, b) => a.id.localeCompare(b.id))
   return { where, skip, take: safeLimit, rows: tenantRows.slice(skip, skip + safeLimit), total: tenantRows.length }
+}
+
+function commandesWire(
+  dataset: Array<{ id: string; organizationId: string }>,
+  organizationId: string,
+  raw: { page?: unknown; limit?: unknown; search?: string; status?: string[]; eventType?: string; clientId?: string; eventId?: string },
+): PrismaCall & {
+  page: number
+  limit: number
+  rows: Array<{ id: string; organizationId: string }>
+  total: number
+} {
+  const { page = 1, limit = COMMANDE_DEFAULT_PAGE_SIZE } = raw
+  const safePage = Math.max(1, Math.trunc(Number(page) || 1))
+  const safeLimit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(Number(limit) || 1)))
+  const skip = (safePage - 1) * safeLimit
+  const where = buildCommandesWhere(organizationId, raw)
+  const tenantRows = dataset
+    .filter((r) => r.organizationId === organizationId)
+    .sort((a, b) => a.id.localeCompare(b.id))
+  return {
+    where,
+    skip,
+    take: safeLimit,
+    page: safePage,
+    limit: safeLimit,
+    rows: tenantRows.slice(skip, skip + safeLimit),
+    total: tenantRows.length,
+  }
 }
 
 function buildDataset(orgASize: number, orgBSize: number): Array<{ id: string; organizationId: string }> {
@@ -190,6 +255,60 @@ describe('B-01 getInvoices pagination cap', () => {
   })
 })
 
+// ── Tests: commandes (get-commandes-page.ts) ──
+
+describe('B-01 getCommandesPage pagination cap', () => {
+  it('normal limits and pages keep working (defaults preserved)', () => {
+    const dflt = paginateCommandes()
+    assert.deepEqual(dflt, { page: 1, limit: COMMANDE_DEFAULT_PAGE_SIZE, skip: 0 })
+
+    const p3 = paginateCommandes(3, 25)
+    assert.deepEqual(p3, { page: 3, limit: 25, skip: 50 })
+  })
+
+  it('accepts the maximum limit of 100', () => {
+    const max = paginateCommandes(1, 100)
+    assert.equal(max.limit, 100)
+    assert.equal(max.skip, 0)
+  })
+
+  it('safely caps values above the maximum (500 → 100)', () => {
+    const capped = paginateCommandes(1, 500)
+    assert.equal(capped.limit, 100)
+  })
+
+  it('safely caps huge values and computes skip from the capped limit', () => {
+    const huge = paginateCommandes(3, 1_000_000)
+    assert.equal(huge.limit, 100)
+    assert.equal(huge.skip, 200, 'skip must derive from the capped limit, not the raw value')
+  })
+
+  it('clamps page below 1 to 1', () => {
+    assert.equal(paginateCommandes(0, COMMANDE_DEFAULT_PAGE_SIZE).page, 1)
+    assert.equal(paginateCommandes(-5, COMMANDE_DEFAULT_PAGE_SIZE).page, 1)
+    assert.equal(paginateCommandes(0, COMMANDE_DEFAULT_PAGE_SIZE).skip, 0)
+  })
+
+  it('keeps a very large page (no upper page cap), deriving skip from the capped limit', () => {
+    const huge = paginateCommandes(1_000_000, 10)
+    assert.equal(huge.page, 1_000_000)
+    assert.equal(huge.limit, 10)
+    assert.equal(huge.skip, (1_000_000 - 1) * 10)
+  })
+
+  it('clamps sub-minimum limits to 1', () => {
+    assert.equal(paginateCommandes(1, 0).limit, 1)
+    assert.equal(paginateCommandes(1, -7).limit, 1)
+  })
+
+  it('normalizes fractional, string, zero and malformed input', () => {
+    assert.equal(paginateCommandes(2.9, 10).page, 2, 'fractional page truncates safely')
+    assert.deepEqual(paginateCommandes('2', '25'), { page: 2, limit: 25, skip: 25 }, 'numeric strings coerce')
+    assert.equal(paginateCommandes('abc', 'xyz').limit, 1, 'non-numeric input falls back to the minimum')
+    assert.equal(paginateCommandes('abc', 'xyz').page, 1)
+  })
+})
+
 // ── Tests: raw input → actual Prisma args (the production wiring) ──
 
 describe('B-01 Prisma take/skip only ever receives normalized values', () => {
@@ -240,12 +359,50 @@ describe('B-01 Prisma take/skip only ever receives normalized values', () => {
     assert.equal(call.skip, 200, 'skip = (page 3 - 1) × capped 100')
   })
 
+  it('commandes — raw limit 500 results in Prisma take: 100', () => {
+    const call = commandesWire(dataset, 'org_a', { limit: 500 })
+    assert.equal(call.take, 100, 'take must be capped to 100')
+    assert.equal(call.skip, 0)
+  })
+
+  it('commandes — raw limit 1,000,000 results in Prisma take: 100', () => {
+    const call = commandesWire(dataset, 'org_a', { limit: 1_000_000 })
+    assert.equal(call.take, 100)
+  })
+
+  it('commandes — normal limit 25 results in Prisma take: 25', () => {
+    const call = commandesWire(dataset, 'org_a', { limit: 25 })
+    assert.equal(call.take, 25)
+  })
+
+  it('commandes — default (no limit) results in Prisma take: 10', () => {
+    const call = commandesWire(dataset, 'org_a', {})
+    assert.equal(call.take, COMMANDE_DEFAULT_PAGE_SIZE, 'default stays 10')
+    assert.equal(call.skip, 0)
+  })
+
+  it('commandes — raw limit 1,000,000 with page 3 computes skip from the capped limit', () => {
+    const call = commandesWire(dataset, 'org_a', { page: 3, limit: 1_000_000 })
+    assert.equal(call.take, 100)
+    assert.equal(call.skip, 200, 'skip = (page 3 - 1) × capped 100')
+  })
+
+  it('commandes — page 0 and limit 0 normalize to page 1 / limit 1 before Prisma', () => {
+    const call = commandesWire(dataset, 'org_a', { page: 0, limit: 0 })
+    assert.equal(call.page, 1)
+    assert.equal(call.limit, 1)
+    assert.equal(call.skip, 0)
+    assert.equal(call.take, 1)
+  })
+
   it('take and skip are always integers within Prisma constraints', () => {
     const calls = [
       clientsWire(dataset, 'org_a', { limit: 500 }),
       clientsWire(dataset, 'org_a', { page: 'abc', limit: 'xyz' }),
       invoicesWire(dataset, 'org_a', { limit: 1000 }),
       invoicesWire(dataset, 'org_a', { page: 0, limit: 0 }),
+      commandesWire(dataset, 'org_a', { limit: 1000 }),
+      commandesWire(dataset, 'org_a', { page: 0, limit: 0 }),
     ]
     for (const c of calls) {
       assert.ok(Number.isInteger(c.take) && c.take >= 1 && c.take <= 100, `take ${c.take} must be int in [1,100]`)
@@ -290,5 +447,29 @@ describe('B-01 pagination remains tenant-scoped', () => {
     const call = clientsWire(dataset, 'org_a', { search: 'dupont' })
     assert.equal(call.where.organizationId, 'org_a')
     assert.equal((call.where.OR as Array<Record<string, unknown>>).length, 4)
+  })
+
+  it('commandes wire always carries the server-derived organizationId and keeps filters', () => {
+    const dataset = buildDataset(100, 100)
+    const call = commandesWire(dataset, 'org_a', {
+      search: 'maria',
+      status: ['CONFIRMED', 'DELIVERED'],
+      eventType: 'WEDDING',
+      clientId: 'c-1',
+      eventId: 'e-1',
+    })
+    assert.equal(call.where.organizationId, 'org_a')
+    assert.deepEqual(call.where.status, { in: ['CONFIRMED', 'DELIVERED'] })
+    assert.equal(call.where.eventType, 'WEDDING')
+    assert.equal(call.where.clientId, 'c-1')
+    assert.equal(call.where.eventId, 'e-1')
+    assert.equal((call.where.OR as Array<Record<string, unknown>>).length, 4)
+  })
+
+  it('commandes wire leaves status undefined when the status array is empty', () => {
+    const dataset = buildDataset(10, 10)
+    const call = commandesWire(dataset, 'org_a', { status: [] })
+    assert.equal(call.where.organizationId, 'org_a')
+    assert.equal(call.where.status, undefined)
   })
 })
