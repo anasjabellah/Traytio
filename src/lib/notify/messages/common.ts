@@ -18,6 +18,9 @@ export const COMMON = {
   RATE_LIMIT_UNAVAILABLE: "Service temporairement indisponible. Veuillez réessayer plus tard.",
   REPORT: {
     DATE_REQUIRED: "Veuillez sélectionner une date de début.",
+    DATE_END_REQUIRED: "Veuillez sélectionner une date de fin.",
+    DATE_RANGE_INVALID: "La date de fin doit être postérieure à la date de début.",
+    RANGE_TOO_LARGE: "Le rapport couvre trop de commandes. Réduisez la période ou affinez les filtres.",
     GENERATE_ERROR: "Erreur lors de la génération du rapport.",
     GENERATE_SUCCESS: (count: number) => `Rapport généré : ${count} commandes.`,
     DOWNLOAD_SUCCESS: "Rapport téléchargé (CSV).",

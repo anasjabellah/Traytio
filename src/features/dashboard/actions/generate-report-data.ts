@@ -44,12 +44,22 @@ export type ReportFilters = {
   eventType?: string;
 };
 
+const MAX_REPORT_ROWS = 10_000;
+
+const dateString = (message: string) =>
+  z.string().min(1, message).refine((v) => !Number.isNaN(Date.parse(v)), {
+    message: COMMON.REPORT.DATE_RANGE_INVALID,
+  });
+
 const reportFiltersSchema = z.object({
-  dateFrom: z.string().optional(),
-  dateTo: z.string().optional(),
+  dateFrom: dateString(COMMON.REPORT.DATE_REQUIRED),
+  dateTo: dateString(COMMON.REPORT.DATE_END_REQUIRED),
   status: z.string().optional(),
   clientId: z.string().optional(),
   eventType: z.string().optional(),
+}).refine((f) => new Date(f.dateTo) >= new Date(f.dateFrom), {
+  message: COMMON.REPORT.DATE_RANGE_INVALID,
+  path: ['dateTo'],
 });
 
 export type ReportData = {
@@ -74,16 +84,15 @@ async function generateReportDataHandler(filters: ReportFilters): Promise<{
 
     const where: Record<string, unknown> = { organizationId };
 
-    if (parsed.data.dateFrom || parsed.data.dateTo) {
-      const createdAtFilter: Record<string, Date> = {};
-      if (parsed.data.dateFrom) createdAtFilter.gte = new Date(parsed.data.dateFrom);
-      if (parsed.data.dateTo) {
+    const createdAtFilter: Record<string, Date> = {
+      gte: new Date(parsed.data.dateFrom),
+      lte: (() => {
         const end = new Date(parsed.data.dateTo);
         end.setHours(23, 59, 59, 999);
-        createdAtFilter.lte = end;
-      }
-      where.createdAt = createdAtFilter;
-    }
+        return end;
+      })(),
+    };
+    where.createdAt = createdAtFilter;
 
     if (parsed.data.status) {
       where.status = parsed.data.status;
@@ -95,6 +104,12 @@ async function generateReportDataHandler(filters: ReportFilters): Promise<{
 
     if (parsed.data.eventType) {
       where.eventType = parsed.data.eventType;
+    }
+
+    const count = await prisma.commande.count({ where });
+
+    if (count > MAX_REPORT_ROWS) {
+      return { success: false, error: COMMON.REPORT.RANGE_TOO_LARGE };
     }
 
     const commandes = await prisma.commande.findMany({
