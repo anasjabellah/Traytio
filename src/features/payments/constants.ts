@@ -28,14 +28,12 @@ export const METHOD_BADGES: Record<string, { label: string; icon: LucideIcon; st
 
 export const STATUS_LABELS: Record<string, string> = {
   COMPLETED: 'Compl\u00e9t\u00e9',
-  PENDING: 'En attente',
   FAILED: '\u00c9chou\u00e9',
   REFUNDED: 'Rembours\u00e9',
 };
 
 export const STATUS_STYLES: Record<string, string> = {
   COMPLETED: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-300/60',
-  PENDING: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200/60',
   FAILED: 'bg-red-50 text-red-700 ring-1 ring-red-200/60',
   REFUNDED: 'bg-gray-100 text-gray-600 ring-1 ring-gray-200/60',
 };

@@ -87,7 +87,7 @@ async function getPaymentsHandler(params?: {
       },
     } satisfies Prisma.PaymentInclude
 
-    // NOTE: all-time collected/refunded and pendingCount come from a single groupBy.
+    // NOTE: all-time collected/refunded come from a single groupBy.
     // Monthly aggregates (this month, previous month) are derived from the 8-month
     // historical fetch in JS. This reduces the original 8 sequential queries to 4
     // parallel queries, eliminating ~4 round-trips (~200ms at current RTT).
@@ -104,7 +104,7 @@ async function getPaymentsHandler(params?: {
       prisma.payment.count({ where }),
       prisma.payment.groupBy({
         by: ['status'],
-        where: { organizationId, status: { in: ["COMPLETED", "REFUNDED", "PENDING"] } },
+        where: { organizationId, status: { in: ["COMPLETED", "REFUNDED"] } },
         _sum: { amount: true },
         _count: true,
       }),
@@ -122,8 +122,6 @@ async function getPaymentsHandler(params?: {
 
     const collectedAgg = statusAgg.find(g => g.status === "COMPLETED")
     const refundedAgg = statusAgg.find(g => g.status === "REFUNDED")
-    const pendingGroup = statusAgg.find(g => g.status === "PENDING")
-    const pendingCount = pendingGroup?._count ?? 0
 
     const monthlyRevenue = historicalRows
       .filter(r => r.status === "COMPLETED" && r.createdAt >= startOfMonth)
@@ -165,11 +163,6 @@ async function getPaymentsHandler(params?: {
       r => Number(r.amount),
     )
 
-    const perfPending = buildMonthlySparkline(
-      historicalRows.filter(r => r.status === "PENDING"),
-      monthKeys,
-    )
-
     const todayRows = historicalRows.filter(r => r.createdAt >= todayStart)
     const completedRows = historicalRows.filter(r => r.status === "COMPLETED")
     const collectedTotal = Number(collectedAgg?._sum.amount ?? 0)
@@ -186,7 +179,7 @@ async function getPaymentsHandler(params?: {
     }))
 
     const insights: string[] = []
-    const totalPayments = completedCount + pendingCount + refundedCount
+    const totalPayments = completedCount + refundedCount
     const paymentRate = totalPayments > 0 ? Math.round((completedCount / totalPayments) * 100) : 0
     if (totalPayments > 0) {
       insights.push(`${paymentRate}% des paiements sont complétés.`)
@@ -203,9 +196,6 @@ async function getPaymentsHandler(params?: {
     if (monthlyRevenue > 0) {
       insights.push(`${monthlyRevenue.toLocaleString('fr-FR')} MAD collectés ce mois.`)
     }
-    if (pendingCount > 0) {
-      insights.push(`${pendingCount} paiement${pendingCount > 1 ? 's' : ''} en attente de validation.`)
-    }
     if (largest > 0) {
       insights.push(`Plus grand paiement: ${largest.toLocaleString('fr-FR')} MAD.`)
     }
@@ -214,12 +204,10 @@ async function getPaymentsHandler(params?: {
       totalCollected: collectedTotal,
       totalRefunded: Number(refundedAgg?._sum.amount ?? 0),
       monthlyRevenue,
-      pendingCount,
       previousMonthRevenue,
       perfCollected,
       perfRevenue,
       perfRefunded,
-      perfPending,
       todayPayments: {
         count: todayRows.length,
         total: todayRows.reduce((s, r) => s + Number(r.amount), 0),
@@ -229,7 +217,6 @@ async function getPaymentsHandler(params?: {
         averageAmount: average,
         largestPayment: largest,
         completedCount,
-        pendingCount,
         refundedCount,
       },
       completedCount,

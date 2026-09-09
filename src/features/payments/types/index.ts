@@ -17,15 +17,13 @@ export type PaymentStats = {
   totalCollected: number;
   totalRefunded: number;
   monthlyRevenue: number;
-  pendingCount: number;
   previousMonthRevenue: number;
   perfCollected: number[];
   perfRevenue: number[];
   perfRefunded: number[];
-  perfPending: number[];
   todayPayments: { count: number; total: number };
   methodBreakdown: Array<{ method: string; count: number; total: number }>;
-  quickStats: { averageAmount: number; largestPayment: number; completedCount: number; pendingCount: number; refundedCount: number };
+  quickStats: { averageAmount: number; largestPayment: number; completedCount: number; refundedCount: number };
   completedCount: number;
   refundedCount: number;
   largestPayment: number;

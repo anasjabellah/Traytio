@@ -41,20 +41,18 @@ const METHOD_LABELS: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, string> = {
   COMPLETED: "Complété",
-  PENDING: "En attente",
   FAILED: "Échoué",
   REFUNDED: "Remboursé",
 }
 
 const STATUS_STYLES: Record<string, string> = {
   COMPLETED: "bg-emerald-100 text-emerald-800",
-  PENDING: "bg-amber-100 text-amber-800",
   FAILED: "bg-red-100 text-red-800",
   REFUNDED: "bg-gray-200 text-gray-700",
 }
 
 const METHOD_FILTERS = ["", "CASH", "CARD", "TRANSFER", "CHECK", "OTHER"] as const
-const STATUS_FILTERS = ["", "COMPLETED", "PENDING", "FAILED", "REFUNDED"] as const
+const STATUS_FILTERS = ["", "COMPLETED", "FAILED", "REFUNDED"] as const
 
 interface PaymentsPageClientProps {
   initialData?: PaginatedPayments | null;
@@ -107,12 +105,9 @@ function PaymentsPageContent({ initialData }: { initialData?: PaginatedPayments 
   const revenueTrendValid = useMemo(() => hasValidTrend(stats?.perfRevenue ?? []), [stats?.perfRevenue])
   const refundedKpi = useMemo(() => computeKpi(stats?.perfRefunded ?? []), [stats?.perfRefunded])
   const refundedTrendValid = useMemo(() => hasValidTrend(stats?.perfRefunded ?? []), [stats?.perfRefunded])
-  const pendingKpi = useMemo(() => computeKpi(stats?.perfPending ?? []), [stats?.perfPending])
-  const pendingTrendValid = useMemo(() => hasValidTrend(stats?.perfPending ?? []), [stats?.perfPending])
 
   const subtitleParts = [
     stats && `${stats.totalCollected > 0 ? mad(stats.totalCollected) : "0 MAD"} collecté`,
-    stats && stats.pendingCount > 0 && `${stats.pendingCount} paiement${stats.pendingCount > 1 ? "s" : ""} en attente`,
   ].filter(Boolean) as string[]
 
   return (
@@ -148,7 +143,7 @@ function PaymentsPageContent({ initialData }: { initialData?: PaginatedPayments 
 
         {/* ═══ KPI CARDS ═══ */}
         {!stats ? null : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-8">
             <KpiCard
               label="Total collecté"
               value={stats.totalCollected}
@@ -173,13 +168,6 @@ function PaymentsPageContent({ initialData }: { initialData?: PaginatedPayments 
               icon={Ban}
               {...refundedKpi}
               hideTrend={!refundedTrendValid}
-            />
-            <KpiCard
-              label="En attente"
-              value={stats.pendingCount}
-              icon={Receipt}
-              {...pendingKpi}
-              hideTrend={!pendingTrendValid}
             />
           </div>
         )}
@@ -535,9 +523,9 @@ function PaymentsPageContent({ initialData }: { initialData?: PaginatedPayments 
                     </p>
                   </div>
                   <div>
-                    <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-1">En attente / Remboursé</p>
+                    <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-1">Remboursés</p>
                     <p className="text-sm font-semibold tabular-nums text-foreground">
-                      {stats ? `${stats.quickStats.pendingCount} / ${stats.quickStats.refundedCount}` : '—'}
+                      {stats?.quickStats.refundedCount ?? '—'}
                     </p>
                   </div>
                 </div>
