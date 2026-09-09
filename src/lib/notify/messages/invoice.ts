@@ -14,11 +14,13 @@ export const INVOICE = {
   UPDATE: {
     STATUS: {
       ERROR: "Erreur lors de la mise à jour du statut.",
+      PAID_TERMINAL: "Une facture payée est définitive et ne peut plus changer de statut.",
     },
   },
   CONVERT: {
     ERROR: "Erreur lors de la conversion du devis en facture.",
     ERROR_RETRIES: "Erreur lors de la conversion du devis après plusieurs tentatives.",
+    QUOTE_REJECTED: "Un devis rejeté ne peut pas être converti en facture.",
   },
   NOT_FOUND: "Document introuvable.",
   NOT_FOUND_ORGANIZATION: "Organisation introuvable.",

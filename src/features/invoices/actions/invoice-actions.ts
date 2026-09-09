@@ -358,11 +358,18 @@ async function updateInvoiceStatusHandler(
 
     const existing = await prisma.invoice.findFirst({
       where: { id, organizationId },
-      select: { id: true },
+      select: { id: true, status: true },
     })
 
     if (!existing) {
       return { success: false, error: INVOICE.NOT_FOUND }
+    }
+
+    // PAID is terminal: a settled document can never regress to another status.
+    // PAID -> PAID (no-op) stays allowed; every other outgoing transition is
+    // rejected. All other statuses remain freely adjustable.
+    if (existing.status === "PAID" && parsed.data.status !== "PAID") {
+      return { success: false, error: INVOICE.UPDATE.STATUS.PAID_TERMINAL }
     }
 
     const invoice = await prisma.invoice.update({
@@ -413,6 +420,12 @@ async function convertQuoteToInvoiceHandler(quoteId: string): Promise<ActionResp
 
   if (!quote) {
     return { success: false, error: INVOICE.NOT_FOUND_QUOTE }
+  }
+
+  // Mirrors the UI rule (convert button hidden for REJECTED devis) server-side:
+  // a rejected quote can no longer be converted into a facture.
+  if (quote.status === "REJECTED") {
+    return { success: false, error: INVOICE.CONVERT.QUOTE_REJECTED }
   }
 
   if (!quote.commande) {
