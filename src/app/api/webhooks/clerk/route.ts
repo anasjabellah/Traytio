@@ -93,6 +93,36 @@ export async function POST(req: Request) {
       )
       return new Response('Failed to create user resources', { status: 500 })
     }
+  } else if (evt.type === 'user.updated') {
+    const { id, email_addresses, first_name, last_name } = evt.data
+    const email = email_addresses?.[0]?.email_address ?? ''
+
+    // Sync local profile fields from Clerk. Idempotent: repeated writes with
+    // the same data are harmless no-ops.
+    try {
+      const result = await prisma.user.updateMany({
+        where: { clerkId: id },
+        data: {
+          email,
+          firstName: first_name ?? null,
+          lastName: last_name ?? null,
+        },
+      })
+
+      if (result.count === 0) {
+        // User does not exist locally (orphaned Clerk event / pre-provision
+        // timing issue). Return 200 to prevent Clerk from retrying a
+        // non-actionable event.
+        console.warn(
+          `[clerk-webhook] user.updated: no local user found for clerkId=${id ?? "unknown"} — event acknowledged but not applied`,
+        )
+      }
+    } catch (err) {
+      console.error(
+        `[clerk-webhook] user.updated failed: clerkId=${id ?? "unknown"} errorType=${err instanceof Error ? err.constructor.name : typeof err}`,
+      )
+      return new Response('Failed to update user', { status: 500 })
+    }
   }
 
   return new Response('OK', { status: 200 })
