@@ -11,6 +11,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "tsx --test tests/*.test.ts",
     "test:e2e": "playwright test --config=tests/e2e/playwright.config.ts",
     "test:e2e:ui": "playwright test --config=tests/e2e/playwright.config.ts --ui",
     "test:e2e:chromium": "playwright test --config=tests/e2e/playwright.config.ts --project=chromium",
@@ -82,8 +83,9 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "prisma": "^7.8.0",
+    "shadcn": "^4.7.0",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "shadcn": "^4.7.0"
+    "tsx": "^4.23.13",
+    "typescript": "^5"
   }
 }
