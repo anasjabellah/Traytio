@@ -54,7 +54,7 @@ export async function getInvoiceStats(): Promise<InvoiceStats | null> {
   const now = new Date();
   const eightMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 7, 1);
 
-  const [aggregateResult, statusGroupResult, monthlyRows, recentActivity, pendingInvoices, lastPayment] =
+  const [aggregateResult, statusGroupResult, monthlyRows, recentActivity, pendingInvoices, lastPayment, paymentTotals, paymentRows] =
     await Promise.all([
       prisma.invoice.aggregate({
         where: { organizationId: orgId },
@@ -87,10 +87,24 @@ export async function getInvoiceStats(): Promise<InvoiceStats | null> {
         orderBy: { createdAt: 'desc' },
         select: { amount: true, createdAt: true },
       }),
+      prisma.payment.aggregate({
+        where: { organizationId: orgId, status: 'COMPLETED' },
+        _sum: { amount: true },
+      }),
+      prisma.payment.findMany({
+        where: { organizationId: orgId, status: 'COMPLETED', createdAt: { gte: eightMonthsAgo } },
+        select: { createdAt: true, amount: true },
+      }),
     ]);
 
+  // Org-level "collected" figures come from unique Payment rows (one commande
+  // can hold several invoices — devis + facture — and every linked invoice is
+  // synced with the commande's paidAmount, so SUM(invoice.paidAmount) would
+  // count the same payment as many times as there are documents). Payment-based
+  // totals match the payments dashboard and each actual payment exactly once.
+  // Invoice-level paidAmount (per-document display/progress) is untouched.
   const totalInvoiced = Number(aggregateResult._sum.totalAmount ?? 0);
-  const totalCollected = Number(aggregateResult._sum.paidAmount ?? 0);
+  const totalCollected = Number(paymentTotals._sum.amount ?? 0);
   const totalRemaining = totalInvoiced - totalCollected;
   const documentCount = aggregateResult._count;
   const paymentRate = totalInvoiced > 0 ? Math.round((totalCollected / totalInvoiced) * 100) : 0;
@@ -98,7 +112,7 @@ export async function getInvoiceStats(): Promise<InvoiceStats | null> {
 
   const monthKeys = buildMonthKeys(8);
   const perfTotal = buildMonthlySparkline(monthlyRows, monthKeys, (r) => Number(r.totalAmount));
-  const perfCollected = buildMonthlySparkline(monthlyRows, monthKeys, (r) => Number(r.paidAmount));
+  const perfCollected = buildMonthlySparkline(paymentRows, monthKeys, (r) => Number(r.amount));
   const perfRemaining = buildMonthlySparkline(monthlyRows, monthKeys, (r) => Number(r.totalAmount) - Number(r.paidAmount));
   const perfCount = buildMonthlySparkline(monthlyRows, monthKeys);
 
