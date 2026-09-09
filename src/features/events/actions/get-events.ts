@@ -38,7 +38,11 @@ async function getEventsHandler(params: GetEventsParams): Promise<ActionResponse
 
     const { search, page = 1, limit = EVENT_DEFAULT_PAGE_SIZE, sortBy = 'createdAt', sortOrder = 'desc' } = params;
 
-    const skip = (page - 1) * limit;
+    // Normalize pagination at the input boundary: page ≥ 1, limit capped [1, 100].
+    // Only the normalized values ever reach Prisma skip/take (and the response shape).
+    const safePage = Math.max(1, Math.trunc(Number(page) || 1));
+    const safeLimit = Math.max(1, Math.min(100, Math.trunc(Number(limit) || 1)));
+    const skip = (safePage - 1) * safeLimit;
 
     const where: Prisma.EventWhereInput = { organizationId };
 
@@ -110,7 +114,7 @@ async function getEventsHandler(params: GetEventsParams): Promise<ActionResponse
         },
         orderBy: { [sortBy]: sortOrder },
         skip,
-        take: limit,
+        take: safeLimit,
       }),
       prisma.event.findMany({
         where: { organizationId, createdAt: { gte: historicalStart } },
@@ -191,9 +195,9 @@ async function getEventsHandler(params: GetEventsParams): Promise<ActionResponse
       };
     });
 
-    const totalPages = Math.ceil(total / limit);
+    const totalPages = Math.ceil(total / safeLimit);
 
-    return { success: true, data: { data: result, total, page, limit, totalPages, perfTotal, perfWeek, perfMonth, perfBudget, perfPayments } };
+    return { success: true, data: { data: result, total, page: safePage, limit: safeLimit, totalPages, perfTotal, perfWeek, perfMonth, perfBudget, perfPayments } };
   } catch (error: unknown) {
     return { success: false, error: normalizeActionError(error, EVENT.UNEXPECTED_ERROR) };
   }

@@ -27,7 +27,11 @@ async function getMenusHandler(params: GetMenusParams): Promise<ActionResponse<P
     const organizationId = await getOrganizationId();
     await assertCan('menus', 'read');
     const { search, page = 1, limit = MENU_DEFAULT_PAGE_SIZE, sortBy = 'createdAt', sortOrder = 'desc', category, isActive } = params;
-    const skip = (page - 1) * limit;
+    // Normalize pagination at the input boundary: page ≥ 1, limit capped [1, 100].
+    // Only the normalized values ever reach Prisma skip/take (and the response shape).
+    const safePage = Math.max(1, Math.trunc(Number(page) || 1));
+    const safeLimit = Math.max(1, Math.min(100, Math.trunc(Number(limit) || 1)));
+    const skip = (safePage - 1) * safeLimit;
 
     const where: Prisma.MenuWhereInput = { organizationId };
     if (search) {
@@ -76,7 +80,7 @@ async function getMenusHandler(params: GetMenusParams): Promise<ActionResponse<P
       },
       orderBy: { [sortBy]: sortOrder },
       skip,
-      take: limit,
+      take: safeLimit,
     }),
     ]);
 
@@ -92,8 +96,8 @@ async function getMenusHandler(params: GetMenusParams): Promise<ActionResponse<P
       })),
     }));
 
-    const totalPages = Math.ceil(total / limit);
-    return { success: true, data: { data, total, page, limit, totalPages } };
+    const totalPages = Math.ceil(total / safeLimit);
+    return { success: true, data: { data, total, page: safePage, limit: safeLimit, totalPages } };
   } catch (e: unknown) {
     return { success: false, error: normalizeActionError(e, MENU.FETCH_ERROR) };
   }

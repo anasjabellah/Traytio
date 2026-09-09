@@ -7,8 +7,12 @@ import { withApiGuard } from '@/lib/api-guard';
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const search = url.searchParams.get('search') ?? undefined;
-  const page = url.searchParams.get('page') ? Number(url.searchParams.get('page')) : undefined;
-  const limit = url.searchParams.get('limit') ? Number(url.searchParams.get('limit')) : undefined;
+  const page = url.searchParams.get('page')
+    ? Math.max(1, Math.trunc(Number(url.searchParams.get('page')) || 1))
+    : undefined;
+  const limit = url.searchParams.get('limit')
+    ? Math.max(1, Math.min(100, Math.trunc(Number(url.searchParams.get('limit')) || 1)))
+    : undefined;
   const sortBy = (url.searchParams.get('sortBy') ?? undefined) as "name" | "createdAt" | "budget" | "startDate" | undefined;
   const sortOrder = (url.searchParams.get('sortOrder') ?? undefined) as "asc" | "desc" | undefined;
 

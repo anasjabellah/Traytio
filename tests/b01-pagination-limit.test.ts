@@ -6,8 +6,12 @@
  *   - src/features/invoices/actions/invoice-actions.ts
  *   - src/features/commandes/actions/get-commandes-page.ts
  *   - src/features/payments/actions/get-payments.ts
+ *   - src/features/menus/actions/get-menus.ts
+ *   - src/features/menu-items/actions/get-menu-items.ts
+ *   - src/features/events/actions/get-events.ts
+ *   - src/app/api/events/route.ts (query-param normalization before forwarding)
  *
- * All four server actions clamp `limit` at the input boundary to [1, 100] (the cap
+ * All seven server actions clamp `limit` at the input boundary to [1, 100] (the cap
  * already used by get-activity.ts / get-team.ts) and feed ONLY the normalized
  * value into Prisma: `take: safeLimit`, `skip: (safePage - 1) * safeLimit`, with
  * `page` normalized to at least 1.
@@ -32,6 +36,9 @@ const CLIENT_DEFAULT_PAGE_SIZE = 10
 const INVOICE_DEFAULT_PAGE_SIZE = 20
 const COMMANDE_DEFAULT_PAGE_SIZE = 10
 const PAYMENT_DEFAULT_PAGE_SIZE = 10
+const MENU_DEFAULT_PAGE_SIZE = 10
+const MENU_ITEM_DEFAULT_PAGE_SIZE = 10
+const EVENT_DEFAULT_PAGE_SIZE = 10
 
 // ── Input-boundary normalization (faithful replicas of the handlers) ──
 
@@ -58,6 +65,27 @@ function paginateCommandes(rawPage: unknown = 1, rawLimit: unknown = COMMANDE_DE
 
 /** Mirrors get-payments.ts: Number coercion + trunc + clamp [1, 100]. */
 function paginatePayments(rawPage: unknown = 1, rawLimit: unknown = PAYMENT_DEFAULT_PAGE_SIZE) {
+  const page = Math.max(1, Math.trunc(Number(rawPage) || 1))
+  const limit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(Number(rawLimit) || 1)))
+  return { page, limit, skip: (page - 1) * limit }
+}
+
+/** Mirrors get-menus.ts: Number coercion + trunc + clamp [1, 100]. */
+function paginateMenus(rawPage: unknown = 1, rawLimit: unknown = MENU_DEFAULT_PAGE_SIZE) {
+  const page = Math.max(1, Math.trunc(Number(rawPage) || 1))
+  const limit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(Number(rawLimit) || 1)))
+  return { page, limit, skip: (page - 1) * limit }
+}
+
+/** Mirrors get-menu-items.ts: Number coercion + trunc + clamp [1, 100]. */
+function paginateMenuItems(rawPage: unknown = 1, rawLimit: unknown = MENU_ITEM_DEFAULT_PAGE_SIZE) {
+  const page = Math.max(1, Math.trunc(Number(rawPage) || 1))
+  const limit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(Number(rawLimit) || 1)))
+  return { page, limit, skip: (page - 1) * limit }
+}
+
+/** Mirrors get-events.ts: Number coercion + trunc + clamp [1, 100]. */
+function paginateEvents(rawPage: unknown = 1, rawLimit: unknown = EVENT_DEFAULT_PAGE_SIZE) {
   const page = Math.max(1, Math.trunc(Number(rawPage) || 1))
   const limit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(Number(rawLimit) || 1)))
   return { page, limit, skip: (page - 1) * limit }
@@ -128,6 +156,66 @@ function buildPaymentsWhere(
       { notes: { contains: opts.search, mode: 'insensitive' } },
       { commande: { number: { contains: opts.search, mode: 'insensitive' } } },
     ]
+  }
+  return where
+}
+
+function buildMenusWhere(
+  organizationId: string,
+  opts: { search?: string; category?: string; isActive?: boolean },
+) {
+  const where: Record<string, unknown> = { organizationId }
+  if (opts.search) where.OR = [{ name: { contains: opts.search, mode: 'insensitive' } }]
+  if (opts.category) where.category = opts.category
+  if (opts.isActive !== undefined) where.isActive = opts.isActive
+  return where
+}
+
+function buildMenuItemsWhere(
+  organizationId: string,
+  opts: { search?: string; category?: string; isActive?: boolean },
+) {
+  const where: Record<string, unknown> = { organizationId }
+  if (opts.search) where.OR = [{ name: { contains: opts.search, mode: 'insensitive' } }]
+  if (opts.category && opts.category !== 'ALL') where.category = opts.category
+  if (opts.isActive !== undefined) where.isActive = opts.isActive
+  return where
+}
+
+function buildEventsWhere(
+  organizationId: string,
+  opts: {
+    search?: string
+    status?: string
+    type?: string
+    dateFrom?: string
+    dateTo?: string
+    budgetMin?: number
+    budgetMax?: number
+  },
+) {
+  const where: Record<string, unknown> = { organizationId }
+  if (opts.search) {
+    where.OR = [
+      { name: { contains: opts.search, mode: 'insensitive' } },
+      { location: { contains: opts.search, mode: 'insensitive' } },
+      { client: { name: { contains: opts.search, mode: 'insensitive' } } },
+      { client: { phone: { contains: opts.search, mode: 'insensitive' } } },
+    ]
+  }
+  if (opts.status) where.status = opts.status
+  if (opts.type) where.type = opts.type
+  if (opts.dateFrom || opts.dateTo) {
+    where.startDate = {
+      ...(opts.dateFrom ? { gte: new Date(opts.dateFrom) } : {}),
+      ...(opts.dateTo ? { lte: new Date(opts.dateTo) } : {}),
+    }
+  }
+  if (opts.budgetMin !== undefined || opts.budgetMax !== undefined) {
+    where.budget = {
+      ...(opts.budgetMin !== undefined ? { gte: opts.budgetMin } : {}),
+      ...(opts.budgetMax !== undefined ? { lte: opts.budgetMax } : {}),
+    }
   }
   return where
 }
@@ -216,6 +304,103 @@ function paymentsWire(
   const safeLimit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(Number(limit) || 1)))
   const skip = (safePage - 1) * safeLimit
   const where = buildPaymentsWhere(organizationId, raw)
+  const tenantRows = dataset
+    .filter((r) => r.organizationId === organizationId)
+    .sort((a, b) => a.id.localeCompare(b.id))
+  return {
+    where,
+    skip,
+    take: safeLimit,
+    page: safePage,
+    limit: safeLimit,
+    rows: tenantRows.slice(skip, skip + safeLimit),
+    total: tenantRows.length,
+  }
+}
+
+function menusWire(
+  dataset: Array<{ id: string; organizationId: string }>,
+  organizationId: string,
+  raw: { page?: unknown; limit?: unknown; search?: string; category?: string; isActive?: boolean },
+): PrismaCall & {
+  page: number
+  limit: number
+  rows: Array<{ id: string; organizationId: string }>
+  total: number
+} {
+  const { page = 1, limit = MENU_DEFAULT_PAGE_SIZE } = raw
+  const safePage = Math.max(1, Math.trunc(Number(page) || 1))
+  const safeLimit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(Number(limit) || 1)))
+  const skip = (safePage - 1) * safeLimit
+  const where = buildMenusWhere(organizationId, raw)
+  const tenantRows = dataset
+    .filter((r) => r.organizationId === organizationId)
+    .sort((a, b) => a.id.localeCompare(b.id))
+  return {
+    where,
+    skip,
+    take: safeLimit,
+    page: safePage,
+    limit: safeLimit,
+    rows: tenantRows.slice(skip, skip + safeLimit),
+    total: tenantRows.length,
+  }
+}
+
+function menuItemsWire(
+  dataset: Array<{ id: string; organizationId: string }>,
+  organizationId: string,
+  raw: { page?: unknown; limit?: unknown; search?: string; category?: string; isActive?: boolean },
+): PrismaCall & {
+  page: number
+  limit: number
+  rows: Array<{ id: string; organizationId: string }>
+  total: number
+} {
+  const { page = 1, limit = MENU_ITEM_DEFAULT_PAGE_SIZE } = raw
+  const safePage = Math.max(1, Math.trunc(Number(page) || 1))
+  const safeLimit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(Number(limit) || 1)))
+  const skip = (safePage - 1) * safeLimit
+  const where = buildMenuItemsWhere(organizationId, raw)
+  const tenantRows = dataset
+    .filter((r) => r.organizationId === organizationId)
+    .sort((a, b) => a.id.localeCompare(b.id))
+  return {
+    where,
+    skip,
+    take: safeLimit,
+    page: safePage,
+    limit: safeLimit,
+    rows: tenantRows.slice(skip, skip + safeLimit),
+    total: tenantRows.length,
+  }
+}
+
+function eventsWire(
+  dataset: Array<{ id: string; organizationId: string }>,
+  organizationId: string,
+  raw: {
+    page?: unknown
+    limit?: unknown
+    search?: string
+    status?: string
+    type?: string
+    dateFrom?: string
+    dateTo?: string
+    budgetMin?: number
+    budgetMax?: number
+  },
+): PrismaCall & {
+  page: number
+  limit: number
+  rows: Array<{ id: string; organizationId: string }>
+  total: number
+} {
+  const { page = 1, limit = EVENT_DEFAULT_PAGE_SIZE } = raw
+  const safePage = Math.max(1, Math.trunc(Number(page) || 1))
+  const safeLimit = Math.max(1, Math.min(MAX_LIMIT, Math.trunc(Number(limit) || 1)))
+  const skip = (safePage - 1) * safeLimit
+  const where = buildEventsWhere(organizationId, raw)
   const tenantRows = dataset
     .filter((r) => r.organizationId === organizationId)
     .sort((a, b) => a.id.localeCompare(b.id))
@@ -418,6 +603,168 @@ describe('B-01 getPayments pagination cap', () => {
   })
 })
 
+// ── Tests: menus (get-menus.ts) ──
+
+describe('B-01 getMenus pagination cap', () => {
+  it('normal limits and pages keep working (defaults preserved)', () => {
+    const dflt = paginateMenus()
+    assert.deepEqual(dflt, { page: 1, limit: MENU_DEFAULT_PAGE_SIZE, skip: 0 })
+
+    const p3 = paginateMenus(3, 25)
+    assert.deepEqual(p3, { page: 3, limit: 25, skip: 50 })
+  })
+
+  it('accepts the maximum limit of 100', () => {
+    const max = paginateMenus(1, 100)
+    assert.equal(max.limit, 100)
+    assert.equal(max.skip, 0)
+  })
+
+  it('safely caps values above the maximum (500 → 100)', () => {
+    const capped = paginateMenus(1, 500)
+    assert.equal(capped.limit, 100)
+  })
+
+  it('safely caps huge values and computes skip from the capped limit', () => {
+    const huge = paginateMenus(3, 1_000_000)
+    assert.equal(huge.limit, 100)
+    assert.equal(huge.skip, 200, 'skip must derive from the capped limit, not the raw value')
+  })
+
+  it('clamps page below 1 to 1', () => {
+    assert.equal(paginateMenus(0, MENU_DEFAULT_PAGE_SIZE).page, 1)
+    assert.equal(paginateMenus(-5, MENU_DEFAULT_PAGE_SIZE).page, 1)
+    assert.equal(paginateMenus(0, MENU_DEFAULT_PAGE_SIZE).skip, 0)
+  })
+
+  it('keeps a very large page (no upper page cap), deriving skip from the capped limit', () => {
+    const huge = paginateMenus(1_000_000, 10)
+    assert.equal(huge.page, 1_000_000)
+    assert.equal(huge.limit, 10)
+    assert.equal(huge.skip, (1_000_000 - 1) * 10)
+  })
+
+  it('clamps sub-minimum limits to 1', () => {
+    assert.equal(paginateMenus(1, 0).limit, 1)
+    assert.equal(paginateMenus(1, -7).limit, 1)
+  })
+
+  it('normalizes fractional, string, zero and malformed input', () => {
+    assert.equal(paginateMenus(2.9, 10).page, 2, 'fractional page truncates safely')
+    assert.deepEqual(paginateMenus('2', '25'), { page: 2, limit: 25, skip: 25 }, 'numeric strings coerce')
+    assert.equal(paginateMenus('abc', 'xyz').limit, 1, 'non-numeric input falls back to the minimum')
+    assert.equal(paginateMenus('abc', 'xyz').page, 1)
+  })
+})
+
+// ── Tests: menu items (get-menu-items.ts) ──
+
+describe('B-01 getMenuItems pagination cap', () => {
+  it('normal limits and pages keep working (defaults preserved)', () => {
+    const dflt = paginateMenuItems()
+    assert.deepEqual(dflt, { page: 1, limit: MENU_ITEM_DEFAULT_PAGE_SIZE, skip: 0 })
+
+    const p3 = paginateMenuItems(3, 25)
+    assert.deepEqual(p3, { page: 3, limit: 25, skip: 50 })
+  })
+
+  it('accepts the maximum limit of 100', () => {
+    const max = paginateMenuItems(1, 100)
+    assert.equal(max.limit, 100)
+    assert.equal(max.skip, 0)
+  })
+
+  it('safely caps values above the maximum (500 → 100)', () => {
+    const capped = paginateMenuItems(1, 500)
+    assert.equal(capped.limit, 100)
+  })
+
+  it('safely caps huge values and computes skip from the capped limit', () => {
+    const huge = paginateMenuItems(3, 1_000_000)
+    assert.equal(huge.limit, 100)
+    assert.equal(huge.skip, 200, 'skip must derive from the capped limit, not the raw value')
+  })
+
+  it('clamps page below 1 to 1', () => {
+    assert.equal(paginateMenuItems(0, MENU_ITEM_DEFAULT_PAGE_SIZE).page, 1)
+    assert.equal(paginateMenuItems(-5, MENU_ITEM_DEFAULT_PAGE_SIZE).page, 1)
+    assert.equal(paginateMenuItems(0, MENU_ITEM_DEFAULT_PAGE_SIZE).skip, 0)
+  })
+
+  it('keeps a very large page (no upper page cap), deriving skip from the capped limit', () => {
+    const huge = paginateMenuItems(1_000_000, 10)
+    assert.equal(huge.page, 1_000_000)
+    assert.equal(huge.limit, 10)
+    assert.equal(huge.skip, (1_000_000 - 1) * 10)
+  })
+
+  it('clamps sub-minimum limits to 1', () => {
+    assert.equal(paginateMenuItems(1, 0).limit, 1)
+    assert.equal(paginateMenuItems(1, -7).limit, 1)
+  })
+
+  it('normalizes fractional, string, zero and malformed input', () => {
+    assert.equal(paginateMenuItems(2.9, 10).page, 2, 'fractional page truncates safely')
+    assert.deepEqual(paginateMenuItems('2', '25'), { page: 2, limit: 25, skip: 25 }, 'numeric strings coerce')
+    assert.equal(paginateMenuItems('abc', 'xyz').limit, 1, 'non-numeric input falls back to the minimum')
+    assert.equal(paginateMenuItems('abc', 'xyz').page, 1)
+  })
+})
+
+// ── Tests: events (get-events.ts) ──
+
+describe('B-01 getEvents pagination cap', () => {
+  it('normal limits and pages keep working (defaults preserved)', () => {
+    const dflt = paginateEvents()
+    assert.deepEqual(dflt, { page: 1, limit: EVENT_DEFAULT_PAGE_SIZE, skip: 0 })
+
+    const p3 = paginateEvents(3, 25)
+    assert.deepEqual(p3, { page: 3, limit: 25, skip: 50 })
+  })
+
+  it('accepts the maximum limit of 100', () => {
+    const max = paginateEvents(1, 100)
+    assert.equal(max.limit, 100)
+    assert.equal(max.skip, 0)
+  })
+
+  it('safely caps values above the maximum (500 → 100)', () => {
+    const capped = paginateEvents(1, 500)
+    assert.equal(capped.limit, 100)
+  })
+
+  it('safely caps huge values and computes skip from the capped limit', () => {
+    const huge = paginateEvents(3, 1_000_000)
+    assert.equal(huge.limit, 100)
+    assert.equal(huge.skip, 200, 'skip must derive from the capped limit, not the raw value')
+  })
+
+  it('clamps page below 1 to 1', () => {
+    assert.equal(paginateEvents(0, EVENT_DEFAULT_PAGE_SIZE).page, 1)
+    assert.equal(paginateEvents(-5, EVENT_DEFAULT_PAGE_SIZE).page, 1)
+    assert.equal(paginateEvents(0, EVENT_DEFAULT_PAGE_SIZE).skip, 0)
+  })
+
+  it('keeps a very large page (no upper page cap), deriving skip from the capped limit', () => {
+    const huge = paginateEvents(1_000_000, 10)
+    assert.equal(huge.page, 1_000_000)
+    assert.equal(huge.limit, 10)
+    assert.equal(huge.skip, (1_000_000 - 1) * 10)
+  })
+
+  it('clamps sub-minimum limits to 1', () => {
+    assert.equal(paginateEvents(1, 0).limit, 1)
+    assert.equal(paginateEvents(1, -7).limit, 1)
+  })
+
+  it('normalizes fractional, string, zero and malformed input', () => {
+    assert.equal(paginateEvents(2.9, 10).page, 2, 'fractional page truncates safely')
+    assert.deepEqual(paginateEvents('2', '25'), { page: 2, limit: 25, skip: 25 }, 'numeric strings coerce')
+    assert.equal(paginateEvents('abc', 'xyz').limit, 1, 'non-numeric input falls back to the minimum')
+    assert.equal(paginateEvents('abc', 'xyz').page, 1)
+  })
+})
+
 // ── Tests: raw input → actual Prisma args (the production wiring) ──
 
 describe('B-01 Prisma take/skip only ever receives normalized values', () => {
@@ -540,6 +887,114 @@ describe('B-01 Prisma take/skip only ever receives normalized values', () => {
     assert.equal(call.take, 1)
   })
 
+  it('menus — raw limit 500 results in Prisma take: 100', () => {
+    const call = menusWire(dataset, 'org_a', { limit: 500 })
+    assert.equal(call.take, 100, 'take must be capped to 100')
+    assert.equal(call.skip, 0)
+  })
+
+  it('menus — raw limit 1,000,000 results in Prisma take: 100', () => {
+    const call = menusWire(dataset, 'org_a', { limit: 1_000_000 })
+    assert.equal(call.take, 100)
+  })
+
+  it('menus — normal limit 25 results in Prisma take: 25', () => {
+    const call = menusWire(dataset, 'org_a', { limit: 25 })
+    assert.equal(call.take, 25)
+  })
+
+  it('menus — default (no limit) results in Prisma take: 10', () => {
+    const call = menusWire(dataset, 'org_a', {})
+    assert.equal(call.take, MENU_DEFAULT_PAGE_SIZE, 'default stays 10')
+    assert.equal(call.skip, 0)
+  })
+
+  it('menus — raw limit 1,000,000 with page 3 computes skip from the capped limit', () => {
+    const call = menusWire(dataset, 'org_a', { page: 3, limit: 1_000_000 })
+    assert.equal(call.take, 100)
+    assert.equal(call.skip, 200, 'skip = (page 3 - 1) × capped 100')
+  })
+
+  it('menus — page 0 and limit 0 normalize to page 1 / limit 1 before Prisma', () => {
+    const call = menusWire(dataset, 'org_a', { page: 0, limit: 0 })
+    assert.equal(call.page, 1)
+    assert.equal(call.limit, 1)
+    assert.equal(call.skip, 0)
+    assert.equal(call.take, 1)
+  })
+
+  it('menu items — raw limit 500 results in Prisma take: 100', () => {
+    const call = menuItemsWire(dataset, 'org_a', { limit: 500 })
+    assert.equal(call.take, 100, 'take must be capped to 100')
+    assert.equal(call.skip, 0)
+  })
+
+  it('menu items — raw limit 1,000,000 results in Prisma take: 100', () => {
+    const call = menuItemsWire(dataset, 'org_a', { limit: 1_000_000 })
+    assert.equal(call.take, 100)
+  })
+
+  it('menu items — normal limit 25 results in Prisma take: 25', () => {
+    const call = menuItemsWire(dataset, 'org_a', { limit: 25 })
+    assert.equal(call.take, 25)
+  })
+
+  it('menu items — default (no limit) results in Prisma take: 10', () => {
+    const call = menuItemsWire(dataset, 'org_a', {})
+    assert.equal(call.take, MENU_ITEM_DEFAULT_PAGE_SIZE, 'default stays 10')
+    assert.equal(call.skip, 0)
+  })
+
+  it('menu items — raw limit 1,000,000 with page 3 computes skip from the capped limit', () => {
+    const call = menuItemsWire(dataset, 'org_a', { page: 3, limit: 1_000_000 })
+    assert.equal(call.take, 100)
+    assert.equal(call.skip, 200, 'skip = (page 3 - 1) × capped 100')
+  })
+
+  it('menu items — page 0 and limit 0 normalize to page 1 / limit 1 before Prisma', () => {
+    const call = menuItemsWire(dataset, 'org_a', { page: 0, limit: 0 })
+    assert.equal(call.page, 1)
+    assert.equal(call.limit, 1)
+    assert.equal(call.skip, 0)
+    assert.equal(call.take, 1)
+  })
+
+  it('events — raw limit 500 results in Prisma take: 100', () => {
+    const call = eventsWire(dataset, 'org_a', { limit: 500 })
+    assert.equal(call.take, 100, 'take must be capped to 100')
+    assert.equal(call.skip, 0)
+  })
+
+  it('events — raw limit 1,000,000 results in Prisma take: 100', () => {
+    const call = eventsWire(dataset, 'org_a', { limit: 1_000_000 })
+    assert.equal(call.take, 100)
+  })
+
+  it('events — normal limit 25 results in Prisma take: 25', () => {
+    const call = eventsWire(dataset, 'org_a', { limit: 25 })
+    assert.equal(call.take, 25)
+  })
+
+  it('events — default (no limit) results in Prisma take: 10', () => {
+    const call = eventsWire(dataset, 'org_a', {})
+    assert.equal(call.take, EVENT_DEFAULT_PAGE_SIZE, 'default stays 10')
+    assert.equal(call.skip, 0)
+  })
+
+  it('events — raw limit 1,000,000 with page 3 computes skip from the capped limit', () => {
+    const call = eventsWire(dataset, 'org_a', { page: 3, limit: 1_000_000 })
+    assert.equal(call.take, 100)
+    assert.equal(call.skip, 200, 'skip = (page 3 - 1) × capped 100')
+  })
+
+  it('events — page 0 and limit 0 normalize to page 1 / limit 1 before Prisma', () => {
+    const call = eventsWire(dataset, 'org_a', { page: 0, limit: 0 })
+    assert.equal(call.page, 1)
+    assert.equal(call.limit, 1)
+    assert.equal(call.skip, 0)
+    assert.equal(call.take, 1)
+  })
+
   it('take and skip are always integers within Prisma constraints', () => {
     const calls = [
       clientsWire(dataset, 'org_a', { limit: 500 }),
@@ -550,6 +1005,12 @@ describe('B-01 Prisma take/skip only ever receives normalized values', () => {
       commandesWire(dataset, 'org_a', { page: 0, limit: 0 }),
       paymentsWire(dataset, 'org_a', { limit: 1000 }),
       paymentsWire(dataset, 'org_a', { page: 0, limit: 0 }),
+      menusWire(dataset, 'org_a', { limit: 1000 }),
+      menusWire(dataset, 'org_a', { page: 0, limit: 0 }),
+      menuItemsWire(dataset, 'org_a', { limit: 1000 }),
+      menuItemsWire(dataset, 'org_a', { page: 0, limit: 0 }),
+      eventsWire(dataset, 'org_a', { limit: 1000 }),
+      eventsWire(dataset, 'org_a', { page: 0, limit: 0 }),
     ]
     for (const c of calls) {
       assert.ok(Number.isInteger(c.take) && c.take >= 1 && c.take <= 100, `take ${c.take} must be int in [1,100]`)
@@ -631,5 +1092,49 @@ describe('B-01 pagination remains tenant-scoped', () => {
     assert.equal(call.where.method, 'CASH')
     assert.equal(call.where.status, 'COMPLETED')
     assert.equal((call.where.OR as Array<Record<string, unknown>>).length, 3)
+  })
+
+  it('menus wire always carries the server-derived organizationId and keeps filters', () => {
+    const dataset = buildDataset(100, 100)
+    const call = menusWire(dataset, 'org_a', { search: 'plat', category: 'WEDDING', isActive: true })
+    assert.equal(call.where.organizationId, 'org_a')
+    assert.equal(call.where.category, 'WEDDING')
+    assert.equal(call.where.isActive, true)
+    assert.equal((call.where.OR as Array<Record<string, unknown>>).length, 1)
+  })
+
+  it('menu items wire always carries the server-derived organizationId and keeps filters', () => {
+    const dataset = buildDataset(100, 100)
+    const call = menuItemsWire(dataset, 'org_a', { search: 'saumon', category: 'FOOD', isActive: false })
+    assert.equal(call.where.organizationId, 'org_a')
+    assert.equal(call.where.category, 'FOOD')
+    assert.equal(call.where.isActive, false)
+    assert.equal((call.where.OR as Array<Record<string, unknown>>).length, 1)
+  })
+
+  it('menu items wire drops the category filter when it is the ALL sentinel', () => {
+    const dataset = buildDataset(10, 10)
+    const call = menuItemsWire(dataset, 'org_a', { category: 'ALL' })
+    assert.equal(call.where.organizationId, 'org_a')
+    assert.equal(call.where.category, undefined)
+  })
+
+  it('events wire always carries the server-derived organizationId and keeps filters', () => {
+    const dataset = buildDataset(100, 100)
+    const call = eventsWire(dataset, 'org_a', {
+      search: 'gala',
+      status: 'CONFIRMED',
+      type: 'WEDDING',
+      dateFrom: '2026-01-01',
+      dateTo: '2026-12-31',
+      budgetMin: 1000,
+      budgetMax: 50000,
+    })
+    assert.equal(call.where.organizationId, 'org_a')
+    assert.equal(call.where.status, 'CONFIRMED')
+    assert.equal(call.where.type, 'WEDDING')
+    assert.deepEqual(call.where.startDate, { gte: new Date('2026-01-01'), lte: new Date('2026-12-31') })
+    assert.deepEqual(call.where.budget, { gte: 1000, lte: 50000 })
+    assert.equal((call.where.OR as Array<Record<string, unknown>>).length, 4)
   })
 })
