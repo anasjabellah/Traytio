@@ -1,5 +1,6 @@
 'use server';
 
+import { z } from "zod";
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
@@ -7,6 +8,11 @@ import { withActionGuard } from '@/lib/action-guard';
 import { normalizeActionError } from '@/lib/action-error';
 import { COMMON } from '@/lib/notify/messages';
 import type { ActivityFeedItem, ActivityFeedResponse, ActivityType, ActivityPagination } from '@/features/activity/types';
+
+const getActivitySchema = z.object({
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().optional(),
+});
 
 const ACTION_TO_TYPE: Record<string, ActivityType> = {
   commande_created: 'commande_created',
@@ -36,12 +42,19 @@ function fmtTimeAgo(date: Date): string {
 
 async function getActivityHandler(params?: { page?: number; limit?: number }): Promise<{ success: boolean; data?: ActivityFeedResponse; error?: string }> {
   try {
+    const parsed = getActivitySchema.safeParse(params ?? {});
+    if (!parsed.success) {
+      return { success: false, error: COMMON.INVALID_INPUT };
+    }
+
     const organizationId = await getOrganizationId();
     await assertCan('dashboard', 'view');
 
-    const page = Math.max(1, params?.page ?? 1);
-    const limit = Math.max(1, Math.min(100, params?.limit ?? ACTIVITY_DEFAULT_PAGE_SIZE));
-    const skip = (page - 1) * limit;
+    // Normalize pagination at the input boundary: page ≥ 1, limit capped [1, 100].
+    // Only the normalized values ever reach Prisma skip/take (and the response shape).
+    const safePage = Math.max(1, Math.trunc(Number(parsed.data.page || 1)));
+    const safeLimit = Math.max(1, Math.min(100, Math.trunc(Number(parsed.data.limit || ACTIVITY_DEFAULT_PAGE_SIZE))));
+    const skip = (safePage - 1) * safeLimit;
 
     const [total, activities] = await Promise.all([
       prisma.commandeActivity.count({
@@ -51,7 +64,7 @@ async function getActivityHandler(params?: { page?: number; limit?: number }): P
         where: { commande: { organizationId } },
         orderBy: { createdAt: 'desc' },
         skip,
-        take: limit,
+        take: safeLimit,
         include: {
           commande: {
             select: { id: true, number: true },
@@ -91,8 +104,8 @@ async function getActivityHandler(params?: { page?: number; limit?: number }): P
       if (ts >= monthStart) totalMonth++;
     }
 
-    const totalPages = Math.ceil(total / limit);
-    const pagination: ActivityPagination = { page, limit, total, totalPages };
+    const totalPages = Math.ceil(total / safeLimit);
+    const pagination: ActivityPagination = { page: safePage, limit: safeLimit, total, totalPages };
 
     return {
       success: true,
