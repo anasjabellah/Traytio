@@ -31,7 +31,7 @@ export function buildInvitationEmailHtml(params: {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Invitation TUR</title>
 </head>
-<body style="margin:0;padding:0;background-color:#faf7f2;font-family:'DM Sans','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<body style="margin:0;padding:0;background-color:#faf7f2;font-family:'Manrope','DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf7f2;padding:40px 20px;">
     <tr>
       <td align="center">

@@ -1,23 +1,16 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import { Manrope } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { frFR } from "@clerk/localizations";
 import { QueryProvider } from "@/providers/query-provider";
 import { ToastProvider } from "@/providers/toast-provider";
 import "./globals.css";
 
-const dmSans = DM_Sans({
+const manrope = Manrope({
   subsets: ["latin"],
   display: "swap",
   weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
-});
-
-const cormorantGaramond = Cormorant_Garamond({
-  subsets: ["latin"],
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-heading",
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -80,7 +73,7 @@ export default function RootLayout({
     <ClerkProvider localization={frFR}>
       <html
         lang="fr"
-        className={`${dmSans.variable} ${cormorantGaramond.variable}`}
+        className={manrope.variable}
       >
         <body>
           <QueryProvider>

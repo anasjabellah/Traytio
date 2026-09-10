@@ -20,7 +20,7 @@ export const authAppearance = {
     colorDanger: "#cc3333",
     colorSuccess: "rgb(16 185 129)",
     borderRadius: "0.75rem",
-    fontFamily: "'DM Sans', system-ui, sans-serif",
+    fontFamily: "'Manrope', system-ui, sans-serif",
     fontSize: "0.875rem",
   },
   layout: {
@@ -51,7 +51,7 @@ export const authAppearance = {
       textAlign: "left",
     },
     headerTitle: {
-      fontFamily: "var(--font-heading), Georgia, serif",
+      fontFamily: "var(--font-heading), system-ui, sans-serif",
       fontSize: "2rem",
       lineHeight: "1.1",
       letterSpacing: "-0.03em",
