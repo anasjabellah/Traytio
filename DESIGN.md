@@ -34,7 +34,7 @@ Traytio follows four principles:
 
 3. **Craft over Chrome** — Decoration serves function. Gold is the single accent — it appears on CTAs, focus rings, chart sparklines, status indicators, and section highlights. It never decorates for its own sake. Transitions are tactile (spring physics, not linear). Cards have quiet borders and diffused shadows — no neon, no glow, no glass gradients.
 
-4. **Dual-Voice Typography** — The brand speaks in two voices: an editorial serif (`Cormorant Garamond`) for headlines, display text, and metric numbers (craft, tradition, authority), and a clean geometric sans (`DM Sans`) for body copy, navigation, and dashboard UI (clarity, precision, modernity). This split mirrors the audience's dual identity — culinary artist and business operator.
+4. **Single-Voice Typography** — The brand speaks in one voice: `Manrope`, used consistently across headings, body copy, metric values, and dashboard UI. Hierarchy is achieved purely through weight contrast (600 page / section / card / KPI, 500 nav / labels, 400 body) and semantic type tokens — never through a decorative serif face.
 
 ### Taste Spectrum Placement
 - **Density**: Level 5 — Balanced. Marketing pages are gallery-airy (`pt-36 pb-24` hero spacing). The dashboard is information-dense but structured with generous padding (`px-6 lg:px-10`), never cramped. Section gaps breathe.
@@ -128,41 +128,45 @@ Traytio follows four principles:
 
 | Role | Font Family | Fallback | Usage |
 |------|-------------|----------|-------|
-| **Display / Heading** | `Cormorant Garamond` | Georgia, serif | All h1–h6, hero headlines, section titles, display metric numbers, dashboard value displays. CSS variable: `--font-heading`. Utility class: `.font-display` |
-| **Body / UI** | `DM Sans` | system-ui, sans-serif | Body copy, navigation, dashboard UI, forms, tables, all reading text, buttons, badges, tooltips. CSS variable: `--font-sans` |
+| **Primary (Display / Body / UI)** | `Manrope` | system-ui, sans-serif | Everything: h1–h6, hero headlines, section/card titles, metric numbers, body copy, navigation, forms, tables, buttons, badges, tooltips. Loaded once via `--font-sans`; `--font-heading` aliases it. Utilities `.font-display`, `font-heading`, `font-sans` all resolve to Manrope. Weights: 400, 500, 600, 700 |
 | **Mono** | `Geist Mono` (via `--font-geist-mono`) | system monospace | Code elements, technical metadata |
 
 ### Type Scale
 
-| Token | Size | CSS Value | Usage |
-|-------|------|-----------|-------|
-| **Hero Display** | `clamp(3rem, 6.5vw, 5.75rem)` | — | Homepage headline. Weight 400, `font-display`, tracking `-0.03em`, leading `0.95` |
-| **Dashboard Title** | `5xl` / `6xl` (`3rem` / `3.75rem`) | `text-5xl lg:text-6xl` | Dashboard page title "Dashboard". Weight 400, `font-display`, leading `1.05` |
-| **Section Heading** | `clamp(1.75rem, 3vw, 2.5rem)` | — | Marketing section titles |
-| **3xl** | `1.875rem` (30px) | `text-3xl` | Card headings, modal titles |
-| **2xl** | `1.5rem` (24px) | `text-2xl` | Feature card titles, metric displays |
-| **xl** | `1.25rem` (20px) | `text-xl` | Sub-headings |
-| **lg** | `1.125rem` (18px) | `text-lg` | Hero subtext, large body |
-| **Base** | `1rem` (16px) | `text-base` | Default body copy, form labels, table cells |
-| **sm** | `0.875rem` (14px) | `text-sm` | Buttons, nav links, form input text, table headers, descriptions |
-| **xs** | `0.75rem` (12px) | `text-xs` | Captions, metadata, timestamps, status indicators, footnotes, footer links |
-| **Caption** | `0.75rem` (12px) | — | Dashboard chart labels, sidebar labels, notification text |
+All dashboard type sizes ship as **semantic tokens** defined in `globals.css` (`@layer utilities`). They apply Manrope weights and tracking, compose with color utilities (e.g. `text-gradient-charcoal`), and are the single source of truth for hierarchy. **Do not use raw `text-3xl`/`text-4xl`/`text-5xl`/`text-6xl` on dashboard headings, KPI values, dialog titles, or card titles** — use the token classes below.
+
+| Token | Class | Size | Usage |
+|-------|-------|------|-------|
+| **Hero Display** (marketing) | — | `clamp(3rem, 6.5vw, 5.75rem)` | Homepage headline. Weight 400, `font-display`, tracking `-0.03em`, leading `0.95` |
+| **Section Heading** (marketing) | — | `clamp(1.75rem, 3vw, 2.5rem)` | Marketing section titles |
+| **Page Title** | `.text-page-title` | `clamp(1.875rem, 3vw, 2.375rem)` (30px → 38px) | Dashboard page `h1` titles. Weight 600, tracking `-0.02em`. Mobile floors at 30px, desktop caps at 38px |
+| **Section Title** | `.text-section-title` | `1.1875rem` (19px) | Dashboard section headings, panel titles, empty-state titles, dialog titles. Weight 600 |
+| **Card Title** | `.text-card-title` | `1.0625rem` (17px) | Card titles. Weight 600 |
+| **KPI Value** | `.text-kpi-value` | `1.4375rem` (23px) | KPI values, chart totals, stat tiles, order totals. Weight 600, `tabular-nums` |
+| **Micro Label** | `.label-micro` | `0.625rem` (10px) | Genuine eyebrow labels — uppercase, tracking `0.16em`, weight 500. Never for form labels; keeps `tracking-wider` table/stat micro-labels distinct |
+| **3xl** | `text-3xl` | `1.875rem` (30px) | Fallback large display where no token applies |
+| **2xl** | `text-2xl` | `1.5rem` (24px) | Fallback large display (e.g. brand name) |
+| **xl** | `text-xl` | `1.25rem` (20px) | Large body |
+| **lg** | `text-lg` | `1.125rem` (18px) | Large body |
+| **Base** | `text-base` | `1rem` (16px) | Default body copy, form labels, table cells |
+| **sm** | `text-sm` | `0.875rem` (14px) | Buttons, nav links, form input text, table headers, descriptions |
+| **xs** | `text-xs` | `0.75rem` (12px) | Captions, metadata, timestamps, status indicators, footnotes |
+| **Caption** | `text-caption` | `0.75rem` (12px) | Dashboard chart labels, sidebar labels, notification text |
 
 ### Typography Rules
 
-- **Display/Headlines (Cormorant Garamond):** Track-tight (`-0.03em` via `.font-display`), compressed leading (`0.95` for hero, `1.05` for dashboard). Weight-driven hierarchy (400 for large display, 500–600 for section heads, `font-medium` for card titles). The italic variant is a signature accent voice — used specifically for the gold gradient hero phrase (`italic text-gradient-gold`)
-- **Body/UI (DM Sans):** Relaxed leading (`1.5`), Steel Muted (`#888888`) for secondary and metadata. Neutral, precise, never decorative. Max line width: `max-w-xl` (approx 576px) for readable text blocks
+- **Display/Headlines (Manrope):** Track-tight (`-0.02em` default, `-0.03em` via `.font-display`), compressed leading. Weight-driven hierarchy via tokens (600 page / section / card / KPI, 500 nav / labels, 400 body). Italic is reserved for the gold gradient hero accent phrase (`italic text-gradient-gold`)
+- **Body/UI (Manrope):** Relaxed leading (`1.65`), Steel Muted (`#888888`) for secondary and metadata. Neutral, precise, never decorative. Max line width: `max-w-xl` (approx 576px) for readable text blocks
 - **Mono:** Reserved for code and technical metadata only
-- **Dashboard Constraint:** All headings use `font-display` (Cormorant Garamond) — including dashboard metric values (`text-gradient-charcoal`). Body text uses `font-sans` (DM Sans) exclusively
+- **Dashboard Constraint:** All dashboard headings use the semantic type tokens (`text-page-title`, `text-section-title`, `text-card-title`, `text-kpi-value`) — Manrope only, no serif, no raw oversized display utilities. KPI values compose `text-kpi-value` with `text-gradient-charcoal` where the design requires the dark gradient
 - **Density Override:** When density exceeds Level 7, all numbers must use Monospace — not currently applicable at Level 5
-- **Tabular Numbers:** Dashboard values use `tabular-nums` for stable alignment when values change
+- **Tabular Numbers:** Dashboard values use `tabular-nums` for stable alignment when values change (baked into `text-kpi-value`)
 
 ### Typography Anti-Patterns (Banned Fonts)
-- `Inter` — BANNED everywhere. Use `DM Sans` for body, `Cormorant Garamond` for display
-- Generic old-style serifs (`Times New Roman`, `Georgia`, `Garamond`, `Palatino`) — BANNED. `Cormorant Garamond` is a distinctive modern serif and is the one allowed exception for the editorial brand voice
-- `Arial` — BANNED as body font
-- No default browser serif stacks — always specify `'Cormorant Garamond'` explicitly for `--font-heading`
-- For purely functional dashboard data views, the heading stack falls back to `DM Sans` weight 600 if serif feels too editorial for the context
+- `Inter`, `Poppins`, `Arial` — BANNED everywhere. Single primary font: `Manrope`
+- ALL serif faces (`Cormorant Garamond`, `Playfair Display`, `Times New Roman`, `Georgia`, `Garamond`, `Palatino`) — BANNED. The application is single-voice sans-serif; hierarchy comes from Manrope weights, never a serif voice
+- No default browser serif stacks — `--font-heading` aliases `--font-sans` (Manrope) in `globals.css`
+- PDF exports may use the user-selectable `pdfFontFamily` setting (Inter / Poppins / DM Sans) — that is the document-renderer feature, independent of the web UI font
 
 ---
 
@@ -191,7 +195,7 @@ Traytio follows four principles:
 | `icon-sm` | 28px (size-7) | — | — | Compact icon |
 | `icon-lg` | 36px (size-9) | — | — | Large icon |
 
-**Marketing buttons (site-specific)** — the Hero and Navbar use custom Charcoal-filled pill buttons: `rounded-full bg-foreground text-primary-foreground px-6 py-3.5 text-sm font-medium shadow-lift hover:shadow-gold transition-all`. This is the only place pill shapes appear — for marketing calls to action.
+**Marketing buttons (site-specific)** — the Hero and Navbar use custom Charcoal-filled pill buttons: `rounded-full bg-foreground text-primary-foreground px-6 py-3.5 text-sm font-semibold shadow-lift hover:shadow-gold transition-all`. This is the only place pill shapes appear — for marketing calls to action.
 
 ### Forms
 
@@ -224,12 +228,12 @@ Traytio follows four principles:
 |------|-------|
 | **Card** | `rounded-xl bg-card ring-1 ring-foreground/10 py-4 px-0` |
 | **Header** | `px-4`, flex row with optional action column |
-| **Title** | `font-heading text-base leading-snug font-medium` — Cormorant Garamond, 16px |
-| **Description** | `text-sm text-muted-foreground` — DM Sans, 14px, steel muted |
+| **Title** | `font-heading text-base leading-snug font-medium` — Manrope, 16px |
+| **Description** | `text-sm text-muted-foreground` — Manrope, 14px, steel muted |
 | **Content** | `px-4` |
 | **Footer** | `rounded-b-xl border-t bg-muted/50 p-4` |
 
-**KPI Cards** (`src/shared/components/kpi-card.tsx`): `rounded-2xl border bg-card p-5 shadow-soft hover:shadow-lift transition-all`. Can accent with `border-gold` and gold radial glow. Features: icon in `size-10 rounded-xl bg-gradient-gold` (accent) or `bg-foreground/[0.04]` (standard), `font-display text-lg sm:text-xl lg:text-2xl` for value, `text-xs uppercase tracking-wider text-muted-foreground` for label, delta badge, sparkline, optional progress bar.
+**KPI Cards** (`src/shared/components/kpi-card.tsx`): `rounded-2xl border bg-card p-5 shadow-soft hover:shadow-lift transition-all`. Can accent with `border-gold` and gold radial glow. Features: icon in `size-10 rounded-xl bg-gradient-gold` (accent) or `bg-foreground/[0.04]` (standard), `text-kpi-value` for value (Manrope 600, `tabular-nums`, 23px — does not shrink at any breakpoint), `text-xs uppercase tracking-wider text-muted-foreground` for label, delta badge, sparkline, optional progress bar.
 
 **Marketing Cards:** Glass-morphism variants (`glass shadow-glass rounded-3xl` with `backdrop-filter: blur(20px)`) for hero dashboard mockup container. Regular cards for pricing and features use border + subtle shadow.
 
@@ -294,7 +298,7 @@ Dashboard widgets follow consistent patterns:
 
 ### Navigation
 
-**Marketing Navbar:** Fixed top, glass effect, rounded-full container. `fixed top-4 left-1/2 -translate-x-1/2 w-[min(1180px,calc(100%-2rem))]`. Gold-accented "T" logo icon, `font-display text-2xl` brand name. Links: `px-4 py-2 rounded-full hover:text-foreground hover:bg-secondary/80`. CTA: Charcoal-filled `rounded-full` pill.
+**Marketing Navbar:** Fixed top, glass effect, rounded-full container. `fixed top-4 left-1/2 -translate-x-1/2 w-[min(1180px,calc(100%-2rem))]`. Gold-accented "T" logo icon, `font-display text-2xl` brand name (Manrope). Links: `px-4 py-2 rounded-full hover:text-foreground hover:bg-secondary/80`. CTA: Charcoal-filled `rounded-full` pill.
 
 **Dashboard Top Bar:** Sticky top (`sticky top-0 z-30 bg-background border-b border-border/50`). Logo left, dynamic nav links (overflow detection via ResizeObserver → "More" dropdown), search (`⌘K`), notification bell with red unread badge, user avatar (charcoal circle with first initial, gold ring on hover), mobile hamburger → Sheet drawer (`SheetContent side="left"`).
 
@@ -313,7 +317,7 @@ Dashboard widgets follow consistent patterns:
 
 | Part | Style |
 |------|-------|
-| **Title** | `font-heading text-base leading-none font-medium` |
+| **Title** | `text-section-title` (Manrope 600, 19px) via shared `DialogTitle` default |
 | **Description** | `text-sm text-muted-foreground` |
 | **Header** | `flex flex-col gap-2` |
 | **Footer** | `-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end` |
@@ -374,7 +378,7 @@ The Hero is the first impression — editorial, warm, and distinctly premium. Tr
 **Structure:**
 - **Asymmetric Layout:** Left text column (1.05fr) paired with a dashboard mockup column (1fr) via CSS Grid: `grid lg:grid-cols-[1.05fr_1fr] gap-14`. Variance Level 7 demands non-centered composition
 - **Atmospheric Background:** Three-layer depth: `bg-gradient-mesh` base → `grid-bg` overlay → gold `radiance` radial gradient at top center. All `pointer-events-none`, sitting behind content. Clean spatial separation — text never overlaps images or background decorative layers
-- **Headline:** `font-display text-[clamp(3rem,6.5vw,5.75rem)] leading-[0.95] tracking-tight`. The signature creative technique: the italic gold gradient phrase (`traiteurs modernes.`) acts as typographic punctuation
+- **Headline:** `font-display text-[clamp(3rem,6.5vw,5.75rem)] leading-[0.95] tracking-tight`. The signature creative technique: the gold gradient phrase (`traiteurs modernes.`) — set in Manrope italic — acts as typographic punctuation
 - **Subtext:** `max-w-xl text-lg text-muted-foreground leading-relaxed` — restrained, explanatory, never hyperbolic
 - **CTA Restraint:** Two CTAs — one primary (Charcoal pill with arrow, `shadow-lift hover:shadow-gold`), one secondary (glass pill with gold play icon). No "Learn more" links. Maximum two, no redundant micro-copy
 - **Social Proof:** Inline: `+1 200 traiteurs nous font déjà confiance` with overlapping gold avatar circles in a flex container
@@ -542,8 +546,8 @@ Traytio uses Tailwind v4 breakpoints (mobile-first):
 Enforced rules that every UI component must follow:
 
 - **No emojis** — anywhere in UI, code, or alt text. Use lucide icons instead
-- **No `Inter` font** — use `DM Sans` (body/UI) and `Cormorant Garamond` (display)
-- **No generic old-style serif fonts** (`Times New Roman`, `Georgia`, `Garamond`) — `Cormorant Garamond` is the one allowed exception
+- **No `Inter`, `Poppins`, or `Arial`** — single primary font: `Manrope`
+- **No serif fonts at all** (`Cormorant Garamond`, `Times New Roman`, `Georgia`, `Garamond`) — Manrope is the only font family; hierarchy comes from weights, not a serif voice
 - **No pure black (`#000000`)** — always Charcoal Ink (`#1A1A1A`) or Charcoal gradient
 - **No neon outer glows** or default box-shadow glow effects
 - **No oversaturated accent colors** — Signal Gold is ~45% saturation, well below the 80% ceiling

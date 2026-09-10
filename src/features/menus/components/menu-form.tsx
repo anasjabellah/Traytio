@@ -89,7 +89,7 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div data-field="name">
-            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Nom *</div>
+            <div className="label-micro text-muted-foreground mb-1.5">Nom *</div>
             <div className={inputClass(errors.name)}>
               <input
                 {...register('name')}
@@ -100,7 +100,7 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
             {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name.message?.toString()}</p>}
           </div>
           <div data-field="category">
-            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Catégorie *</div>
+            <div className="label-micro text-muted-foreground mb-1.5">Catégorie *</div>
             <Controller
               name="category"
               control={control}
@@ -141,7 +141,7 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
             {errors.category && <p className="text-xs text-red-600 mt-1">{errors.category.message?.toString()}</p>}
           </div>
           <div data-field="pricePerPerson">
-            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Prix par table (MAD) *</div>
+            <div className="label-micro text-muted-foreground mb-1.5">Prix par table (MAD) *</div>
             <div className={inputClass(errors.pricePerPerson)}>
               <span className="text-sm text-muted-foreground">MAD</span>
               <input
@@ -155,7 +155,7 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
             {errors.pricePerPerson && <p className="text-xs text-red-600 mt-1">{errors.pricePerPerson.message?.toString()}</p>}
           </div>
           <div data-field="minPersons">
-            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Min. tables</div>
+            <div className="label-micro text-muted-foreground mb-1.5">Min. tables</div>
             <div className={inputClass(errors.minPersons)}>
               <input
                 type="number"
@@ -166,7 +166,7 @@ export function MenuForm({ onSubmit, isLoading = false, mode }: MenuFormProps) {
             </div>
           </div>
           <div data-field="maxPersons">
-            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Max. tables *</div>
+            <div className="label-micro text-muted-foreground mb-1.5">Max. tables *</div>
             <div className={inputClass(errors.maxPersons)}>
               <input
                 type="number"

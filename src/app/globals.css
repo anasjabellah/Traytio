@@ -158,8 +158,11 @@
   --charcoal: oklch(0.18 0.012 70);
 
   /* Typography */
-  /* --font-sans and --font-heading are provided by next/font/google
-     in the root layout (DM Sans, Cormorant Garamond) */
+  /* Manrope is loaded by next/font/google in the root layout and applied to
+     `--font-sans` (the single global font). `--font-heading` aliases it so
+     heading utilities, `.font-display` and all h1–h6 resolve to the same
+     Manrope stack across the entire application — no serif anywhere. */
+  --font-heading: var(--font-sans);
 
   /* =========================================================
      PREMIUM GRADIENTS
@@ -282,6 +285,45 @@
     font-family: var(--font-heading);
     font-weight: 600;
     letter-spacing: -0.03em;
+  }
+
+  /* =========================================================
+     SEMANTIC TYPE TOKENS
+     Single source of truth for dashboard typography hierarchy.
+     Applies Manrope weights only — no new fonts, no serif.
+     These compose with utilities like `text-gradient-charcoal`.
+  ========================================================= */
+
+  .text-page-title {
+    font-size: clamp(1.875rem, 3vw, 2.375rem); /* 30px → 38px */
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .text-section-title {
+    font-size: 1.1875rem; /* 19px */
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .text-card-title {
+    font-size: 1.0625rem; /* 17px */
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .text-kpi-value {
+    font-size: 1.4375rem; /* 23px */
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .label-micro {
+    font-size: 0.625rem; /* 10px */
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
   }
 
   .text-gradient-gold {

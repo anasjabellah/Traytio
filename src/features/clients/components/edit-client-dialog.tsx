@@ -63,7 +63,7 @@ export function EditClientDialog({ client, open, onOpenChange, onSuccess }: Edit
       <DialogContent className="flex flex-col p-0 gap-0 w-[90vw] max-w-[800px] !max-w-[800px] rounded-xl border border-[#e2e2e2] shadow-lg overflow-hidden max-h-[90vh]">
         {/* FIXED HEADER */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-[#e2e2e2] shrink-0">
-          <DialogTitle className="font-heading text-2xl font-medium text-[#1a1a1a]">Modifier le client</DialogTitle>
+          <DialogTitle className="text-section-title text-[#1a1a1a]">Modifier le client</DialogTitle>
           <div className="w-8 h-0.5 bg-[#C9A96E] mt-2 mb-1" />
           <DialogDescription className="text-sm text-[#888888]">
             Modifiez les informations du client ci-dessous.

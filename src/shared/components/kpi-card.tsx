@@ -142,7 +142,7 @@ export function KpiCard({
           <div className="text-xs uppercase tracking-wider text-muted-foreground">
             {label}
           </div>
-          <div className="mt-3 font-display text-lg sm:text-xl lg:text-2xl xl:text-lg tabular-nums">
+          <div className="mt-3 text-kpi-value">
             <SensitiveValue
               hidden={sensitive && isPrivacyMode}
               className="text-gradient-charcoal"

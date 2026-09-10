@@ -203,7 +203,7 @@ export default function TeamPageClient({ initialData }: TeamPageClientProps) {
                 <span className="text-muted-foreground/40 mx-1">•</span>
                 <span>{stats?.totalMembers ?? 0} membre{(stats?.totalMembers ?? 0) > 1 ? 's' : ''}</span>
               </div>
-              <h1 className="font-display text-4xl lg:text-5xl text-gradient-charcoal leading-[1.05]">
+              <h1 className="text-page-title text-gradient-charcoal leading-[1.05]">
                 Équipe
               </h1>
               <p className="mt-2 text-muted-foreground max-w-2xl">
@@ -310,7 +310,7 @@ export default function TeamPageClient({ initialData }: TeamPageClientProps) {
                     <div className="flex items-center justify-between px-6 pt-5 pb-3">
                       <div>
                         <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Effectif</div>
-                        <h3 className="font-display text-xl mt-0.5">Tous les membres</h3>
+                        <h3 className="text-section-title mt-0.5">Tous les membres</h3>
                       </div>
                       <span className="text-xs text-muted-foreground/60">{filteredMembers.length} membre{filteredMembers.length > 1 ? 's' : ''}</span>
                     </div>
@@ -355,7 +355,7 @@ export default function TeamPageClient({ initialData }: TeamPageClientProps) {
 
                   <div className="md:hidden space-y-3">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-display text-xl">Tous les membres</h3>
+                      <h3 className="text-section-title">Tous les membres</h3>
                       <span className="text-xs text-muted-foreground/60">{filteredMembers.length} membre{filteredMembers.length > 1 ? 's' : ''}</span>
                     </div>
                     {filteredMembers.map((member, idx) => (
@@ -775,7 +775,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
       <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[var(--gold-soft)]">
         <Users className="h-7 w-7 text-[var(--gold-deep)]" />
       </div>
-      <h3 className="mt-5 font-display text-2xl tracking-tight text-charcoal">Aucun membre</h3>
+      <h3 className="mt-5 text-section-title text-charcoal">Aucun membre</h3>
       <p className="mt-2 max-w-md text-sm text-muted-foreground">
         Invitez des collaborateurs à rejoindre votre organisation pour travailler ensemble.
       </p>
@@ -794,7 +794,7 @@ function NoResultsEmpty({ query, onClear }: { query: string; onClear: () => void
           <Search className="size-9 text-muted-foreground/30" strokeWidth={1.2} />
         </div>
         <div>
-          <h3 className="font-display text-2xl text-foreground">Aucun résultat</h3>
+          <h3 className="text-section-title text-foreground">Aucun résultat</h3>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
             Aucun membre ne correspond à votre recherche &laquo; <span className="font-medium text-foreground">{query}</span> &raquo;
           </p>

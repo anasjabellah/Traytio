@@ -15,7 +15,7 @@ export const TodayEventsWidget = memo(function TodayEventsWidget({ events }: { e
       <div className="flex items-center justify-between mb-4">
         <div>
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Aujourd&rsquo;hui</div>
-          <h3 className="font-display text-xl mt-1">Programme du jour</h3>
+          <h3 className="text-section-title mt-1">Programme du jour</h3>
         </div>
         <span className="text-xs text-muted-foreground">{events.length}</span>
       </div>
@@ -54,7 +54,7 @@ export const ActivityFeedWidget = memo(function ActivityFeedWidget({ activity }:
       <div className="flex items-center justify-between mb-4 shrink-0">
         <div>
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Temps r&eacute;el</div>
-          <h3 className="font-display text-xl mt-1">Activit&eacute; r&eacute;cente</h3>
+          <h3 className="text-section-title mt-1">Activit&eacute; r&eacute;cente</h3>
         </div>
       </div>
       {activity.length === 0 ? (
@@ -93,7 +93,7 @@ export const QuickStatsWidget = memo(function QuickStatsWidget({ stats }: { stat
     <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
       <div className="mb-4">
         <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Indicateurs</div>
-        <h3 className="font-display text-xl mt-1">Stats rapides</h3>
+        <h3 className="text-section-title mt-1">Stats rapides</h3>
       </div>
       <div className="space-y-4">
         {[

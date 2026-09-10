@@ -29,7 +29,7 @@ export function ClientDialogWrapper({
       <DialogContent className="flex flex-col p-0 gap-0 w-[calc(100vw-2rem)] sm:max-w-[600px] md:max-w-[800px] rounded-xl border border-[#e2e2e2] shadow-lg overflow-hidden max-h-[85vh]">
         {/* FIXED HEADER */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-[#e2e2e2] shrink-0">
-          <DialogTitle className="font-heading text-2xl font-medium text-[#1a1a1a]">{title}</DialogTitle>
+          <DialogTitle className="text-section-title text-[#1a1a1a]">{title}</DialogTitle>
           <div className="w-8 h-0.5 bg-[#C9A96E] mt-2 mb-1" />
           <DialogDescription className="text-sm text-[#888888]">
             {description}

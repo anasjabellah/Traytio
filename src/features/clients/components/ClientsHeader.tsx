@@ -17,7 +17,7 @@ export function ClientsHeader({ clients, total, onCreate }: {
           <Sparkles className="size-3.5 text-[var(--gold-deep)]" />
           <span>Gestion des clients &bull; {total} au total</span>
         </div>
-        <h1 className="font-display text-5xl lg:text-6xl text-gradient-charcoal leading-[1.05]">
+        <h1 className="text-page-title text-gradient-charcoal leading-[1.05]">
           Clients
         </h1>
         <p className="mt-3 text-muted-foreground max-w-xl">

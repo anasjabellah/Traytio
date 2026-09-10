@@ -46,19 +46,19 @@ function LivePreview() {
       <div className="rounded-2xl border border-border/60 bg-surface-soft p-4">
         <div className="flex items-center gap-2 mb-4">
           <Sparkles className="h-3.5 w-3.5 text-[var(--gold-deep)]" />
-          <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-medium">Aperçu</span>
+          <span className="label-micro text-muted-foreground font-medium">Aperçu</span>
         </div>
 
         <div className="space-y-3">
           <div>
-            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Nom</span>
+            <span className="label-micro text-muted-foreground">Nom</span>
             <p className="font-display text-lg text-charcoal leading-tight mt-0.5">
               {name || 'Nom du menu'}
             </p>
           </div>
 
           <div>
-            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Catégorie</span>
+            <span className="label-micro text-muted-foreground">Catégorie</span>
             <div className="mt-1">
               {catLabel ? (
                 <span className={cn('inline-block rounded-full px-2 py-0.5 text-xs font-medium', catColor)}>
@@ -72,28 +72,28 @@ function LivePreview() {
           </div>
 
           <div>
-            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Prix / table</span>
+            <span className="label-micro text-muted-foreground">Prix / table</span>
             <p className="font-display text-xl text-charcoal tabular-nums mt-0.5">
               {pricePerPerson ? formatCurrency(pricePerPerson) : '—'}
             </p>
           </div>
 
           <div>
-            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Tables</span>
+            <span className="label-micro text-muted-foreground">Tables</span>
             <p className="font-display text-lg text-charcoal tabular-nums mt-0.5">
               {minPersons ? `${minPersons}` : '—'}{maxPersons ? ` – ${maxPersons}` : ''}
             </p>
           </div>
 
           <div>
-            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Articles</span>
+            <span className="label-micro text-muted-foreground">Articles</span>
             <p className="font-display text-lg text-charcoal tabular-nums mt-0.5">
               {itemsCount > 0 ? `${itemsCount} article${itemsCount > 1 ? 's' : ''}` : '—'}
             </p>
           </div>
 
           <div>
-            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Statut</span>
+            <span className="label-micro text-muted-foreground">Statut</span>
             <div className="mt-1">
               <span className={cn('inline-block rounded-full px-2 py-0.5 text-[10px] font-medium shadow-sm', isActive !== false ? 'bg-emerald-600/85 text-white' : 'bg-zinc-500/70 text-white')}>
                 {isActive !== false ? '● Actif' : '○ Inactif'}
@@ -103,7 +103,7 @@ function LivePreview() {
 
           {preview.length > 0 && (
             <div>
-              <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Inclus</span>
+              <span className="label-micro text-muted-foreground">Inclus</span>
               <div className="mt-1 flex flex-wrap gap-1">
                 {preview.map((item: { displayName?: string; defaultQty?: number }, i: number) => (
                   <span key={i} className="inline-flex items-center gap-0.5 rounded-full bg-white px-1.5 py-0.5 text-[10px] text-muted-foreground shadow-sm border border-border">
@@ -173,7 +173,7 @@ export function CreateMenuDialog({ open, onOpenChange, onSuccess }: CreateMenuDi
           <DialogHeader className="px-8 pt-7 pb-5 border-b border-border shrink-0">
             <div className="flex items-start justify-between">
               <div>
-                <DialogTitle className="font-display text-3xl tracking-tight text-charcoal">
+                <DialogTitle className="text-section-title text-charcoal">
                   Créer un menu
                 </DialogTitle>
                 <DialogDescription className="text-sm text-muted-foreground mt-1.5">

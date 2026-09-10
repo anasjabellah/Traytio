@@ -34,7 +34,7 @@ export function SummaryPanel(props: {
       <div className="absolute inset-x-0 top-0 h-32 bg-gradient-mesh opacity-50 pointer-events-none" />
       <div className="relative p-6">
         <div className="flex items-center justify-between">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Résumé en direct</div>
+          <div className="label-micro text-muted-foreground">Résumé en direct</div>
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[10px] font-medium">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
           </span>
@@ -78,8 +78,8 @@ export function SummaryPanel(props: {
           <Row label="Frais supplémentaires" value={extrasTotal} />
           {discountAmount > 0 && <Row label="Remise" value={-discountAmount} accent="text-emerald-700" />}
           <div className="flex items-end justify-between pt-3">
-            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Total</span>
-            <motion.span key={total} initial={{ y: -3, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="font-display text-3xl tabular-nums">
+            <span className="label-micro text-muted-foreground">Total</span>
+            <motion.span key={total} initial={{ y: -3, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-kpi-value">
               {total.toLocaleString("fr-MA", { maximumFractionDigits: 0 })} MAD
             </motion.span>
           </div>

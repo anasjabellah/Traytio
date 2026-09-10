@@ -136,7 +136,7 @@ function PdfSettingsPageContent() {
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl text-gradient-charcoal leading-[1.05]">
+              <h1 className="text-page-title text-gradient-charcoal leading-[1.05]">
                 Paramètres PDF
               </h1>
               <p className="text-sm text-muted-foreground mt-1.5">

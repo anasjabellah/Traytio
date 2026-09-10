@@ -169,7 +169,7 @@ export function CommandesPageClient({ initialData }: CommandesPageClientProps) {
           </div>
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <h1 className="font-display text-4xl lg:text-5xl text-gradient-charcoal leading-[1.05]">
+              <h1 className="text-page-title text-gradient-charcoal leading-[1.05]">
                 Commandes
               </h1>
               {subtitleParts.length > 0 && (
@@ -330,7 +330,7 @@ export function CommandesPageClient({ initialData }: CommandesPageClientProps) {
                     <div className="flex items-center justify-between px-4 sm:px-6 pt-5 pb-3">
                       <div>
                         <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Liste</div>
-                        <h3 className="font-display text-xl mt-0.5">Toutes les commandes</h3>
+                        <h3 className="text-section-title mt-0.5">Toutes les commandes</h3>
                       </div>
                       <span className="text-xs text-muted-foreground/60">
                         {isLoading ? '…' : `${commandes.length} résultat${commandes.length > 1 ? 's' : ''}`}
@@ -362,7 +362,7 @@ export function CommandesPageClient({ initialData }: CommandesPageClientProps) {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Liste</div>
-                      <h3 className="font-display text-xl mt-0.5">Toutes les commandes</h3>
+                      <h3 className="text-section-title mt-0.5">Toutes les commandes</h3>
                     </div>
                     <span className="text-xs text-muted-foreground/60">
                       {isLoading ? '…' : `${commandes.length} résultat${commandes.length > 1 ? 's' : ''}`}
@@ -402,7 +402,7 @@ export function CommandesPageClient({ initialData }: CommandesPageClientProps) {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Vue grille</div>
-                    <h3 className="font-display text-xl mt-0.5">Aperçu des commandes</h3>
+                    <h3 className="text-section-title mt-0.5">Aperçu des commandes</h3>
                   </div>
                   <span className="text-xs text-muted-foreground/60">
                     {isLoading ? '…' : `${commandes.length} commande${commandes.length > 1 ? 's' : ''}`}

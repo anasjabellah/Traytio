@@ -163,7 +163,7 @@ function MenusPageContent({ initialData }: { initialData?: PaginatedMenus | null
               <span className="text-muted-foreground/40 mx-1">•</span>
               <span>{pagination.total} au total</span>
             </div>
-            <h1 className="font-display text-5xl lg:text-6xl text-gradient-charcoal leading-[1.05]">
+            <h1 className="text-page-title text-gradient-charcoal leading-[1.05]">
               Menus
             </h1>
             <p className="mt-3 text-muted-foreground max-w-2xl">
@@ -293,7 +293,7 @@ function MenusPageContent({ initialData }: { initialData?: PaginatedMenus | null
                   <div className="flex items-center justify-between px-6 pt-5 pb-3">
                     <div>
                       <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Liste</div>
-                      <h3 className="font-display text-xl mt-0.5">Tous les menus</h3>
+                      <h3 className="text-section-title mt-0.5">Tous les menus</h3>
                     </div>
                     <span className="text-xs text-muted-foreground/60">{pagination.total} résultat{pagination.total > 1 ? 's' : ''}</span>
                   </div>
@@ -302,7 +302,7 @@ function MenusPageContent({ initialData }: { initialData?: PaginatedMenus | null
 
                 <div className="md:hidden space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-display text-xl">Tous les menus</h3>
+                    <h3 className="text-section-title">Tous les menus</h3>
                     <span className="text-xs text-muted-foreground/60">{pagination.total} résultat{pagination.total > 1 ? 's' : ''}</span>
                   </div>
                   <div className="space-y-3">
@@ -368,7 +368,7 @@ function KpiCard({ label, value, icon: Icon, accent, gold, delay }: { label: str
         </div>
         {gold && <Crown className="absolute top-0 right-0 size-3.5 text-[var(--gold-deep)]" />}
       </div>
-      <div className="relative font-display text-4xl leading-none tracking-tight text-charcoal tabular-nums">{v}</div>
+      <div className="relative text-kpi-value leading-none text-charcoal">{v}</div>
     </motion.div>
   );
 }
@@ -388,7 +388,7 @@ function MostCompleteCard({ menu, onView }: { menu: Menu; onView: () => void }) 
             <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--gold)]/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--gold-deep)]">
               <Star className="size-3" /> Le plus complet
             </div>
-            <div className="mt-3 font-display text-2xl leading-tight text-charcoal">{menu.name}</div>
+            <div className="mt-3 text-card-title text-charcoal">{menu.name}</div>
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
                 <Utensils className="size-3.5 text-[var(--gold-deep)]" />
@@ -504,7 +504,7 @@ function PackCard({ menu, onView, onEdit, onDelete }: {
       <div className="p-5">
         {/* Title row */}
         <div className="flex items-start justify-between gap-3">
-          <h3 className="font-display text-2xl leading-snug tracking-tight text-stone-900">{menu.name}</h3>
+          <h3 className="text-card-title leading-snug text-stone-900">{menu.name}</h3>
           <ArrowUpRight className="mt-1 h-5 w-5 shrink-0 text-stone-400 transition-all duration-300 group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:scale-110 group-hover:text-stone-900" />
         </div>
         <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-stone-500">{menu.description || '—'}</p>
@@ -745,7 +745,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
       <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[var(--gold-soft)]">
         <Sparkles className="h-7 w-7 text-[var(--gold-deep)]" />
       </div>
-      <h3 className="mt-5 font-display text-2xl tracking-tight text-charcoal">Aucun Menu</h3>
+      <h3 className="mt-5 text-section-title text-charcoal">Aucun Menu</h3>
       <p className="mt-2 max-w-md text-sm text-muted-foreground">Commencez par créer votre premier menu — formules mariage, buffet, cocktail, brunch… tout ce que vous proposez à vos clients.</p>
       <Button onClick={onCreate} className="mt-6 gap-2 bg-gradient-charcoal text-white shadow-lift hover:opacity-90">
         <Plus className="size-4" /> Créer un Menu
@@ -762,7 +762,7 @@ function NoResultsEmpty({ query, onClear }: { query: string; onClear: () => void
           <Search className="size-9 text-muted-foreground/30" strokeWidth={1.2} />
         </div>
         <div>
-          <h3 className="font-display text-2xl text-foreground">Aucun résultat</h3>
+          <h3 className="text-section-title text-foreground">Aucun résultat</h3>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
             Aucun menu ne correspond à votre recherche &laquo; <span className="font-medium text-foreground">{query}</span> &raquo;
           </p>

@@ -96,7 +96,7 @@ export function DeleteConfirmDialog({
                 <AlertTriangle className="size-6 text-red-600" strokeWidth={1.8} />
               </div>
               <div>
-                <h3 id="delete-dialog-title" className="font-display text-xl">
+                <h3 id="delete-dialog-title" className="text-section-title">
                   {title}
                 </h3>
                 <div className="text-sm text-muted-foreground mt-2">

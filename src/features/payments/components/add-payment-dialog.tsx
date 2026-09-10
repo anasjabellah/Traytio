@@ -139,7 +139,7 @@ export function AddPaymentDialog({
               <Wallet className="size-4.5 text-[var(--gold-deep)]" strokeWidth={1.8} />
             </div>
             <div>
-              <DialogTitle className="font-display text-lg font-semibold text-foreground">
+              <DialogTitle className="text-section-title text-foreground">
                 {defaultAmount ? "Encaisser l'acompte" : "Ajouter un paiement"}
               </DialogTitle>
             </div>

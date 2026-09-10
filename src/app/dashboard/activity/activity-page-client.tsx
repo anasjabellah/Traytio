@@ -51,7 +51,7 @@ function PageContent({ initialData }: { initialData?: ActivityFeedResponse | nul
               <Activity className="size-5 text-gold-foreground" strokeWidth={1.5} />
             </div>
             <div>
-              <h1 className="font-display text-2xl sm:text-3xl font-medium leading-tight text-foreground">
+              <h1 className="text-page-title leading-tight text-foreground">
                 Activit&eacute;
               </h1>
               <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">

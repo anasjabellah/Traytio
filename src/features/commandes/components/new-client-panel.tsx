@@ -30,8 +30,8 @@ export function NewClientPanel({ onClose, onCreate }: { onClose: () => void; onC
       >
         <header className="flex items-center justify-between px-7 py-6 border-b border-border">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Nouveau</div>
-            <h3 className="font-display text-3xl">Créer un client</h3>
+            <div className="label-micro text-muted-foreground">Nouveau</div>
+            <h3 className="text-section-title">Créer un client</h3>
           </div>
           <button onClick={onClose} className="h-9 w-9 rounded-full hover:bg-secondary flex items-center justify-center">
             <X className="h-4 w-4" />

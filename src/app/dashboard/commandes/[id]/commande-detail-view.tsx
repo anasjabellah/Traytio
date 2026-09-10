@@ -382,7 +382,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
               <span className="text-[11px] uppercase tracking-[0.1em] text-foreground/50 font-semibold mb-1 block">
                 Commande
               </span>
-              <h1 className="font-display text-2xl sm:text-3xl lg:text-5xl text-gradient-charcoal leading-[1.05] tracking-tight break-words">
+              <h1 className="text-page-title text-gradient-charcoal leading-[1.05] break-words">
                 {commande.number}
               </h1>
             </div>
@@ -418,7 +418,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
               <div className="flex items-start justify-between">
                 <div className="min-w-0">
                   <div className="text-xs uppercase tracking-wider text-muted-foreground">Total</div>
-                  <div className="mt-2 sm:mt-3 font-display text-lg sm:text-2xl lg:text-4xl tabular-nums text-gradient-charcoal break-words">{madFull(total)}</div>
+                  <div className="mt-2 sm:mt-3 text-kpi-value text-gradient-charcoal break-words">{madFull(total)}</div>
                 </div>
                 <div className="size-10 shrink-0 rounded-xl flex items-center justify-center bg-gradient-gold text-[var(--gold-foreground)]">
                   <Wallet className="size-5" strokeWidth={1.8} />
@@ -437,7 +437,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
               <div className="flex items-start justify-between">
                 <div className="min-w-0">
                   <div className="text-xs uppercase tracking-wider text-muted-foreground">Payé</div>
-                  <div className="mt-2 sm:mt-3 font-display text-lg sm:text-2xl lg:text-4xl tabular-nums text-emerald-600 break-words">{madFull(paid)}</div>
+                  <div className="mt-2 sm:mt-3 text-kpi-value text-emerald-600 break-words">{madFull(paid)}</div>
                 </div>
                 <div className="size-10 shrink-0 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-600">
                   <CheckCircle2 className="size-5" strokeWidth={1.8} />
@@ -456,7 +456,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
               <div className="flex items-start justify-between">
                 <div className="min-w-0">
                   <div className="text-xs uppercase tracking-wider text-muted-foreground">Reste</div>
-                  <div className={`mt-2 sm:mt-3 font-display text-lg sm:text-2xl lg:text-4xl tabular-nums break-words ${remaining > 0 ? "text-amber-600" : "text-emerald-600"}`}>
+                  <div className={`mt-2 sm:mt-3 text-kpi-value break-words ${remaining > 0 ? "text-amber-600" : "text-emerald-600"}`}>
                     {remaining > 0 ? madFull(remaining) : "0 MAD"}
                   </div>
                 </div>
@@ -481,7 +481,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
               <div className="flex items-start justify-between">
                 <div className="min-w-0">
                   <div className="text-xs uppercase tracking-wider text-muted-foreground">Tables</div>
-                  <div className="mt-2 sm:mt-3 font-display text-2xl sm:text-3xl lg:text-4xl tabular-nums text-gradient-charcoal">
+                  <div className="mt-2 sm:mt-3 text-kpi-value text-gradient-charcoal">
                     {commande.guestCount ? `${commande.guestCount}` : "—"}
                   </div>
                 </div>
@@ -518,7 +518,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                   <div className="size-7 rounded-lg bg-foreground/[0.04] flex items-center justify-center">
                     <Receipt className="size-3.5 text-foreground/70" strokeWidth={1.8} />
                   </div>
-                  <h4 className="font-display text-sm font-semibold text-foreground">Articles</h4>
+                  <h4 className="text-section-title text-foreground">Articles</h4>
                   <span className="text-xs text-foreground/50 ml-auto">{commande.items.length} article{commande.items.length > 1 ? "s" : ""}</span>
                 </div>
                 {/* ─── Desktop table ─── */}
@@ -603,7 +603,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                   <div className="size-7 rounded-lg bg-foreground/[0.04] flex items-center justify-center">
                     <PartyPopper className="size-3.5 text-foreground/70" strokeWidth={1.8} />
                   </div>
-                  <h4 className="font-display text-sm font-semibold text-foreground">Informations de l&apos;événement</h4>
+                  <h4 className="text-section-title text-foreground">Informations de l&apos;événement</h4>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
@@ -720,7 +720,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                   <div className="size-7 rounded-lg bg-gradient-gold text-[var(--gold-foreground)] flex items-center justify-center">
                     <Wallet className="size-3.5" strokeWidth={1.8} />
                   </div>
-                  <h4 className="font-display text-sm font-semibold text-foreground">Résumé financier</h4>
+                  <h4 className="text-section-title text-foreground">Résumé financier</h4>
                 </div>
                 <div className="space-y-2">
                   <FinRow label="Sous-total articles" value={madFull(itemsSubtotal)} />
@@ -804,7 +804,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                   <div className="size-7 rounded-lg bg-foreground/[0.04] flex items-center justify-center">
                     <FileText className="size-3.5 text-foreground/70" strokeWidth={1.8} />
                   </div>
-                  <h4 className="font-display text-sm font-semibold text-foreground">Notes</h4>
+                  <h4 className="text-section-title text-foreground">Notes</h4>
                 </div>
                 {noteTabs.length > 1 && (
                   <div className="flex items-center gap-1.5 mb-4">
@@ -844,7 +844,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                 <div className="size-7 rounded-lg bg-foreground/[0.04] flex items-center justify-center">
                   <Sparkles className="size-3.5 text-foreground/70" strokeWidth={1.8} />
                 </div>
-                <h4 className="font-display text-sm font-semibold text-foreground">Activité</h4>
+                <h4 className="text-section-title text-foreground">Activité</h4>
                 <span className="text-xs text-foreground/50 ml-auto">{activities.length} événement{activities.length > 1 ? "s" : ""}</span>
               </div>
               <div className="relative">
@@ -882,7 +882,7 @@ export default function CommandeDetailView({ commande }: { commande: CommandeWit
                 <div className="size-7 rounded-lg bg-foreground/[0.04] flex items-center justify-center">
                   <FileText className="size-3.5 text-foreground/70" strokeWidth={1.8} />
                 </div>
-                <h4 className="font-display text-sm font-semibold text-foreground">Devis & Factures</h4>
+                <h4 className="text-section-title text-foreground">Devis & Factures</h4>
                 <span className="text-xs text-foreground/50 ml-auto">{invoices.length} document{invoices.length > 1 ? "s" : ""}</span>
               </div>
               {invoicesLoading ? (

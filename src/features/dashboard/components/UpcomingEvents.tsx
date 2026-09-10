@@ -13,7 +13,7 @@ export const UpcomingEvents = memo(function UpcomingEvents({ events }: { events:
       <div className="flex items-center justify-between mb-5">
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Agenda</div>
-          <h3 className="font-display text-2xl mt-1">Prochains &eacute;v&eacute;nements</h3>
+          <h3 className="text-section-title mt-1">Prochains &eacute;v&eacute;nements</h3>
         </div>
         <Link href="/dashboard/events" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
           Tout voir <ArrowRight className="size-3" />

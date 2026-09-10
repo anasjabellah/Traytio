@@ -11,8 +11,8 @@ export function FinancialCard({ label, value, highlight, muted }: { label: strin
         ? "bg-surface-soft border border-border"
         : "bg-card border border-border"
     }`}>
-      <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{label}</div>
-      <motion.div key={value} initial={{ y: -3, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mt-2 font-display text-3xl tabular-nums">
+      <div className="label-micro text-muted-foreground">{label}</div>
+      <motion.div key={value} initial={{ y: -3, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mt-2 text-kpi-value">
         {value.toLocaleString("fr-MA", { maximumFractionDigits: 0 })} MAD
       </motion.div>
     </div>

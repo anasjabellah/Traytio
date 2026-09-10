@@ -10,7 +10,7 @@ export function NoClientsEmptyState({ onAdd }: { onAdd: () => void }) {
           <Users className="size-9 text-muted-foreground/30" strokeWidth={1.2} />
         </div>
         <div>
-          <h3 className="font-display text-2xl text-foreground">Aucun client</h3>
+          <h3 className="text-section-title text-foreground">Aucun client</h3>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
             Votre portefeuille clients est vide. <br />
             Commencez par ajouter votre premier client.
@@ -36,7 +36,7 @@ export function NoResultsEmptyState({ query, onClear }: { query: string; onClear
           <Search className="size-9 text-muted-foreground/30" strokeWidth={1.2} />
         </div>
         <div>
-          <h3 className="font-display text-2xl text-foreground">Aucun r&eacute;sultat</h3>
+          <h3 className="text-section-title text-foreground">Aucun r&eacute;sultat</h3>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
             Aucun client ne correspond &agrave; votre recherche <br />
             &laquo; <span className="font-medium text-foreground">{query}</span> &raquo;

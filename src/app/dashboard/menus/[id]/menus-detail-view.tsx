@@ -81,7 +81,7 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
                 <Sparkles className="size-3 text-[var(--gold-deep)]" />
                 <span>Détail du menu</span>
               </div>
-              <h1 className="font-display text-4xl lg:text-5xl text-gradient-charcoal leading-[1.05]">
+              <h1 className="text-page-title text-gradient-charcoal leading-[1.05]">
                 {menu.name}
               </h1>
               <div className="flex flex-wrap items-center gap-2 mt-3">
@@ -176,7 +176,7 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
             >
               <div className="flex items-center gap-2 mb-5">
                 <FileText className="size-4 text-muted-foreground" />
-                <h3 className="font-display text-xl">Informations</h3>
+                <h3 className="text-section-title">Informations</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 <InfoItem icon={Package} label="Catégorie" value={CATEGORY_LABELS[menu.category] || menu.category} />
@@ -197,7 +197,7 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
             >
               <div className="flex items-center gap-2 mb-5">
                 <FileText className="size-4 text-muted-foreground" />
-                <h3 className="font-display text-xl">Description</h3>
+                <h3 className="text-section-title">Description</h3>
               </div>
               {menu.description ? (
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{menu.description}</p>
@@ -220,7 +220,7 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
                 <div className="p-6 pb-4">
                   <div className="flex items-center gap-2 mb-1">
                     <Utensils className="size-4 text-muted-foreground" />
-                    <h3 className="font-display text-xl">Composition du Menu</h3>
+                    <h3 className="text-section-title">Composition du Menu</h3>
                   </div>
                 </div>
                 <div className="divide-y divide-border">
@@ -277,7 +277,7 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
             >
               <div className="flex items-center gap-2 mb-4">
                 <Crown className="size-4 text-[var(--gold-deep)]" />
-                <h3 className="font-display text-xl">Catégorie</h3>
+                <h3 className="text-section-title">Catégorie</h3>
               </div>
               <div className="flex items-center gap-3">
                 <div className="size-10 rounded-full bg-gradient-to-br from-[var(--gold-soft)] to-[var(--gold-deep)]/20 flex items-center justify-center">
@@ -301,7 +301,7 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
             >
               <div className="flex items-center gap-2 mb-4">
                 <BarChart3 className="size-4 text-muted-foreground" />
-                <h3 className="font-display text-xl">Statistiques</h3>
+                <h3 className="text-section-title">Statistiques</h3>
               </div>
               <div className="space-y-4">
                 <div>
@@ -332,7 +332,7 @@ export default function MenuDetailView({ menu }: { menu: Menu }) {
             >
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="size-4 text-muted-foreground" />
-                <h3 className="font-display text-xl">Activité</h3>
+                <h3 className="text-section-title">Activité</h3>
               </div>
               <div className="relative space-y-0">
                 <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border" />

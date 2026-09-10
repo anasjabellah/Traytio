@@ -11,7 +11,7 @@ export const QuickActions = memo(function QuickActions() {
     <div className="rounded-2xl border border-border bg-card shadow-soft p-6">
       <div className="mb-5">
         <div className="text-xs uppercase tracking-wider text-muted-foreground">Raccourcis</div>
-        <h3 className="font-display text-2xl mt-1">Actions rapides</h3>
+        <h3 className="text-section-title mt-1">Actions rapides</h3>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {ACTIONS.map((a) => {

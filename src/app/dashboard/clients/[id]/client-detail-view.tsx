@@ -113,7 +113,7 @@ export default function ClientDetailView({ client }: { client: ClientWithStats }
                   {initials}
                 </div>
                 <div>
-                  <h1 className="font-display text-4xl lg:text-5xl text-gradient-charcoal leading-[1.05]">
+                  <h1 className="text-page-title text-gradient-charcoal leading-[1.05]">
                     {client.name}
                   </h1>
                   <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -184,7 +184,7 @@ export default function ClientDetailView({ client }: { client: ClientWithStats }
             >
               <div className="flex items-center gap-2 mb-5">
                 <User className="size-4 text-muted-foreground" />
-                <h3 className="font-display text-xl">Contact</h3>
+                <h3 className="text-section-title">Contact</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 <InfoItem icon={Mail} label="Email" value={client.email || "Aucun email renseigné"} />
@@ -208,7 +208,7 @@ export default function ClientDetailView({ client }: { client: ClientWithStats }
             >
               <div className="flex items-center gap-2 mb-5">
                 <StickyNote className="size-4 text-muted-foreground" />
-                <h3 className="font-display text-xl">Notes</h3>
+                <h3 className="text-section-title">Notes</h3>
               </div>
               {client.notes ? (
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{client.notes}</p>
@@ -231,7 +231,7 @@ export default function ClientDetailView({ client }: { client: ClientWithStats }
                 <div className="p-6 pb-4">
                   <div className="flex items-center gap-2 mb-1">
                     <ShoppingCart className="size-4 text-muted-foreground" />
-                    <h3 className="font-display text-xl">Dernières commandes</h3>
+                    <h3 className="text-section-title">Dernières commandes</h3>
                   </div>
                 </div>
                 <div className="min-w-[500px] divide-y divide-border">
@@ -272,7 +272,7 @@ export default function ClientDetailView({ client }: { client: ClientWithStats }
                 <div className="p-6 pb-4">
                   <div className="flex items-center gap-2 mb-1">
                     <Calendar className="size-4 text-muted-foreground" />
-                    <h3 className="font-display text-xl">Derniers événements</h3>
+                    <h3 className="text-section-title">Derniers événements</h3>
                   </div>
                 </div>
                 <div className="min-w-[500px] divide-y divide-border">
@@ -338,7 +338,7 @@ export default function ClientDetailView({ client }: { client: ClientWithStats }
             >
               <div className="flex items-center gap-2 mb-4">
                 <CircleDollarSign className="size-4 text-[var(--gold-deep)]" />
-                <h3 className="font-display text-xl">Résumé</h3>
+                <h3 className="text-section-title">Résumé</h3>
               </div>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -374,7 +374,7 @@ export default function ClientDetailView({ client }: { client: ClientWithStats }
             >
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="size-4 text-muted-foreground" />
-                <h3 className="font-display text-xl">Activité</h3>
+                <h3 className="text-section-title">Activité</h3>
               </div>
               <div className="relative space-y-0">
                 <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border" />
@@ -403,7 +403,7 @@ export default function ClientDetailView({ client }: { client: ClientWithStats }
             >
               <div className="flex items-center gap-2 mb-4">
                 <Phone className="size-4 text-muted-foreground" />
-                <h3 className="font-display text-xl">Coordonnées</h3>
+                <h3 className="text-section-title">Coordonnées</h3>
               </div>
               {client.email || client.phone || client.address ? (
                 <div className="space-y-3">

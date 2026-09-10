@@ -18,7 +18,7 @@ export const PaymentsCard = memo(function PaymentsCard({ paid, pending, remainin
       <div className="flex items-center justify-between">
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Paiements</div>
-          <h3 className="font-display text-2xl mt-1">Suivi financier</h3>
+          <h3 className="text-section-title mt-1">Suivi financier</h3>
         </div>
         <Wallet className="size-5 text-muted-foreground" />
       </div>

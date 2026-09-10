@@ -70,7 +70,7 @@ export default function MenuItemDetailView({ item }: { item: MenuItem }) {
                 <Sparkles className="size-3 text-[var(--gold-deep)]" />
                 <span>Détail de l&apos;article</span>
               </div>
-              <h1 className="font-display text-4xl lg:text-5xl text-gradient-charcoal leading-[1.05]">
+              <h1 className="text-page-title text-gradient-charcoal leading-[1.05]">
                 {item.name}
               </h1>
               <div className="flex flex-wrap items-center gap-2 mt-3">
@@ -165,7 +165,7 @@ export default function MenuItemDetailView({ item }: { item: MenuItem }) {
             >
               <div className="flex items-center gap-2 mb-5">
                 <FileText className="size-4 text-muted-foreground" />
-                <h3 className="font-display text-xl">Informations</h3>
+                <h3 className="text-section-title">Informations</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 <InfoItem icon={Package} label="Catégorie" value={CATEGORY_LABELS[item.category] || item.category} />
@@ -190,7 +190,7 @@ export default function MenuItemDetailView({ item }: { item: MenuItem }) {
             >
               <div className="flex items-center gap-2 mb-5">
                 <FileText className="size-4 text-muted-foreground" />
-                <h3 className="font-display text-xl">Description</h3>
+                <h3 className="text-section-title">Description</h3>
               </div>
               {item.notes ? (
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{item.notes}</p>
@@ -211,19 +211,19 @@ export default function MenuItemDetailView({ item }: { item: MenuItem }) {
             >
               <div className="flex items-center gap-2 mb-5">
                 <TrendingUp className="size-4 text-muted-foreground" />
-                <h3 className="font-display text-xl">Statistiques d&apos;utilisation</h3>
+                <h3 className="text-section-title">Statistiques d&apos;utilisation</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="rounded-xl bg-foreground/[0.03] p-5">
                   <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Utilisations</div>
-                  <div className="font-display text-3xl text-gradient-charcoal tabular-nums">
+                  <div className="text-kpi-value text-gradient-charcoal">
                     {item.usageCount ?? 0}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">fois dans les commandes</div>
                 </div>
                 <div className="rounded-xl bg-foreground/[0.03] p-5">
                   <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Impact prix</div>
-                  <div className="font-display text-3xl text-gradient-charcoal tabular-nums">
+                  <div className="text-kpi-value text-gradient-charcoal">
                     {formatCurrency(item.unitPrice * (item.usageCount ?? 0))}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">revenu estimé</div>
@@ -273,7 +273,7 @@ export default function MenuItemDetailView({ item }: { item: MenuItem }) {
             >
               <div className="flex items-center gap-2 mb-4">
                 <Crown className="size-4 text-[var(--gold-deep)]" />
-                <h3 className="font-display text-xl">Catégorie</h3>
+                <h3 className="text-section-title">Catégorie</h3>
               </div>
               <div className="flex items-center gap-3">
                 <div className="size-10 rounded-full bg-gradient-to-br from-[var(--gold-soft)] to-[var(--gold-deep)]/20 flex items-center justify-center text-lg">
@@ -297,7 +297,7 @@ export default function MenuItemDetailView({ item }: { item: MenuItem }) {
             >
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="size-4 text-muted-foreground" />
-                <h3 className="font-display text-xl">Activité</h3>
+                <h3 className="text-section-title">Activité</h3>
               </div>
               <div className="relative space-y-0">
                 <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border" />

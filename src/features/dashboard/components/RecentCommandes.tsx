@@ -54,7 +54,7 @@ export const RecentCommandes = memo(function RecentCommandes({ commandes }: { co
       <div className="flex items-center justify-between p-6 pb-4">
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Activit&eacute;</div>
-          <h3 className="font-display text-2xl mt-1">Commandes r&eacute;centes</h3>
+          <h3 className="text-section-title mt-1">Commandes r&eacute;centes</h3>
         </div>
         <button onClick={() => router.push('/dashboard/commandes')} className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
           Voir tout <ArrowRight className="size-3" />

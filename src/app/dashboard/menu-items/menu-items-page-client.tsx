@@ -231,7 +231,7 @@ function MenuItemsPageContent({ initialData }: { initialData?: PaginatedMenuItem
               <span className="text-muted-foreground/40 mx-1">•</span>
               <span>{pagination.total} au total</span>
             </div>
-            <h1 className="font-display text-5xl lg:text-6xl text-gradient-charcoal leading-[1.05]">
+            <h1 className="text-page-title text-gradient-charcoal leading-[1.05]">
               Menu Items
             </h1>
             <p className="mt-3 text-muted-foreground max-w-2xl">
@@ -371,7 +371,7 @@ function MenuItemsPageContent({ initialData }: { initialData?: PaginatedMenuItem
                   <div className="flex items-center justify-between px-6 pt-5 pb-3">
                     <div>
                       <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Liste</div>
-                      <h3 className="font-display text-xl mt-0.5">Tous les articles</h3>
+                      <h3 className="text-section-title mt-0.5">Tous les articles</h3>
                     </div>
                     <span className="text-xs text-muted-foreground/60">{pagination.total} résultat{pagination.total > 1 ? 's' : ''}</span>
                   </div>
@@ -380,7 +380,7 @@ function MenuItemsPageContent({ initialData }: { initialData?: PaginatedMenuItem
 
                 <div className="md:hidden space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-display text-xl">Tous les articles</h3>
+                    <h3 className="text-section-title">Tous les articles</h3>
                     <span className="text-xs text-muted-foreground/60">{pagination.total} résultat{pagination.total > 1 ? 's' : ''}</span>
                   </div>
                   <div className="space-y-3">
@@ -445,7 +445,7 @@ function KpiCard({ label, value, icon: Icon, accent, gold }: { label: string; va
         </div>
         {gold && <Crown className="size-3.5 text-[var(--gold-deep)]" />}
       </div>
-      <div className="relative mt-4 font-display text-3xl tracking-tight text-charcoal tabular-nums">{v}</div>
+      <div className="relative mt-4 text-kpi-value text-charcoal">{v}</div>
       <div className="relative mt-1 text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
     </motion.div>
   );
@@ -518,7 +518,7 @@ function GridView({ items, loading, onView, onEdit, onDuplicate, onArchive, onDe
             </div>
             <button onClick={() => onView(it)} className="block w-full p-5 text-left">
               <div className="flex items-start justify-between gap-3">
-                <h3 className="font-display text-lg leading-tight tracking-tight text-charcoal">{it.name}</h3>
+                <h3 className="text-card-title leading-tight text-charcoal">{it.name}</h3>
                 <ArrowUpRight className="mt-0.5 size-4 shrink-0 text-muted-foreground transition group-hover:text-foreground" />
               </div>
               <p className="mt-1.5 line-clamp-2 text-xs text-muted-foreground">{it.notes || '—'}</p>
@@ -651,7 +651,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
       <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[var(--gold-soft)]">
         <Sparkles className="h-7 w-7 text-[var(--gold-deep)]" />
       </div>
-      <h3 className="mt-5 font-display text-2xl tracking-tight text-charcoal">Aucun Menu Item</h3>
+      <h3 className="mt-5 text-section-title text-charcoal">Aucun Menu Item</h3>
       <p className="mt-2 max-w-md text-sm text-muted-foreground">Commencez par créer votre premier Menu Item — plats, boissons, décoration, services… tout ce que vous offrez à vos clients.</p>
       <Button onClick={onCreate} className="mt-6 gap-2 bg-gradient-charcoal text-white shadow-lift hover:opacity-90">
         <Plus className="size-4" /> Créer un Menu Item
@@ -668,7 +668,7 @@ function NoResultsEmpty({ query, onClear }: { query: string; onClear: () => void
           <Search className="size-9 text-muted-foreground/30" strokeWidth={1.2} />
         </div>
         <div>
-          <h3 className="font-display text-2xl text-foreground">Aucun résultat</h3>
+          <h3 className="text-section-title text-foreground">Aucun résultat</h3>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
             Aucun article ne correspond à votre recherche &laquo; <span className="font-medium text-foreground">{query}</span> &raquo;
           </p>

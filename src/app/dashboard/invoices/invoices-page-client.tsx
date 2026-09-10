@@ -265,7 +265,7 @@ function InvoicesPageContent({ initialData, stats }: { initialData?: PaginatedRe
           </div>
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl text-gradient-charcoal leading-[1.05]">
+              <h1 className="text-page-title text-gradient-charcoal leading-[1.05]">
                 Devis &amp; Factures
               </h1>
               <p className="text-sm text-muted-foreground mt-1.5">
@@ -549,7 +549,7 @@ function InvoicesPageContent({ initialData, stats }: { initialData?: PaginatedRe
                     <Clock className="size-3.5 text-amber-600" strokeWidth={2} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground">Factures en attente</h3>
+                    <h3 className="text-section-title text-foreground">Factures en attente</h3>
                     <p className="text-[11px] text-muted-foreground">
                       {sortedPending.reduce((s, g) => s + g.count, 0)} document{sortedPending.reduce((s, g) => s + g.count, 0) > 1 ? 's' : ''} en attente
                     </p>
@@ -603,7 +603,7 @@ function InvoicesPageContent({ initialData, stats }: { initialData?: PaginatedRe
                     <Sparkles className="size-3.5 text-blue-600" strokeWidth={2} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground">Activité récente</h3>
+                    <h3 className="text-section-title text-foreground">Activité récente</h3>
                     <p className="text-[11px] text-muted-foreground">Derniers documents mis à jour</p>
                   </div>
                 </div>
@@ -660,7 +660,7 @@ function InvoicesPageContent({ initialData, stats }: { initialData?: PaginatedRe
                     <CircleDollarSign className="size-3.5 text-emerald-600" strokeWidth={2} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground">Stats rapides</h3>
+                    <h3 className="text-section-title text-foreground">Stats rapides</h3>
                     <p className="text-[11px] text-muted-foreground">Indicateurs clés</p>
                   </div>
                 </div>
@@ -708,7 +708,7 @@ function InvoicesPageContent({ initialData, stats }: { initialData?: PaginatedRe
                     <Lightbulb className="size-3.5 text-indigo-600" strokeWidth={2} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground">Insights</h3>
+                    <h3 className="text-section-title text-foreground">Insights</h3>
                     <p className="text-[11px] text-muted-foreground">Analyse rapide</p>
                   </div>
                 </div>

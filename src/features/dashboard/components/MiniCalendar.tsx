@@ -199,7 +199,7 @@ export const MiniCalendar = memo(function MiniCalendar() {
           <div className="text-xs uppercase tracking-wider text-muted-foreground">
             Calendrier
           </div>
-          <h3 className="font-display text-2xl mt-1">
+          <h3 className="text-section-title mt-1">
             Aper&ccedil;u
           </h3>
         </div>

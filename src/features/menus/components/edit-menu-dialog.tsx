@@ -74,7 +74,7 @@ export function EditMenuDialog({ menu, open, onClose, onSuccess }: EditMenuDialo
           <DialogHeader className="px-8 pt-7 pb-5 border-b border-border shrink-0">
             <div className="flex items-start justify-between">
               <div>
-                <DialogTitle className="font-display text-3xl tracking-tight text-charcoal">
+                <DialogTitle className="text-section-title text-charcoal">
                   Modifier le menu
                 </DialogTitle>
                 <DialogDescription className="text-sm text-muted-foreground mt-1.5">

@@ -129,7 +129,7 @@ function PaymentsPageContent({ initialData }: { initialData?: PaginatedPayments 
           </div>
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl text-gradient-charcoal leading-[1.05]">
+              <h1 className="text-page-title text-gradient-charcoal leading-[1.05]">
                 Paiements
               </h1>
               {subtitleParts.length > 0 && (
@@ -264,7 +264,7 @@ function PaymentsPageContent({ initialData }: { initialData?: PaginatedPayments 
                     <div className="flex items-center justify-between px-6 pt-5 pb-3">
                       <div>
                         <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/40 font-semibold">Historique</div>
-                        <h3 className="font-display text-xl mt-0.5">Tous les paiements</h3>
+                        <h3 className="text-section-title mt-0.5">Tous les paiements</h3>
                       </div>
                       <span className="text-xs text-muted-foreground/60">
                         {isLoading ? "…" : `${pagination.total} paiement${pagination.total > 1 ? "s" : ""}`}
@@ -365,7 +365,7 @@ function PaymentsPageContent({ initialData }: { initialData?: PaginatedPayments 
 
                   <div className="md:hidden space-y-3">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-display text-xl">Tous les paiements</h3>
+                      <h3 className="text-section-title">Tous les paiements</h3>
                       <span className="text-xs text-muted-foreground/60">
                         {pagination.total} paiement{pagination.total > 1 ? "s" : ""}
                       </span>
@@ -405,7 +405,7 @@ function PaymentsPageContent({ initialData }: { initialData?: PaginatedPayments 
                     <Calendar className="size-3.5 text-emerald-600" strokeWidth={2} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground">Paiements aujourd'hui</h3>
+                    <h3 className="text-section-title text-foreground">Paiements aujourd'hui</h3>
                     <p className="text-[11px] text-muted-foreground">
                       {stats ? `${stats.todayPayments.count} paiement${stats.todayPayments.count > 1 ? 's' : ''}` : '—'}
                     </p>
@@ -446,7 +446,7 @@ function PaymentsPageContent({ initialData }: { initialData?: PaginatedPayments 
                     <CreditCard className="size-3.5 text-blue-600" strokeWidth={2} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground">Répartition des méthodes</h3>
+                    <h3 className="text-section-title text-foreground">Répartition des méthodes</h3>
                     <p className="text-[11px] text-muted-foreground">
                       {stats ? `${stats.methodBreakdown.length} méthode${stats.methodBreakdown.length > 1 ? 's' : ''}` : '—'}
                     </p>
@@ -497,7 +497,7 @@ function PaymentsPageContent({ initialData }: { initialData?: PaginatedPayments 
                     <CircleDollarSign className="size-3.5 text-amber-600" strokeWidth={2} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground">Stats rapides</h3>
+                    <h3 className="text-section-title text-foreground">Stats rapides</h3>
                     <p className="text-[11px] text-muted-foreground">Indicateurs clés</p>
                   </div>
                 </div>
@@ -545,7 +545,7 @@ function PaymentsPageContent({ initialData }: { initialData?: PaginatedPayments 
                     <Lightbulb className="size-3.5 text-indigo-600" strokeWidth={2} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground">Insights</h3>
+                    <h3 className="text-section-title text-foreground">Insights</h3>
                     <p className="text-[11px] text-muted-foreground">Analyse rapide</p>
                   </div>
                 </div>

@@ -101,7 +101,7 @@ export function EventDetailSheet({
         <SheetHeader className="px-5 pt-5 pb-0">
           <div className="flex items-start justify-between">
             <div className="min-w-0 flex-1">
-              <SheetTitle className="text-lg truncate pr-8">{event.name}</SheetTitle>
+              <SheetTitle className="text-section-title truncate pr-8">{event.name}</SheetTitle>
               <SheetDescription className="flex items-center gap-2 mt-1">
                 <TypeIcon className="size-3.5 text-muted-foreground/60" />
                 <span>{TYPE_LABEL[event.type] || event.type}</span>

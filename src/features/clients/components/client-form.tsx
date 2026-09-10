@@ -59,8 +59,8 @@ export function ClientForm({ defaultValues = {}, onSubmit, isLoading = false, mo
 
   const inputClass = "flex items-center gap-2 rounded-2xl border border-border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold";
   const inputInnerClass = "flex-1 bg-transparent text-sm focus:outline-none placeholder:text-muted-foreground";
-  const labelClass = "text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5";
-  const sectionTitleClass = "text-[10px] uppercase tracking-[0.16em] text-foreground/50 font-semibold mb-3";
+  const labelClass = "label-micro text-muted-foreground mb-1.5";
+  const sectionTitleClass = "label-micro text-foreground/50 mb-3";
 
   function ErrorSlot({ error }: { error?: { message?: string } }) {
     return (

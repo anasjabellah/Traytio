@@ -109,7 +109,7 @@ export const RevenueChart = memo(function RevenueChart({
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Évolution du chiffre d&rsquo;affaires</div>
           <div className="mt-2 flex items-baseline gap-3">
-            <div className="font-display text-4xl tabular-nums">
+            <div className="text-kpi-value">
               <SensitiveValue hidden={isPrivacyMode} className="text-gradient-charcoal">{mad(s.total)}</SensitiveValue>
             </div>
             <span className={`text-xs font-medium px-2 py-1 rounded-md inline-flex items-center gap-1 ${s.growth >= 0 ? "text-emerald-700 bg-emerald-50" : "text-rose-700 bg-rose-50"}`}>

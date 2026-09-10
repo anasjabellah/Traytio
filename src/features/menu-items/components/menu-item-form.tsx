@@ -83,7 +83,7 @@ export function MenuItemForm({ onSubmit, isLoading = false, mode, onUploadingCha
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Nom *</div>
+            <div className="label-micro text-muted-foreground mb-1.5">Nom *</div>
             <div className={inputClass}>
               <input
                 {...register('name')}
@@ -94,7 +94,7 @@ export function MenuItemForm({ onSubmit, isLoading = false, mode, onUploadingCha
             {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name.message?.toString()}</p>}
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Catégorie *</div>
+            <div className="label-micro text-muted-foreground mb-1.5">Catégorie *</div>
             <Controller
               name="category"
               control={control}
@@ -131,7 +131,7 @@ export function MenuItemForm({ onSubmit, isLoading = false, mode, onUploadingCha
             {errors.category && <p className="text-xs text-red-600 mt-1">{errors.category.message?.toString()}</p>}
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Prix unitaire (MAD) *</div>
+            <div className="label-micro text-muted-foreground mb-1.5">Prix unitaire (MAD) *</div>
             <div className={inputClass}>
               <span className="text-sm text-muted-foreground">MAD</span>
               <input
@@ -145,7 +145,7 @@ export function MenuItemForm({ onSubmit, isLoading = false, mode, onUploadingCha
             {errors.unitPrice && <p className="text-xs text-red-600 mt-1">{errors.unitPrice.message?.toString()}</p>}
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Unité</div>
+            <div className="label-micro text-muted-foreground mb-1.5">Unité</div>
             <Controller
               name="unit"
               control={control}

@@ -158,7 +158,7 @@ export function ReportModal({ open, onOpenChange }: { open: boolean; onOpenChang
                 <FileText className="size-5 text-[var(--gold-foreground)]" strokeWidth={1.6} />
               </div>
               <div>
-                <DialogTitle className="text-xl font-display">Générer un rapport</DialogTitle>
+                <DialogTitle className="text-section-title">Générer un rapport</DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                   Analysez vos commandes sur une période donnée
                 </DialogDescription>

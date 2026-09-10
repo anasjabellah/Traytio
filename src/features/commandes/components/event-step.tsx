@@ -65,7 +65,7 @@ export function EventStep({
       <div className="grid sm:grid-cols-2 gap-4">
         <PremiumField label="Nom de l'événement" value={eventName} onChange={setEventName} placeholder="Nom de l'événement" />
         <label className="block">
-          <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Type d'événement</div>
+          <div className="label-micro text-muted-foreground mb-1.5">Type d'événement</div>
           <div className="flex flex-wrap gap-1.5 rounded-2xl border border-border bg-surface-soft p-1.5">
             {EVENT_TYPES.map((t: string) => (
               <button
@@ -81,7 +81,7 @@ export function EventStep({
       </div>
 
       <div>
-        <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Statut de l'événement</div>
+        <div className="label-micro text-muted-foreground mb-1.5">Statut de l'événement</div>
         <div className="flex flex-wrap gap-1.5 rounded-2xl border border-border bg-surface-soft p-1.5">
           {STATUS_KEYS.map((key) => (
             <button
@@ -132,7 +132,7 @@ export function EventStep({
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Nombre de tables</div>
+          <div className="label-micro text-muted-foreground mb-1.5">Nombre de tables</div>
           <div className="flex items-center justify-between rounded-xl border border-border bg-surface-soft px-4 h-14">
             <TableIcon className="size-4 text-muted-foreground shrink-0" />
             <div className="flex items-center gap-3">

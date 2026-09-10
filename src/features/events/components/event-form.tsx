@@ -211,7 +211,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
       <div className="grid sm:grid-cols-2 gap-4">
         {/* Name */}
         <div data-field="name">
-          <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Nom de l'événement *</div>
+          <div className="label-micro text-muted-foreground mb-1.5">Nom de l'événement *</div>
           <div className={`flex items-center gap-2 rounded-2xl border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold ${errors.name ? 'border-red-500' : 'border-border'}`}>
             <input
               {...register('name')}
@@ -224,7 +224,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
 
         {/* Type pills */}
         <div data-field="type">
-          <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Type d'événement *</div>
+          <div className="label-micro text-muted-foreground mb-1.5">Type d'événement *</div>
           <div className={`flex flex-wrap gap-1.5 rounded-2xl border bg-surface-soft p-1.5 ${errors.type ? 'border-red-500' : 'border-border'}`}>
             {EVENT_TYPE_KEYS.map((label) => (
               <button
@@ -249,7 +249,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
       <div className="grid sm:grid-cols-3 gap-4">
         {/* Date */}
         <div data-field="startDate">
-          <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Date *</div>
+          <div className="label-micro text-muted-foreground mb-1.5">Date *</div>
           <div className={`flex items-center gap-2 rounded-2xl border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold ${errors.startDate ? 'border-red-500' : 'border-border'}`}>
             <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
             <input
@@ -273,7 +273,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
 
         {/* Heure début */}
         <div data-field="startDate">
-          <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Début *</div>
+          <div className="label-micro text-muted-foreground mb-1.5">Début *</div>
           <div className={`flex items-center gap-2 rounded-2xl border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold ${errors.startDate ? 'border-red-500' : 'border-border'}`}>
             <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
             <input
@@ -291,7 +291,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
 
         {/* Heure fin */}
         <div data-field="endDate">
-          <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Fin *</div>
+          <div className="label-micro text-muted-foreground mb-1.5">Fin *</div>
           <div className={`flex items-center gap-2 rounded-2xl border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold ${errors.endDate ? 'border-red-500' : 'border-border'}`}>
             <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
             <input
@@ -320,7 +320,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
 
       {/* Lieu */}
       <div>
-        <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Lieu</div>
+        <div className="label-micro text-muted-foreground mb-1.5">Lieu</div>
         <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface-soft px-4 py-3 transition-all focus-within:border-gold focus-within:ring-gold">
           <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
           <input
@@ -335,7 +335,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
       <div className="grid sm:grid-cols-2 gap-4">
         {/* Guests counter */}
         <div>
-          <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Nombre de tables</div>
+          <div className="label-micro text-muted-foreground mb-1.5">Nombre de tables</div>
           <Controller
             name="guestCount"
             control={control}
@@ -402,7 +402,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
 
         {/* Budget */}
         <div>
-          <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Budget client</div>
+          <div className="label-micro text-muted-foreground mb-1.5">Budget client</div>
           <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-soft px-4 h-14 transition-all focus-within:border-gold focus-within:ring-gold">
             <Wallet className="h-4 w-4 text-muted-foreground shrink-0" />
             <span className="text-sm text-muted-foreground">MAD</span>
@@ -425,7 +425,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
 
       {/* Client search */}
       <div>
-        <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Client associé</div>
+        <div className="label-micro text-muted-foreground mb-1.5">Client associé</div>
         <div className="relative">
           <Controller
             name="clientId"
@@ -487,7 +487,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
 
       {/* Contact Person */}
       <div>
-        <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Personne de contact</div>
+        <div className="label-micro text-muted-foreground mb-1.5">Personne de contact</div>
         <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-soft px-4 h-14 transition-all focus-within:border-gold focus-within:ring-gold">
           <User className="h-4 w-4 text-muted-foreground shrink-0" />
           <input
@@ -500,7 +500,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
 
       {/* Contact Phone */}
       <div>
-        <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Téléphone contact</div>
+        <div className="label-micro text-muted-foreground mb-1.5">Téléphone contact</div>
         <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-soft px-4 h-14 transition-all focus-within:border-gold focus-within:ring-gold">
           <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
           <input
@@ -513,7 +513,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
 
       {/* Status pills */}
       <div>
-        <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Statut</div>
+        <div className="label-micro text-muted-foreground mb-1.5">Statut</div>
         <Controller
           name="status"
           control={control}
@@ -540,7 +540,7 @@ export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mod
 
       {/* Notes */}
       <div>
-        <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">Notes</div>
+        <div className="label-micro text-muted-foreground mb-1.5">Notes</div>
         <textarea
           {...register('notes')}
           placeholder="Détails logistiques, demandes spéciales…"
