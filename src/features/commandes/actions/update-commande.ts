@@ -81,7 +81,8 @@ async function updateCommandeHandler(id: string, input: unknown): Promise<Action
 
     // ── Resolve eventId ──────────────────────────────────────────────
     // 1. If eventId was provided, it was already verified above.
-    // 2. If no eventId but event data exists, create an Event and link it.
+    // 2. If no eventId but event data exists, an Event is created and linked
+    //    INSIDE the transaction below (atomic with the Commande mutation).
     // 3. If event data was cleared (no eventDate), leave eventId as null.
 
     if (resolvedEventId && data.eventDate) {
@@ -101,29 +102,6 @@ async function updateCommandeHandler(id: string, input: unknown): Promise<Action
           notes: data.notes ?? undefined,
         },
       });
-    } else if (!resolvedEventId && data.eventDate) {
-      // No existing event but event data present — create one
-      const startDate = new Date(data.eventDate);
-      const endDate = new Date(startDate.getTime() + 4 * 60 * 60 * 1000);
-
-      const createdEvent = await prisma.event.create({
-        data: {
-          organizationId,
-          clientId: data.clientId,
-          name: data.eventName ?? `Événement - ${data.number}`,
-          type: (data.eventType ?? 'OTHER') as EventType,
-          status: (data.eventStatus ?? 'CONFIRMED') as EventStatus,
-          startDate,
-          endDate,
-          location: data.location ?? undefined,
-          guestCount: data.guestCount ?? undefined,
-          budget: data.clientBudget ?? undefined,
-          contactPerson: data.contactName ?? undefined,
-          contactPhone: data.contactPhone ?? undefined,
-          notes: data.notes ?? undefined,
-        },
-      });
-      resolvedEventId = createdEvent.id;
     }
     // If resolvedEventId exists but eventDate is empty, keep the existing
     // event link (don't null it out — the Event still exists).
@@ -131,11 +109,38 @@ async function updateCommandeHandler(id: string, input: unknown): Promise<Action
     // ── Update Commande ──────────────────────────────────────────────
     const oldClientId = existing.clientId;
     await prisma.$transaction(async (tx) => {
+      // Automatic Event creation is atomic with the Commande: it runs inside
+      // this transaction so a failure cannot leave an orphan Event behind.
+      let eventId = resolvedEventId
+      if (!eventId && data.eventDate) {
+        const startDate = new Date(data.eventDate);
+        const endDate = new Date(startDate.getTime() + 4 * 60 * 60 * 1000);
+
+        const createdEvent = await tx.event.create({
+          data: {
+            organizationId,
+            clientId: data.clientId,
+            name: data.eventName ?? `Événement - ${data.number}`,
+            type: (data.eventType ?? 'OTHER') as EventType,
+            status: (data.eventStatus ?? 'CONFIRMED') as EventStatus,
+            startDate,
+            endDate,
+            location: data.location ?? undefined,
+            guestCount: data.guestCount ?? undefined,
+            budget: data.clientBudget ?? undefined,
+            contactPerson: data.contactName ?? undefined,
+            contactPhone: data.contactPhone ?? undefined,
+            notes: data.notes ?? undefined,
+          },
+        });
+        eventId = createdEvent.id;
+      }
+
       await tx.commande.update({
         where: { id, organizationId },
         data: {
           clientId: data.clientId,
-          eventId: resolvedEventId,
+          eventId,
           status: data.status as CommandeStatus,
           eventType: (data.eventType ?? undefined) as EventType | undefined,
           eventDate: data.eventDate ? new Date(data.eventDate) : undefined,

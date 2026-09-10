@@ -70,31 +70,10 @@ async function createCommandeHandler(input: unknown) {
   }
 
   // ── Resolve eventId ──────────────────────────────────────────────
-  let resolvedEventId = data.eventId ?? null;
-
-  if (!resolvedEventId && data.eventDate) {
-    const startDate = new Date(data.eventDate);
-    const endDate = new Date(startDate.getTime() + 4 * 60 * 60 * 1000);
-
-    const createdEvent = await prisma.event.create({
-      data: {
-        organizationId,
-        clientId: data.clientId,
-        name: data.eventName ?? `Événement - ${data.number ?? 'Nouveau'}`,
-        type: (data.eventType ?? 'OTHER') as EventType,
-        status: (data.eventStatus ?? 'CONFIRMED') as EventStatus,
-        startDate,
-        endDate,
-        location: data.location ?? undefined,
-        guestCount: data.guestCount ?? undefined,
-        budget: data.clientBudget ?? undefined,
-        contactPerson: data.contactName ?? undefined,
-        contactPhone: data.contactPhone ?? undefined,
-        notes: data.notes ?? undefined,
-      },
-    });
-    resolvedEventId = createdEvent.id;
-  }
+  // A client-provided eventId is resolved here (validated above). The
+  // automatic Event creation lives INSIDE the transaction below so a
+  // rollback or P2002 retry can never leave an orphan/duplicate Event.
+  const resolvedEventId = data.eventId ?? null;
 
   // ── Create Commande with P2002 retry for number uniqueness ────────
   let lastError: unknown = null
@@ -103,13 +82,41 @@ async function createCommandeHandler(input: unknown) {
       const commande = await prisma.$transaction(async (tx) => {
         const number = data.number ?? await nextCommandeNumber(tx, organizationId)
 
+        // Automatic Event creation is atomic with the Commande: it runs inside
+        // this transaction (per attempt), so a rollback or retry never leaves
+        // an orphan or duplicate Event behind. A resolved client eventId skips it.
+        let eventId = resolvedEventId
+        if (!eventId && data.eventDate) {
+          const startDate = new Date(data.eventDate)
+          const endDate = new Date(startDate.getTime() + 4 * 60 * 60 * 1000)
+
+          const createdEvent = await tx.event.create({
+            data: {
+              organizationId,
+              clientId: data.clientId,
+              name: data.eventName ?? `Événement - ${data.number ?? 'Nouveau'}`,
+              type: (data.eventType ?? 'OTHER') as EventType,
+              status: (data.eventStatus ?? 'CONFIRMED') as EventStatus,
+              startDate,
+              endDate,
+              location: data.location ?? undefined,
+              guestCount: data.guestCount ?? undefined,
+              budget: data.clientBudget ?? undefined,
+              contactPerson: data.contactName ?? undefined,
+              contactPhone: data.contactPhone ?? undefined,
+              notes: data.notes ?? undefined,
+            },
+          })
+          eventId = createdEvent.id
+        }
+
         const cmd = await tx.commande.create({
           data: {
             organizationId,
             createdById: membership.userId,
             clientId: data.clientId,
             number,
-            eventId: resolvedEventId,
+            eventId,
             status: data.status as CommandeStatus,
             eventType: (data.eventType ?? undefined) as EventType | undefined,
             eventDate: data.eventDate ? new Date(data.eventDate) : undefined,
