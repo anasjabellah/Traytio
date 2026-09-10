@@ -1,10 +1,38 @@
 # ESLint Remediation Audit
 
-**Date:** 2026-06-12
-**Total issues:** 273 (201 errors, 72 warnings)
-**Affected files:** 114 / 225 linted
-**Build status:** `npm run build` passes cleanly
-**TypeScript:** Zero compilation errors
+**Original audit:** 2026-06-12 — baseline 273 issues (201 errors, 72 warnings), 114 / 225 files linted
+**Latest verified:** 2026-09-10 — **259 issues (116 errors, 143 warnings)** across 100 files
+**Verification command:** `npx eslint --no-warn-ignored src tests`
+**Build status:** `npm run build` passes cleanly (re-verified)
+**TypeScript:** Zero compilation errors (re-verified)
+
+> **Status note (2026-09-10):** The Issue counts below have drifted. The category
+> breakdowns and remediation roadmap in this document remain valid as *guidance*,
+> but their individual counts reflect the **2026-06-12** baseline (273 issues).
+> The current snapshot — re-verified with the command above — is:
+
+| Rule | Errors | Warnings |
+|---|---|---|
+| `react/no-unescaped-entities` | 44 | 0 |
+| `@typescript-eslint/no-explicit-any` | 34 | 0 |
+| `react-hooks/set-state-in-effect` | 20 | 0 |
+| `@typescript-eslint/no-unused-vars` | 0 | 100 |
+| `react-hooks/purity` | 4 | 0 |
+| `react-hooks/preserve-manual-memoization` | 3 | 0 |
+| `react-hooks/use-memo` | 3 | 0 |
+| `react-hooks/error-boundaries` | 2 | 0 |
+| `@next/next/no-html-link-for-pages` | 2 | 0 |
+| `react-hooks/refs` | 2 | 0 |
+| `react-hooks/exhaustive-deps` | 0 | 18 |
+| `@next/next/no-img-element` | 0 | 13 |
+| `react-hooks/rules-of-hooks` | 1 | 0 |
+| `react-hooks/immutability` | 1 | 0 |
+| `react-hooks/incompatible-library` | 0 | 7 |
+| `@typescript-eslint/no-unused-expressions` | 0 | 4 |
+| `jsx-a11y/alt-text` | 0 | 1 |
+| **Total** | **116** | **143** |
+
+The historical 2026-06-12 audit, category analysis, and remediation roadmap follow unchanged.
 
 ---
 
