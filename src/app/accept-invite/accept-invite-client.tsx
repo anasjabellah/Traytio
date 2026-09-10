@@ -1,7 +1,7 @@
 "use client"
 
 import { Suspense, useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useUser, SignInButton, SignUpButton } from "@clerk/nextjs"
 import { AUTH } from "@/lib/notify/messages"
 import { getInvitationByToken } from "@/features/team/actions/get-invitation-by-token"
@@ -24,6 +24,7 @@ export function AcceptInviteClient() {
 }
 
 function AcceptInviteContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
   const { isLoaded, isSignedIn, user } = useUser()
@@ -34,7 +35,6 @@ function AcceptInviteContent() {
   } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [accepting, setAccepting] = useState(false)
-  const [accepted, setAccepted] = useState(false)
 
   useEffect(() => {
     if (!token) {
@@ -56,7 +56,7 @@ function AcceptInviteContent() {
     const res = await acceptInvite(token)
     setAccepting(false)
     if (res.success) {
-      setAccepted(true)
+      router.replace("/dashboard")
     } else {
       setError(res.error ?? AUTH.ACCEPT.ERROR)
     }
@@ -96,32 +96,6 @@ function AcceptInviteContent() {
         >
           <Loader2 className="size-8 animate-spin text-muted-foreground/50 mx-auto mb-4" />
           <p className="text-sm text-muted-foreground">{AUTH.ACCEPT.LOADING}</p>
-        </motion.div>
-      </div>
-    )
-  }
-
-  if (accepted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-[#faf7f2] to-background p-6">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md rounded-3xl border border-border/60 bg-card shadow-xl p-8 text-center"
-        >
-          <div className="mx-auto size-14 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4">
-            <CheckCircle2 className="size-6 text-emerald-500" strokeWidth={1.8} />
-          </div>
-          <h1 className="font-display text-xl font-semibold mb-2">{AUTH.ACCEPT.SUCCESS_TITLE}</h1>
-          <p className="text-sm text-muted-foreground mb-6">
-            {AUTH.ACCEPT.SUCCESS_DESCRIPTION_PREFIX} <strong>{invitation.organizationName}</strong>{AUTH.ACCEPT.SUCCESS_DESCRIPTION_SUFFIX}
-          </p>
-          <a
-            href="/dashboard"
-            className="inline-flex items-center justify-center h-10 px-5 rounded-xl bg-[var(--gold-deep)] text-white text-sm font-medium"
-          >
-            Accéder au tableau de bord
-          </a>
         </motion.div>
       </div>
     )
