@@ -39,7 +39,9 @@ export const createCommandeSchema = z.object({
   internalNotes: z.string().nullable().optional(),
   clientNotes: z.string().nullable().optional(),
   status: z.enum(['DRAFT', 'QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'READY', 'DELIVERED', 'CANCELLED'], { message: COMMANDE.VALIDATION.INVALID_STATUS }).optional().default('DRAFT'),
-  items: z.array(commandeItemSchema).optional().default([]),
+  // No `.default([])`: an OMITTED items key must stay `undefined` so writers can
+  // distinguish "no item update" from an explicit "clear all items" empty array.
+  items: z.array(commandeItemSchema).optional(),
 });
 
 export type CreateCommandeInput = z.infer<typeof createCommandeSchema>;

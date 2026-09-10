@@ -159,17 +159,23 @@ async function updateCommandeHandler(id: string, input: unknown): Promise<Action
           notes: data.notes ?? undefined,
           internalNotes: data.internalNotes ?? undefined,
           clientNotes: data.clientNotes ?? undefined,
-          items: data.items && data.items.length > 0 ? {
-            deleteMany: {},
-            create: data.items.map((item) => ({
-              name: item.name,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              totalPrice: item.totalPrice,
-              menuItemId: item.menuItemId ?? undefined,
-              notes: item.notes ?? undefined,
-            })),
-          } : undefined,
+          // Three-state items semantics:
+          //   undefined (omitted)  → no item update
+          //   []                   → explicitly clear all existing line items
+          //   non-empty            → replace items (delete + recreate)
+          items: data.items === undefined
+            ? undefined
+            : {
+                deleteMany: {},
+                create: data.items.map((item) => ({
+                  name: item.name,
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice,
+                  totalPrice: item.totalPrice,
+                  menuItemId: item.menuItemId ?? undefined,
+                  notes: item.notes ?? undefined,
+                })),
+              },
         },
       });
 
