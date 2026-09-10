@@ -13,6 +13,11 @@
  * is created, no organization/role/financial logic is touched, and
  * imageUrl synchronization is deliberately excluded from this change.
  *
+ * user.deleted is implemented separately in B-15 (tests/b15-clerk-webhook-
+ * user-deleted.test.ts); this suite pins the user.created / user.updated
+ * invariants only, and the "no user.deleted handler" guard has been replaced
+ * by a presence contract since B-15 now owns that branch.
+ *
  * Test convention: faithful replicas of the new handler logic (truth-table
  * tests) + fs contract checks on the actual source tree (no transitive deps),
  * same style as tests/b11-*, tests/b12-*, tests/b13-*.
@@ -196,21 +201,21 @@ describe('B-14 source contract: route.ts implements the audit', () => {
     )
   })
 
-  it('no user.deleted handler was added', () => {
+  it('user.deleted is handled (implemented separately in B-15)', () => {
     const src = readProjectFile('src/app/api/webhooks/clerk/route.ts')
-    assert.equal(
-      src.includes('user.deleted'),
-      false,
-      'user.deleted must NOT be handled (deferred to product decision)',
+    assert.ok(
+      src.includes("evt.type === 'user.deleted'"),
+      'user.deleted handler must be present (owned by B-15)',
     )
   })
 
   it('no organization/role/financial logic was changed in the new branch', () => {
     const src = readProjectFile('src/app/api/webhooks/clerk/route.ts')
-    // Extract just the user.updated branch
+    // Extract JUST the user.updated branch (stops at the user.deleted branch,
+    // which B-15 owns and legitimately touches roles/organizations).
     const updatedStart = src.indexOf("evt.type === 'user.updated'")
-    const handlerEnd = src.lastIndexOf('return new Response')
-    const updatedBranch = src.slice(updatedStart, handlerEnd)
+    const updatedEnd = src.indexOf("else if (evt.type === 'user.deleted')")
+    const updatedBranch = src.slice(updatedStart, updatedEnd)
 
     assert.equal(
       updatedBranch.includes('organization'),
