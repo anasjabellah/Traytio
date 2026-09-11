@@ -5,6 +5,7 @@ import { auth } from '@clerk/nextjs/server';
 import cloudinary from '@/lib/cloudinary';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { withApiGuard } from '@/lib/api-guard';
+import { readBodyWithLimit } from '@/lib/request-body-limit';
 import { AUTH } from '@/lib/notify/messages';
 
 const ALLOWED_MIME_TYPES = [
@@ -45,17 +46,35 @@ async function uploadApi(request: Request) {
       return NextResponse.json({ error: AUTH.ORGANIZATION_NOT_FOUND }, { status: 403 });
     }
 
-    // Reject oversized requests before buffering the entire multipart body.
-    // The per-file limits below are enforced after parsing, but without an
-    // up-front cap the raw body is read into memory first (memory-exhaustion
-    // DoS). 25 MB covers the 20 MB PDF ceiling plus multipart overhead.
+    // Early rejection optimization: if the client declares an oversized body,
+    // reject it without reading any bytes. This is NOT the authoritative
+    // limit — Content-Length is client-controlled (it can be forged small or
+    // omitted entirely via chunked transfer).
     const declaredLength = Number(request.headers.get("content-length") || 0);
     const MAX_REQUEST_BYTES = 25 * 1024 * 1024;
     if (declaredLength > MAX_REQUEST_BYTES) {
       return NextResponse.json({ error: "Fichier trop volumineux" }, { status: 413 });
     }
 
-    const formData = await request.formData();
+    // Authoritative limit: read the raw body stream and count ACTUAL bytes,
+    // aborting at MAX_REQUEST_BYTES. An oversized body is never fully buffered
+    // (request.formData() alone would buffer the whole multipart body first).
+    const boundedBody = await readBodyWithLimit(request.body, MAX_REQUEST_BYTES);
+    if (!boundedBody.ok) {
+      return NextResponse.json({ error: "Fichier trop volumineux" }, { status: 413 });
+    }
+
+    // The bounded bytes are re-injected into a fresh Request so the built-in
+    // multipart parser can be reused. Its body is already capped, so parsing
+    // cannot buffer more than MAX_REQUEST_BYTES.
+    const boundedHeaders = new Headers(request.headers);
+    boundedHeaders.delete("content-length");
+    const boundedRequest = new Request(request.url, {
+      method: request.method,
+      headers: boundedHeaders,
+      body: boundedBody.data,
+    });
+    const formData = await boundedRequest.formData();
     const file = formData.get('file') as Blob | null;
     if (!file) {
       return NextResponse.json({ error: 'Aucun fichier fourni' }, { status: 400 });
