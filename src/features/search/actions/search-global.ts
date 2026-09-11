@@ -45,13 +45,16 @@ async function searchGlobalHandler(query: string): Promise<ActionResponse<Global
   try {
     searchGlobalSchema.parse({ query })
     const trimmed = query.trim()
-    if (!trimmed) {
+    // Minimum 2 non-whitespace characters. Shorter terms (empty, whitespace,
+    // single char) would match nearly every row across the 8 ILIKE '%term%'
+    // scans for no useful signal, so return an empty result instead of
+    // executing any database query.
+    if (trimmed.length < 2) {
       return { success: true, data: { clients: [], commandes: [], invoices: [], events: [], payments: [], menus: [], menuItems: [], members: [] } }
     }
 
     const membership = await getCurrentMembership()
     const orgId = membership.organizationId
-    const q = `%${trimmed}%`
 
     const [clients, commandes, invoices, events, payments, menus, menuItems, members] = await Promise.all([
       prisma.client.findMany({

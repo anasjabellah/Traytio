@@ -11,7 +11,9 @@
  *     `$transaction` (per retry attempt) using `tx.event.create`. Rollback or
  *     P2002 retry now discards that attempt's Event atomically.
  *   - update-commande.ts: same minimal correction for its automatic creation
- *     path. The pre-existing `prisma.event.update` branch is preserved as-is.
+ *     path, and the linked-Event UPDATE was moved INSIDE the same transaction
+ *     (`tx.event.update`) so a commit failure cannot leave the Event updated
+ *     independently of the Commande (finding C-1).
  *
  * This file follows the tests/b01..n05 conventions: dependency-injected
  * replicas + fs source-contract checks — no @clerk/@prisma imports, no DB.
@@ -80,6 +82,7 @@ type Op =
   | { kind: 'commandeUpdate'; inTx: boolean }
 
 interface TxOpts {
+  beforeEventUpdate?: () => void
   beforeCommandeCreate?: () => void
   beforeCommandeUpdate?: () => void
 }
@@ -100,6 +103,10 @@ interface Tx {
     contactPhone?: string
     notes?: string
   }): string
+  eventUpdate(
+    where: { id: string; organizationId: string },
+    patch: Partial<EventRow>,
+  ): void
   commandeCreate(data: {
     organizationId: string
     createdById?: string
@@ -120,7 +127,6 @@ interface Db {
   ops: Op[]
   findFirst(model: 'clients' | 'events' | 'menus', where: Record<string, unknown>): Row | null
   findManyMenuItems(ids: string[], organizationId: string): Row[]
-  eventUpdate(id: string, patch: Partial<EventRow>): void
   nextCommandeNumber(organizationId: string): string
 }
 
@@ -185,12 +191,6 @@ function seedDb(seed: {
     },
     findManyMenuItems: (ids, organizationId) =>
       store.menuItems.filter((r) => ids.includes(String(r.id)) && r.organizationId === organizationId),
-    eventUpdate: (id, patch) => {
-      const row = store.events.find((e) => e.id === id)
-      if (!row) throw Object.assign(new Error('P2025: record not found'), { code: 'P2025' })
-      Object.assign(row, patch)
-      ops.push({ kind: 'eventUpdate', inTx: false })
-    },
     nextCommandeNumber: (organizationId) => {
       const year = new Date().getFullYear()
       const row = store.counters.find((c) => c.organizationId === organizationId && c.year === year)
@@ -211,6 +211,13 @@ function seedDb(seed: {
         pending.events.push(event)
         localOps.push({ kind: 'eventCreate', inTx: true })
         return event.id
+      },
+      eventUpdate(where, patch) {
+        if (txOpts.beforeEventUpdate) txOpts.beforeEventUpdate()
+        const idx = pending.events.findIndex((e) => matchesWhere(e as unknown as Row, where))
+        if (idx === -1) throw Object.assign(new Error('P2025: record not found'), { code: 'P2025' })
+        pending.events[idx] = { ...pending.events[idx], ...patch }
+        localOps.push({ kind: 'eventUpdate', inTx: true })
       },
       commandeCreate(data) {
         if (txOpts.beforeCommandeCreate) txOpts.beforeCommandeCreate()
@@ -386,23 +393,26 @@ async function updateCommandeWire(
     resolvedEventId = data.eventId
   }
 
-  if (resolvedEventId && data.eventDate) {
-    db.eventUpdate(resolvedEventId, {
-      name: data.eventName ?? undefined,
-      type: data.eventType ?? undefined,
-      status: data.eventStatus ?? undefined,
-      startDate: data.eventDate ? new Date(data.eventDate) : undefined,
-      location: data.location ?? undefined,
-      guestCount: data.guestCount ?? undefined,
-      budget: data.clientBudget ?? undefined,
-      contactPerson: data.contactName ?? undefined,
-      contactPhone: data.contactPhone ?? undefined,
-      notes: data.notes ?? undefined,
-    })
-  }
-
   try {
     await db._runTransaction(async (tx) => {
+      if (resolvedEventId && data.eventDate) {
+        tx.eventUpdate(
+          { id: resolvedEventId, organizationId: serverOrg },
+          {
+            name: data.eventName ?? undefined,
+            type: data.eventType ?? undefined,
+            status: data.eventStatus ?? undefined,
+            startDate: data.eventDate ? new Date(data.eventDate) : undefined,
+            location: data.location ?? undefined,
+            guestCount: data.guestCount ?? undefined,
+            budget: data.clientBudget ?? undefined,
+            contactPerson: data.contactName ?? undefined,
+            contactPhone: data.contactPhone ?? undefined,
+            notes: data.notes ?? undefined,
+          },
+        )
+      }
+
       let eventId = resolvedEventId
       if (!eventId && data.eventDate) {
         const startDate = new Date(data.eventDate)
@@ -471,17 +481,20 @@ describe('N-06 SOURCE CONTRACT: automatic Event creation is inside the transacti
     assert.ok(src.includes('const resolvedEventId = data.eventId ?? null'), 'no Event creation happens before the retry loop')
   })
 
-  it('update-commande.ts uses tx.event.create, keeps prisma.event.update, has no prisma.event.create', () => {
+  it('update-commande.ts runs both the linked-Event update and auto-creation inside the transaction', () => {
     const src = readFileSync(resolve(SRC_ROOT, 'features/commandes/actions/update-commande.ts'), 'utf8')
     assert.ok(!src.includes('prisma.event.create'), 'no automatic Event create may run outside the transaction')
+    assert.ok(!src.includes('prisma.event.update'), 'no linked-Event update may run outside the transaction')
     assert.ok(src.includes('await tx.event.create'), 'automatic Event creation uses the transaction client')
-    assert.ok(src.includes('await prisma.event.update'), 'existing linked-event update behavior preserved')
+    assert.ok(src.includes('await tx.event.update'), 'linked-Event update uses the transaction client')
     assert.equal((src.match(/prisma\.\$transaction\(/g) ?? []).length, 1, 'no nested $transaction')
     const txIdx = src.indexOf('prisma.$transaction(async (tx)')
+    const eventUpdateIdx = src.indexOf('await tx.event.update')
     const eventCreateIdx = src.indexOf('await tx.event.create')
     const commandeUpdateIdx = src.indexOf('await tx.commande.update')
-    assert.ok(txIdx !== -1 && eventCreateIdx !== -1 && commandeUpdateIdx !== -1)
-    assert.ok(txIdx < eventCreateIdx && eventCreateIdx < commandeUpdateIdx, 'event create inside tx, before the commande update')
+    assert.ok(txIdx !== -1 && eventUpdateIdx !== -1 && eventCreateIdx !== -1 && commandeUpdateIdx !== -1)
+    assert.ok(txIdx < eventUpdateIdx, 'linked-Event update runs inside the tx (after transaction start)')
+    assert.ok(eventUpdateIdx < eventCreateIdx && eventCreateIdx < commandeUpdateIdx, 'event update + creation both inside the tx, before the commande update')
   })
 })
 
@@ -630,7 +643,7 @@ describe('N-06 BEHAVIOR: update-commande Event atomicity', () => {
     assert.equal(db.store.commandes[0]!.status, 'DRAFT', 'Commande state unchanged')
   })
 
-  it('update with a provided eventId + eventDate updates the existing Event (outside tx, preserved) and does not create one', async () => {
+  it('update with a provided eventId + eventDate updates the existing Event inside the transaction and does not create one', async () => {
     const db = seedDb({
       clients: baseSeedClients(),
       commandes: [{ id: 'cmd_1', organizationId: ORG_A, clientId: 'client_a', eventId: 'evt_1', number: 'CMD-2026-0001', status: 'DRAFT', totalAmount: 1000 }],
@@ -647,6 +660,60 @@ describe('N-06 BEHAVIOR: update-commande Event atomicity', () => {
     assert.equal(db.store.events.length, 1, 'no new Event created')
     assert.equal(db.store.events[0]!.name, 'New Name', 'existing linked Event was updated')
     assert.equal(db.store.commandes[0]!.eventId, 'evt_1')
-    assert.equal(db.ops.find((o) => o.kind === 'eventUpdate')?.inTx, false, 'event update runs outside the tx (preserved)')
+    assert.equal(db.store.commandes[0]!.status, 'CONFIRMED')
+    assert.equal(db.ops.find((o) => o.kind === 'eventUpdate')?.inTx, true, 'event update ran inside the transaction')
+    assert.equal(db.ops.find((o) => o.kind === 'commandeUpdate')?.inTx, true, 'commande update ran inside the same transaction')
+    const eventUps = db.ops.filter((o) => o.kind === 'eventUpdate')
+    assert.equal(eventUps.length, 1, 'exactly one event update issued')
+  })
+
+  it('a tx failure after the Event update rolls back the Event update together with the Commande update', async () => {
+    const db = seedDb({
+      clients: baseSeedClients(),
+      commandes: [{ id: 'cmd_1', organizationId: ORG_A, clientId: 'client_a', eventId: 'evt_1', number: 'CMD-2026-0001', status: 'DRAFT', totalAmount: 1000 }],
+      events: [{ id: 'evt_1', organizationId: ORG_A, clientId: 'client_a', name: 'Old Name', type: 'OTHER', status: 'DRAFT', startDate: new Date(eventDateInput()), endDate: new Date(eventDateInput()) }],
+    })
+    const res = await updateCommandeWire(
+      db, ORG_A, 'cmd_1',
+      { clientId: 'client_a', eventId: 'evt_1', eventDate: eventDateInput(), eventName: 'New Name', status: 'CONFIRMED' },
+      { beforeCommandeUpdate: () => { throw new Error('simulated failure after Event update') } },
+    )
+    assert.deepEqual(res, { ok: false, error: ERR.UPDATE_FAILED })
+    assert.equal(db.store.events[0]!.name, 'Old Name', 'Event update rolled back with the transaction')
+    assert.equal(db.store.commandes[0]!.status, 'DRAFT', 'Commande update rolled back')
+    const eventUps = db.ops.filter((o) => o.kind === 'eventUpdate')
+    assert.equal(eventUps.length, 0, 'rolled-back operations are never committed to the op log')
+  })
+
+  it('a tx failure DURING the Event update leaves the Event and Commande unchanged', async () => {
+    const db = seedDb({
+      clients: baseSeedClients(),
+      commandes: [{ id: 'cmd_1', organizationId: ORG_A, clientId: 'client_a', eventId: 'evt_1', number: 'CMD-2026-0001', status: 'DRAFT', totalAmount: 1000 }],
+      events: [{ id: 'evt_1', organizationId: ORG_A, clientId: 'client_a', name: 'Old Name', type: 'OTHER', status: 'DRAFT', startDate: new Date(eventDateInput()), endDate: new Date(eventDateInput()) }],
+    })
+    const res = await updateCommandeWire(
+      db, ORG_A, 'cmd_1',
+      { clientId: 'client_a', eventId: 'evt_1', eventDate: eventDateInput(), eventName: 'New Name', status: 'CONFIRMED' },
+      { beforeEventUpdate: () => { throw new Error('simulated failure during Event update') } },
+    )
+    assert.deepEqual(res, { ok: false, error: ERR.UPDATE_FAILED })
+    assert.equal(db.store.events[0]!.name, 'Old Name')
+    assert.equal(db.store.commandes[0]!.status, 'DRAFT')
+  })
+
+  it('no linked Event means no update is issued (behavior preserved)', async () => {
+    const db = seedDb({
+      clients: baseSeedClients(),
+      commandes: [{ id: 'cmd_1', organizationId: ORG_A, clientId: 'client_a', eventId: null, number: 'CMD-2026-0001', status: 'DRAFT', totalAmount: 1000 }],
+    })
+    const res = await updateCommandeWire(db, ORG_A, 'cmd_1', {
+      clientId: 'client_a',
+      eventDate: eventDateInput(),
+      eventName: 'Fresh Event',
+      status: 'CONFIRMED',
+    })
+    assert.deepEqual(res, { ok: true })
+    assert.equal(db.store.events.length, 1, 'only the auto-created Event exists')
+    assert.equal(db.ops.filter((o) => o.kind === 'eventUpdate').length, 0, 'no update issued when there is no linked Event')
   })
 })

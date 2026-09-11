@@ -84,31 +84,35 @@ async function updateCommandeHandler(id: string, input: unknown): Promise<Action
     // 2. If no eventId but event data exists, an Event is created and linked
     //    INSIDE the transaction below (atomic with the Commande mutation).
     // 3. If event data was cleared (no eventDate), leave eventId as null.
+    // Existing linked Events are kept in sync by an atomic Event UPDATE
+    // that runs inside the same transaction (see below).
 
-    if (resolvedEventId && data.eventDate) {
-      // Update the linked Event with current form data (org-scoped by id + organizationId)
-      await prisma.event.update({
-        where: { id: resolvedEventId, organizationId },
-        data: {
-          name: data.eventName ?? undefined,
-          type: (data.eventType ?? undefined) as EventType | undefined,
-          status: (data.eventStatus ?? undefined) as EventStatus | undefined,
-          startDate: data.eventDate ? new Date(data.eventDate) : undefined,
-          location: data.location ?? undefined,
-          guestCount: data.guestCount ?? undefined,
-          budget: data.clientBudget ?? undefined,
-          contactPerson: data.contactName ?? undefined,
-          contactPhone: data.contactPhone ?? undefined,
-          notes: data.notes ?? undefined,
-        },
-      });
-    }
-    // If resolvedEventId exists but eventDate is empty, keep the existing
-    // event link (don't null it out — the Event still exists).
-
-    // ── Update Commande ──────────────────────────────────────────────
+    // ── Update Commande and linked Event (atomic) ────────────────────
     const oldClientId = existing.clientId;
     await prisma.$transaction(async (tx) => {
+      // Keep the existing linked Event in sync with current form data
+      // (org-scoped by id + organizationId). Runs inside this transaction so
+      // a failure cannot leave the Event updated while the Commande rolls back.
+      if (resolvedEventId && data.eventDate) {
+        await tx.event.update({
+          where: { id: resolvedEventId, organizationId },
+          data: {
+            name: data.eventName ?? undefined,
+            type: (data.eventType ?? undefined) as EventType | undefined,
+            status: (data.eventStatus ?? undefined) as EventStatus | undefined,
+            startDate: data.eventDate ? new Date(data.eventDate) : undefined,
+            location: data.location ?? undefined,
+            guestCount: data.guestCount ?? undefined,
+            budget: data.clientBudget ?? undefined,
+            contactPerson: data.contactName ?? undefined,
+            contactPhone: data.contactPhone ?? undefined,
+            notes: data.notes ?? undefined,
+          },
+        });
+      }
+      // If resolvedEventId exists but eventDate is empty, keep the existing
+      // event link (don't null it out — the Event still exists).
+
       // Automatic Event creation is atomic with the Commande: it runs inside
       // this transaction so a failure cannot leave an orphan Event behind.
       let eventId = resolvedEventId
