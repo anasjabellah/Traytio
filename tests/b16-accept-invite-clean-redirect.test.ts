@@ -101,7 +101,7 @@ describe('B-16 UNCHANGED SCOPE: sign-in/sign-up round-trip and error handling', 
   it('SignInButton fallbackRedirectUrl still re-embeds the token (pre-accept round-trip)', () => {
     const src = readClient()
     assert.ok(
-      src.includes('fallbackRedirectUrl={' + BT + '/accept-invite?token=${token}' + BT + '}'),
+      src.includes('fallbackRedirectUrl={' + BT + '/accept-invite?token=${encodeURIComponent(token ?? "")}' + BT + '}'),
       'pre-accept round-trip via Clerk sign-in must remain intact',
     )
   })

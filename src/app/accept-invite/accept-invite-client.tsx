@@ -158,14 +158,14 @@ function AcceptInviteContent() {
           </>
         ) : (
           <div className="space-y-3">
-            <SignInButton mode="redirect" fallbackRedirectUrl={`/accept-invite?token=${token}`}>
+            <SignInButton mode="redirect" fallbackRedirectUrl={`/accept-invite?token=${encodeURIComponent(token ?? "")}`}>
               <button className="w-full inline-flex items-center justify-center h-12 rounded-xl bg-[var(--gold-deep)] hover:bg-[var(--gold-deep)]/90 text-white text-sm font-semibold transition-all">
                 Se connecter pour accepter
               </button>
             </SignInButton>
             <p className="text-center text-xs text-muted-foreground">
               Pas encore de compte ?{" "}
-              <SignUpButton mode="redirect" fallbackRedirectUrl={`/accept-invite?token=${token}`}>
+              <SignUpButton mode="redirect" fallbackRedirectUrl={`/accept-invite?token=${encodeURIComponent(token ?? "")}`}>
                 <span className="text-[var(--gold-deep)] hover:underline cursor-pointer">Créer un compte</span>
               </SignUpButton>
             </p>
