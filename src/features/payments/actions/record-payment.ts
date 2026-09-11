@@ -33,17 +33,23 @@ async function recordPaymentHandler(input: unknown) {
     }
 
     const result = await prisma.$transaction(async (tx) => {
-      // Fresh read inside transaction to minimize race window
-      const freshCommande = await tx.commande.findUnique({
-        where: { id: data.commandeId },
-        select: { remainingAmount: true },
-      })
+      // Lock the Commande row to prevent concurrent payment races.
+      // Two concurrent requests reading the same remainingAmount could both
+      // pass validation and both create payments. FOR UPDATE serializes
+      // access: the second transaction blocks until the first commits,
+      // then reads the fresh remainingAmount.
+      const rows = await tx.$queryRaw<{ remainingAmount: unknown }[]>`
+        SELECT "remainingAmount"
+        FROM "commandes"
+        WHERE "id" = ${data.commandeId}
+        FOR UPDATE
+      `
 
-      if (!freshCommande) {
+      if (rows.length === 0) {
         return { success: false as const, error: PAYMENT.NOT_FOUND_COMMANDE_ALT }
       }
 
-      const remaining = Number(freshCommande.remainingAmount)
+      const remaining = Number(rows[0].remainingAmount)
       if (data.amount > remaining) {
         return {
           success: false as const,
