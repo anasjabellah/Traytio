@@ -53,8 +53,8 @@ export function EventsFilters({
   return (
     <>
       {/* Search + Filters + View toggle */}
-      <div className="mt-8 flex flex-col lg:flex-row lg:items-center gap-3">
-        <div className={`flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft w-full lg:flex-1 ${searchMaxWidth || 'lg:max-w-[400px]'} transition-all focus-within:border-gold focus-within:ring-1 focus-within:ring-gold/30`}>
+      <div className="mt-8 flex flex-col md:flex-row md:items-center gap-3">
+        <div className={`flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft w-full md:flex-1 ${searchMaxWidth || 'lg:max-w-[400px]'} transition-all focus-within:border-gold focus-within:ring-1 focus-within:ring-gold/30`}>
           <Search className="size-4 text-muted-foreground shrink-0" />
           <input
             value={searchQuery}

@@ -118,7 +118,7 @@ export function EventsSidebar({
 }) {
   return (
     <aside className="col-span-12 xl:col-span-3 space-y-6">
-      <div className="xl:sticky xl:top-24 space-y-6">
+      <div className="xl:sticky xl:top-24 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-6">
         <TodayEventsSection events={todayEvents} />
         <QuickStatsSection stats={statsEvents} totalBudget={totalBudget} />
       </div>
