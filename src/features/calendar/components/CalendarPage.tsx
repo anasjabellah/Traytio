@@ -187,7 +187,7 @@ export function CalendarPage({ initialData }: { initialData?: CalendarInitialDat
   const paymentsKpi = useMemo(() => computeKpi(stats.perfPayments), [stats.perfPayments])
 
   const KPIS = useMemo(() => [
-    { label: 'Événements', value: stats.totalEvents, icon: Calendar, sensitive: false, ...totalKpi },
+    { label: 'Événements', value: stats.totalEvents, icon: Calendar, sensitive: false, accent: true, ...totalKpi },
     { label: 'Cette semaine', value: stats.thisWeek, icon: CalendarCheck, sensitive: false, ...weekKpi },
     { label: 'Ce mois', value: stats.thisMonth, icon: CalendarRange, sensitive: false, ...monthKpi },
     { label: 'Budget total', value: stats.totalBudget, prefix: 'MAD', icon: Wallet, sensitive: true, ...budgetKpi },

@@ -152,7 +152,7 @@ export function KpiCard({
           </div>
         </div>
         <div
-          className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${
+          className={`size-10 rounded-full flex items-center justify-center shrink-0 ${
             accent
               ? 'bg-gradient-gold text-[var(--gold-foreground)]'
               : 'bg-foreground/[0.04] text-foreground'
