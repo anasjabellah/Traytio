@@ -20,7 +20,7 @@ export const TodayEventsWidget = memo(function TodayEventsWidget({ events }: { e
         <span className="text-xs text-muted-foreground">{events.length}</span>
       </div>
       {events.length === 0 ? (
-        <div className="py-6 text-center text-xs text-muted-foreground">
+        <div className="py-3 text-center text-xs text-muted-foreground">
           Aucun &eacute;v&eacute;nement programm&eacute; aujourd&rsquo;hui
         </div>
       ) : (
@@ -50,7 +50,7 @@ export const TodayEventsWidget = memo(function TodayEventsWidget({ events }: { e
 export const ActivityFeedWidget = memo(function ActivityFeedWidget({ activity }: { activity: DashboardData['activity'] }) {
   const { isPrivacyMode } = usePrivacyMode();
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-soft p-5 flex flex-col h-[380px]">
+    <div className="rounded-2xl border border-border bg-card shadow-soft p-5 flex flex-col">
       <div className="flex items-center justify-between mb-4 shrink-0">
         <div>
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Temps r&eacute;el</div>
@@ -60,7 +60,7 @@ export const ActivityFeedWidget = memo(function ActivityFeedWidget({ activity }:
       {activity.length === 0 ? (
         <div className="py-6 text-center text-xs text-muted-foreground">Aucune activit&eacute; r&eacute;cente</div>
       ) : (
-        <div className="flex-1 overflow-y-auto min-h-0 scrollbar-subtle pr-1 [mask-image:linear-gradient(to_bottom,black_92%,transparent_100%)]">
+        <div className="overflow-y-auto max-h-[300px] scrollbar-subtle pr-1 [mask-image:linear-gradient(to_bottom,black_92%,transparent_100%)]">
           <div className="space-y-3 pt-1 relative">
             <div className="absolute left-[7px] inset-y-1 w-px bg-border" />
             {activity.map((f, i) => (
@@ -95,7 +95,7 @@ export const QuickStatsWidget = memo(function QuickStatsWidget({ stats }: { stat
         <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Indicateurs</div>
         <h3 className="text-section-title mt-1">Stats rapides</h3>
       </div>
-      <div className="space-y-4">
+      <div className="space-y-3">
         {[
           { label: "Budget moyen", value: mad(stats.avgBudget) },
           { label: "Invit\u00e9s moyen", value: stats.avgGuests > 0 ? `${stats.avgGuests} pax` : "0 pax" },
@@ -120,7 +120,7 @@ export const QuickStatsWidget = memo(function QuickStatsWidget({ stats }: { stat
           );
         })}
       </div>
-      <div className="mt-5 pt-4 border-t border-border flex items-center justify-between">
+      <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <CheckCircle2 className="size-3.5 text-emerald-600" /> Donn&eacute;es mises &agrave; jour
         </div>

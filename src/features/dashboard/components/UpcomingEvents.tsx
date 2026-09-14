@@ -19,9 +19,9 @@ export const UpcomingEvents = memo(function UpcomingEvents({ events }: { events:
           Tout voir <ArrowRight className="size-3" />
         </Link>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {events.length === 0 && (
-          <div className="col-span-3 py-8 text-center text-sm text-muted-foreground">Aucun &eacute;v&eacute;nement &agrave; venir</div>
+          <div className="col-span-1 md:col-span-2 lg:col-span-3 py-8 text-center text-sm text-muted-foreground">Aucun &eacute;v&eacute;nement &agrave; venir</div>
         )}
         {events.map((e, i) => {
           const daysUntil = Math.ceil((new Date(e.startDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));

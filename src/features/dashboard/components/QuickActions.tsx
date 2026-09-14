@@ -13,7 +13,7 @@ export const QuickActions = memo(function QuickActions() {
         <div className="text-xs uppercase tracking-wider text-muted-foreground">Raccourcis</div>
         <h3 className="text-section-title mt-1">Actions rapides</h3>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {ACTIONS.map((a) => {
           const Icon = a.icon;
           const inner = (

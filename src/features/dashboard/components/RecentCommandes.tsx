@@ -64,7 +64,7 @@ export const RecentCommandes = memo(function RecentCommandes({ commandes }: { co
       {/* Desktop (>=640px): table */}
       <div className="hidden sm:block overflow-x-auto">
         <div className="min-w-[700px] lg:min-w-0 divide-y divide-border">
-          <div className="grid grid-cols-12 px-6 py-3 text-[10px] uppercase tracking-wider text-muted-foreground bg-foreground/[0.02]">
+          <div className="grid grid-cols-12 px-6 py-3 text-[10px] md:text-[11px] lg:text-[10px] uppercase tracking-wider text-muted-foreground bg-foreground/[0.02]">
             <div className="col-span-3">Commande</div>
             <div className="col-span-3">Client</div>
             <div className="col-span-2">Date</div>
@@ -93,7 +93,7 @@ export const RecentCommandes = memo(function RecentCommandes({ commandes }: { co
                 <SensitiveValue hidden={isPrivacyMode}>{mad(c.total)}</SensitiveValue>
               </div>
               <div className="col-span-2 flex items-center justify-end gap-2">
-                <span className={`whitespace-nowrap text-[10px] px-2 py-0.5 rounded-full ${STATUS_STYLES[COMMANDE_STATUS_LABELS[c.status]] || 'bg-foreground/[0.05]'}`}>
+                <span className={`whitespace-nowrap text-[10px] md:text-[11px] lg:text-[10px] px-2 py-0.5 rounded-full ${STATUS_STYLES[COMMANDE_STATUS_LABELS[c.status]] || 'bg-foreground/[0.05]'}`}>
                   {COMMANDE_STATUS_LABELS[c.status] || c.status}
                 </span>
                 <ChevronRight className="size-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
