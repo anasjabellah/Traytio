@@ -42,7 +42,7 @@ function ActivitySection({ activities }: { activities: ActivityItem[] }) {
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-soft p-5 h-[460px] flex flex-col">
+    <div className="rounded-2xl border border-border bg-card shadow-soft p-5 max-h-[460px] flex flex-col">
       <div className="flex items-center justify-between mb-4 shrink-0">
         <div>
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Activit&eacute;</div>
@@ -153,7 +153,7 @@ function QuickStatsSection({ stats, avgValue, activePct, topCity, growthRate }: 
         </div>
       ) : (
         <>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {visibleStats.map((s, i) => (
               <div key={i}>
                 <div className="flex items-center justify-between text-xs mb-1.5">
@@ -187,7 +187,7 @@ function QuickStatsSection({ stats, avgValue, activePct, topCity, growthRate }: 
               </div>
             ))}
           </div>
-          <div className="mt-5 pt-4 border-t border-border flex items-center justify-between">
+          <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <CheckCircle2 className="size-3.5 text-emerald-600" />
               {stats ? `${stats.totalClients} client${stats.totalClients > 1 ? 's' : ''} au total` : 'Chargement...'}
@@ -211,15 +211,15 @@ export function ClientsSidebar({
 }) {
   return (
     <aside className="w-full xl:w-[320px] shrink-0 space-y-6">
-      <div className="xl:sticky xl:top-24 space-y-6">
-        <ActivitySection activities={activities} />
-        <QuickStatsSection
+      <div className="xl:sticky xl:top-24 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-6">
+        <div className="min-w-0"><ActivitySection activities={activities} /></div>
+        <div className="min-w-0"><QuickStatsSection
           stats={stats}
           avgValue={avgValue}
           activePct={activePct}
           topCity={topCity}
           growthRate={growthRate}
-        />
+        /></div>
       </div>
     </aside>
   );

@@ -159,8 +159,8 @@ function ClientCardsView({ clients, isLoading, onView }: {
 
 function RecentClientsSection({ clients }: { clients: ClientWithStats[] }) {
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-soft p-6">
-      <div className="flex items-center justify-between mb-5">
+    <div className="rounded-2xl border border-border bg-card shadow-soft p-5">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Clients</div>
           <h3 className="font-display text-2xl mt-1">Clients r&eacute;cents</h3>
@@ -290,7 +290,9 @@ function ClientAnalytics({ stats, totalRevenue, avgValue, activePct, totalComman
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: ci * 0.08 }}
-                className="rounded-xl border border-border/60 p-3.5 bg-card"
+                className={`rounded-xl border border-border/60 p-3.5 bg-card ${
+                  ci === metrics.length - 1 ? 'sm:col-span-2 lg:col-span-1' : ''
+                }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px] text-muted-foreground font-medium">{c.label}</span>

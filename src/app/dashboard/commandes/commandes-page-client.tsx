@@ -189,7 +189,7 @@ export function CommandesPageClient({ initialData }: CommandesPageClientProps) {
         </motion.div>
 
         {/* ═══ KPI CARDS ═══ */}
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-3">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           {stats.map((k, i) => (
             <KpiCard key={k.label} {...k} delay={i * 0.05} />
           ))}
@@ -219,7 +219,7 @@ export function CommandesPageClient({ initialData }: CommandesPageClientProps) {
               )}
             </div>
 
-            <div className="flex flex-row flex-nowrap items-center justify-between w-full gap-1.5 sm:gap-2 sm:ml-auto md:justify-end md:w-auto">
+            <div className="flex flex-row flex-wrap items-center justify-between w-full gap-1.5 sm:gap-2 sm:ml-auto md:justify-end md:w-auto">
               <div className="sm:order-last inline-flex">
                 <ViewSwitcher value={viewMode} onChange={handleViewChange} />
               </div>
@@ -438,7 +438,7 @@ export function CommandesPageClient({ initialData }: CommandesPageClientProps) {
 
           {/* ═══ SIDEBAR (hidden in calendar view) ═══ */}
           {viewMode !== 'calendar' && (
-            <div className="xl:w-[27%] xl:min-w-[300px] space-y-5">
+            <div className="xl:w-[27%] xl:min-w-[300px] grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-5">
 
               {/* Upcoming Events */}
               <motion.div

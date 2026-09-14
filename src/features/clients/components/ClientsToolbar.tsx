@@ -40,10 +40,10 @@ export function ClientsToolbar({
         )}
       </div>
 
-      {/* Controls — 2 rows on mobile, single row on desktop */}
-      <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:ml-auto">
-        {/* Row 1: View Switcher + Sort */}
-        <div className="flex items-center gap-3">
+      {/* Controls — one wrapping row from sm, aligned right on desktop */}
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 lg:ml-auto">
+        {/* Group 1: View Switcher + Sort */}
+        <div className="flex items-center gap-3 sm:flex-1 lg:flex-none">
           <div className="flex p-0.5 rounded-xl bg-foreground/[0.04] border border-border">
             <button
               onClick={() => onViewModeChange('table')}
@@ -78,8 +78,8 @@ export function ClientsToolbar({
           </select>
         </div>
 
-        {/* Row 2: Filters + Refresh */}
-        <div className="flex items-center gap-3">
+        {/* Group 2: Filters + Refresh */}
+        <div className="flex items-center gap-3 sm:flex-1 lg:flex-none">
           <Button
             variant={showFilters ? 'default' : 'outline'}
             size="sm"
