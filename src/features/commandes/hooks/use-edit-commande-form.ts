@@ -11,20 +11,6 @@ import { createCommandeAttachment } from "@/features/commandes/actions/create-co
 import { COMMANDE } from "@/lib/notify/messages";
 import type { Client, MenuItemDisplay, CommandeWithDetails } from "@/features/commandes/types";
 
-const EVENT_TYPE_MAP: Record<string, string> = {
-  WEDDING: "Mariage", CORPORATE: "Entreprise", BIRTHDAY: "Anniversaire",
-  ANNIVERSARY: "Mariage", HOLIDAY: "Cocktail", OTHER: "Privé",
-};
-
-const FR_TO_EN_EVENT_TYPE: Record<string, string> = {
-  "Mariage": "WEDDING",
-  "Entreprise": "CORPORATE",
-  "Anniversaire": "ANNIVERSARY",
-  "Fête": "BIRTHDAY",
-  "Vacances": "HOLIDAY",
-  "Autre": "OTHER",
-};
-
 export function useEditCommandeForm(commande: CommandeWithDetails) {
   const eventSrc = commande.event;
 
@@ -52,7 +38,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
 
   const [eventName, setEventName] = useState(eventSrc?.name ?? commande.eventName ?? commande.client?.name ?? "");
   const rawEventType = eventSrc?.type ?? commande.eventType;
-  const [eventType, setEventType] = useState(rawEventType ? (EVENT_TYPE_MAP[rawEventType] ?? rawEventType) : "");
+  const [eventType, setEventType] = useState(rawEventType ?? "");
   const [eventDate, setEventDate] = useState(eventDateStr);
   const [startTime, setStartTime] = useState(startTimeStr);
   const [endTime, setEndTime] = useState(endTimeStr);
@@ -245,7 +231,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
         clientId: client.id,
         eventName: eventName || null,
         eventStatus: eventStatus,
-        eventType: (eventType ? FR_TO_EN_EVENT_TYPE[eventType] ?? null : null),
+        eventType: eventType || null,
         eventDate: eventDateTime,
         guestCount: guests || null,
         location: location || null,
@@ -297,9 +283,6 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
     }
   }, [client, commande.id, commande.number, commande.status, eventStatus, eventName, discountType, eventDate, startTime, selectedPack, packs, selectedList, eventType, guests, location, total, transport, delivery, equipment, discountValue, discountAmount, acompteAmount, deposit, budget, contactPerson, contactPhone, eventNotes, internalNotes, clientNotes, attachments]);
 
-  const dateHash = eventDate.split("-").reduce((a, b) => a + parseInt(b, 10), 0);
-  const dateAvailable = dateHash % 3 !== 0;
-
   const state = {
     client, setClient, showClientPanel, setShowClientPanel,
     eventName, setEventName, eventType, setEventType,
@@ -331,7 +314,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
   };
 
   return {
-    state, derived, handlers, dateAvailable, packs, menuItems,
+    state, derived, handlers, packs, menuItems,
     clients: Array.isArray(clients) ? clients : [],
     isClientsLoading: clientsLoading,
     selectedEvent, showEventForm,

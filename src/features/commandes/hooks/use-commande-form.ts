@@ -170,20 +170,6 @@ export function useCommandeForm() {
     setSelected(next);
   };
 
-  const EVENT_TYPE_MAP: Record<string, string> = {
-    WEDDING: "Mariage", CORPORATE: "Entreprise", BIRTHDAY: "Anniversaire",
-    ANNIVERSARY: "Mariage", HOLIDAY: "Cocktail", OTHER: "Privé",
-  };
-
-  const FR_TO_EN_EVENT_TYPE: Record<string, string> = {
-    "Mariage": "WEDDING",
-    "Entreprise": "CORPORATE",
-    "Anniversaire": "ANNIVERSARY",
-    "Fête": "BIRTHDAY",
-    "Vacances": "HOLIDAY",
-    "Autre": "OTHER",
-  };
-
   const handleClientChange = useCallback((c: Client | null) => {
     setClient(c);
     setSelectedEvent(null);
@@ -198,7 +184,7 @@ export function useCommandeForm() {
   const handleSelectEvent = useCallback((event: ClientEventSummary) => {
     setSelectedEvent(event);
     setEventName(event.name);
-    setEventType(EVENT_TYPE_MAP[event.type] ?? event.type);
+    setEventType(event.type);
     const start = new Date(event.startDate);
     setEventDate(start.toISOString().split("T")[0]);
     setStartTime(`${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")}`);
@@ -244,7 +230,7 @@ export function useCommandeForm() {
         clientId: client.id,
         eventName: eventName || null,
         eventStatus: eventStatus,
-        eventType: (eventType ? FR_TO_EN_EVENT_TYPE[eventType] ?? null : null),
+        eventType: eventType || null,
         eventDate: eventDateTime,
         guestCount: guests || null,
         location: location || null,
@@ -297,9 +283,6 @@ export function useCommandeForm() {
     }
   }, [client, eventStatus, eventName, discountType, eventDate, startTime, selectedPack, packs, selectedList, eventType, guests, location, total, transport, delivery, equipment, discountValue, discountAmount, acompteAmount, deposit, budget, contactPerson, contactPhone, eventNotes, internalNotes, clientNotes, attachments]);
 
-  const dateHash = eventDate.split("-").reduce((a, b) => a + parseInt(b, 10), 0);
-  const dateAvailable = dateHash % 3 !== 0;
-
   const state = {
     client, setClient, showClientPanel, setShowClientPanel,
     eventName, setEventName, eventType, setEventType,
@@ -329,7 +312,7 @@ export function useCommandeForm() {
   };
 
   return {
-    state, derived, handlers, dateAvailable, packs, menuItems,
+    state, derived, handlers, packs, menuItems,
     clients: Array.isArray(clients) ? clients : [],
     isClientsLoading: clientsLoading,
     selectedEvent, showEventForm,

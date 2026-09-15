@@ -18,6 +18,7 @@ type EventFormProps = {
   isLoading?: boolean;
   mode: 'create' | 'edit';
   eventId?: string;
+  onValuesChange?: (values: Partial<EventFormValues>) => void;
 };
 
 const EVENT_TYPE_KEYS = ['Mariage', 'Entreprise', 'Anniversaire', 'Cocktail', 'Gala', 'Privé'] as const;
@@ -47,19 +48,32 @@ function joinDate(dateStr: string, timeStr: string): Date | undefined {
   return new Date(`${dateStr}T${timeStr || '00:00'}:00`);
 }
 
-export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mode, eventId }: EventFormProps) {
+export function EventForm({ defaultValues = {}, onSubmit, isLoading = false, mode, eventId, onValuesChange }: EventFormProps) {
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
     register,
     setValue,
+    watch,
   } = useForm<EventFormValues>({
     resolver: zodResolver(createEventSchema, { error: validationErrorMap }),
     defaultValues,
     mode: 'onChange',
     reValidateMode: 'onChange',
   });
+
+  const onValuesChangeRef = React.useRef(onValuesChange);
+  React.useEffect(() => {
+    onValuesChangeRef.current = onValuesChange;
+  }, [onValuesChange]);
+
+  React.useEffect(() => {
+    const subscription = watch((values) => {
+      onValuesChangeRef.current?.(values as Partial<EventFormValues>);
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
 
   const startDateVal = useWatch({ control, name: 'startDate' }) as Date | undefined;
   const endDateVal = useWatch({ control, name: 'endDate' }) as Date | undefined;
