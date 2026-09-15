@@ -43,7 +43,7 @@ function SkeletonRows() {
 
 function SkeletonKpi() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-8 [&>div]:min-h-[156px]">
       {Array.from({ length: 5 }).map((_, i) => (
         <div key={i} className="rounded-2xl border border-border bg-card shadow-soft p-5 animate-pulse">
           <div className="flex items-center gap-3 mb-4">
@@ -225,10 +225,6 @@ function InvoicesPageContent({ initialData, stats }: { initialData?: PaginatedRe
     const direction: 'up' | 'down' = delta >= 0 ? 'up' : 'down'
     return { delta, trend: direction, spark: [] }
   }, [stats?.perfCollected])
-  const paymentRateTrendValid = useMemo(() => {
-    const spark = stats?.perfCollected ?? []
-    return spark.length >= 2 && spark[spark.length - 2] > 0
-  }, [stats?.perfCollected])
 
   const sortedPending = useMemo(() => {
     if (!stats?.pendingPaymentGroups) return []
@@ -279,7 +275,7 @@ function InvoicesPageContent({ initialData, stats }: { initialData?: PaginatedRe
         {!stats ? (
           <SkeletonKpi />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mb-8">
+<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-8 [&>div]:min-h-[156px] [&>div]:flex [&>div]:flex-col [&>div>div:has(>_.min-w-0)]:flex-1 [&_.min-w-0]:flex [&_.min-w-0]:flex-col [&_.min-w-0]:self-stretch [&_.text-kpi-value]:mt-auto">
             <KpiCard
               label="Total facturé"
               value={stats.totalInvoiced}
@@ -318,9 +314,8 @@ function InvoicesPageContent({ initialData, stats }: { initialData?: PaginatedRe
               value={stats.paymentRate}
               suffix="%"
               icon={TrendingUp}
-              progress={stats.paymentRate}
               {...paymentRateKpi}
-              hideTrend={!paymentRateTrendValid}
+              hideTrend
             />
           </div>
         )}
@@ -535,7 +530,7 @@ function InvoicesPageContent({ initialData, stats }: { initialData?: PaginatedRe
           </div>
 
           {/* RIGHT: SIDEBAR */}
-          <div className="w-full xl:w-[30%] mt-6 xl:mt-0 space-y-5">
+          <div className="w-full xl:w-[30%] mt-6 xl:mt-0 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-5">
             {/* CARD 1: Factures en attente */}
             <motion.div
               initial={{ opacity: 0, x: 16 }}
