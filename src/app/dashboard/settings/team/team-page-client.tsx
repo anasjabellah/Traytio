@@ -237,6 +237,7 @@ export default function TeamPageClient({ initialData }: TeamPageClientProps) {
                 label={def.label}
                 value={(stats?.[def.key as keyof TeamStats] as number) ?? 0}
                 icon={def.icon}
+                accent={def.key === "totalMembers"}
                 {...kpiResults[def.key]}
                 delay={i * 0.05}
               />
