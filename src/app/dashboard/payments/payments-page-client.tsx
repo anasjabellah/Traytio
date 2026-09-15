@@ -143,7 +143,7 @@ function PaymentsPageContent({ initialData }: { initialData?: PaginatedPayments 
 
         {/* ═══ KPI CARDS ═══ */}
         {!stats ? null : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 [&>div]:min-h-[156px] [&_.text-kpi-value]:mt-9">
             <KpiCard
               label="Total collecté"
               value={stats.totalCollected}
@@ -180,7 +180,7 @@ function PaymentsPageContent({ initialData }: { initialData?: PaginatedPayments 
           className="mb-6"
         >
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft w-full sm:max-w-sm xl:max-w-md transition-all focus-within:border-[var(--gold-deep)] focus-within:ring-1 focus-within:ring-[var(--gold-deep)]/20">
+            <div className="flex items-center gap-2 px-4 h-11 rounded-xl border border-border bg-card shadow-soft w-full sm:flex-1 transition-all focus-within:border-[var(--gold-deep)] focus-within:ring-1 focus-within:ring-[var(--gold-deep)]/20">
               <Search size={18} strokeWidth={1.8} className="text-muted-foreground shrink-0" />
               <input
                 value={localSearch}
@@ -195,7 +195,7 @@ function PaymentsPageContent({ initialData }: { initialData?: PaginatedPayments 
               )}
             </div>
 
-            <div className="flex items-center gap-2 sm:ml-auto">
+            <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
               <select
                 value={methodFilter}
                 onChange={(e) => setMethodFilter(e.target.value)}
@@ -391,7 +391,7 @@ function PaymentsPageContent({ initialData }: { initialData?: PaginatedPayments 
           </div>
 
           {/* RIGHT: SIDEBAR */}
-          <div className="w-full xl:w-[30%] mt-6 xl:mt-0 space-y-5">
+          <div className="w-full xl:w-[30%] mt-6 xl:mt-0 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-5">
             {/* CARD 1: Paiements aujourd'hui */}
             <motion.div
               initial={{ opacity: 0, x: 16 }}

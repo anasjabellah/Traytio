@@ -18,7 +18,9 @@ export default function PaymentsLoading() {
             </div>
           </div>
         </div>
-        <StatsSkeleton cards={4} />
+        <div className="[&>div>div]:min-h-[156px]">
+          <StatsSkeleton cards={3} />
+        </div>
         <div className="mt-6 mb-6 flex items-center gap-4">
           <div className="h-11 flex-1 max-w-md rounded-xl bg-foreground/5 animate-pulse" />
           <div className="h-11 w-[120px] rounded-xl bg-foreground/5 animate-pulse" />
