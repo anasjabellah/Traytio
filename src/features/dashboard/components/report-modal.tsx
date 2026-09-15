@@ -54,24 +54,25 @@ const EVENT_TYPE_OPTIONS = [
   { value: 'OTHER', label: 'Autre' },
 ];
 
-function getDateRange(preset: Preset): { dateFrom?: string; dateTo?: string } {
+function getDateRange(preset: Preset): { dateFrom: string; dateTo: string } {
   const now = new Date();
+  const today = now.toISOString().slice(0, 10);
   switch (preset) {
     case 'today': {
-      const s = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      return { dateFrom: s.toISOString().slice(0, 10) };
+      const s = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10);
+      return { dateFrom: s, dateTo: today };
     }
     case '7days': {
       const s = new Date(now);
       s.setDate(s.getDate() - 6);
-      return { dateFrom: s.toISOString().slice(0, 10) };
+      return { dateFrom: s.toISOString().slice(0, 10), dateTo: today };
     }
     case 'month':
-      return { dateFrom: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10) };
+      return { dateFrom: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10), dateTo: today };
     case 'year':
-      return { dateFrom: new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 10) };
+      return { dateFrom: new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 10), dateTo: today };
     case 'custom':
-      return {};
+      return { dateFrom: '', dateTo: '' };
   }
 }
 
@@ -87,8 +88,8 @@ export function ReportModal({ open, onOpenChange }: { open: boolean; onOpenChang
 
   const handleGenerate = useCallback(async () => {
     const range = preset === 'custom' ? { dateFrom: customFrom, dateTo: customTo } : getDateRange(preset);
-    if (preset === 'custom' && !customFrom) {
-      notify.error(COMMON.REPORT.DATE_REQUIRED);
+    if (!range.dateFrom || !range.dateTo) {
+      notify.error(range.dateFrom ? COMMON.REPORT.DATE_END_REQUIRED : COMMON.REPORT.DATE_REQUIRED);
       return;
     }
     setLoading(true);
