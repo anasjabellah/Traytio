@@ -278,7 +278,8 @@ type WireResult = { ok: true } | { ok: false; error: string }
 
 const ERR = {
   CLIENT_NOT_FOUND: 'CLIENT_NOT_FOUND_OR_ACCESS_DENIED',
-  CLIENT_HAS_ACTIVE: 'CLIENT_HAS_ACTIVE_COMMANDES',
+  CLIENT_HAS_COMMANDES: 'CLIENT_HAS_COMMANDES',
+  CLIENT_HAS_PAYMENTS: 'CLIENT_HAS_PAYMENTS',
   CLIENT_UPDATE_ERR: 'CLIENT_UNEXPECTED_ERROR',
   CLIENT_DELETE_ERR: 'CLIENT_DELETE_ERROR',
   COMMANDE_NOT_FOUND: 'COMMANDE_NOT_FOUND_OR_ACCESS_DENIED',
@@ -318,11 +319,19 @@ async function deleteClientWire(db: Db, serverOrg: string, id: string): Promise<
   try {
     const existing = db.findFirst('client', { id, organizationId: serverOrg })
     if (!existing) return { ok: false, error: ERR.CLIENT_NOT_FOUND }
-    const active = db.count('commande', {
+    const commandesCount = db.count('commande', {
       clientId: id,
       organizationId: serverOrg,
     })
-    if (active > 0) return { ok: false, error: ERR.CLIENT_HAS_ACTIVE }
+    if (commandesCount > 0) return { ok: false, error: ERR.CLIENT_HAS_COMMANDES }
+    // Payment check: find commandeIds for the client, then count payments with those commandeIds
+    const clientCommandeIds = db.store.commande
+      .filter((c) => c.clientId === id && c.organizationId === serverOrg)
+      .map((c) => c.id)
+    const paymentsCount = db.store.payment.filter(
+      (p) => p.organizationId === serverOrg && clientCommandeIds.includes(p.commandeId as string),
+    ).length
+    if (paymentsCount > 0) return { ok: false, error: ERR.CLIENT_HAS_PAYMENTS }
     db.remove('client', { id, organizationId: serverOrg })
     return { ok: true }
   } catch {
@@ -462,7 +471,7 @@ describe('B-08 BEHAVIOR: same-organization happy path', () => {
     assert.equal(db.store.client[0]!.name, 'new')
   })
 
-  it('deleteClient succeeds with no active commandes and org-scoped where', async () => {
+  it('deleteClient succeeds with no commandes and org-scoped where', async () => {
     const db = seedDb({
       client: [{ id: 'c1', organizationId: 'org_a' }],
     })

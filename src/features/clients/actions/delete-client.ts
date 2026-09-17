@@ -36,21 +36,38 @@ async function deleteClientHandler(id: string): Promise<ActionResponse<void>> {
       return { success: false, error: CLIENT.NOT_FOUND_OR_ACCESS_DENIED };
     }
 
-    // Check for active commandes (not cancelled or delivered)
-    const activeCommandesCount = await prisma.commande.count({
+    // Check for ALL commandes — Prisma Restrict on Commande.clientId blocks
+    // any deletion when commandes exist, regardless of status.
+    const commandesCount = await prisma.commande.count({
       where: {
         clientId: id,
         organizationId,
-        status: {
-          notIn: ['CANCELLED', 'DELIVERED']
+      }
+    });
+
+    if (commandesCount > 0) {
+      return {
+        success: false,
+        error: CLIENT.HAS_COMMANDES
+      };
+    }
+
+    // Defense-in-depth: check for payments linked to this client's commandes.
+    // Payment has no direct Client FK (it references Commande), so we check
+    // via the commande relation. This must remain organization-scoped.
+    const paymentsCount = await prisma.payment.count({
+      where: {
+        organizationId,
+        commande: {
+          clientId: id,
         }
       }
     });
 
-    if (activeCommandesCount > 0) {
+    if (paymentsCount > 0) {
       return {
         success: false,
-        error: CLIENT.HAS_ACTIVE_COMMANDES
+        error: CLIENT.HAS_PAYMENTS
       };
     }
 

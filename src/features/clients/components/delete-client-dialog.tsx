@@ -19,10 +19,10 @@ export function DeleteClientDialog({
   onSuccess?: () => void;
 }) {
   const [isDeleting, setIsDeleting] = React.useState(false);
-  const hasActiveCommandes = client.commandesCount > 0;
+  const hasCommandes = client.commandesCount > 0;
 
   const handleDelete = async () => {
-    if (hasActiveCommandes) return;
+    if (hasCommandes) return;
     setIsDeleting(true);
     try {
       const resp = await deleteClient(client.id);
@@ -51,12 +51,12 @@ export function DeleteClientDialog({
         <>
           Êtes-vous sûr de vouloir supprimer le client{' '}
           <span className="font-semibold text-foreground">{client.name}</span> ?
-          {hasActiveCommandes && (
-            <p className="mt-2 text-sm text-destructive">{CLIENT.ACTIVE_COMMANDES_WARNING}</p>
+          {hasCommandes && (
+            <p className="mt-2 text-sm text-destructive">{CLIENT.HAS_COMMANDES}</p>
           )}
         </>
       }
-      confirmLabel={hasActiveCommandes ? "Client avec commandes" : "Supprimer"}
+      confirmLabel={hasCommandes ? "Client avec commandes" : "Supprimer"}
     />
   );
 }
