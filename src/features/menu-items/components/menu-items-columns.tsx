@@ -41,12 +41,17 @@ export const menuItemsColumns = (
       const emoji = EMOJI_MAP[item.category] || '📦';
       return (
         <div className="flex items-center gap-3">
-          <div className={`h-12 w-12 shrink-0 overflow-hidden rounded-full bg-gradient-to-br text-lg flex items-center justify-center ${accent}`}>
-            {item.imageUrl ? (
-              <img src={item.imageUrl} alt="" className="h-full w-full object-cover object-center" />
-            ) : (
-              <span>{emoji}</span>
-            )}
+          <div className={`relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-gradient-to-br text-lg flex items-center justify-center ${accent}`}>
+            <span>{emoji}</span>
+            {(item.imageUrl ?? '').trim() ? (
+              <img
+                key={item.imageUrl}
+                src={(item.imageUrl ?? '').trim()}
+                alt=""
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                className="absolute inset-0 h-full w-full rounded-full object-cover object-center"
+              />
+            ) : null}
           </div>
           <div className="min-w-0">
             <div className="font-medium text-foreground truncate">{item.name}</div>

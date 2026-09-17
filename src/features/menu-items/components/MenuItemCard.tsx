@@ -20,6 +20,9 @@ interface MenuItemCardProps {
 export function MenuItemCard({ item, index, onView, onEdit, onDelete, onDuplicate, onArchive }: MenuItemCardProps) {
   const emoji = ITEM_EMOJI[item.category] || '\u{1F4E6}';
   const accent = CATEGORY_ACCENT[item.category] || 'from-gray-50 to-stone-50';
+  // Never render a broken-image icon: blank URLs count as absent, and a URL
+  // that fails to load hides itself to reveal the emoji underneath.
+  const imgSrc = (item.imageUrl ?? '').trim() || undefined;
 
   return (
     <motion.div
@@ -30,11 +33,16 @@ export function MenuItemCard({ item, index, onView, onEdit, onDelete, onDuplicat
     >
       <div className={cn('relative aspect-[16/9] bg-gradient-to-br', accent)}>
         <div className="absolute inset-0 grid place-items-center text-5xl drop-shadow-sm">
-          {item.imageUrl ? (
-            <img src={item.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-          ) : (
-            <span>{emoji}</span>
-          )}
+          <span>{emoji}</span>
+          {imgSrc ? (
+            <img
+              key={imgSrc}
+              src={imgSrc}
+              alt=""
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : null}
         </div>
         <div className="absolute right-3 top-3">
           <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium shadow-sm backdrop-blur-md ring-1', CATEGORY_BADGE_COLORS[item.category] || 'bg-background/80 text-foreground')}>

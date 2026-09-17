@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 
 import { useMenuItems } from '@/features/menu-items/hooks/use-menu-items';
 import { useMenuItemForm } from '@/features/menu-items/hooks/use-menu-item-form';
+import { useInvalidateQueries } from '@/lib/invalidate-queries';
 import { MenuItemsTable } from '@/features/menu-items/components/menu-items-table';
 import { MenuItemCard } from '@/features/menu-items/components/MenuItemCard';
 import { Pagination } from '@/components/ui/pagination';
@@ -152,8 +153,16 @@ function MenuItemsPageContent({ initialData }: { initialData?: PaginatedMenuItem
   const handleView = useCallback((item: MenuItem) => { window.location.href = `/dashboard/menu-items/${item.id}`; }, []);
   const handleEdit = useCallback((item: MenuItem) => openEdit(item), [openEdit]);
   const handleDelete = useCallback((item: MenuItem) => openDelete(item), [openDelete]);
-  const handleDuplicate = useCallback((item: MenuItem) => { openDuplicate(item).then(() => refresh()); }, [openDuplicate, refresh]);
-  const handleArchive = useCallback((item: MenuItem) => { openArchive(item).then(() => refresh()); }, [openArchive, refresh]);
+  const invalidate = useInvalidateQueries();
+  // Catalog consumers outside this page (Commande Event Builder) cache the
+  // menu catalog under their own query keys. A saved image/price/name must
+  // reach those cards, so refresh them alongside the local list.
+  const refreshCatalog = useCallback(() => {
+    refresh();
+    invalidate([["commande-menus"], ["commande-all-menu-items"]]);
+  }, [refresh, invalidate]);
+  const handleDuplicate = useCallback((item: MenuItem) => { openDuplicate(item).then(() => refreshCatalog()); }, [openDuplicate, refreshCatalog]);
+  const handleArchive = useCallback((item: MenuItem) => { openArchive(item).then(() => refreshCatalog()); }, [openArchive, refreshCatalog]);
 
   const isSearching = query.length > 0;
   const hasNoResults = !isLoading && isSearching && items.length === 0;
@@ -417,12 +426,12 @@ function MenuItemsPageContent({ initialData }: { initialData?: PaginatedMenuItem
       </div>
 
       {/* Dialogs */}
-      <CreateMenuItemDialog open={isCreateOpen} onOpenChange={(open) => { if (!open) closeAll(); }} onSuccess={refresh} />
+      <CreateMenuItemDialog open={isCreateOpen} onOpenChange={(open) => { if (!open) closeAll(); }} onSuccess={refreshCatalog} />
       {isEditOpen && selectedItem && (
-        <EditMenuItemDialog item={selectedItem} open={true} onClose={(open) => { if (!open) closeAll(); }} onSuccess={refresh} />
+        <EditMenuItemDialog item={selectedItem} open={true} onClose={(open) => { if (!open) closeAll(); }} onSuccess={refreshCatalog} />
       )}
       {isDeleteOpen && selectedItem && (
-        <DeleteMenuItemDialog item={selectedItem} open={true} onOpenChange={(open) => { if (!open) closeAll(); }} onSuccess={refresh} />
+        <DeleteMenuItemDialog item={selectedItem} open={true} onOpenChange={(open) => { if (!open) closeAll(); }} onSuccess={refreshCatalog} />
       )}
     </div>
   );

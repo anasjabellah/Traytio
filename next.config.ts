@@ -15,7 +15,11 @@ const csp = [
   // which is a larger refactor out of scope for this targeted hardening.
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://${clerkFrontendHost}`,
   `font-src 'self' https://fonts.gstatic.com https://${clerkFrontendHost}`,
-  `img-src 'self' data: blob: https://${clerkFrontendHost} https://img.clerk.com https://res.cloudinary.com${cloudinaryCloudName ? `/${cloudinaryCloudName}` : ""} https://raw.githubusercontent.com`,
+  // NOTE: a CSP source with a path MUST end with a trailing slash to cover
+  // everything below it. `https://res.cloudinary.com/<cloud>` (no slash)
+  // matches only that exact path — every real delivery URL
+  // (`/<cloud>/image/upload/...`) was blocked, breaking all uploaded images.
+  `img-src 'self' data: blob: https://${clerkFrontendHost} https://img.clerk.com https://res.cloudinary.com${cloudinaryCloudName ? `/${cloudinaryCloudName}/` : ""} https://raw.githubusercontent.com`,
   `connect-src 'self' https://${clerkFrontendHost} https://api.clerk.com https://*.protect.clerk.com:* https://res.cloudinary.com`,
   `frame-src 'self' https://${clerkFrontendHost} https://clerk.${clerkFrontendHost.replace(/^\*\./, "")} https://challenges.cloudflare.com https://*.protect.clerk.com`,
   "worker-src 'self' blob:",
