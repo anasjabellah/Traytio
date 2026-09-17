@@ -1,6 +1,15 @@
 export type Cat = "Food" | "Drinks" | "Desserts" | "Decoration" | "Services" | "Divertissement" | "Extras";
 
-export type SelectedItem = { id: string; qty: number; note?: string };
+export type SelectedItem = {
+  id: string;
+  qty: number;
+  note?: string;
+  // HIGH-05: persisted snapshot carried from an existing CommandeItem.
+  // When present, the edit form must display this price — never the live
+  // catalog price. Absent for genuinely new selections (catalog applies).
+  unitPrice?: number;
+  name?: string;
+};
 
 export type MenuItem = {
   id: string;

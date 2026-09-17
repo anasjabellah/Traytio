@@ -393,24 +393,55 @@ async function updateCommandeWire(
     resolvedEventId = data.eventId
   }
 
+  // Fetch original Event data for clone-on-write (matches production action)
+  const originalEvent = (resolvedEventId && data.eventDate)
+    ? db.store.events.find((e) => e.id === resolvedEventId && e.organizationId === serverOrg) ?? null
+    : null
+
   try {
     await db._runTransaction(async (tx) => {
       if (resolvedEventId && data.eventDate) {
-        tx.eventUpdate(
-          { id: resolvedEventId, organizationId: serverOrg },
-          {
-            name: data.eventName ?? undefined,
-            type: data.eventType ?? undefined,
-            status: data.eventStatus ?? undefined,
-            startDate: data.eventDate ? new Date(data.eventDate) : undefined,
-            location: data.location ?? undefined,
-            guestCount: data.guestCount ?? undefined,
-            budget: data.clientBudget ?? undefined,
-            contactPerson: data.contactName ?? undefined,
-            contactPhone: data.contactPhone ?? undefined,
-            notes: data.notes ?? undefined,
-          },
-        )
+        const commandesUsingEvent = db.store.commandes.filter(
+          (c) => c.eventId === resolvedEventId && c.organizationId === serverOrg,
+        ).length
+
+        if (commandesUsingEvent > 1) {
+          // Clone-on-Write: create a clone of the shared Event.
+          const evt = originalEvent!
+          const cloneId = tx.eventCreate({
+            organizationId: serverOrg,
+            clientId: data.clientId,
+            name: data.eventName ?? evt.name,
+            type: data.eventType ?? evt.type,
+            status: data.eventStatus ?? evt.status,
+            startDate: data.eventDate ? new Date(data.eventDate) : evt.startDate,
+            endDate: evt.endDate,
+            location: data.location ?? evt.location,
+            guestCount: data.guestCount ?? evt.guestCount,
+            budget: data.clientBudget ?? evt.budget,
+            contactPerson: data.contactName ?? evt.contactPerson,
+            contactPhone: data.contactPhone ?? evt.contactPhone,
+            notes: data.notes ?? evt.notes,
+          })
+          resolvedEventId = cloneId
+        } else {
+          // Not shared — update in place (matches production action).
+          tx.eventUpdate(
+            { id: resolvedEventId, organizationId: serverOrg },
+            {
+              name: data.eventName ?? undefined,
+              type: data.eventType ?? undefined,
+              status: data.eventStatus ?? undefined,
+              startDate: data.eventDate ? new Date(data.eventDate) : undefined,
+              location: data.location ?? undefined,
+              guestCount: data.guestCount ?? undefined,
+              budget: data.clientBudget ?? undefined,
+              contactPerson: data.contactName ?? undefined,
+              contactPhone: data.contactPhone ?? undefined,
+              notes: data.notes ?? undefined,
+            },
+          )
+        }
       }
 
       let eventId = resolvedEventId
@@ -494,7 +525,11 @@ describe('N-06 SOURCE CONTRACT: automatic Event creation is inside the transacti
     const commandeUpdateIdx = src.indexOf('await tx.commande.update')
     assert.ok(txIdx !== -1 && eventUpdateIdx !== -1 && eventCreateIdx !== -1 && commandeUpdateIdx !== -1)
     assert.ok(txIdx < eventUpdateIdx, 'linked-Event update runs inside the tx (after transaction start)')
-    assert.ok(eventUpdateIdx < eventCreateIdx && eventCreateIdx < commandeUpdateIdx, 'event update + creation both inside the tx, before the commande update')
+    assert.ok(txIdx < eventCreateIdx, 'Event creation runs inside the tx (after transaction start)')
+    assert.ok(eventUpdateIdx < commandeUpdateIdx, 'Event update runs before commande update')
+    assert.ok(eventCreateIdx < commandeUpdateIdx, 'Event creation runs before commande update')
+    assert.ok(src.includes('commandesUsingEvent'), 'clone-on-write checks Commande count before mutating shared Event')
+    assert.ok(src.includes('clone'), 'clone-on-write creates a cloned Event when shared')
   })
 })
 

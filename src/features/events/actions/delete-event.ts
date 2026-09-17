@@ -24,6 +24,14 @@ async function deleteEventHandler(id: string): Promise<ActionResponse<void>> {
     const organizationId = await getOrganizationId();
     await assertCan('events', 'delete');
 
+    // ── Pre-delete guard: block if Event has linked Commandes ──
+    const commandesCount = await prisma.commande.count({
+      where: { eventId: id, organizationId },
+    });
+    if (commandesCount > 0) {
+      return { success: false, error: EVENT.HAS_COMMANDES };
+    }
+
     await prisma.event.delete({
       where: { id, organizationId }
     });

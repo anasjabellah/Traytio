@@ -14,6 +14,7 @@ export const MENU_ITEM = {
   DELETE: {
     SUCCESS: "Article supprimé avec succès.",
     ERROR: "Impossible de supprimer l'article.",
+    HAS_DEPENDENCIES: "Impossible de supprimer cet article car il est lié à des commandes ou des menus.",
   },
   DUPLICATE: {
     SUCCESS: "Article dupliqué avec succès.",

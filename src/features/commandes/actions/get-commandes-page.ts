@@ -101,7 +101,7 @@ async function getCommandesPageHandler(params: GetCommandesParams): Promise<Acti
       remainingAmount: true, discountType: true, discountAmount: true,
       createdAt: true, updatedAt: true, clientId: true, eventId: true,
       menuId: true, menuName: true, pricePerPerson: true, location: true, notes: true,
-      transportFees: true, deliveryFees: true, equipmentFees: true, discountValue: true,
+      transportFees: true, deliveryFees: true, equipmentFees: true, extraService: true, discountValue: true,
       taxRate: true, taxLabel: true, taxAmount: true, clientBudget: true,
       contactName: true, contactPhone: true, internalNotes: true, clientNotes: true,
       pdfUrl: true, sentAt: true, sentVia: true, acomptePercent: true, organizationId: true,

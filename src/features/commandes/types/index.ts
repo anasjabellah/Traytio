@@ -21,6 +21,7 @@
   transportFees: number | null;
   deliveryFees: number | null;
   equipmentFees: number | null;
+  extraService: number | null;
   discountType: string | null;
   discountValue: number | null;
   discountAmount: number | null;
@@ -111,6 +112,12 @@ export type CommandeWithDetails = Commande & {
   activities?: CommandeActivity[];
 };
 
+export type Task = {
+  id?: string;
+  label: string;
+  done: boolean;
+};
+
 export type CreateCommandeInput = {
   number: string;
   clientId: string;
@@ -125,6 +132,10 @@ export type CreateCommandeInput = {
   menuName?: string | null;
   pricePerPerson?: number | null;
   totalAmount?: number | null;
+  transportFees?: number | null;
+  deliveryFees?: number | null;
+  equipmentFees?: number | null;
+  extraService?: number | null;
   notes?: string | null;
   status?: string;
   items?: Array<{
@@ -134,6 +145,7 @@ export type CreateCommandeInput = {
     totalPrice: number;
     menuItemId?: string | null;
   }>;
+  tasks?: Task[];
 };
 
 export type UpdateCommandeInput = Partial<CreateCommandeInput> & { id: string };

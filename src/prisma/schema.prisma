@@ -228,6 +228,7 @@ model Commande {
   transportFees   Decimal?              @default(0)
   deliveryFees    Decimal?              @default(0)
   equipmentFees   Decimal?              @default(0)
+  extraService    Decimal?              @default(0)
   discountType    DiscountType?
   discountValue   Decimal?              @default(0)
   discountAmount  Decimal?              @default(0)

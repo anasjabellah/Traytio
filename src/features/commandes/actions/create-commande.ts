@@ -10,6 +10,7 @@ import { COMMANDE } from "@/lib/notify/messages"
 import { withActionGuard } from "@/lib/action-guard"
 import { normalizeActionError } from "@/lib/action-error"
 import type { CommandeStatus, EventType, EventStatus, DiscountType, Prisma } from "@prisma/client";
+import type { TaskInput } from "@/features/commandes/validations/create-commande-schema";
 
 function isPrismaP2002(err: unknown): boolean {
   return typeof err === 'object' && err !== null && 'code' in err && (err as { code: string }).code === 'P2002'
@@ -66,6 +67,25 @@ async function createCommandeHandler(input: unknown) {
     });
     if (validMenuItems.length !== menuItemIds.length) {
       return { success: false, error: "Invalid menu item for organization" };
+    }
+  }
+
+  // ── HIGH-05: catalog fallback map for genuinely-missing item prices ──
+  // The zod schema requires unitPrice, so this only triggers for callers
+  // that bypass validation. Org-scoped like the menuItem check above.
+  const catalogPrices = new Map<string, number>();
+  {
+    const ids = [...new Set(
+      (parsed.data.items ?? [])
+        .filter((i) => i.menuItemId && !(typeof i.unitPrice === 'number' && Number.isFinite(i.unitPrice) && i.unitPrice >= 0))
+        .map((i) => i.menuItemId!),
+    )];
+    if (ids.length > 0) {
+      const catalog = await prisma.menuItem.findMany({
+        where: { id: { in: ids }, organizationId },
+        select: { id: true, unitPrice: true },
+      });
+      for (const m of catalog) catalogPrices.set(m.id, Number(m.unitPrice));
     }
   }
 
@@ -129,6 +149,7 @@ async function createCommandeHandler(input: unknown) {
             transportFees: data.transportFees ?? undefined,
             deliveryFees: data.deliveryFees ?? undefined,
             equipmentFees: data.equipmentFees ?? undefined,
+            extraService: data.extraService ?? undefined,
             discountType: data.discountType as DiscountType | undefined,
             discountValue: data.discountValue ?? undefined,
             discountAmount: data.discountAmount ?? undefined,
@@ -141,20 +162,44 @@ async function createCommandeHandler(input: unknown) {
             internalNotes: data.internalNotes ?? undefined,
             clientNotes: data.clientNotes ?? undefined,
             items: {
-              create: (data.items ?? []).map(item => ({
-                name: item.name,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                totalPrice: item.totalPrice,
-                menuItemId: item.menuItemId ?? undefined,
-                notes: item.notes ?? undefined,
-              })),
+              create: (data.items ?? []).map(item => {
+                const hasClientPrice =
+                  typeof item.unitPrice === 'number' &&
+                  Number.isFinite(item.unitPrice) &&
+                  item.unitPrice >= 0;
+                // HIGH-05: at creation the client (catalog) price is the
+                // historical price; the catalog lookup below only fires when
+                // the price is genuinely absent.
+                const unitPrice = hasClientPrice
+                  ? item.unitPrice
+                  : (item.menuItemId ? catalogPrices.get(item.menuItemId) : undefined)
+                    ?? item.unitPrice;
+                return {
+                  name: item.name,
+                  quantity: item.quantity,
+                  unitPrice,
+                  // Recompute only when we fell back to a different price;
+                  // otherwise keep the caller-supplied total untouched.
+                  totalPrice: hasClientPrice ? item.totalPrice : unitPrice * item.quantity,
+                  menuItemId: item.menuItemId ?? undefined,
+                  notes: item.notes ?? undefined,
+                };
+              }),
             },
           },
           include: { items: true, tasks: true },
         })
 
         await recalculateCommandeBalances(tx, cmd.id)
+
+        if (data.tasks && data.tasks.length > 0) {
+          for (const t of data.tasks) {
+            await tx.commandeTask.create({
+              data: { commandeId: cmd.id, title: t.label, isDone: t.done ?? false },
+            })
+          }
+        }
+
         return cmd
       })
 

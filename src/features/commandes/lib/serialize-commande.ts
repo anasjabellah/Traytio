@@ -12,6 +12,7 @@ export function serializeCommande(c: {
   pricePerPerson: unknown; totalAmount: unknown; acomptePercent: number
   acompteAmount: unknown; paidAmount: unknown; remainingAmount: unknown
   notes: string | null; transportFees: unknown; deliveryFees: unknown; equipmentFees: unknown
+  extraService: unknown;
   discountType: string | null; discountValue: unknown; discountAmount: unknown
   taxRate: unknown; taxLabel: string | null; taxAmount: unknown; clientBudget: unknown
   contactName: string | null; contactPhone: string | null
@@ -30,7 +31,7 @@ export function serializeCommande(c: {
     acompteAmount: Number(c.acompteAmount ?? 0), paidAmount: Number(c.paidAmount ?? 0),
     remainingAmount: Number(c.remainingAmount ?? 0), notes: c.notes,
     transportFees: toNumber(c.transportFees), deliveryFees: toNumber(c.deliveryFees),
-    equipmentFees: toNumber(c.equipmentFees),
+    equipmentFees: toNumber(c.equipmentFees), extraService: toNumber(c.extraService),
     discountType: c.discountType, discountValue: toNumber(c.discountValue),
     discountAmount: toNumber(c.discountAmount),
     taxRate: toNumber(c.taxRate), taxLabel: c.taxLabel ?? null, taxAmount: toNumber(c.taxAmount),

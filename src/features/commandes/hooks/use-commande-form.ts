@@ -228,6 +228,7 @@ export function useCommandeForm() {
       }));
       const result = await createCommande({
         clientId: client.id,
+        eventId: selectedEvent && selectedEvent !== "new" ? selectedEvent.id : undefined,
         eventName: eventName || null,
         eventStatus: eventStatus,
         eventType: eventType || null,
@@ -241,6 +242,7 @@ export function useCommandeForm() {
         transportFees: transport,
         deliveryFees: delivery,
         equipmentFees: equipment,
+        extraService: extraService || null,
         discountType: discountValue > 0 ? discountTypeDb : null,
         discountValue: discountValue || null,
         discountAmount: discountAmount || null,
@@ -254,6 +256,7 @@ export function useCommandeForm() {
         clientNotes: clientNotes || null,
         status: "DRAFT",
         items,
+        tasks: tasks.map((t) => ({ label: t.label, done: t.done })),
       });
       if (!result.success || !result.data) return { success: false as const, error: result.error ?? COMMANDE.CREATE.ERROR };
 
@@ -281,7 +284,7 @@ export function useCommandeForm() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [client, eventStatus, eventName, discountType, eventDate, startTime, selectedPack, packs, selectedList, eventType, guests, location, total, transport, delivery, equipment, discountValue, discountAmount, acompteAmount, deposit, budget, contactPerson, contactPhone, eventNotes, internalNotes, clientNotes, attachments]);
+  }, [client, eventStatus, eventName, discountType, eventDate, startTime, selectedPack, packs, selectedList, eventType, guests, location, total, transport, delivery, equipment, extraService, discountValue, discountAmount, acompteAmount, deposit, budget, contactPerson, contactPhone, eventNotes, internalNotes, clientNotes, attachments]);
 
   const state = {
     client, setClient, showClientPanel, setShowClientPanel,

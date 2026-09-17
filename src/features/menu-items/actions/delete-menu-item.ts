@@ -7,8 +7,8 @@ import type { ActionResponse } from '@/features/menu-items/types';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
-import { normalizeActionError } from '@/lib/action-error';
 import { MENU_ITEM } from '@/lib/notify/messages';
+import { normalizeActionError } from '@/lib/action-error';
 
 const deleteMenuItemSchema = z.object({
   id: z.string().min(1),
@@ -23,6 +23,18 @@ async function deleteMenuItemHandler(id: string): Promise<ActionResponse> {
 
     const organizationId = await getOrganizationId();
     await assertCan('menu-items', 'delete');
+
+    // ── Pre-delete guard: block if MenuItem has linked dependencies ──
+    const menuItemLinkCount = await prisma.menuMenuItem.count({
+      where: { menuItemId: id },
+    });
+    const commandeItemCount = await prisma.commandeItem.count({
+      where: { menuItemId: id },
+    });
+    if (menuItemLinkCount > 0 || commandeItemCount > 0) {
+      return { success: false, error: MENU_ITEM.DELETE.HAS_DEPENDENCIES };
+    }
+
     await prisma.menuItem.delete({ where: { id, organizationId } });
     revalidatePath("/dashboard/menu-items")
     return { success: true };

@@ -14,6 +14,7 @@ export const EVENT = {
     SUCCESS: "Événement supprimé avec succès.",
     ERROR: "Impossible de supprimer l'événement.",
   },
+  HAS_COMMANDES: "Impossible de supprimer cet événement car il est lié à des commandes.",
   NOT_FOUND: "Événement introuvable.",
   INVALID_INPUT: COMMON.INVALID_INPUT,
   FETCH_ERROR: "Échec du chargement des événements.",

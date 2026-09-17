@@ -10,6 +10,12 @@ export const commandeItemSchema = z.object({
   notes: z.string().nullable().optional(),
 });
 
+export const taskSchema = z.object({
+  id: z.string().min(1).optional(),
+  label: z.string().min(1),
+  done: z.boolean().default(false),
+});
+
 export const createCommandeSchema = z.object({
   number: z.string().min(1).optional(),
   clientId: z.string().min(1),
@@ -27,6 +33,7 @@ export const createCommandeSchema = z.object({
   transportFees: z.number().min(0).nullable().optional(),
   deliveryFees: z.number().min(0).nullable().optional(),
   equipmentFees: z.number().min(0).nullable().optional(),
+  extraService: z.number().min(0).nullable().optional(),
   discountType: z.enum(['PERCENTAGE', 'FIXED'], { message: COMMANDE.VALIDATION.INVALID_DISCOUNT_TYPE }).nullable().optional(),
   discountValue: z.number().min(0).nullable().optional(),
   discountAmount: z.number().min(0).nullable().optional(),
@@ -39,9 +46,9 @@ export const createCommandeSchema = z.object({
   internalNotes: z.string().nullable().optional(),
   clientNotes: z.string().nullable().optional(),
   status: z.enum(['DRAFT', 'QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'READY', 'DELIVERED', 'CANCELLED'], { message: COMMANDE.VALIDATION.INVALID_STATUS }).optional().default('DRAFT'),
-  // No `.default([])`: an OMITTED items key must stay `undefined` so writers can
-  // distinguish "no item update" from an explicit "clear all items" empty array.
   items: z.array(commandeItemSchema).optional(),
+  tasks: z.array(taskSchema).optional(),
 });
 
 export type CreateCommandeInput = z.infer<typeof createCommandeSchema>;
+export type TaskInput = z.infer<typeof taskSchema>;

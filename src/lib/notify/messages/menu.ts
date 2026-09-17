@@ -13,6 +13,7 @@ export const MENU = {
   DELETE: {
     SUCCESS: "Menu supprimé avec succès.",
     ERROR: "Impossible de supprimer le menu.",
+    HAS_DEPENDENCIES: "Impossible de supprimer ce menu car il est lié à des commandes ou des articles.",
   },
   NOT_FOUND: "Menu introuvable.",
   INVALID_INPUT: COMMON.INVALID_INPUT,

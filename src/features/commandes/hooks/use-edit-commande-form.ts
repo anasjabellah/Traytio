@@ -57,7 +57,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
   const [transport, setTransport] = useState(commande.transportFees ?? 0);
   const [delivery, setDelivery] = useState(commande.deliveryFees ?? 0);
   const [equipment, setEquipment] = useState(commande.equipmentFees ?? 0);
-  const [extraService, setExtraService] = useState(0);
+  const [extraService, setExtraService] = useState(commande.extraService ?? 0);
 
   const [discountType, setDiscountType] = useState<string>(
     commande.discountType === "FIXED" ? "fixed" : "percent"
@@ -107,7 +107,15 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
     const initialSelected: Record<string, SelectedItem> = {};
     commande.items.forEach(item => {
       const id = item.menuItemId ?? item.name;
-      initialSelected[id] = { id, qty: item.quantity, note: item.notes ?? "" };
+      // HIGH-05: hydrate with the PERSISTED price/name — the catalog join
+      // below must not overwrite these with live MenuItem prices.
+      initialSelected[id] = {
+        id,
+        qty: item.quantity,
+        note: item.notes ?? "",
+        unitPrice: Number(item.unitPrice),
+        name: item.name,
+      };
     });
     setSelected(initialSelected);
   }, [commande.items]);
@@ -175,7 +183,20 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
   const selectedList = useMemo(
     () => Object.values(selected).filter((s) => s.qty > 0).map((s) => {
       const item = menuItems.find((m) => m.id === s.id);
-      return { ...s, item: item ?? { id: s.id, name: "Inconnu", category: "Extras", price: 0, description: "" } };
+      // HIGH-05: an existing persisted row keeps its own price/name.
+      // The live catalog price applies ONLY to genuinely new selections
+      // (no carried unitPrice) — e.g. via applyPack/toggleItem — and to
+      // custom rows with no catalog match, which keep their snapshot.
+      const price = s.unitPrice ?? item?.price ?? 0;
+      const name = s.name ?? item?.name ?? "Inconnu";
+      return {
+        ...s,
+        item: {
+          ...(item ?? { id: s.id, category: "Extras", price: 0, description: "" }),
+          name,
+          price,
+        },
+      };
     }),
     [selected, menuItems],
   );
@@ -242,6 +263,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
         transportFees: transport,
         deliveryFees: delivery,
         equipmentFees: equipment,
+        extraService: extraService || null,
         discountType: discountValue > 0 ? discountTypeDb : null,
         discountValue: discountValue || null,
         discountAmount: discountAmount || null,
@@ -255,6 +277,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
         clientNotes: clientNotes || null,
         status: commande.status,
         items,
+        tasks: tasks.map((t) => ({ label: t.label, done: t.done })),
       });
       if (!result.success) return { success: false as const, error: result.error ?? COMMANDE.UPDATE.ERROR };
 
@@ -281,7 +304,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [client, commande.id, commande.number, commande.status, eventStatus, eventName, discountType, eventDate, startTime, selectedPack, packs, selectedList, eventType, guests, location, total, transport, delivery, equipment, discountValue, discountAmount, acompteAmount, deposit, budget, contactPerson, contactPhone, eventNotes, internalNotes, clientNotes, attachments]);
+  }, [client, commande.id, commande.number, commande.status, eventStatus, eventName, discountType, eventDate, startTime, selectedPack, packs, selectedList, eventType, guests, location, total, transport, delivery, equipment, extraService, discountValue, discountAmount, acompteAmount, deposit, budget, contactPerson, contactPhone, eventNotes, internalNotes, clientNotes, attachments]);
 
   const state = {
     client, setClient, showClientPanel, setShowClientPanel,

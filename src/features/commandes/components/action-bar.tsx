@@ -1,5 +1,6 @@
 "use client"
 
+import { useCallback } from "react";
 import { motion } from "framer-motion";
 import { Save, FileText, Send, Check, Loader2 } from "lucide-react";
 
@@ -18,6 +19,10 @@ function BarBtn({ icon, label, primary, ghost, onClick, disabled }: { icon: Reac
 }
 
 export function ActionBar({ total, onSubmit, isSubmitting, submitLabel, submittingLabel }: { total: number; onSubmit?: () => void; isSubmitting?: boolean; submitLabel?: string; submittingLabel?: string }) {
+  const handleSubmit = useCallback(() => {
+    if (isSubmitting) return;
+    onSubmit?.();
+  }, [isSubmitting, onSubmit]);
   return (
     <motion.div
       initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
@@ -37,14 +42,14 @@ export function ActionBar({ total, onSubmit, isSubmitting, submitLabel, submitti
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          <BarBtn icon={<Save className="h-3.5 w-3.5" />} label="Brouillon" ghost />
-          <BarBtn icon={<FileText className="h-3.5 w-3.5" />} label="Devis" />
-          <BarBtn icon={<Send className="h-3.5 w-3.5" />} label="WhatsApp" ghost />
+          <BarBtn icon={<Save className="h-3.5 w-3.5" />} label="Brouillon" ghost onClick={undefined} disabled />
+          <BarBtn icon={<FileText className="h-3.5 w-3.5" />} label="Devis" disabled />
+          <BarBtn icon={<Send className="h-3.5 w-3.5" />} label="WhatsApp" ghost disabled />
           <BarBtn
             icon={isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
             label={isSubmitting ? submittingLabel ?? "Création..." : submitLabel ?? "Créer la commande"}
             primary
-            onClick={onSubmit}
+            onClick={handleSubmit}
             disabled={isSubmitting}
           />
         </div>
