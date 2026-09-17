@@ -31,8 +31,8 @@ export const Sparkline = memo(function Sparkline({
   /** Unique id to prevent SVG gradient collisions when multiple sparklines are rendered. */
   id: string;
 }) {
-  const w = 96,
-    h = 32,
+  const w = 72,
+    h = 24,
     pad = 2;
   const min = Math.min(...data);
   const max = Math.max(...data);

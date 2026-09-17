@@ -167,7 +167,7 @@ export const fetchKpiSection = cache(async () => {
         label: "Chiffre d'affaires",
         value: totalRevenue, prefix: 'MAD',
         delta: revenueKpi.delta, trend: revenueKpi.trend, spark: revenueKpi.spark,
-        icon: 'wallet', sensitive: true,
+        icon: 'wallet', sensitive: true, accent: true,
       },
       {
         label: 'Commandes actives',

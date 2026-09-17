@@ -313,7 +313,7 @@
   }
 
   .text-kpi-value {
-    font-size: 1.4375rem; /* 23px */
+    font-size: 1.25rem; /* 20px */
     font-weight: 600;
     letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
