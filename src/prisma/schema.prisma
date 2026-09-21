@@ -58,6 +58,8 @@ model Organization {
   menuItems   MenuItem[]
   invitations Invitation[]
   notifications Notification[]
+  subscriptions Subscription[]
+  billingWebhookEvents BillingWebhookEvent[]
 
   @@map("organizations")
 }
@@ -518,6 +520,63 @@ model Notification {
   @@map("notifications")
 }
 
+// ==================== SAAS BILLING FOUNDATION ====================
+// Provider-agnostic subscription billing (money paid BY catering
+// businesses TO Traytio). Deliberately separate from the catering
+// Payment/Invoice models, which record money paid by a catering client's
+// own customers and must never be reused here.
+//
+// Plan transition note: Organization.plan (free String, zero readers)
+// predates this foundation and is left untouched. Once an organization has
+// a Subscription row, Subscription.plan is the authoritative billing plan;
+// Organization.plan is legacy and must not be treated as a second source
+// of truth for access decisions.
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  organizationId       String             @unique
+  provider             String
+  providerCustomerId   String?
+  providerSubscriptionId String?          @unique
+  plan                 SubscriptionPlan
+  status               SubscriptionStatus
+  priceId              String?
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  trialEnd             DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  // Owned billing record: cascade off the owning organization only.
+  // Never cascades toward financial/history data.
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([provider, providerCustomerId])
+  @@map("subscriptions")
+}
+
+model BillingWebhookEvent {
+  id              String   @id @default(cuid())
+  provider        String
+  providerEventId String
+  eventType       String
+  payload         Json
+  // Optional org link for already-attributable events (enables org-scoped
+  // queries + the required Organization reverse relation). Null when the
+  // event cannot be attributed yet; org is otherwise resolved from payload.
+  organizationId  String?
+  processedAt     DateTime?
+  createdAt       DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerEventId])
+  @@index([organizationId])
+  @@index([createdAt])
+  @@map("billing_webhook_events")
+}
+
 // ==================== TEAM MEMBER MODEL (deprecated) ====================
 
 model TeamMember {
@@ -649,6 +708,22 @@ enum NotificationType {
   EVENT_CREATED
   INVOICE_CREATED
   TEAM_INVITATION
+}
+
+enum SubscriptionPlan {
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  UNPAID
 }
 
 // ==================== DECIMAL SUPPORT ====================
