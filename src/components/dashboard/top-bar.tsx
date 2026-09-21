@@ -2,10 +2,11 @@
 
 import { useState, useRef, useEffect, useCallback, useLayoutEffect, startTransition } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Search, Bell, CheckCheck, AlertTriangle, Clock, Menu, ChevronDown, X } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { Search, Bell, CheckCheck, AlertTriangle, Menu, ChevronDown, X, ShoppingBag, Wallet, CalendarDays, FileText, UserPlus } from "lucide-react"
 import { useUser, useClerk } from "@clerk/nextjs"
-import { useNotificationStore } from "@/stores/notification-store"
+import { useNotifications, formatRelativeTime } from "@/features/notifications/hooks/use-notifications"
+import type { NotificationType } from "@prisma/client"
 import { useRole } from "@/hooks/use-role"
 import { RoleBadge } from "@/components/ui/role-badge"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
@@ -108,7 +109,11 @@ export function TopBar() {
   const notifRef = useRef<HTMLDivElement>(null)
   const userRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotificationStore()
+  const router = useRouter()
+  const {
+    notifications, unreadCount, isLoading: notifLoading,
+    markAsRead, markAllAsRead,
+  } = useNotifications()
   const { role, can } = useRole()
   const { user } = useUser()
   const clerk = useClerk()
@@ -213,22 +218,32 @@ export function TopBar() {
     [isActive],
   )
 
-  const iconMap: Record<string, typeof AlertTriangle> = { danger: AlertTriangle, warn: Clock, info: AlertTriangle }
-  const iconStyles: Record<string, string> = { danger: "text-red-500", warn: "text-amber-500", info: "text-blue-500" }
+  const notificationIconMap: Record<NotificationType, typeof AlertTriangle> = {
+    COMMANDE_CREATED: ShoppingBag,
+    PAYMENT_RECEIVED: Wallet,
+    EVENT_CREATED: CalendarDays,
+    INVOICE_CREATED: FileText,
+    TEAM_INVITATION: UserPlus,
+  }
+  const notificationIconStyles: Record<NotificationType, string> = {
+    COMMANDE_CREATED: "text-blue-500",
+    PAYMENT_RECEIVED: "text-emerald-500",
+    EVENT_CREATED: "text-amber-500",
+    INVOICE_CREATED: "text-violet-500",
+    TEAM_INVITATION: "text-rose-500",
+  }
 
-  const seen = new Map<string, typeof notifications>()
-  const groups: Array<{ key: string; title: string; items: typeof notifications }> = []
-  for (const n of notifications) {
-    const k = n.title
-    if (!seen.has(k)) {
-      seen.set(k, [])
-      groups.push({ key: k, title: k, items: [] })
+  const handleNotificationClick = useCallback((id: string, href: string | null) => {
+    markAsRead(id)
+    setNotifOpen(false)
+    if (href) {
+      try {
+        router.push(href)
+      } catch {
+        // Navigation failure must not lose the read state (already saved).
+      }
     }
-    seen.get(k)!.push(n)
-  }
-  for (const g of groups) {
-    g.items = notifications.filter((n) => n.title === g.key)
-  }
+  }, [markAsRead, router])
 
   return (
     <div className="sticky top-0 z-30 bg-background border-b border-border/50">
@@ -344,40 +359,45 @@ export function TopBar() {
                       className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <CheckCheck className="size-3" strokeWidth={1.8} />
-                      Tout marquer lu
+                      Tout marquer comme lu
                     </button>
                   )}
                 </div>
                 <div className="max-h-[320px] overflow-y-auto">
-                  {notifications.length === 0 ? (
+                  {notifLoading ? (
+                    <div className="flex flex-col items-center justify-center py-10 text-center">
+                      <div className="size-4 animate-spin rounded-full border-2 border-gold border-t-transparent mb-2" />
+                      <p className="text-xs text-muted-foreground/50 font-medium">Chargement...</p>
+                    </div>
+                  ) : notifications.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10 text-center">
                       <Bell className="size-8 text-muted-foreground/30 mb-2" strokeWidth={1.2} />
                       <p className="text-xs text-muted-foreground/50 font-medium">Aucune notification</p>
                     </div>
                   ) : (
                     <div className="py-1">
-                      {groups.map((group) => {
-                        const Icon = iconMap[group.items[0]?.type] || AlertTriangle
-                        const iconStyle = iconStyles[group.items[0]?.type] || "text-muted-foreground"
+                      {notifications.map((n) => {
+                        const Icon = notificationIconMap[n.type] || AlertTriangle
+                        const iconStyle = notificationIconStyles[n.type] || "text-muted-foreground"
+                        const isUnread = !n.readAt
                         return (
-                          <div key={group.key}>
-                            <div className="flex items-center gap-2 px-4 py-2 text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em]">
-                              <Icon className={`size-3 ${iconStyle}`} strokeWidth={2} />
-                              {group.key.replace("⚠ ", "").replace("⏰ ", "")}
-                            </div>
-                            {group.items.map((n) => (
-                              <button
-                                key={n.id}
-                                onClick={() => markAsRead(n.id)}
-                                className={`w-full text-left px-4 py-2.5 transition-colors hover:bg-muted/30 ${n.read ? "opacity-50" : ""}`}
-                              >
-                                <p className="text-xs font-medium text-foreground truncate">{n.text}</p>
-                                <p className="text-[10px] text-muted-foreground/50 mt-0.5 truncate">
-                                  {n.title.replace("⚠ ", "").replace("⏰ ", "")}
-                                </p>
-                              </button>
-                            ))}
-                          </div>
+                          <button
+                            key={n.id}
+                            onClick={() => handleNotificationClick(n.id, n.href)}
+                            className={`w-full text-left px-4 py-2.5 transition-colors hover:bg-muted/30 ${n.readAt ? "opacity-50" : ""}`}
+                          >
+                            <span className="flex items-start gap-2.5">
+                              <span className="mt-0.5 flex items-center gap-1.5 shrink-0">
+                                {isUnread && <span className="size-1.5 rounded-full bg-gold" />}
+                                <Icon className={`size-3.5 ${iconStyle}`} strokeWidth={2} />
+                              </span>
+                              <span className="flex-1 min-w-0">
+                                <span className="block text-xs font-medium text-foreground truncate">{n.title}</span>
+                                <span className="block text-[11px] text-muted-foreground/80 mt-0.5 line-clamp-2">{n.message}</span>
+                                <span className="block text-[10px] text-muted-foreground/50 mt-0.5 tabular-nums">{formatRelativeTime(n.createdAt)}</span>
+                              </span>
+                            </span>
+                          </button>
                         )
                       })}
                     </div>

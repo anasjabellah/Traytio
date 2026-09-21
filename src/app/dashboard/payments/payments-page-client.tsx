@@ -143,7 +143,7 @@ function PaymentsPageContent({ initialData }: { initialData?: PaginatedPayments 
 
         {/* ═══ KPI CARDS ═══ */}
         {!stats ? null : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 [&>div]:min-h-[156px] [&_.text-kpi-value]:mt-9">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 [&>div]:min-h-[156px] [&_.text-kpi-value]:mt-12">
             <KpiCard
               label="Total collecté"
               value={stats.totalCollected}

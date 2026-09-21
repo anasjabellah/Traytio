@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { getOrganizationId } from '@/lib/get-organization-id';
+import { assertCan } from '@/lib/assert-role';
 import { buildMonthKeys, buildMonthlySparkline } from '@/features/dashboard/lib/kpi-engine';
 
 export type RecentInvoiceActivity = {
@@ -50,6 +51,10 @@ const ACTIVE_STATUSES: import('@prisma/client').InvoiceStatus[] = ['SENT', 'VIEW
 export async function getInvoiceStats(): Promise<InvoiceStats | null> {
   const orgId = await getOrganizationId();
   if (!orgId) return null;
+
+  // Same boundary as every other invoice read (getInvoices, invoice PDF):
+  // the matrix denies MEMBER invoices:read, so aggregates must not load.
+  await assertCan('invoices', 'read');
 
   const now = new Date();
   const eightMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 7, 1);

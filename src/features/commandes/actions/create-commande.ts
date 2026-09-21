@@ -6,9 +6,10 @@ import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { createCommandeSchema } from "@/features/commandes/validations/create-commande-schema"
 import { recalculateCommandeBalances } from "@/features/financial/recalculate-commande-balances"
 import { serializeCommande, serializeCommandeItem } from "@/features/commandes/lib/serialize-commande"
-import { COMMANDE } from "@/lib/notify/messages"
+import { COMMANDE, NOTIFICATION } from "@/lib/notify/messages"
 import { withActionGuard } from "@/lib/action-guard"
 import { normalizeActionError } from "@/lib/action-error"
+import { notifyOrganizationMembers } from "@/features/notifications/lib/notify"
 import type { CommandeStatus, EventType, EventStatus, DiscountType, Prisma } from "@prisma/client";
 import type { TaskInput } from "@/features/commandes/validations/create-commande-schema";
 
@@ -210,6 +211,18 @@ async function createCommandeHandler(input: unknown) {
 
       revalidatePath("/dashboard/commandes")
       revalidatePath("/dashboard")
+
+      // Best-effort team notification — must never fail the creation.
+      try {
+        await notifyOrganizationMembers(prisma, organizationId, {
+          type: 'COMMANDE_CREATED',
+          title: NOTIFICATION.CREATE.COMMANDE_CREATED_TITLE,
+          message: `La commande ${serialized.number} a été créée.`,
+          href: `/dashboard/commandes/${serialized.id}`,
+        })
+      } catch {
+        // Intentionally swallowed: notification fan-out is non-critical.
+      }
 
       return { success: true, data: serialized }
     } catch (err: unknown) {

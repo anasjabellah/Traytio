@@ -4,8 +4,9 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { resend, resendFromEmail } from "@/lib/resend"
 import { getCurrentMembership, assertCan } from "@/lib/assert-role"
-import { AUTH } from "@/lib/notify/messages"
+import { AUTH, NOTIFICATION } from "@/lib/notify/messages"
 import { normalizeActionError } from "@/lib/action-error"
+import { notifyOrganizationMembers } from "@/features/notifications/lib/notify"
 import { OrgRole } from "@prisma/client"
 import { withActionGuard } from "@/lib/action-guard"
 import { revalidatePath } from "next/cache"
@@ -110,6 +111,19 @@ async function inviteMemberHandler(input: { email: string; role: OrgRole }) {
     }
 
     revalidatePath("/dashboard/settings/team")
+
+    // Best-effort team notification — must never fail the invitation.
+    try {
+      await notifyOrganizationMembers(prisma, membership.organizationId, {
+        type: 'TEAM_INVITATION',
+        title: NOTIFICATION.CREATE.TEAM_INVITATION_TITLE,
+        message: `Une invitation a été envoyée à ${email}.`,
+        href: "/dashboard/settings/team",
+      })
+    } catch {
+      // Intentionally swallowed: notification fan-out is non-critical.
+    }
+
     return { success: true }
   } catch (err) {
     console.error("[inviteMember] Error:", err)

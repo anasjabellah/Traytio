@@ -4,9 +4,10 @@ import { prisma } from "@/lib/prisma"
 import { getOrganizationId } from "@/lib/get-organization-id"
 import { assertCan } from "@/lib/assert-role"
 import { withActionGuard } from "@/lib/action-guard"
-import { PAYMENT } from "@/lib/notify/messages"
+import { PAYMENT, NOTIFICATION } from "@/lib/notify/messages"
 import { normalizeActionError } from "@/lib/action-error"
 import { recalculateCommandeBalances } from "@/features/financial/recalculate-commande-balances"
+import { notifyOrganizationMembers } from "@/features/notifications/lib/notify"
 import { recordPaymentSchema } from "@/features/payments/validations/payment-schemas"
 import type { PaymentMethod, CommandePaymentStatus } from "@prisma/client"
 import { revalidatePath } from "next/cache"
@@ -98,6 +99,7 @@ async function recordPaymentHandler(input: unknown) {
     const updated = await prisma.commande.findFirst({
       where: { id: data.commandeId, organizationId },
       select: {
+        number: true,
         paidAmount: true,
         remainingAmount: true,
         paymentStatus: true,
@@ -106,6 +108,20 @@ async function recordPaymentHandler(input: unknown) {
 
     revalidatePath("/dashboard/commandes")
     revalidatePath("/dashboard")
+
+    // Best-effort team notification — must never fail the payment.
+    try {
+      const amountLabel = Number(data.amount).toLocaleString("fr-FR")
+      const commandeLabel = updated?.number ?? data.commandeId
+      await notifyOrganizationMembers(prisma, organizationId, {
+        type: 'PAYMENT_RECEIVED',
+        title: NOTIFICATION.CREATE.PAYMENT_RECEIVED_TITLE,
+        message: `Un paiement de ${amountLabel} DH a été enregistré pour la commande ${commandeLabel}.`,
+        href: `/dashboard/commandes/${data.commandeId}`,
+      })
+    } catch {
+      // Intentionally swallowed: notification fan-out is non-critical.
+    }
 
     return {
       success: true as const,

@@ -554,15 +554,23 @@ describe('B-15 schema contract: deleting a User is safe at the FK level', () => 
   it('no other relation references User.id', () => {
     const schema = readProjectFile('src/prisma/schema.prisma')
     // Direct FK declarations whose target model is `User`. The User model has
-    // exactly two back-relations: UserOrganization.user (userId) and
-    // Commande.createdBy (createdById). No other model (clients, events, menus,
-    // invoices, payments, invitations, team members, submissions) has a User FK,
-    // so deleting a User only cascades memberships and SetNulls createdById.
+    // exactly three back-relations: UserOrganization.user (userId),
+    // Commande.createdBy (createdById), and Notification.user (userId). No
+    // other model (clients, events, menus, invoices, payments, invitations,
+    // team members, submissions) has a User FK, so deleting a User only
+    // cascades memberships, deletes that user's own notifications (owned
+    // ephemera — never financial/history data), and SetNulls createdById.
     const userFkRelations = schema.match(/[\w]+?\s+User\??\s*@relation\(/g) ?? []
     const names = userFkRelations.map((s) => s.trim().replace(/\s+.*/, ''))
-    assert.equal(userFkRelations.length, 2, `expected exactly 2 User FKs, got: ${names.join(', ') || '(none)'}`)
+    assert.equal(userFkRelations.length, 3, `expected exactly 3 User FKs, got: ${names.join(', ') || '(none)'}`)
     assert.ok(names.includes('user'), 'UserOrganization.user must be one of the User FKs')
     assert.ok(names.includes('createdBy'), 'Commande.createdBy must be one of the User FKs')
+    assert.ok(
+      /user\s+User\s+@relation\(fields: \[userId\], references: \[id\], onDelete: Cascade\)/.test(
+        schema.match(/model Notification \{[\s\S]*?\n\}/)?.[0] ?? '',
+      ),
+      'Notification.user must cascade (owned rows) without touching financial data',
+    )
   })
 })
 

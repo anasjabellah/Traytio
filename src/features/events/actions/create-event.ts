@@ -7,8 +7,9 @@ import { createEventSchema } from '@/features/events/validations/create-event-sc
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { assertCan } from '@/lib/assert-role';
 import { withActionGuard } from '@/lib/action-guard';
-import { EVENT } from '@/lib/notify/messages';
+import { EVENT, NOTIFICATION } from '@/lib/notify/messages';
 import { normalizeActionError } from '@/lib/action-error';
+import { notifyOrganizationMembers } from '@/features/notifications/lib/notify';
 async function createEventHandler(data: Record<string, unknown>): Promise<ActionResponse<Event>> {
   try {
     const parsed = createEventSchema.safeParse(data);
@@ -101,6 +102,18 @@ async function createEventHandler(data: Record<string, unknown>): Promise<Action
 
     revalidatePath("/dashboard/events")
     revalidatePath("/dashboard/calendar")
+
+    // Best-effort team notification — must never fail the creation.
+    try {
+      await notifyOrganizationMembers(prisma, organizationId, {
+        type: 'EVENT_CREATED',
+        title: NOTIFICATION.CREATE.EVENT_CREATED_TITLE,
+        message: `L'événement « ${result.name} » a été créé.`,
+        href: `/dashboard/events/${result.id}`,
+      })
+    } catch {
+      // Intentionally swallowed: notification fan-out is non-critical.
+    }
 
     return { success: true, data: result };
   } catch (error: unknown) {

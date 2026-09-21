@@ -73,7 +73,7 @@ export async function GET(
         companyName: true, companyAddress: true, companyPhone: true, companyEmail: true, companyWebsite: true,
         companyICE: true, companyIF: true, companyRC: true,
         invoicePrefix: true, quotePrefix: true, paymentDelayDays: true,
-        invoiceFooter: true, invoiceTerms: true,
+        invoiceFooter: true, invoiceTerms: true, invoiceNotes: true,
       },
     });
 
@@ -105,6 +105,7 @@ export async function GET(
           paymentDelayDays: org.paymentDelayDays ?? 30,
           invoiceFooter: org.invoiceFooter,
           invoiceTerms: org.invoiceTerms,
+          invoiceNotes: org.invoiceNotes,
         }}
         org={{
           name: org.name,
@@ -137,6 +138,7 @@ export async function GET(
           notes: invoice.notes,
         }}
         commande={{
+          number: cmd.number,
           totalAmount: Number(cmd.totalAmount),
           acompteAmount: Number(cmd.acompteAmount),
           paidAmount: Number(cmd.paidAmount),

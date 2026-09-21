@@ -33,6 +33,7 @@ export type Module =
   | 'payments'
   | 'team'
   | 'settings'
+  | 'notifications'
   | 'superadmin'
 
 export const PERMISSIONS: Record<Module, Partial<Record<Action, OrgRole[]>>> = {
@@ -94,6 +95,10 @@ export const PERMISSIONS: Record<Module, Partial<Record<Action, OrgRole[]>>> = {
     update: ['SUPERADMIN', 'OWNER'],
     billing: ['SUPERADMIN', 'OWNER'],
     'delete-org': ['SUPERADMIN', 'OWNER'],
+  },
+  notifications: {
+    read: ['SUPERADMIN', 'OWNER', 'ADMIN', 'MEMBER'],
+    update: ['SUPERADMIN', 'OWNER', 'ADMIN', 'MEMBER'],
   },
   superadmin: {
     organizations: ['SUPERADMIN'],

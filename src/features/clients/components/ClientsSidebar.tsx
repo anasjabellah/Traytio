@@ -67,46 +67,38 @@ function ActivitySection({ activities }: { activities: ActivityItem[] }) {
           </div>
         </motion.div>
       ) : (
-        <>
-          <div
-            className="relative flex-1 min-h-0 overflow-y-auto scroll-smooth scrollbar-hide"
-          >
-            <div className="absolute left-[15px] top-2 bottom-2 w-px bg-border/60" />
-            <div className="space-y-0">
-              {activities.map((a, i) => {
-                const Icon = getIcon(a.type);
-                const color = getColor(a.type);
-                return (
-                  <motion.div
-                    key={a.id}
-                    initial={{ opacity: 0, x: -6 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.04 }}
-                    className="relative flex items-start gap-3 pb-4 last:pb-0"
-                  >
-                    <div className={`relative z-10 size-8 rounded-lg ${color} flex items-center justify-center shrink-0`}>
-                      <Icon className="size-3.5" strokeWidth={2} />
+        <div
+          className="relative flex-1 min-h-0 overflow-y-auto scroll-smooth scrollbar-hide"
+        >
+          <div className="absolute left-[15px] top-2 bottom-2 w-px bg-border/60" />
+          <div className="space-y-0">
+            {activities.map((a, i) => {
+              const Icon = getIcon(a.type);
+              const color = getColor(a.type);
+              return (
+                <motion.div
+                  key={a.id}
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                  className="relative flex items-start gap-3 pb-4 last:pb-0"
+                >
+                  <div className={`relative z-10 size-8 rounded-lg ${color} flex items-center justify-center shrink-0`}>
+                    <Icon className="size-3.5" strokeWidth={2} />
+                  </div>
+                  <div className="flex-1 min-w-0 pt-0.5">
+                    <div className="text-xs leading-snug text-foreground/80">{a.description}</div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[10px] text-muted-foreground/50">{a.clientName}</span>
+                      <span className="size-0.5 rounded-full bg-muted-foreground/30" />
+                      <span className="text-[10px] text-muted-foreground/40">{formatTime(a.createdAt)}</span>
                     </div>
-                    <div className="flex-1 min-w-0 pt-0.5">
-                      <div className="text-xs leading-snug text-foreground/80">{a.description}</div>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[10px] text-muted-foreground/50">{a.clientName}</span>
-                        <span className="size-0.5 rounded-full bg-muted-foreground/30" />
-                        <span className="text-[10px] text-muted-foreground/40">{formatTime(a.createdAt)}</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
-          <a
-            href="/dashboard/activity"
-            className="block text-center text-xs font-medium text-muted-foreground hover:text-foreground pt-3 mt-3 border-t border-border/50 shrink-0 transition-colors"
-          >
-            Voir tout
-          </a>
-        </>
+        </div>
       )}
     </div>
   );

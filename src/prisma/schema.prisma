@@ -57,6 +57,7 @@ model Organization {
   teamMembers TeamMember[]
   menuItems   MenuItem[]
   invitations Invitation[]
+  notifications Notification[]
 
   @@map("organizations")
 }
@@ -75,6 +76,7 @@ model User {
   // Relations
   organizations    UserOrganization[]
   createdCommandes Commande[]
+  notifications    Notification[]
 
   @@map("users")
 }
@@ -491,6 +493,31 @@ model Invitation {
   @@map("invitations")
 }
 
+// ==================== NOTIFICATION MODEL ====================
+
+model Notification {
+  id             String           @id @default(cuid())
+  organizationId String
+  userId         String
+  type           NotificationType
+  title          String
+  message        String
+  href           String?
+  readAt         DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  // Relations — owned ephemera: cascade off the owning org/user only.
+  // Never cascades toward financial/history data.
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, userId])
+  @@index([userId, readAt])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
 // ==================== TEAM MEMBER MODEL (deprecated) ====================
 
 model TeamMember {
@@ -614,6 +641,14 @@ enum StockCategory {
 enum DiscountType {
   PERCENTAGE
   FIXED
+}
+
+enum NotificationType {
+  COMMANDE_CREATED
+  PAYMENT_RECEIVED
+  EVENT_CREATED
+  INVOICE_CREATED
+  TEAM_INVITATION
 }
 
 // ==================== DECIMAL SUPPORT ====================

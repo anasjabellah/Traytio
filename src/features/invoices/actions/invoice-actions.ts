@@ -7,8 +7,9 @@ import { getOrganizationId } from "@/lib/get-organization-id"
 import { assertCan } from "@/lib/assert-role"
 import { withActionGuard } from "@/lib/action-guard"
 import { updateInvoiceStatusSchema } from "@/features/invoices/validations/invoice-schemas"
-import { INVOICE } from "@/lib/notify/messages"
+import { INVOICE, NOTIFICATION } from "@/lib/notify/messages"
 import { normalizeActionError } from "@/lib/action-error"
+import { notifyOrganizationMembers } from "@/features/notifications/lib/notify"
 import type { ActionResponse, Invoice, InvoiceWithCommande } from "@/features/invoices/types"
 
 const commandeIdSchema = z.object({
@@ -111,9 +112,23 @@ async function createQuoteFromCommandeHandler(commandeId: string): Promise<Actio
 
       revalidatePath(`/dashboard/commandes/${commandeId}`)
 
+      const quoteData = serializeInvoice(invoice)
+
+      // Best-effort team notification — must never fail the creation.
+      try {
+        await notifyOrganizationMembers(prisma, organizationId, {
+          type: 'INVOICE_CREATED',
+          title: NOTIFICATION.CREATE.QUOTE_CREATED_TITLE,
+          message: `Le devis ${quoteData.number} a été créé.`,
+          href: `/dashboard/invoices/${quoteData.id}`,
+        })
+      } catch {
+        // Intentionally swallowed: notification fan-out is non-critical.
+      }
+
       return {
         success: true,
-        data: serializeInvoice(invoice),
+        data: quoteData,
       }
     } catch (err: unknown) {
       lastError = err
@@ -184,9 +199,23 @@ async function createInvoiceFromCommandeHandler(commandeId: string): Promise<Act
 
       revalidatePath(`/dashboard/commandes/${commandeId}`)
 
+      const invoiceData = serializeInvoice(invoice)
+
+      // Best-effort team notification — must never fail the creation.
+      try {
+        await notifyOrganizationMembers(prisma, organizationId, {
+          type: 'INVOICE_CREATED',
+          title: NOTIFICATION.CREATE.INVOICE_CREATED_TITLE,
+          message: `La facture ${invoiceData.number} a été créée.`,
+          href: `/dashboard/invoices/${invoiceData.id}`,
+        })
+      } catch {
+        // Intentionally swallowed: notification fan-out is non-critical.
+      }
+
       return {
         success: true,
-        data: serializeInvoice(invoice),
+        data: invoiceData,
       }
     } catch (err: unknown) {
       lastError = err

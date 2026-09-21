@@ -2,7 +2,7 @@
 
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
-import { getCurrentMembership } from "@/lib/assert-role"
+import { getCurrentMembership, assertCan } from "@/lib/assert-role"
 import { withActionGuard } from "@/lib/action-guard"
 import { COMMON } from "@/lib/notify/messages/common"
 
@@ -56,6 +56,45 @@ async function searchGlobalHandler(query: string): Promise<ActionResponse<Global
     const membership = await getCurrentMembership()
     const orgId = membership.organizationId
 
+    // Enforce the existing RBAC matrix per restricted data source. The
+    // matrix denies MEMBER both invoices:read and payments:read, so those
+    // two queries must not run at all for unauthorized roles — the server
+    // must neither fetch nor return that financial data. All other groups
+    // stay available exactly as before.
+    let canReadInvoices = true
+    let canReadPayments = true
+    try {
+      await assertCan('invoices', 'read')
+    } catch {
+      canReadInvoices = false
+    }
+    try {
+      await assertCan('payments', 'read')
+    } catch {
+      canReadPayments = false
+    }
+
+    const invoiceQuery = canReadInvoices
+      ? prisma.invoice.findMany({
+          where: { organizationId: orgId, number: { contains: trimmed, mode: "insensitive" } },
+          take: 5,
+          select: { id: true, number: true, type: true, status: true, totalAmount: true },
+        })
+      : Promise.resolve([] as Array<{ id: string; number: string; type: "DEVIS" | "FACTURE"; status: string; totalAmount: unknown }>)
+    const paymentQuery = canReadPayments
+      ? prisma.payment.findMany({
+          where: {
+            organizationId: orgId,
+            OR: [
+              { reference: { contains: trimmed, mode: "insensitive" } },
+              { notes: { contains: trimmed, mode: "insensitive" } },
+            ],
+          },
+          take: 5,
+          select: { id: true, amount: true, method: true, status: true, reference: true, commande: { select: { number: true } } },
+        })
+      : Promise.resolve([] as Array<{ id: string; amount: unknown; method: string; status: string; reference: string | null; commande: { number: string } | null }>)
+
     const [clients, commandes, invoices, events, payments, menus, menuItems, members] = await Promise.all([
       prisma.client.findMany({
         where: { organizationId: orgId, name: { contains: trimmed, mode: "insensitive" } },
@@ -67,27 +106,13 @@ async function searchGlobalHandler(query: string): Promise<ActionResponse<Global
         take: 5,
         select: { id: true, number: true, status: true, client: { select: { name: true } } },
       }),
-      prisma.invoice.findMany({
-        where: { organizationId: orgId, number: { contains: trimmed, mode: "insensitive" } },
-        take: 5,
-        select: { id: true, number: true, type: true, status: true, totalAmount: true },
-      }),
+      invoiceQuery,
       prisma.event.findMany({
         where: { organizationId: orgId, name: { contains: trimmed, mode: "insensitive" } },
         take: 5,
         select: { id: true, name: true, type: true, startDate: true },
       }),
-      prisma.payment.findMany({
-        where: {
-          organizationId: orgId,
-          OR: [
-            { reference: { contains: trimmed, mode: "insensitive" } },
-            { notes: { contains: trimmed, mode: "insensitive" } },
-          ],
-        },
-        take: 5,
-        select: { id: true, amount: true, method: true, status: true, reference: true, commande: { select: { number: true } } },
-      }),
+      paymentQuery,
       prisma.menu.findMany({
         where: { organizationId: orgId, name: { contains: trimmed, mode: "insensitive" } },
         take: 5,
