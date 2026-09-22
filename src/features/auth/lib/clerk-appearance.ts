@@ -71,20 +71,30 @@ export const authAppearance = {
       color: "#1a1a1a",
       fontSize: "0.875rem",
       fontWeight: 500,
+      marginBottom: "0.5rem",
     },
     formFieldInput: {
-      backgroundColor: "#ffffff",
-      border: "1px solid #e2e2e2",
+      backgroundColor: "#F7F4EE",
+      border: "1px solid #BDB5A8",
       borderRadius: "0.75rem",
-      height: "2.75rem",
-      padding: "0 0.875rem",
+      height: "3.25rem",
+      minHeight: "3.25rem",
+      padding: "0 1rem",
       fontSize: "0.875rem",
-      color: "#1a1a1a",
-      boxShadow: "none",
-      transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+      color: "#171717",
+      boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+      transition: "border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease",
+      "&:hover": {
+        borderColor: "#AFA69A",
+      },
       "&:focus": {
+        backgroundColor: "#FFFFFF",
         borderColor: "#C9A96E",
-        boxShadow: "0 0 0 2px rgba(201, 169, 110, 0.5)",
+        boxShadow: "0 0 0 3px rgba(200,155,65,0.14)",
+      },
+      "&::placeholder": {
+        color: "#66615A",
+        opacity: "1",
       },
       "&:disabled": {
         backgroundColor: "#f0f0f0",
@@ -195,7 +205,7 @@ export const authAppearance = {
     },
     otpCodeFieldInput: {
       borderRadius: "0.75rem",
-      border: "1px solid #e2e2e2",
+      border: "1px solid rgba(0, 0, 0, 0.12)",
     },
   },
 };

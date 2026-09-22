@@ -50,24 +50,29 @@ describe('S-1 SOURCE CONTRACT: encodeURIComponent in fallbackRedirectUrl', () =>
     )
   })
 
-  it('SignUpButton fallbackRedirectUrl contains encodeURIComponent(token)', () => {
-    const line = getTagLine('SignUpButton')
+  it('sign-up Link href contains encodeURIComponent(token)', () => {
+    const src = readClient()
     assert.ok(
-      line.includes(ENCODING_PATTERN),
-      `SignUpButton fallbackRedirectUrl must use encodeURIComponent(token): ${line}`,
-    )
-    assert.ok(
-      line.includes('fallbackRedirectUrl='),
-      'SignUpButton must have fallbackRedirectUrl prop',
+      src.includes('/sign-up?token=${encodeURIComponent(token'),
+      `sign-up Link must encode the token: ${src.slice(src.indexOf('/sign-up?token='), src.indexOf('/sign-up?token=') + 60)}`,
     )
   })
 
-  it('both fallbackRedirectUrl occurrences use encodeURIComponent (count >= 2)', () => {
+  it('no unparameterized Clerk SignUpButton entry remains (public self-signup closed)', () => {
+    const src = readClient()
+    assert.equal(
+      src.includes('<SignUpButton'),
+      false,
+      'SignUpButton must be gone; invitation signup flows through /sign-up?token=',
+    )
+  })
+
+  it('SignInButton fallbackRedirectUrl plus sign-up Link both encode (count >= 2)', () => {
     const src = readClient()
     const count = src.split(ENCODING_PATTERN).length - 1
     assert.ok(
       count >= 2,
-      `expected at least 2 ${ENCODING_PATTERN}) occurrences, found ${count}`,
+      `expected at least 2 ${ENCODING_PATTERN}) occurrences (signin fallback + signup link), found ${count}`,
     )
   })
 })
@@ -80,8 +85,7 @@ describe('S-1 INJECTION PREVENTION: encoded URL contains no raw injection chars'
     const matches = [
       ...src.matchAll(/fallbackRedirectUrl=\{[^}]*\}/g),
     ]
-    assert.ok(matches.length >= 2, 'must have at least 2 fallbackRedirectUrl props')
-
+    assert.ok(matches.length >= 1, 'must have at least 1 fallbackRedirectUrl prop')
     for (const m of matches) {
       const url = m[0]
       assert.ok(
@@ -89,6 +93,15 @@ describe('S-1 INJECTION PREVENTION: encoded URL contains no raw injection chars'
         `each fallbackRedirectUrl must encode the token: ${url}`,
       )
     }
+  })
+
+  it('the sign-up Link href encodes the token and contains no raw interpolation', () => {
+    const src = readClient()
+    const idx = src.indexOf('/sign-up?token=')
+    assert.ok(idx !== -1, 'sign-up Link href must exist')
+    const snippet = src.slice(idx, idx + 80)
+    assert.ok(snippet.includes(ENCODING_PATTERN), `sign-up href must encode: ${snippet}`)
+    assert.equal(snippet.includes('${token}'), false, 'no unencoded ${token}')
   })
 
   it('raw token interpolation without encodeURIComponent does not appear in fallbackRedirectUrl', () => {
@@ -118,11 +131,11 @@ describe('S-1 URL STRUCTURE: same-origin path preserved', () => {
     )
   })
 
-  it('SignUpButton fallbackRedirectUrl path starts with /accept-invite', () => {
-    const line = getTagLine('SignUpButton')
+  it('sign-up Link targets the token-gated /sign-up route', () => {
+    const src = readClient()
     assert.ok(
-      line.includes('/accept-invite?token='),
-      `SignUpButton redirect must target /accept-invite path: ${line}`,
+      src.includes('/sign-up?token='),
+      'sign-up Link must target the token-gated /sign-up route',
     )
   })
 

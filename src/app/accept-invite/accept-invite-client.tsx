@@ -2,7 +2,8 @@
 
 import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useUser, SignInButton, SignUpButton } from "@clerk/nextjs"
+import Link from "next/link"
+import { useUser, SignInButton } from "@clerk/nextjs"
 import { AUTH } from "@/lib/notify/messages"
 import { getInvitationByToken } from "@/features/team/actions/get-invitation-by-token"
 import { acceptInvite } from "@/features/team/actions/accept-invite"
@@ -165,9 +166,12 @@ function AcceptInviteContent() {
             </SignInButton>
             <p className="text-center text-xs text-muted-foreground">
               Pas encore de compte ?{" "}
-              <SignUpButton mode="redirect" fallbackRedirectUrl={`/accept-invite?token=${encodeURIComponent(token ?? "")}`}>
-                <span className="text-[var(--gold-deep)] hover:underline cursor-pointer">Créer un compte</span>
-              </SignUpButton>
+              <Link
+                href={`/sign-up?token=${encodeURIComponent(token ?? "")}`}
+                className="text-[var(--gold-deep)] hover:underline cursor-pointer"
+              >
+                Créer un compte
+              </Link>
             </p>
           </div>
         )}

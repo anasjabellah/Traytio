@@ -6,10 +6,24 @@ import { BrandPanel } from "./brand-panel";
 export function AuthLayout({
   children,
   topbar,
+  layout = "split",
 }: {
   children: React.ReactNode;
   topbar?: ReactNode;
+  /** "split" keeps the marketing BrandPanel; "centered" renders a dedicated
+      centered authentication experience without it. */
+  layout?: "split" | "centered";
 }) {
+  if (layout === "centered") {
+    return (
+      <div className="relative min-h-svh bg-background">
+        {topbar ?? <AuthTopbar />}
+        <div className="grid min-h-svh grid-cols-1">
+          <AuthCard centered>{children}</AuthCard>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="relative min-h-svh bg-background">
       {topbar ?? <AuthTopbar />}
