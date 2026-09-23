@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient, InvoiceStatus } from "@prisma/client";
 import { computePaymentStatus } from "./compute-payment-status";
 
 type TransactionClient = Omit<
@@ -80,6 +80,20 @@ export async function recalculateCommandeBalances(
       where: { commandeId },
       data: { paidAmount },
     });
+
+    // Auto-PAID: a fully paid commande settles its linked invoices.
+    // Forward-only by design — PAID is terminal in this domain (see
+    // updateInvoiceStatus), and the model cannot distinguish a manually
+    // settled invoice from an auto-settled one, so a later payment reversal
+    // intentionally does NOT regress PAID (paidAmount above still syncs).
+    // REJECTED is excluded: an explicitly rejected document stays manual.
+    if (remainingAmount === 0 && totalAmount > 0) {
+      const autoPaidFrom: InvoiceStatus[] = ['DRAFT', 'SENT', 'VIEWED', 'ACCEPTED', 'OVERDUE'];
+      await tx.invoice.updateMany({
+        where: { commandeId, status: { in: autoPaidFrom } },
+        data: { status: 'PAID' },
+      });
+    }
 
     // Recalculate client totalSpent from all non-cancelled commandes
     if (commande.clientId) {
