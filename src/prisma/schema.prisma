@@ -405,6 +405,7 @@ model Payment {
   status         PaymentStatus @default(COMPLETED)
   reference      String?
   notes          String?
+  idempotencyKey String?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
@@ -418,6 +419,7 @@ model Payment {
   @@index([invoiceId])
   @@index([organizationId, createdAt])
   @@index([organizationId, status, createdAt])
+  @@unique([organizationId, idempotencyKey])
   @@map("payments")
 }
 
