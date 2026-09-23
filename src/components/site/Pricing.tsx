@@ -15,6 +15,7 @@ const plans = [
     monthly: 299,
     desc: "Fonctionnalités essentielles pour démarrer votre activité.",
     href: "/demo",
+    checkoutPlan: "STARTER",
     features: [
       "Jusqu'à 30 événements / mois",
       "Gestion des clients",
@@ -30,6 +31,7 @@ const plans = [
     monthly: 599,
     desc: "Pour les traiteurs qui souhaitent développer leur activité.",
     href: "/demo",
+    checkoutPlan: "PROFESSIONAL",
     features: [
       "Événements illimités",
       "Gestion des équipes",
@@ -158,7 +160,7 @@ export function Pricing({ headingLevel = 2 }: PricingProps) {
                 </div>
 
                 <Link
-                  href={p.href}
+                  href={"checkoutPlan" in p && p.checkoutPlan ? `/checkout?plan=${p.checkoutPlan}` : p.href}
                   className={cn(
                     buttonVariants({ variant: p.featured ? "gold" : "charcoal", size: "xl" }),
                     "group/btn mt-8 w-full"
