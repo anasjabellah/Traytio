@@ -16,11 +16,11 @@ export const metadata: Metadata = {
 export default async function CheckoutPage({
   searchParams,
 }: {
-  searchParams: Promise<{ plan?: string }>;
+  searchParams: Promise<{ plan?: string; cancelled?: string }>;
 }) {
   // Only the plan identifier is read from the URL. Pricing always resolves
   // server-side — ?plan=STARTER&amount=1 cannot alter the total.
-  const { plan: planParam } = await searchParams;
+  const { plan: planParam, cancelled } = await searchParams;
   const plan = resolvePlan(planParam);
   if (!plan) notFound();
 
@@ -43,6 +43,12 @@ export default async function CheckoutPage({
             <ShieldCheck className="h-4 w-4 text-gold-deep" />
             Page sécurisée — aucun compte requis pour continuer.
           </p>
+          {cancelled === '1' && (
+            <p role="status" className="mt-4 max-w-2xl rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+              Le paiement a été annulé avant validation — aucun montant n&apos;a été débité. Vous
+              pouvez recommencer quand vous voulez.
+            </p>
+          )}
 
           <div className="mt-10 grid gap-6 lg:grid-cols-[1fr_1.2fr]">
             <section

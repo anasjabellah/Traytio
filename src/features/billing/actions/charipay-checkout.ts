@@ -10,6 +10,8 @@ import {
   extractSafeSessionResult,
   chariPayErrorCode,
   normalizePhoneE164,
+  newChariPayOrderId,
+  checkoutReturnUrls,
 } from '@/features/billing/lib/charipay';
 import type { ActionResponse } from '@/features/billing/types';
 
@@ -69,11 +71,14 @@ async function createChariPayCheckoutSessionHandler(
       return { success: false, error: GENERIC_ERROR };
     }
 
+    const orderId = newChariPayOrderId();
     const { url, method, headers, body, debug } = buildChariPaySessionRequest({
       apiKey,
       amountMad: plan.priceMad,
       plan: plan.id,
       customer,
+      orderId,
+      urls: checkoutReturnUrls(process.env.NEXT_PUBLIC_APP_URL, plan.id, orderId),
     });
 
     let res: Response;

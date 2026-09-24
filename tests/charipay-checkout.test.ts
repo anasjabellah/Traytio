@@ -102,10 +102,36 @@ describe('CHARIPAY CHECKOUT: request contract', () => {
     }
   })
 
-  it('no return URLs declared (localhost rejected by provider)', () => {
+  it('return URLs omitted without explicit https targets (localhost rejected by provider)', () => {
     const raw = JSON.stringify(build(299).body)
-    assert.ok(!raw.includes('url') || raw.includes('checkoutUrl') === false, 'no urls in body')
-    assert.ok(!raw.includes('localhost') && !raw.includes('http'), 'no URLs at all')
+    assert.ok(!('urls' in JSON.parse(raw).config), 'no urls without caller-supplied https targets')
+    assert.ok(!raw.includes('localhost'), 'no localhost URLs ever')
+  })
+
+  it('https return URLs included when supplied (accept/decline per OpenAPI)', async () => {
+    const { buildChariPaySessionRequest, checkoutReturnUrls } = await import(
+      '../src/features/billing/lib/charipay.js'
+    )
+    const urls = checkoutReturnUrls('https://traytio.vercel.app', 'STARTER', 'TUR-SUB-abc123')
+    assert.deepEqual(urls, {
+      accept: 'https://traytio.vercel.app/checkout/success?order=TUR-SUB-abc123',
+      decline: 'https://traytio.vercel.app/checkout?plan=STARTER&cancelled=1',
+    })
+    const req = buildChariPaySessionRequest({
+      apiKey: 'chari_sk_test_FAKEKEY',
+      amountMad: 299,
+      plan: 'STARTER',
+      customer: { email: 'a@b.co', firstName: 'A', lastName: 'B', phone: '+212600000000' },
+      urls,
+    })
+    assert.deepEqual(req.body.config.urls, urls)
+  })
+
+  it('non-https app origins yield no urls (provider fallback preserved)', async () => {
+    const { checkoutReturnUrls } = await import('../src/features/billing/lib/charipay.js')
+    assert.equal(checkoutReturnUrls('http://localhost:3000', 'STARTER', 'TUR-SUB-x'), undefined)
+    assert.equal(checkoutReturnUrls(undefined, 'STARTER', 'TUR-SUB-x'), undefined)
+    assert.equal(checkoutReturnUrls('not-a-url', 'STARTER', 'TUR-SUB-x'), undefined)
   })
 })
 
@@ -161,6 +187,28 @@ describe('CHARIPAY CHECKOUT: server-only key + safe extraction', () => {
     assert.ok(!action.includes('error.message'), 'never reflects provider messages')
     const occurrences = action.split('GENERIC_ERROR').length - 1
     assert.ok(occurrences >= 5, 'all failure paths share one generic French message')
+  })
+})
+
+describe('CHARIPAY CHECKOUT: return experience', () => {
+  it('success page never trusts the redirect as payment proof', () => {
+    const page = read('src/app/checkout/success/page.tsx')
+    assert.ok(!page.includes('prisma'), 'no database writes')
+    assert.ok(!page.includes('réussi') && !page.includes('confirmé'), 'no success claims')
+    assert.ok(page.includes('vérification'), 'pending-verification messaging')
+    assert.ok(page.includes('order'), 'order reference echoed for reassurance only')
+  })
+
+  it('cancelled return shows a retry note on the checkout page', () => {
+    const page = read('src/app/checkout/page.tsx')
+    assert.ok(page.includes("cancelled === '1'"), 'cancelled flag read')
+    assert.ok(page.includes('annulé'), 'cancellation notice rendered')
+  })
+
+  it('action wires order-scoped return URLs from the app origin', () => {
+    const action = read('src/features/billing/actions/charipay-checkout.ts')
+    assert.ok(action.includes('newChariPayOrderId()'), 'unique order per session')
+    assert.ok(action.includes('checkoutReturnUrls(process.env.NEXT_PUBLIC_APP_URL'), 'origin from existing config')
   })
 })
 

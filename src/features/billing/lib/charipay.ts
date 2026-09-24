@@ -35,6 +35,16 @@ export type ChariPaySessionRequest = {
     externalId: string;
     config: {
       customer: ChariPayCustomer;
+      /**
+       * Return URLs (OpenAPI CheckoutSessionUrls: accept = success redirect,
+       * decline = failure redirect; HTTPS only). Omitted entirely unless both
+       * are valid https:// URLs — ChariPay rejects localhost with HTTP 400,
+       * so local/dev sessions fall back to merchant/account defaults.
+       */
+      urls?: {
+        accept: string;
+        decline: string;
+      };
     };
     /** Echoed back verbatim in the payment webhook (OpenAPI: ≤ 4 KB). */
     metadata: Record<string, string>;
@@ -49,12 +59,45 @@ function newId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`;
 }
 
+/** Generate a unique Traytio order reference (safe to expose in return URLs). */
+export function newChariPayOrderId(): string {
+  return newId('TUR-SUB');
+}
+
+/**
+ * Success/cancel return targets for a checkout session. The app URL comes
+ * from the existing NEXT_PUBLIC_APP_URL convention; non-HTTPS values yield
+ * undefined so the builder omits urls (localhost fallback). The order
+ * reference is our own opaque id — display/correlation only, never trusted
+ * as proof of payment (the webhook remains the source of truth).
+ */
+export function checkoutReturnUrls(
+  appUrl: string | undefined,
+  planId: string,
+  orderId: string,
+): { accept: string; decline: string } | undefined {
+  if (!appUrl) return undefined;
+  let base: string;
+  try {
+    const parsed = new URL(appUrl);
+    if (parsed.protocol !== 'https:') return undefined;
+    base = `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return undefined;
+  }
+  return {
+    accept: `${base}/checkout/success?order=${encodeURIComponent(orderId)}`,
+    decline: `${base}/checkout?plan=${encodeURIComponent(planId)}&cancelled=1`,
+  };
+}
+
 /**
  * Build POST /v1/payment-sessions for a SaaS plan checkout.
  * Amount comes from the caller (which must be the server-side plan
- * catalog — never browser input). config.urls is deliberately OMITTED:
- * ChariPay rejects non-HTTPS/localhost return URLs with HTTP 400, so the
- * provider falls back to merchant/account defaults.
+ * catalog — never browser input). `urls` carries the success/cancel return
+ * targets and is included ONLY when the caller supplies valid https:// URLs
+ * (production app URL); otherwise it is omitted so the provider falls back
+ * to merchant/account defaults instead of rejecting localhost with HTTP 400.
  * `metadata` carries ONLY Traytio reconciliation data (plan + customer
  * identity) and is echoed back in the payment webhook — it is the SOLE
  * bridge between the stateless checkout and later provisioning.
@@ -67,6 +110,7 @@ export function buildChariPaySessionRequest(input: {
   amountMad: number;
   customer: ChariPayCustomer;
   plan: string;
+  urls?: { accept: string; decline: string };
   orderId?: string;
   externalId?: string;
   idempotencyKey?: string;
@@ -77,6 +121,10 @@ export function buildChariPaySessionRequest(input: {
   if (externalId === orderId) externalId = newId('tur-sub');
   const idempotencyKey = input.idempotencyKey ?? crypto.randomUUID();
   const requestId = input.requestId ?? crypto.randomUUID();
+  const urls =
+    input.urls && isHttpsUrl(input.urls.accept) && isHttpsUrl(input.urls.decline)
+      ? { accept: input.urls.accept, decline: input.urls.decline }
+      : undefined;
 
   return {
     url: `${CHARIPAY_API_BASE}/v1/payment-sessions`,
@@ -99,6 +147,7 @@ export function buildChariPaySessionRequest(input: {
           lastName: input.customer.lastName,
           phone: input.customer.phone,
         },
+        ...(urls ? { urls } : {}),
       },
       metadata: {
         plan: input.plan,
@@ -111,6 +160,14 @@ export function buildChariPaySessionRequest(input: {
     },
     debug: { orderId, externalId, idempotencyKey, requestId },
   };
+}
+
+function isHttpsUrl(value: string): boolean {
+  try {
+    return new URL(value).protocol === 'https:';
+  } catch {
+    return false;
+  }
 }
 
 export type ChariPaySafeSessionResult = {
