@@ -9,7 +9,7 @@
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:seed": "prisma db seed",
     "dev": "next dev -p 3000",
-    "build": "next build",
+    "build": "prisma generate --schema=src/prisma/schema.prisma && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "tsx --test tests/*.test.ts",
