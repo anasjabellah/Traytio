@@ -30,7 +30,7 @@ const FAKE_KEY = 'chari_sk_test_FAKEKEY'
 const CUSTOMER = { firstName: 'Sara', lastName: 'Bennani', email: 'sara@exemple.com', phone: '+212612345678' }
 
 function build(amountMad: number) {
-  return buildChariPaySessionRequest({ apiKey: FAKE_KEY, amountMad, customer: CUSTOMER })
+  return buildChariPaySessionRequest({ apiKey: FAKE_KEY, amountMad, plan: 'STARTER', customer: CUSTOMER })
 }
 
 describe('CHARIPAY CHECKOUT: server-side plan pricing', () => {

@@ -59,6 +59,7 @@ async function createChariPayCheckoutSessionHandler(
     const { url, method, headers, body, debug } = buildChariPaySessionRequest({
       apiKey,
       amountMad: plan.priceMad,
+      plan: plan.id,
       customer: parsed.data.customer,
     });
 
