@@ -579,6 +579,30 @@ model BillingWebhookEvent {
   @@map("billing_webhook_events")
 }
 
+// ==================== PURCHASE CLAIM (Phase 3A) ====================
+// Single-use activation token binding a paid SaaS order to its pre-
+// provisioned pending tenant (User.clerkId = 'pending:<idempotencyKey>').
+// Deliberately separate from the team Invitation model: no inviter, no
+// MEMBER/ADMIN role grant — claiming only swaps the placeholder clerkId
+// for the real Clerk identity and preserves org/membership/subscription.
+// The URL carries ONLY this random token: no database IDs, no secrets.
+
+model PurchaseClaim {
+  id             String    @id @default(cuid())
+  token          String    @unique
+  email          String
+  userId         String    @unique
+  organizationId String
+  idempotencyKey String    @unique
+  expiresAt      DateTime
+  consumedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([email])
+  @@index([organizationId])
+  @@map("purchase_claims")
+}
+
 // ==================== TEAM MEMBER MODEL (deprecated) ====================
 
 model TeamMember {

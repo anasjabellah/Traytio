@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
 import { Webhook } from 'svix'
 import { OrgRole, Prisma } from '@prisma/client'
+import { linkPendingClaimToClerkUser } from '@/features/billing/lib/provisioning'
 
 /**
  * Internal control-flow error used to abort the user.deleted transaction when
@@ -71,6 +72,31 @@ export async function POST(req: Request) {
     const existing = await prisma.user.findUnique({ where: { clerkId: id } })
     if (existing) {
       return new Response('OK', { status: 200 })
+    }
+
+    // Phase 3A — paid-customer claim: if this email owns a pending purchase
+    // tenant, swap the placeholder clerkId for the real identity and consume
+    // the purchase token atomically. Org, OWNER membership, and subscription
+    // are preserved; no second tenant is created.
+    try {
+      const linked = await linkPendingClaimToClerkUser({ clerkId: id, email })
+      if (linked === 'claimed') {
+        return new Response('OK', { status: 200 })
+      }
+      if (linked === 'email-taken') {
+        // Address belongs to a real Clerk account (dedicated
+        // existing-customer flow later). Leave everything unchanged instead
+        // of failing into a 500-retry loop.
+        console.warn(
+          `[clerk-webhook] user.created: email already linked to a real account; leaving unchanged (no duplicate user)`,
+        )
+        return new Response('OK', { status: 200 })
+      }
+    } catch (err) {
+      console.error(
+        `[clerk-webhook] purchase claim failed: event=${evt.type} errorType=${err instanceof Error ? err.constructor.name : typeof err}`,
+      )
+      return new Response('Failed to link purchase claim', { status: 500 })
     }
 
     try {

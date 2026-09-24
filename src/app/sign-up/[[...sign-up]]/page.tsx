@@ -18,10 +18,15 @@ export const metadata: Metadata = {
 };
 
 /**
- * Self-registration is disabled: there is no public sign-up entry point
+ * Self-registration is disabled: there is no public sign-in entry point
  * anywhere in the UI. This route only serves invitation/activation flows,
  * which always carry the team-invitation token issued by our backend
  * (see accept-invite). Bare visits redirect to sign-in.
+ *
+ * Paid SaaS customers use a purchase-scoped token instead (Phase 3A):
+ * a valid, unconsumed purchase claim redirects signup completion to the
+ * activation page. Team-invitation behavior is unchanged for all other
+ * tokens.
  *
  * NOTE: this is a route-level gate, not a Clerk instance restriction. True
  * enforcement additionally requires disabling sign-ups in the Clerk
@@ -38,7 +43,14 @@ export default async function SignUpPage({
     redirect("/sign-in");
   }
 
-  const fallbackRedirectUrl = `/accept-invite?token=${encodeURIComponent(token)}`;
+  // Purchase-scoped signup: only when the token is a live purchase claim.
+  // Everything else (team tokens, unknown tokens) keeps the legacy fallback.
+  const { getPurchaseClaimByToken } = await import("@/features/billing/lib/provisioning");
+  const purchase = await getPurchaseClaimByToken(token).catch(() => null);
+  const fallbackRedirectUrl =
+    purchase && purchase.valid
+      ? `/activate?token=${encodeURIComponent(token)}`
+      : `/accept-invite?token=${encodeURIComponent(token)}`;
 
   return (
     <AuthLayout>
