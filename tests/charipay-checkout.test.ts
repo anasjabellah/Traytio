@@ -109,6 +109,30 @@ describe('CHARIPAY CHECKOUT: request contract', () => {
   })
 })
 
+describe('CHARIPAY CHECKOUT: E.164 phone normalization', () => {
+  it('strips visual separators to E.164', async () => {
+    const { normalizePhoneE164 } = await import('../src/features/billing/lib/charipay.js')
+    assert.equal(normalizePhoneE164('+212 6 12 34 56 78'), '+212612345678')
+    assert.equal(normalizePhoneE164('+212-612-345678'), '+212612345678')
+    assert.equal(normalizePhoneE164('+212612345678'), '+212612345678')
+  })
+
+  it('rejects non-E.164 numbers with a clear field error', async () => {
+    const { normalizePhoneE164 } = await import('../src/features/billing/lib/charipay.js')
+    assert.equal(normalizePhoneE164('0612345678'), null)
+    assert.equal(normalizePhoneE164('+212'), null)
+    assert.equal(normalizePhoneE164(''), null)
+    const action = read('src/features/billing/actions/charipay-checkout.ts')
+    assert.ok(action.includes('normalizePhoneE164'), 'action normalizes before sending')
+    assert.ok(action.includes('format international'), 'clear French error on rejection')
+  })
+
+  it('normalized phone flows into session customer + metadata', () => {
+    const action = read('src/features/billing/actions/charipay-checkout.ts')
+    assert.ok(action.includes('const customer = { ...parsed.data.customer, phone }'), 'single normalized customer object')
+  })
+})
+
 describe('CHARIPAY CHECKOUT: server-only key + safe extraction', () => {
   it('16. API key never reaches client code', () => {
     const form = read('src/app/checkout/checkout-form.tsx')

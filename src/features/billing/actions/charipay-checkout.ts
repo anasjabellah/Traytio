@@ -9,6 +9,7 @@ import {
   buildChariPaySessionRequest,
   extractSafeSessionResult,
   chariPayErrorCode,
+  normalizePhoneE164,
 } from '@/features/billing/lib/charipay';
 import type { ActionResponse } from '@/features/billing/types';
 
@@ -51,8 +52,20 @@ async function createChariPayCheckoutSessionHandler(
       return { success: false, error: 'Formule invalide. Choisissez Starter ou Professional.' };
     }
 
+    const phone = normalizePhoneE164(parsed.data.customer.phone);
+    if (!phone) {
+      return {
+        success: false,
+        error: 'Numéro de téléphone invalide. Utilisez le format international, par exemple +212600000000.',
+      };
+    }
+    const customer = { ...parsed.data.customer, phone };
+
     const apiKey = process.env.CHARIPAY_API_KEY;
     if (!apiKey) {
+      // Diagnostic only: presence fact, never the key itself. A missing key
+      // is the expected cause when checkout works locally but fails deployed.
+      console.error('[charipay-checkout] CHARIPAY_API_KEY is not configured in this environment');
       return { success: false, error: GENERIC_ERROR };
     }
 
@@ -60,13 +73,18 @@ async function createChariPayCheckoutSessionHandler(
       apiKey,
       amountMad: plan.priceMad,
       plan: plan.id,
-      customer: parsed.data.customer,
+      customer,
     });
 
     let res: Response;
     try {
       res = await fetch(url, { method, headers, body: JSON.stringify(body) });
-    } catch {
+    } catch (err: unknown) {
+      // Diagnostic only: network-layer failures carry no customer data and
+      // no credentials (key travels in headers, never in the URL).
+      console.error(
+        `[charipay-checkout] network error calling ChariPay: ${err instanceof Error ? err.constructor.name : 'unknown'}`,
+      );
       return { success: false, error: GENERIC_ERROR };
     }
 

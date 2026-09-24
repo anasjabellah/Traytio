@@ -149,6 +149,17 @@ export function chariPayErrorCode(payload: unknown): string | null {
   return typeof code === 'string' && code ? code : null;
 }
 
+/**
+ * Normalize a phone number to E.164 (required by ChariPay: e.g.
+ * +212600000000 — spaces and separators are rejected provider-side with
+ * MISSING_PARAMETER). Only strips visual separators; never guesses a
+ * country prefix. Returns null when the result is not valid E.164.
+ */
+export function normalizePhoneE164(phone: string): string | null {
+  const compact = phone.replace(/[\s\-.\(\)]/g, '');
+  return /^\+\d{7,15}$/.test(compact) ? compact : null;
+}
+
 export type ChariPayPaymentDetails = {
   /** Our order identifier (Reference field). */
   reference: string;
