@@ -7,6 +7,13 @@ import { getCommandeClients } from "@/features/commandes/actions/get-commande-cl
 import { getCommandeMenus } from "@/features/commandes/actions/get-commande-menus";
 import { getCommandeAllMenuItems } from "@/features/commandes/actions/get-commande-all-menu-items";
 import { updateCommande } from "@/features/commandes/actions/update-commande";
+import {
+  productQty,
+  setProductQty,
+  clearProduct,
+  setProductNote,
+  hydrateLines,
+} from "@/features/commandes/lib/cart-lines";
 import { createCommandeAttachment } from "@/features/commandes/actions/create-commande-attachment";
 import { COMMANDE } from "@/lib/notify/messages";
 import type { Client, MenuItemDisplay, CommandeWithDetails } from "@/features/commandes/types";
@@ -104,19 +111,18 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
 
   useEffect(() => {
     if (!commande.items?.length) return;
-    const initialSelected: Record<string, SelectedItem> = {};
-    commande.items.forEach(item => {
-      const id = item.menuItemId ?? item.name;
-      // HIGH-05: hydrate with the PERSISTED price/name — the catalog join
-      // below must not overwrite these with live MenuItem prices.
-      initialSelected[id] = {
-        id,
+    // HIGH-05: hydrate with the PERSISTED price/name — the catalog join
+    // below must not overwrite these with live MenuItem prices. Rows sharing
+    // product AND price merge; different prices stay independent lines.
+    const initialSelected = hydrateLines(
+      commande.items.map((item) => ({
+        id: item.menuItemId ?? item.name,
         qty: item.quantity,
         note: item.notes ?? "",
         unitPrice: Number(item.unitPrice),
         name: item.name,
-      };
-    });
+      })),
+    );
     setSelected(initialSelected);
   }, [commande.items]);
 
@@ -181,7 +187,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
   }, [rawMenus, selectedPack, allMenuItems]);
 
   const selectedList = useMemo(
-    () => Object.values(selected).filter((s) => s.qty > 0).map((s) => {
+    () => Object.entries(selected).filter(([, s]) => s.qty > 0).map(([key, s]) => {
       const item = menuItems.find((m) => m.id === s.id);
       // HIGH-05: an existing persisted row keeps its own price/name.
       // The live catalog price applies ONLY to genuinely new selections
@@ -190,6 +196,7 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
       const price = s.unitPrice ?? item?.price ?? 0;
       const name = s.name ?? item?.name ?? "Inconnu";
       return {
+        key,
         ...s,
         item: {
           ...(item ?? { id: s.id, category: "Extras", price: 0, description: "" }),
@@ -210,13 +217,23 @@ export function useEditCommandeForm(commande: CommandeWithDetails) {
   const budgetUsed = budget > 0 ? Math.min(100, (total / budget) * 100) : 0;
   const overBudget = total > budget && budget > 0;
 
+  const catalogPriceOf = (id: string): number | undefined => {
+    const found = menuItems.find((m) => m.id === id);
+    return found ? found.price : undefined;
+  };
+
   const setQty = (id: string, qty: number) =>
-    setSelected((s) => ({ ...s, [id]: { ...(s[id] ?? { id }), id, qty: Math.max(0, qty) } }));
+    setSelected((s) => setProductQty(s, id, qty, catalogPriceOf(id)));
   const setNote = (id: string, note: string) =>
-    setSelected((s) => ({ ...s, [id]: { ...(s[id] ?? { id, qty: 0 }), id, note } }));
+    setSelected((s) => setProductNote(s, id, note));
   const toggleItem = (id: string) => {
-    const current = selected[id]?.qty || 0;
-    setQty(id, current > 0 ? 0 : guests);
+    const current = productQty(selected, id);
+    if (current > 0) {
+      setSelected((s) => clearProduct(s, id));
+    } else {
+      const price = catalogPriceOf(id) ?? 0;
+      setSelected((s) => setProductQty(s, id, guests, price));
+    }
   };
   const applyPack = (packId: string) => {
     const pack = packs.find((p) => p.id === packId);

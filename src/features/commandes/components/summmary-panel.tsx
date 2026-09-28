@@ -15,7 +15,7 @@ function Row({ label, value, muted, accent }: { label: string; value: number; mu
 
 export function SummaryPanel(props: {
   client: Client | null; eventName: string; eventDate: string; guests: number;
-  packName?: string; selectedList: { id: string; item: { emoji?: string; name: string; price: number }; qty: number }[]; itemsSubtotal: number; extrasTotal: number;
+  packName?: string; selectedList: { key: string; id: string; item: { emoji?: string; name: string; price: number }; qty: number }[]; itemsSubtotal: number; extrasTotal: number;
   discountAmount: number; total: number; deposit: number; remaining: number;
   budget: number; budgetUsed: number; overBudget: boolean;
 }) {
@@ -57,7 +57,7 @@ export function SummaryPanel(props: {
             )}
             {selectedList.map((s) => (
               <motion.div
-                key={s.id}
+                key={s.key}
                 layout
                 initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 6 }}
                 className="flex items-center justify-between text-xs"
@@ -67,7 +67,10 @@ export function SummaryPanel(props: {
                   <span className="truncate">{s.item.name}</span>
                   <span className="text-muted-foreground tabular-nums">×{s.qty}</span>
                 </div>
-                <span className="tabular-nums">{(s.item.price * s.qty).toLocaleString("fr-MA")} MAD</span>
+                <div className="text-right shrink-0">
+                  <div className="tabular-nums">{(s.item.price * s.qty).toLocaleString("fr-MA")} MAD</div>
+                  <div className="text-muted-foreground tabular-nums text-[10px]">{s.item.price.toLocaleString("fr-MA")} MAD/u</div>
+                </div>
               </motion.div>
             ))}
           </AnimatePresence>

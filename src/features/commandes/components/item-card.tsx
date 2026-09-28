@@ -29,10 +29,17 @@ export function parseQtyDraft(draft: string): number | null {
 }
 
 export function ItemCard({
-  item, state, onToggle, onQty, onNote,
+  item, state, onToggle, onQty, onNote, multiPrice,
 }: {
   item: MenuItemDisplay; state?: SelectedItem;
   onToggle: () => void; onQty: (n: number) => void; onNote: (n: string) => void;
+  /**
+   * True when the product holds several cart lines at different stored unit
+   * prices. The card then shows the aggregate quantity with a neutral
+   * "Plusieurs tarifs" label instead of a misleading live-price total —
+   * the Summary panel stays authoritative for the per-line breakdown.
+   */
+  multiPrice?: boolean;
 }) {
   const qty = state?.qty || 0;
   const active = qty > 0;
@@ -90,7 +97,7 @@ export function ItemCard({
         <div className="flex-1 min-w-0">
           <div className="font-medium text-sm">{item.name}</div>
           <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{item.description}</div>
-          <div className="text-xs text-muted-foreground mt-1.5 tabular-nums">{item.price} MAD · unité</div>
+          <div className="text-xs text-muted-foreground mt-1.5 tabular-nums">{multiPrice ? "Plusieurs tarifs" : `${item.price} MAD · unité`}</div>
         </div>
       </div>
 
@@ -131,11 +138,15 @@ export function ItemCard({
             </motion.button>
           )}
         </AnimatePresence>
-        {active && (
-          <motion.div key={lineTotal} initial={{ y: -3, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="font-display text-lg tabular-nums">
-            {lineTotal.toLocaleString("fr-MA")} MAD
-          </motion.div>
-        )}
+          {active && (
+            multiPrice ? (
+              <span className="font-display text-sm text-muted-foreground">Plusieurs tarifs — voir le récapitulatif</span>
+            ) : (
+              <motion.div key={lineTotal} initial={{ y: -3, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0, x: 6 }} className="font-display text-lg tabular-nums">
+                {lineTotal.toLocaleString("fr-MA")} MAD
+              </motion.div>
+            )
+          )}
       </div>
 
       {active && (

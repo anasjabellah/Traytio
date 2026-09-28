@@ -9,6 +9,13 @@ import { getCommandeAllMenuItems } from "@/features/commandes/actions/get-comman
 import { getCommandeClientEvents, type ClientEventSummary } from "@/features/commandes/actions/get-commande-client-events";
 import { createCommande } from "@/features/commandes/actions/create-commande";
 import { createCommandeAttachment } from "@/features/commandes/actions/create-commande-attachment";
+import {
+  productQty,
+  setProductQty,
+  clearProduct,
+  setProductNote,
+  lineKeyFor,
+} from "@/features/commandes/lib/cart-lines";
 import { COMMANDE } from "@/lib/notify/messages";
 import type { Client, MenuItemDisplay } from "@/features/commandes/types";
 
@@ -131,10 +138,23 @@ export function useCommandeForm() {
     });
   }, [rawMenus, selectedPack, allMenuItems]);
 
+  // Price-versioned lines: each entry keeps the unit price active when its
+  // quantity was added (never the live catalog price). Two entries for the
+  // same product at different prices stay independent (see cart-lines lib).
   const selectedList = useMemo(
-    () => Object.values(selected).filter((s) => s.qty > 0).map((s) => {
+    () => Object.entries(selected).filter(([, s]) => s.qty > 0).map(([key, s]) => {
       const item = menuItems.find((m) => m.id === s.id);
-      return { ...s, item: item ?? { id: s.id, name: "Inconnu", category: "Extras", price: 0, description: "" } };
+      const price = s.unitPrice ?? item?.price ?? 0;
+      const name = s.name ?? item?.name ?? "Inconnu";
+      return {
+        key,
+        ...s,
+        item: {
+          ...(item ?? { id: s.id, category: "Extras", price: 0, description: "" }),
+          name,
+          price,
+        },
+      };
     }),
     [selected, menuItems],
   );
@@ -148,13 +168,23 @@ export function useCommandeForm() {
   const budgetUsed = budget > 0 ? Math.min(100, (total / budget) * 100) : 0;
   const overBudget = total > budget && budget > 0;
 
+  const catalogPriceOf = (id: string): number | undefined => {
+    const found = menuItems.find((m) => m.id === id);
+    return found ? found.price : undefined;
+  };
+
   const setQty = (id: string, qty: number) =>
-    setSelected((s) => ({ ...s, [id]: { ...(s[id] ?? { id }), id, qty: Math.max(0, qty) } }));
+    setSelected((s) => setProductQty(s, id, qty, catalogPriceOf(id)));
   const setNote = (id: string, note: string) =>
-    setSelected((s) => ({ ...s, [id]: { ...(s[id] ?? { id, qty: 0 }), id, note } }));
+    setSelected((s) => setProductNote(s, id, note));
   const toggleItem = (id: string) => {
-    const current = selected[id]?.qty || 0;
-    setQty(id, current > 0 ? 0 : Math.max(guests, 1));
+    const current = productQty(selected, id);
+    if (current > 0) {
+      setSelected((s) => clearProduct(s, id));
+    } else {
+      const price = catalogPriceOf(id) ?? 0;
+      setSelected((s) => setProductQty(s, id, Math.max(guests, 1), price));
+    }
   };
   const applyPack = (packId: string) => {
     if (packId === selectedPack) {
@@ -165,8 +195,13 @@ export function useCommandeForm() {
     const pack = packs.find((p) => p.id === packId);
     if (!pack) return;
     setSelectedPack(packId);
+    // Explicit catalog selection: snapshot the CURRENT catalog price per
+    // line so later catalog changes never reprice these quantities.
     const next: Record<string, SelectedItem> = {};
-    pack.items.forEach((id) => (next[id] = { id, qty: Math.max(guests, 1) }));
+    pack.items.forEach((id) => {
+      const price = catalogPriceOf(id) ?? 0;
+      next[lineKeyFor(id, price)] = { id, qty: Math.max(guests, 1), unitPrice: price };
+    });
     setSelected(next);
   };
 

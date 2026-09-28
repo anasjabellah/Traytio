@@ -5,6 +5,7 @@ import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { ChefHat, Wine, CakeSlice, Flower2, Music4, Sparkles, ChevronDown, Package } from "lucide-react";
 import { type SelectedItem } from "@/features/commandes/data/mock-data";
 import type { MenuItemDisplay } from "@/features/commandes/types";
+import { productQty, productNote, displayPriceFor } from "../lib/cart-lines";
 import { ItemCard } from "./item-card";
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -50,7 +51,7 @@ export function BuilderStep({
       <LayoutGroup>
         {categories.map((cat) => {
           const items = menuItems.filter((m) => m.category === cat.id);
-          const count = items.filter((i) => (selected[i.id]?.qty || 0) > 0).length;
+          const count = items.filter((i) => productQty(selected, i.id) > 0).length;
           const isOpen = openCats[cat.id] ?? true;
           return (
             <motion.div layout key={cat.id} className="rounded-2xl border border-border bg-surface-soft overflow-hidden">
@@ -91,16 +92,20 @@ export function BuilderStep({
                           <p className="text-xs">Aucun produit dans cette catégorie</p>
                         </div>
                       ) : (
-                        items.map((item) => (
-                          <ItemCard
-                            key={item.id}
-                            item={item}
-                            state={selected[item.id]}
-                            onToggle={() => toggleItem(item.id)}
-                            onQty={(n) => setQty(item.id, n)}
-                            onNote={(n) => setNote(item.id, n)}
-                          />
-                        ))
+                        items.map((item) => {
+                          const display = displayPriceFor(selected, item.id, item.price);
+                          return (
+                            <ItemCard
+                              key={item.id}
+                              item={{ ...item, price: display.price }}
+                              state={{ id: item.id, qty: productQty(selected, item.id), note: productNote(selected, item.id) }}
+                              multiPrice={display.multi}
+                              onToggle={() => toggleItem(item.id)}
+                              onQty={(n) => setQty(item.id, n)}
+                              onNote={(n) => setNote(item.id, n)}
+                            />
+                          );
+                        })
                       )}
                     </div>
                   </motion.div>

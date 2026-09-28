@@ -11,6 +11,12 @@ export type SelectedItem = {
   name?: string;
 };
 
+// Cart lines live in a Record keyed by LINE key, not product id:
+// priced lines use `<id>::<unitPrice>` so the same product at two prices
+// stays two independent lines; priceless entries (pack applications,
+// note-first stubs) keep the legacy bare `<id>` key and resolve live.
+// See lib/cart-lines.ts — the single place that builds these keys.
+
 export type MenuItem = {
   id: string;
   name: string;
