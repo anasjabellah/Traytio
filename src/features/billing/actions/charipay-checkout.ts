@@ -1,18 +1,17 @@
 'use server';
 
-import { z } from 'zod';
 import { withActionGuard } from '@/lib/action-guard';
 import { normalizeActionError } from '@/lib/action-error';
-import { resolvePlan } from '@/features/billing/lib/plans';
-import { checkoutCustomerSchema } from '@/features/billing/validations/checkout-customer-schema';
+import { BILLING } from '@/lib/notify/messages';
+import { validateCheckoutInput } from '@/features/billing/lib/checkout-validation';
 import {
   buildChariPaySessionRequest,
   extractSafeSessionResult,
   chariPayErrorCode,
-  normalizePhoneE164,
   newChariPayOrderId,
   checkoutReturnUrls,
 } from '@/features/billing/lib/charipay';
+import { assertBillingEnvSafe } from '@/features/billing/lib/billing-env';
 import type { ActionResponse } from '@/features/billing/types';
 
 // ---------------------------------------------------------------------------
@@ -26,11 +25,6 @@ import type { ActionResponse } from '@/features/billing/types';
 // returning a checkoutUrl is NOT payment success.
 // ---------------------------------------------------------------------------
 
-const publicCheckoutSchema = z.object({
-  plan: z.enum(['STARTER', 'PROFESSIONAL']),
-  customer: checkoutCustomerSchema,
-});
-
 export type ChariPayCheckoutResult = {
   checkoutUrl: string;
   sessionId: string;
@@ -41,27 +35,11 @@ async function createChariPayCheckoutSessionHandler(
 ): Promise<ActionResponse<ChariPayCheckoutResult>> {
   const GENERIC_ERROR = 'Le paiement est momentanément indisponible. Réessayez.';
   try {
-    const parsed = publicCheckoutSchema.safeParse(input);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: parsed.error.issues[0]?.message ?? 'Veuillez vérifier les informations saisies.',
-      };
+    const validated = validateCheckoutInput(input);
+    if (!validated.success) {
+      return { success: false, error: validated.error };
     }
-
-    const plan = resolvePlan(parsed.data.plan);
-    if (!plan) {
-      return { success: false, error: 'Formule invalide. Choisissez Starter ou Professional.' };
-    }
-
-    const phone = normalizePhoneE164(parsed.data.customer.phone);
-    if (!phone) {
-      return {
-        success: false,
-        error: 'Numéro de téléphone invalide. Utilisez le format international, par exemple +212600000000.',
-      };
-    }
-    const customer = { ...parsed.data.customer, phone };
+    const { planId, priceMad, customer, idempotencyKey } = validated.data;
 
     const apiKey = process.env.CHARIPAY_API_KEY;
     if (!apiKey) {
@@ -71,15 +49,23 @@ async function createChariPayCheckoutSessionHandler(
       return { success: false, error: GENERIC_ERROR };
     }
 
+    // Fail closed on sandbox/production mismatch (e.g. test key deployed to
+    // production). Throws inside the guarded handler → normalized generic.
+    const billingEnv = assertBillingEnvSafe(apiKey);
+
     const orderId = newChariPayOrderId();
     const { url, method, headers, body, debug } = buildChariPaySessionRequest({
       apiKey,
-      amountMad: plan.priceMad,
-      plan: plan.id,
+      amountMad: priceMad,
+      plan: planId,
       customer,
       orderId,
-      urls: checkoutReturnUrls(process.env.NEXT_PUBLIC_APP_URL, plan.id, orderId),
+      idempotencyKey,
+      urls: checkoutReturnUrls(process.env.NEXT_PUBLIC_APP_URL, planId, orderId),
     });
+    console.info(
+      `[charipay-checkout] session orderId=${orderId} plan=${planId} amount=${priceMad} env=${billingEnv}`,
+    );
 
     let res: Response;
     try {
@@ -94,6 +80,15 @@ async function createChariPayCheckoutSessionHandler(
     }
 
     const payload: unknown = await res.json().catch(() => null);
+    if (res.status === 409) {
+      // Same idempotency key reused with a different payload: the provider
+      // kept the original session. Surface a dedicated message so the client
+      // retries with a fresh key instead of looping on the generic error.
+      console.error(
+        `[charipay-checkout] duplicate checkout orderId=${debug.orderId} code=${chariPayErrorCode(payload) ?? 'n/a'}`,
+      );
+      return { success: false, error: BILLING.CHECKOUT.DUPLICATE };
+    }
     if (!res.ok) {
       const code = chariPayErrorCode(payload);
       // Safe log: order/external ids + provider code only — never customer
@@ -110,6 +105,9 @@ async function createChariPayCheckoutSessionHandler(
       return { success: false, error: GENERIC_ERROR };
     }
 
+    console.info(
+      `[charipay-checkout] session created orderId=${debug.orderId} sessionId=${safe.sessionId}`,
+    );
     return { success: true, data: safe };
   } catch (error: unknown) {
     return { success: false, error: normalizeActionError(error, GENERIC_ERROR) };

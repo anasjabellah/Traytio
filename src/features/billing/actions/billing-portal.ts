@@ -38,4 +38,9 @@ async function getBillingPortalUrlHandler(): Promise<ActionResponse<PortalResult
   }
 }
 
-export const getBillingPortalUrl = withActionGuard(getBillingPortalUrlHandler, { name: 'billing:portal' });
+export const getBillingPortalUrl = withActionGuard(getBillingPortalUrlHandler, {
+  name: 'billing:portal',
+  // Exempt: subscription management (cancel/downgrade) must stay reachable
+  // precisely when the subscription is inactive.
+  requireSubscription: false,
+});

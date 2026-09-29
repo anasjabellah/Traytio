@@ -3,8 +3,11 @@ import { getMenuById } from '@/features/menus/actions/get-menu-by-id';
 import { updateMenu } from '@/features/menus/actions/update-menu';
 import { deleteMenu } from '@/features/menus/actions/delete-menu';
 import { withApiGuard } from '@/lib/api-guard';
+import { subscriptionDenialResponse } from '@/features/billing/lib/billing';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await subscriptionDenialResponse();
+  if (denied) return denied;
   try {
     const { id } = await params;
     const response = await getMenuById(id);
@@ -19,6 +22,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 }
 
 async function updateMenuApi(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await subscriptionDenialResponse();
+  if (denied) return denied;
   try {
     const { id } = await params;
     const data = await request.json();
@@ -34,6 +39,8 @@ async function updateMenuApi(request: Request, { params }: { params: Promise<{ i
 }
 
 async function deleteMenuApi(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await subscriptionDenialResponse();
+  if (denied) return denied;
   try {
     const { id } = await params;
     const response = await deleteMenu(id);

@@ -4,21 +4,21 @@ import {
   CHARIPAY_PROVIDER,
   verifyChariPaySignature,
   parseChariPayEnvelope,
-  extractChariPayPaymentDetails,
 } from '@/features/billing/lib/charipay';
-import { resolvePlan } from '@/features/billing/lib/plans';
-import { provisionSaaSCustomer } from '@/features/billing/lib/provisioning';
-import { sendSaaSActivationEmail } from '@/features/billing/lib/activation-email';
+import {
+  applyBillingEvent,
+  type BillingEventResult,
+  type BillingCoreDb,
+} from '@/features/billing/lib/webhook-billing-core';
 
 // ---------------------------------------------------------------------------
-// ChariPay webhook receiver: verify → persist → (payment.succeeded only)
-// provision → email. Provisioning and email run OUTSIDE the insert
-// transaction (no external calls inside a tx). Redeliveries converge:
-// the insert dedups, provisioning converges on the deterministic placeholder,
-// and the activation email is sent only while the event is still
-// unprocessed. organizationId is NEVER invented — it is linked from the
-// provisioned tenant. No User/Organization/Subscription is created for any
-// other event type.
+// ChariPay webhook receiver: verify → persist → delegate to the billing
+// core (provision/renew/cancel/email). The core runs OUTSIDE the insert
+// transaction (no external calls inside a tx) and is fully injectable for
+// execution tests. Redeliveries converge: the insert dedups, provisioning
+// converges on the deterministic placeholder, and the activation email is
+// sent only while the event is still unprocessed. organizationId is NEVER
+// invented — it is linked from the provisioned/renewed tenant.
 // NOTE: /api/webhooks/* is intentionally public (see src/proxy.ts) —
 // authenticity comes from the HMAC signature below, never from a session.
 // ---------------------------------------------------------------------------
@@ -101,23 +101,13 @@ export async function POST(req: Request) {
       `[charipay-webhook] stored event=${eventType} providerEventId=${providerEventId} duplicate=${duplicate.duplicate}`,
     );
 
-    // Only successful payments provision. Failures and unknown types stay
-    // persisted-only (marked processed: nothing further to do).
-    if (eventType !== 'payment.succeeded') {
-      await prisma.billingWebhookEvent.updateMany({
-        where: { provider: CHARIPAY_PROVIDER, providerEventId, processedAt: null },
-        data: { processedAt: new Date() },
-      });
-      return Response.json({ received: true, duplicate: duplicate.duplicate });
-    }
-
     // Already fully processed (e.g. redelivery after success): no work,
     // and crucially no second activation email.
     if (duplicate.duplicate && duplicate.processed) {
       return Response.json({ received: true, duplicate: true });
     }
 
-    return await processSucceededPayment(providerEventId, body);
+    return await processSucceededPayment(providerEventId, eventType, body);
   } catch {
     // Persistence failed — non-2xx so ChariPay retries; nothing was marked
     // processed and no business action ran, so the retry is fully safe.
@@ -126,92 +116,63 @@ export async function POST(req: Request) {
 }
 
 /**
- * Map a payment.succeeded payload through provisioning + activation email.
- * Runs fully outside any DB transaction. Returns 2xx only when the tenant
- * is provisioned, the email is sent, and the event is linked + marked.
- * Email failure leaves the tenant intact and the event unprocessed so a
- * ChariPay retry converges idempotently and re-attempts the email.
+ * Single funnel for every stored-but-unfinished delivery: delegates to the
+ * injectable billing core, then translates the outcome to HTTP.
+ * Email failure is deliberately 2xx (never fail a good payment for a bad
+ * mailbox): the tenant stays intact and the token-based resend path
+ * recovers without a new payment.
  */
-async function processSucceededPayment(providerEventId: string, body: unknown): Promise<Response> {
-  const details = extractChariPayPaymentDetails(body);
-  const metadata = details?.metadata ?? null;
-  const plan = resolvePlan(
-    typeof metadata?.plan === 'string' ? metadata.plan : undefined,
+async function processSucceededPayment(
+  providerEventId: string,
+  eventType: string,
+  body: unknown,
+): Promise<Response> {
+  const result: BillingEventResult = await applyBillingEvent(
+    { providerEventId, eventType, body },
+    { db: prisma as unknown as BillingCoreDb },
   );
 
-  const fail = async (reason: string) => {
-    // Unmappable events (e.g. pre-metadata sessions): stored dead-end, marked
-    // processed so retries don't loop forever. Nothing is provisioned.
-    console.warn(`[charipay-webhook] unprovisionable ${providerEventId}: ${reason}`);
-    await prisma.billingWebhookEvent.updateMany({
-      where: { provider: CHARIPAY_PROVIDER, providerEventId, processedAt: null },
-      data: { processedAt: new Date() },
-    });
-    return Response.json({ received: true, provisioned: false });
-  };
-
-  if (!details || !metadata || !plan) return fail('missing reference/metadata/plan');
-  if (details.amount !== null && details.amount !== plan.priceMad) {
-    return fail(`amount mismatch (paid ${details.amount}, plan ${plan.priceMad})`);
+  switch (result.outcome) {
+    case 'duplicate':
+      return Response.json({ received: true, duplicate: true });
+    case 'conflict':
+      // A concurrent redelivery is likely mid-flight: non-2xx so the
+      // provider retries into a converged state. Nothing was marked.
+      return new Response('Concurrent provisioning in progress', { status: 500 });
+    case 'ignored':
+      await markEvent(providerEventId, null);
+      return Response.json({ received: true, duplicate: false });
+    case 'unmapped':
+    case 'ambiguous':
+    case 'stale':
+    case 'no-claim':
+    case 'failed':
+      await markEvent(providerEventId, null);
+      return Response.json({ received: true, provisioned: false });
+    case 'applied':
+    case 'converged':
+    case 'renewed':
+    case 'status-updated':
+      await markEvent(providerEventId, result.organizationId);
+      return Response.json({ received: true, provisioned: true, emailSent: result.emailSent });
+    case 'email-failed':
+      await linkEventOrg(providerEventId, result.organizationId);
+      return Response.json({ received: true, provisioned: true, emailSent: false });
   }
-
-  const customer = {
-    firstName: metadata.firstName,
-    lastName: metadata.lastName,
-    email: metadata.email,
-    phone: metadata.phone,
-  };
-  const provisioned = await provisionSaaSCustomer({
-    provider: CHARIPAY_PROVIDER,
-    providerReference: details.reference,
-    plan: plan.id,
-    customer,
-  });
-  if (!provisioned.success) {
-    // Validation-level failure (bad customer data): dead-end like unmapped.
-    // Tenant-level conflicts converge inside provisionSaaSCustomer.
-    return fail('provisioning validation failed');
-  }
-
-  // Re-read the event gate AFTER provisioning: a concurrent duplicate may
-  // have completed (and emailed) while we worked — then skip the email.
-  const gate = await prisma.billingWebhookEvent.findUnique({
-    where: { provider_providerEventId: { provider: CHARIPAY_PROVIDER, providerEventId } },
-    select: { processedAt: true },
-  });
-  if (gate?.processedAt) {
-    return Response.json({ received: true, duplicate: true });
-  }
-
-  // Resolve the claim token for the activation email (works for fresh and
-  // converged replays alike).
-  const claim = await prisma.purchaseClaim.findFirst({
-    where: { userId: provisioned.userId, consumedAt: null },
-    select: { token: true },
-  });
-  if (!claim) return fail('no claim available for activation email');
-
-  const mailed = await sendSaaSActivationEmail({
-    to: provisionedCustomerEmail(customer),
-    firstName: typeof customer.firstName === 'string' ? customer.firstName : '',
-    plan: plan.id,
-    token: claim.token,
-  });
-  if (!mailed.success) {
-    // Tenant + claim stay intact, event stays unprocessed: a ChariPay retry
-    // converges provisioning and re-attempts exactly this email.
-    console.error(`[charipay-webhook] activation email failed for ${providerEventId}`);
-    return new Response('Activation email failed', { status: 500 });
-  }
-
-  await prisma.billingWebhookEvent.updateMany({
-    where: { provider: CHARIPAY_PROVIDER, providerEventId, processedAt: null },
-    data: { organizationId: provisioned.organizationId || null, processedAt: new Date() },
-  });
-  console.info(`[charipay-webhook] provisioned org for ${providerEventId}`);
-  return Response.json({ received: true, provisioned: true });
 }
 
-function provisionedCustomerEmail(customer: Record<string, unknown>): string {
-  return typeof customer.email === 'string' ? customer.email : '';
+/** Mark fully handled (processed), optionally linking the tenant org. */
+async function markEvent(providerEventId: string, organizationId: string | null): Promise<void> {
+  await prisma.billingWebhookEvent.updateMany({
+    where: { provider: CHARIPAY_PROVIDER, providerEventId, processedAt: null },
+    data: { organizationId, processedAt: new Date() },
+  });
+}
+
+/** Link the tenant org without marking processed (email still pending). */
+async function linkEventOrg(providerEventId: string, organizationId: string | null): Promise<void> {
+  await prisma.billingWebhookEvent.updateMany({
+    where: { provider: CHARIPAY_PROVIDER, providerEventId, processedAt: null },
+    data: { organizationId },
+  });
 }

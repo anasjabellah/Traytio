@@ -5,6 +5,11 @@ import { getClientIp } from './ip'
 import { assertSameOrigin } from './csrf'
 import { AUTH } from '@/lib/notify/messages'
 import { COMMON } from '@/lib/notify/messages'
+import { BILLING } from '@/lib/notify/messages'
+import {
+  requireActiveSubscription,
+  SubscriptionRequiredError,
+} from '@/features/billing/lib/billing'
 
 // Read/view actions are not state-changing and are invoked during page
 // rendering (Server Action reads carry an Origin header that varies by
@@ -23,7 +28,17 @@ export function withActionGuard<T extends (...args: any[]) => Promise<unknown>>(
    * reachable before login (e.g. the invitation lookup / accept-invite flow)
    * should set `public: true`. Treat this as an exception, never the default.
    */
-  public?: boolean }
+  public?: boolean;
+  /**
+   * Opt-out for the subscription-entitlement gate.
+   * Authenticated, non-public actions REQUIRE an active subscription by
+   * default (P0 SaaS enforcement). Set `requireSubscription: false` ONLY for
+   * actions that must remain reachable without one — the billing purchase /
+   * management path (billing:*) and flows that predate any subscription.
+   * Reads are enforced like writes: entitlement is about the organization,
+   * not the operation kind.
+   */
+  requireSubscription?: boolean }
 ): T {
   return (async (...args: Parameters<T>) => {
     const { userId } = await auth()
@@ -47,6 +62,21 @@ export function withActionGuard<T extends (...args: any[]) => Promise<unknown>>(
     const result = await checkRateLimit(key, "action")
     if (!result.ok) {
       return { success: false, error: COMMON.RATE_LIMITED }
+    }
+
+    // Third security gate: subscription entitlement. Authenticated callers
+    // acting for an organization must belong to an entitled one, unless the
+    // action explicitly opts out (billing purchase/management, pre-login and
+    // pre-subscription flows). Never uses client-supplied organization data.
+    if (userId && !config.public && config.requireSubscription !== false) {
+      try {
+        await requireActiveSubscription()
+      } catch (err: unknown) {
+        if (err instanceof SubscriptionRequiredError) {
+          return { success: false, error: BILLING.SUBSCRIPTION_REQUIRED }
+        }
+        throw err
+      }
     }
 
     return fn(...args)

@@ -5,6 +5,7 @@ import { auth } from '@clerk/nextjs/server';
 import cloudinary from '@/lib/cloudinary';
 import { getOrganizationId } from '@/lib/get-organization-id';
 import { withApiGuard } from '@/lib/api-guard';
+import { subscriptionDenialResponse } from '@/features/billing/lib/billing';
 import { readBodyWithLimit } from '@/lib/request-body-limit';
 import { AUTH } from '@/lib/notify/messages';
 
@@ -45,6 +46,9 @@ async function uploadApi(request: Request) {
     if (!organizationId) {
       return NextResponse.json({ error: AUTH.ORGANIZATION_NOT_FOUND }, { status: 403 });
     }
+
+    const denied = await subscriptionDenialResponse();
+    if (denied) return denied;
 
     // Early rejection optimization: if the client declares an oversized body,
     // reject it without reading any bytes. This is NOT the authoritative

@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { withApiGuard } from '@/lib/api-guard';
+import { subscriptionDenialResponse } from '@/features/billing/lib/billing';
 import { getMenus } from '@/features/menus/actions/get-menus';
 import { createMenu } from '@/features/menus/actions/create-menu';
 
 export async function GET(request: Request) {
+  const denied = await subscriptionDenialResponse();
+  if (denied) return denied;
   try {
     const url = new URL(request.url);
     const search = url.searchParams.get('search') || undefined;
@@ -32,6 +35,8 @@ export async function GET(request: Request) {
 }
 
 async function createMenuApi(request: Request) {
+  const denied = await subscriptionDenialResponse();
+  if (denied) return denied;
   try {
     const data = await request.json();
     const response = await createMenu(data);

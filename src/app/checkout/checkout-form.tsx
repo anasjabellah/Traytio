@@ -10,7 +10,7 @@ import {
   checkoutCustomerSchema,
   type CheckoutCustomerInput,
 } from '@/features/billing/validations/checkout-customer-schema';
-import { createChariPayCheckoutSession } from '@/features/billing/actions/charipay-checkout';
+import { createSubscriptionCheckout } from '@/features/billing/actions/create-subscription-checkout';
 import type { PlanDetails } from '@/features/billing/lib/plans';
 
 type FieldName = keyof CheckoutCustomerInput;
@@ -63,16 +63,19 @@ export function CheckoutForm({ plan }: { plan: PlanDetails }) {
   });
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  // One idempotency key per form instance: double-clicks and network retries
+  // of the SAME attempt reuse it (the provider dedups); a fresh page load
+  // (a NEW purchase intent) gets a fresh key.
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
 
-  // Real checkout: validate locally, create a ChariPay Sandbox payment
-  // session server-side, then redirect to the hosted checkout. Returning a
-  // checkoutUrl is NOT payment success — confirmation arrives via webhook
-  // in a later phase, and nothing is provisioned here.
+  // Recurring checkout: validate locally, create ChariPay customer +
+  // subscription server-side, then redirect to the first-charge hosted
+  // checkout (3DS consent). The webhook remains the sole activator.
   async function onSubmit(values: CheckoutCustomerInput) {
     setServerError(null);
     setSubmitting(true);
     try {
-      const res = await createChariPayCheckoutSession({ plan: plan.id, customer: values });
+      const res = await createSubscriptionCheckout({ plan: plan.id, customer: values, idempotencyKey });
       if (res.success && res.data?.checkoutUrl) {
         window.location.assign(res.data.checkoutUrl);
         return;

@@ -61,4 +61,9 @@ async function createBillingCheckoutHandler(
   }
 }
 
-export const createBillingCheckout = withActionGuard(createBillingCheckoutHandler, { name: 'billing:checkout' });
+export const createBillingCheckout = withActionGuard(createBillingCheckoutHandler, {
+  name: 'billing:checkout',
+  // Exempt: this IS the purchase path — an inactive organization must be
+  // able to buy a subscription. (RBAC settings:billing still enforced inside.)
+  requireSubscription: false,
+});

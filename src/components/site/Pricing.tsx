@@ -1,13 +1,10 @@
 "use client";
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Sparkles, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { SectionLabel } from "./ProblemSolution";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-const formatAnnual = (m: number) => (m * 12).toLocaleString("fr-FR");
 
 const plans = [
   {
@@ -65,7 +62,6 @@ type PricingProps = {
 };
 
 export function Pricing({ headingLevel = 2 }: PricingProps) {
-  const [annual, setAnnual] = useState(false);
   const Heading = `h${headingLevel}` as "h1" | "h2";
 
   return (
@@ -77,33 +73,7 @@ export function Pricing({ headingLevel = 2 }: PricingProps) {
             Un investissement, <span className="italic text-gradient-gold">jamais une dépense.</span>
           </Heading>
           <p className="mt-5 text-lg text-muted-foreground">Choisissez le plan qui accompagne votre croissance.</p>
-
-          <div
-            className="mt-8 inline-flex items-center rounded-full bg-card border border-border p-0.5 shadow-soft"
-            role="group"
-            aria-label="Période de facturation"
-          >
-            <button
-              type="button"
-              onClick={() => setAnnual(false)}
-              aria-pressed={!annual}
-              className={`rounded-full px-5 py-3.5 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-1 focus-visible:ring-offset-background ${
-                !annual ? "bg-foreground text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Mensuel
-            </button>
-            <button
-              type="button"
-              onClick={() => setAnnual(true)}
-              aria-pressed={annual}
-              className={`rounded-full px-5 py-3.5 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-1 focus-visible:ring-offset-background ${
-                annual ? "bg-foreground text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Annuel <span className="text-gold-deep font-semibold">-15%</span>
-            </button>
-          </div>
+          <p className="mt-3 text-sm text-muted-foreground">Facturation mensuelle, sans engagement.</p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -143,16 +113,6 @@ export function Pricing({ headingLevel = 2 }: PricingProps) {
                         <span className="font-display text-3xl">MAD</span>
                         <span className={`text-sm ${p.featured ? "text-primary-foreground/60" : "text-muted-foreground"}`}>/mois</span>
                       </div>
-                      {annual && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <span className={`text-xs ${p.featured ? "text-primary-foreground/50" : "text-muted-foreground"}`}>
-                            Facturé {formatAnnual(p.monthly)} MAD/an
-                          </span>
-                          <span className="text-[10px] font-medium text-gold-deep bg-gold-soft px-2 py-0.5 rounded-full">
-                            Économisez 15%
-                          </span>
-                        </div>
-                      )}
                     </div>
                   ) : (
                     <span className="font-display text-5xl lg:text-6xl tracking-tight">{p.price}</span>

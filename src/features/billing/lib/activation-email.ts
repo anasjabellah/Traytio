@@ -27,6 +27,70 @@ export type ResendClientLike = {
 
 export type SaasActivationEmailResult = { success: true } | { success: false; error: string };
 
+export type ResendClaimDb = {
+  purchaseClaim: {
+    findUnique(args: { where: { token: string } }): Promise<{
+      email: string;
+      userId: string;
+      consumedAt: Date | null;
+      expiresAt: Date;
+    } | null>;
+  };
+  user: {
+    findUnique(args: { where: { id: string } }): Promise<{ firstName: string | null } | null>;
+  };
+  subscription: {
+    findFirst(args: { where: { organizationId: string } }): Promise<{ plan: string } | null>;
+  };
+  userOrganization: {
+    findMany(args: { where: { userId: string } }): Promise<{ organizationId: string }[]>;
+  };
+};
+
+export type ResendActivationResult =
+  | { success: true }
+  | { success: false; error: 'invalid' | 'expired' | 'consumed' | 'email' };
+
+/**
+ * Re-send the activation email for a valid, unconsumed purchase claim.
+ * Token-bearer authorized (the token IS the credential — same trust as the
+ * activation link itself). Never invents recipient/plan: everything comes
+ * from stored rows. Returns 'invalid' for unknown tokens so callers can
+ * answer 404 without distinguishing reasons to strangers.
+ */
+export async function resendClaimActivationEmail(
+  token: string,
+  deps: { db: ResendClaimDb; mailer?: ResendClientLike; clock?: () => Date },
+): Promise<ResendActivationResult> {
+  if (!token || typeof token !== 'string') return { success: false, error: 'invalid' };
+  const now = deps.clock ? deps.clock() : new Date();
+  const claim = await deps.db.purchaseClaim.findUnique({ where: { token } });
+  if (!claim) return { success: false, error: 'invalid' };
+  if (claim.consumedAt) return { success: false, error: 'consumed' };
+  if (claim.expiresAt.getTime() <= now.getTime()) return { success: false, error: 'expired' };
+
+  const [user, memberships] = await Promise.all([
+    deps.db.user.findUnique({ where: { id: claim.userId } }),
+    deps.db.userOrganization.findMany({ where: { userId: claim.userId } }),
+  ]);
+  const organizationId = memberships.length === 1 && memberships[0] ? memberships[0].organizationId : null;
+  const subscription = organizationId
+    ? await deps.db.subscription.findFirst({ where: { organizationId } })
+    : null;
+
+  const mailed = await sendSaaSActivationEmail(
+    {
+      to: claim.email,
+      firstName: user?.firstName ?? '',
+      plan: subscription?.plan ?? 'STARTER',
+      token,
+    },
+    deps.mailer ? { client: deps.mailer } : {},
+  );
+  if (!mailed.success) return { success: false, error: 'email' };
+  return { success: true };
+}
+
 function appUrl(): string {
   return process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 }

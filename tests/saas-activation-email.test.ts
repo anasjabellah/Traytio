@@ -119,10 +119,15 @@ describe('SAAS EMAIL: sender behavior', () => {
     assert.deepEqual(threw.success, false)
   })
 
-  it('provisioning data intact on email failure (sender writes nothing)', () => {
+  it('provisioning data intact on email failure (core sender writes nothing)', () => {
     const src = read('src/features/billing/lib/activation-email.ts')
-    assert.ok(!src.includes('prisma'), 'sender performs zero database writes')
-    assert.ok(!src.includes('purchaseClaim.update') && !src.includes('consum'), 'claim never consumed/invalidated here')
+    // sendSaaSActivationEmail (core sender) must stay DB-free; the separate
+    // resendClaimActivationEmail (token-based resend path) legitimately reads
+    // claims but never mutates provisioning.
+    const coreStart = src.indexOf('export async function sendSaaSActivationEmail')
+    const coreSlice = coreStart >= 0 ? src.slice(coreStart) : src
+    assert.ok(!coreSlice.includes('prisma'), 'core sender performs zero database writes')
+    assert.ok(!coreSlice.includes('purchaseClaim.update'), 'core sender never mutates claims')
   })
 
   it('token and URL never logged', () => {

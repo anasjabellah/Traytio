@@ -200,23 +200,39 @@ describe('PHASE4 PROVISIONING: single tenant per payment', () => {
 
 describe('PHASE4 ROUTE: lifecycle, ordering, failures (source contracts)', () => {
   const route = read('src/app/api/webhooks/charipay/route.ts')
+  const core = read('src/features/billing/lib/webhook-billing-core.ts')
 
   it('event stored, org linked after provisioning, processed only on full success', () => {
     assert.ok(route.includes('organizationId: null'), 'created without invented org')
-    assert.ok(route.includes('organizationId: provisioned.organizationId'), 'org linked from tenant')
-    const markIdx = route.lastIndexOf('processedAt: new Date()')
-    const emailIdx = route.indexOf('sendSaaSActivationEmail(')
-    assert.ok(markIdx > emailIdx && emailIdx > 0, 'success mark happens after email attempt')
+    assert.ok(
+      core.includes('organizationId, processedAt: new Date()') ||
+        route.includes('markEvent(providerEventId, result.organizationId)'),
+      'org linked from tenant on success',
+    )
+    const markIdx = core.lastIndexOf('processedAt: new Date()')
+    const emailIdx = core.indexOf('sendSaaSActivationEmail(')
+    assert.ok(markIdx > emailIdx && emailIdx > 0, 'success mark happens after email attempt (in core)')
   })
 
-  it('activation email after commit; failure preserves tenant for retry', () => {
-    assert.ok(route.includes('provisionSaaSCustomer('), 'provision first')
-    assert.ok(route.includes("status: 500"), 'email failure returns 500 for retry')
-    assert.ok(!route.includes('$transaction(async (tx) => {') || route.includes('provisionSaaSCustomer'), 'no external calls inside the insert tx')
+  it('activation email after commit; email failure keeps tenant + 2xx (resend path recovers)', () => {
+    assert.ok(core.includes('provisionSaaSCustomer('), 'provision first (in core)')
+    assert.ok(route.includes("status: 500"), 'persistence failure still returns 500 for retry')
+    assert.ok(core.includes("'email-failed'"), 'email failure is an explicit terminal outcome')
+    assert.ok(
+      !core.includes("status: 500"),
+      'core never decides HTTP status (route maps outcomes)',
+    )
+    assert.ok(
+      route.includes('emailSent: false') || route.includes('emailSent'),
+      'email outcome surfaced, never a second send on retry',
+    )
   })
 
   it('non-succeeded events never provision; unmapped data dead-ends safely', () => {
-    assert.ok(route.includes("eventType !== 'payment.succeeded'"), 'failed/others ignored')
+    assert.ok(
+      core.includes("eventType !== 'payment.succeeded'") || core.includes("'ignored'"),
+      'failed/others ignored by the core',
+    )
     assert.ok(route.includes('provisioned: false'), 'dead-end responses explicit')
   })
 

@@ -3,8 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getOrganizationId } from "@/lib/get-organization-id";
 import { withApiGuard } from "@/lib/api-guard";
+import { subscriptionDenialResponse } from "@/features/billing/lib/billing";
 
 export async function GET(request: NextRequest) {
+  const denied = await subscriptionDenialResponse();
+  if (denied) return denied;
   try {
     const organizationId = await getOrganizationId();
 
@@ -44,6 +47,8 @@ export async function GET(request: NextRequest) {
 }
 
 async function createClientApi(request: Request) {
+  const denied = await subscriptionDenialResponse();
+  if (denied) return denied;
   try {
     const organizationId = await getOrganizationId();
     if (!organizationId) {

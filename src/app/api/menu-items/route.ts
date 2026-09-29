@@ -2,12 +2,15 @@
 
 import { NextResponse } from 'next/server';
 import { withApiGuard } from '@/lib/api-guard';
+import { subscriptionDenialResponse } from '@/features/billing/lib/billing';
 import { getMenuItems } from '@/features/menu-items/actions/get-menu-items';
 import { createMenuItem } from '@/features/menu-items/actions/create-menu-item';
 
 // GET /api/menu-items - list menu items with optional query params
 // Params: search, page, limit, sortBy, sortOrder
 export async function GET(request: Request) {
+  const denied = await subscriptionDenialResponse();
+  if (denied) return denied;
   try {
     const url = new URL(request.url);
     const search = url.searchParams.get('search') || undefined;
@@ -40,6 +43,8 @@ export async function GET(request: Request) {
 
 // POST /api/menu-items - create new menu item
 async function createMenuItemApi(request: Request) {
+  const denied = await subscriptionDenialResponse();
+  if (denied) return denied;
   try {
     const data = await request.json();
     const response = await createMenuItem(data);

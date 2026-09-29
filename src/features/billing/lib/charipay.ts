@@ -24,6 +24,34 @@ export type ChariPayCustomer = {
   phone: string;
 };
 
+export type ChariPaySubscriptionFrequency = 'MONTHLY' | 'YEARLY' | 'WEEKLY' | 'DAILY';
+
+export type ChariPaySubscriptionRequest = {
+  url: string;
+  method: 'POST';
+  headers: Record<string, string>;
+  body: {
+    clientId: string;
+    amount: number;
+    description: string;
+    frequency: ChariPaySubscriptionFrequency;
+    startDate: string;
+    channels: string[];
+    externalId: string;
+    metadata: Record<string, string>;
+    autoPay: boolean;
+  };
+  debug: { externalId: string; idempotencyKey: string; requestId: string; clientId: string };
+};
+
+export type ChariPayCustomerRequest = {
+  url: string;
+  method: 'POST';
+  headers: Record<string, string>;
+  body: { name: string; email: string; phone: string };
+  debug: { idempotencyKey: string; requestId: string };
+};
+
 export type ChariPaySessionRequest = {
   url: string;
   method: 'POST';
@@ -62,6 +90,15 @@ function newId(prefix: string): string {
 /** Generate a unique Traytio order reference (safe to expose in return URLs). */
 export function newChariPayOrderId(): string {
   return newId('TUR-SUB');
+}
+
+/** Deterministic externalId for a Traytio subscription (idempotent creation). */
+export function subscriptionExternalId(organizationId: string, plan: string): string {
+  return `traytio-sub-${organizationId}-${plan}`.slice(0, 80);
+}
+
+export function subscriptionDescription(plan: string): string {
+  return `Traytio ${plan} — Abonnement mensuel`;
 }
 
 /**
@@ -160,6 +197,101 @@ export function buildChariPaySessionRequest(input: {
     },
     debug: { orderId, externalId, idempotencyKey, requestId },
   };
+}
+
+export function buildChariPayCustomerRequest(input: {
+  apiKey: string;
+  customer: ChariPayCustomer;
+  idempotencyKey?: string;
+  requestId?: string;
+}): ChariPayCustomerRequest {
+  return {
+    url: `${CHARIPAY_API_BASE}/v1/clients`,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CHARI-PAY-API-KEY': input.apiKey,
+      'Idempotency-Key': input.idempotencyKey ?? crypto.randomUUID(),
+      'X-Request-Id': input.requestId ?? crypto.randomUUID(),
+    },
+    body: {
+      name: `${input.customer.firstName} ${input.customer.lastName}`.trim() || input.customer.email,
+      email: input.customer.email,
+      phone: input.customer.phone,
+    },
+    debug: {
+      idempotencyKey: input.idempotencyKey ?? '',
+      requestId: input.requestId ?? '',
+    },
+  };
+}
+
+export function buildChariPaySubscriptionRequest(input: {
+  apiKey: string;
+  clientId: string;
+  amountMad: number;
+  plan: string;
+  externalId: string;
+  customer: ChariPayCustomer;
+  idempotencyKey?: string;
+  requestId?: string;
+}): ChariPaySubscriptionRequest {
+  const idempotencyKey = input.idempotencyKey ?? crypto.randomUUID();
+  const requestId = input.requestId ?? crypto.randomUUID();
+  const startDate = new Date().toISOString().slice(0, 10);
+  return {
+    url: `${CHARIPAY_API_BASE}/v1/subscriptions`,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CHARI-PAY-API-KEY': input.apiKey,
+      'Idempotency-Key': idempotencyKey,
+      'X-Request-Id': requestId,
+    },
+    body: {
+      clientId: input.clientId,
+      amount: input.amountMad,
+      description: subscriptionDescription(input.plan),
+      frequency: 'MONTHLY',
+      startDate,
+      channels: ['EMAIL'],
+      externalId: input.externalId,
+      metadata: {
+        plan: input.plan,
+        email: input.customer.email,
+        firstName: input.customer.firstName,
+        lastName: input.customer.lastName,
+        phone: input.customer.phone,
+      },
+      autoPay: true,
+    },
+    debug: { externalId: input.externalId, idempotencyKey, requestId, clientId: input.clientId },
+  };
+}
+
+export type ChariPaySubscriptionResult = {
+  reference: string;
+  status: string | null;
+  currentChargeUrl: string | null;
+  raw: unknown;
+};
+
+export function extractSubscriptionResult(payload: unknown): ChariPaySubscriptionResult | null {
+  if (typeof payload !== 'object' || payload === null) return null;
+  const r = payload as Record<string, unknown>;
+  const reference =
+    (typeof r.reference === 'string' && r.reference) ||
+    (typeof r.id === 'string' && r.id) ||
+    (typeof (r as { externalId?: unknown }).externalId === 'string' && (r as { externalId: string }).externalId) ||
+    null;
+  if (!reference) return null;
+  const status = typeof r.status === 'string' ? r.status : null;
+  const charge = r.currentCharge as Record<string, unknown> | undefined;
+  const url =
+    (charge && typeof charge.checkoutUrl === 'string' && charge.checkoutUrl) ||
+    (typeof r.checkoutUrl === 'string' && r.checkoutUrl) ||
+    null;
+  return { reference, status, currentChargeUrl: url, raw: payload };
 }
 
 function isHttpsUrl(value: string): boolean {

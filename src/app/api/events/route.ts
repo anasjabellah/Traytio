@@ -2,9 +2,12 @@ import { NextResponse } from 'next/server';
 import { getEvents } from '@/features/events/actions/get-events';
 import { createEvent } from '@/features/events/actions/create-event';
 import { withApiGuard } from '@/lib/api-guard';
+import { subscriptionDenialResponse } from '@/features/billing/lib/billing';
 
 // GET /api/events - list events with optional query params (search, page, limit, sortBy, sortOrder)
 export async function GET(request: Request) {
+  const denied = await subscriptionDenialResponse();
+  if (denied) return denied;
   const url = new URL(request.url);
   const search = url.searchParams.get('search') ?? undefined;
   const page = url.searchParams.get('page')
@@ -25,6 +28,8 @@ export async function GET(request: Request) {
 
 // POST /api/events - create a new event
 async function createEventApi(request: Request) {
+  const denied = await subscriptionDenialResponse();
+  if (denied) return denied;
   try {
     const data = await request.json();
     const resp = await createEvent(data);

@@ -166,13 +166,16 @@ describe('CHARIPAY WEBHOOK: route source contracts', () => {
     assert.ok(route.includes('processSucceededPayment'), 'success path funnels through one function')
   })
 
-  it('15-18. business actions only via existing services on payment.succeeded', () => {
+  it('15-18. business logic lives in the injectable core, route only orchestrates', () => {
     for (const token of ['prisma.user.create', 'prisma.organization.create', 'subscription.upsert', 'sendEmail', 'invitation', 'clerkClient']) {
       assert.ok(!route.includes(token), `route must not contain ${token}`)
     }
-    assert.ok(route.includes('provisionSaaSCustomer('), 'provisioning delegated to the existing service')
-    assert.ok(route.includes('sendSaaSActivationEmail('), 'email delegated to the existing sender')
-    assert.ok(route.includes("eventType !== 'payment.succeeded'"), 'only succeeded provisions')
+    assert.ok(route.includes('applyBillingEvent('), 'route delegates to the billing core')
+    assert.ok(route.includes('processSucceededPayment'), 'single funnel function kept')
+    const core = read('src/features/billing/lib/webhook-billing-core.ts')
+    assert.ok(core.includes('provisionSaaSCustomer('), 'provisioning delegated to the existing service')
+    assert.ok(core.includes('sendSaaSActivationEmail('), 'email delegated to the existing sender')
+    assert.ok(core.includes("eventType !== 'payment.succeeded'") || route.includes("eventType !== 'payment.succeeded'"), 'only succeeded provisions')
   })
 
   it('19. secrets and payloads never logged', () => {

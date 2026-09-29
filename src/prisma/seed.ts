@@ -14,6 +14,8 @@ import {
   Prisma,
   PrismaClient,
   StockCategory,
+  SubscriptionPlan,
+  SubscriptionStatus,
   UserRole,
 } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -123,6 +125,29 @@ async function main() {
       invoiceTerms: "Paiement à réception.",
       invoiceNotes: "Merci de votre confiance.",
       invoiceFooter: "Document généré pour le développement local.",
+    },
+  });
+
+  // P0 SaaS enforcement: the dev/test org holds an ACTIVE subscription so
+  // seeded flows (dashboard, actions, e2e) pass the entitlement gate.
+  const now = new Date();
+  const seedPeriodEnd = new Date(now);
+  seedPeriodEnd.setMonth(seedPeriodEnd.getMonth() + 1);
+  await prisma.subscription.upsert({
+    where: { organizationId: org.id },
+    update: { status: SubscriptionStatus.ACTIVE },
+    create: {
+      organizationId: org.id,
+      provider: "seed",
+      providerCustomerId: null,
+      providerSubscriptionId: null,
+      plan: SubscriptionPlan.STARTER,
+      status: SubscriptionStatus.ACTIVE,
+      priceId: null,
+      currentPeriodStart: now,
+      currentPeriodEnd: seedPeriodEnd,
+      trialEnd: null,
+      cancelAtPeriodEnd: false,
     },
   });
 

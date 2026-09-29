@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server"
 import { createCommande } from "@/features/commandes/actions/create-commande"
 import { withApiGuard } from "@/lib/api-guard"
+import { subscriptionDenialResponse } from "@/features/billing/lib/billing"
 
 async function createCommandeApi(request: Request) {
+  const denied = await subscriptionDenialResponse();
+  if (denied) return denied;
   try {
     const data = await request.json()
     const response = await createCommande(data)

@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { CheckCircle2, Clock3, XCircle } from "lucide-react";
 import { AuthLayout } from "@/features/auth";
 import { getPurchaseClaimByToken } from "@/features/billing/lib/provisioning";
+import { ResendEmailForm } from "./resend-email-form";
 
 export const metadata: Metadata = {
   title: "Activer votre abonnement",
@@ -110,6 +111,9 @@ export default async function ActivatePage({
             Créer mon compte
           </Link>
         )}
+        <div className="pt-2">
+          <ResendEmailForm token={token} />
+        </div>
       </Card>
     </AuthLayout>
   );
