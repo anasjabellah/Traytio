@@ -2,10 +2,12 @@
  * No public self-registration — regression tests.
  *
  * Business rule: Traytio accounts are created via team invitation (existing
- * members) or, in the future, post-purchase provisioning — never via a
- * public sign-up CTA. The login page must not offer registration, and bare
- * /sign-up visits redirect to /sign-in, while the invitation/activation
- * chain (accept-invite → /sign-up?token → fallback) keeps working.
+ * members) or post-purchase activation (PurchaseClaim) — never via a
+ * public sign-up CTA. The login page must not offer registration, and
+ * /sign-up gates on token VALIDITY (not mere presence): bare visits, garbage
+ * tokens, and expired/consumed tokens all redirect to /sign-in, while the
+ * invitation/activation chain (accept-invite → /sign-up?token → fallback)
+ * keeps working for valid tokens only.
  *
  * Conventions: fs source-contract checks + tiny gate replica — no
  * @clerk/@prisma imports, no DB.
@@ -21,10 +23,18 @@ import { resolve } from 'node:path'
 const ROOT = process.cwd()
 const read = (p: string) => readFileSync(resolve(ROOT, p), 'utf8')
 
-// Replica of the /sign-up route gate decision.
-function signUpGate(searchParams: { token?: string }): 'render' | 'redirect:/sign-in' {
+// Replica of the /sign-up route gate decision (validity-based).
+// The real page validates the token server-side before rendering <SignUp>:
+// valid PurchaseClaim → /activate fallback; valid Invitation →
+// /accept-invite fallback; anything else → /sign-in (fail closed).
+function signUpGate(
+  searchParams: { token?: string },
+  validity: { purchase?: boolean; invitation?: boolean } = {},
+): 'render:purchase' | 'render:invitation' | 'redirect:/sign-in' {
   if (!searchParams.token) return 'redirect:/sign-in'
-  return 'render'
+  if (validity.purchase) return 'render:purchase'
+  if (validity.invitation) return 'render:invitation'
+  return 'redirect:/sign-in'
 }
 
 describe('AUTH NO-PUBLIC-SIGNUP: login page', () => {
@@ -62,8 +72,8 @@ describe('AUTH NO-PUBLIC-SIGNUP: /sign-up route gate', () => {
     assert.ok(src.includes('redirect("/sign-in")'), 'route redirects bare visits')
   })
 
-  it('2b. invitation token renders the activation form', () => {
-    assert.equal(signUpGate({ token: 'abc' }), 'render')
+  it('2b. valid invitation token renders the signup form with invite fallback', () => {
+    assert.equal(signUpGate({ token: 'abc' }, { invitation: true }), 'render:invitation')
     const src = read('src/app/sign-up/[[...sign-up]]/page.tsx')
     assert.ok(src.includes('<SignUp'), 'SignUp renders for invited users')
     assert.ok(
@@ -72,7 +82,36 @@ describe('AUTH NO-PUBLIC-SIGNUP: /sign-up route gate', () => {
     )
   })
 
-  it('2c. /sign-up delisted from sitemap (no SEO entry point)', () => {
+  it('2c. valid purchase claim renders the signup form with activation fallback', () => {
+    assert.equal(signUpGate({ token: 'abc' }, { purchase: true }), 'render:purchase')
+    const src = read('src/app/sign-up/[[...sign-up]]/page.tsx')
+    assert.ok(src.includes('/activate?token='), 'post-signup returns to the activation page')
+  })
+
+  it('2d. garbage / expired / consumed tokens never render the signup form', () => {
+    // No validator matches → fail closed.
+    assert.equal(signUpGate({ token: 'garbage' }), 'redirect:/sign-in')
+    assert.equal(signUpGate({ token: 'expired-or-consumed' }), 'redirect:/sign-in')
+    const src = read('src/app/sign-up/[[...sign-up]]/page.tsx')
+    assert.ok(
+      !src.includes('if (!token)') || src.includes('redirect("/sign-in")'),
+      'presence check still redirects',
+    )
+  })
+
+  it('2e. gate reuses both existing validators and fails closed on errors', () => {
+    const src = read('src/app/sign-up/[[...sign-up]]/page.tsx')
+    assert.ok(src.includes('getPurchaseClaimByToken'), 'purchase validator reused')
+    assert.ok(src.includes('getInvitationByToken'), 'invitation validator reused')
+    assert.ok(src.includes('catch'), 'validator exceptions fail closed')
+    assert.equal(
+      (src.match(/redirect\("\/sign-in"\)/g) ?? []).length >= 1,
+      true,
+      'redirect to /sign-in present',
+    )
+  })
+
+  it('2f. /sign-up delisted from sitemap (no SEO entry point)', () => {
     const src = read('src/app/sitemap.ts')
     assert.ok(!src.includes('/sign-up'), 'sign-up removed from sitemap')
     assert.ok(src.includes('/sign-in'), 'sign-in still listed')
