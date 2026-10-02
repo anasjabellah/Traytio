@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
 import { Webhook } from 'svix'
 import { OrgRole, Prisma } from '@prisma/client'
-import { linkPendingClaimToClerkUser } from '@/features/billing/lib/provisioning'
+import { linkPendingClaimToClerkUser, getPurchaseClaimByToken } from '@/features/billing/lib/provisioning'
 
 /**
  * Internal control-flow error used to abort the user.deleted transaction when
@@ -21,6 +21,24 @@ class LastOwnerBlockedError extends Error {
     this.name = 'LastOwnerBlockedError'
     this.organizationIds = organizationIds
   }
+}
+
+/**
+ * Purchase-claim evidence (Gap C guard, Phase 3). The sign-up page passes
+ * the server-validated purchase token through Clerk's unsafeMetadata — the
+ * ONLY channel linking this user.created delivery to a PurchaseClaim.
+ * unsafeMetadata is client-controllable, so it can only ever BLOCK default
+ * provisioning (fail closed); it never grants, consumes, or links anything.
+ * Returns the token string, or null when no purchase evidence is present
+ * (team-invitation signups and unrelated creations are untagged).
+ */
+function purchaseTokenEvidence(data: unknown): string | null {
+  const meta = (data as { unsafe_metadata?: unknown } | null | undefined)?.unsafe_metadata
+  if (typeof meta !== 'object' || meta === null) return null
+  const token = (meta as Record<string, unknown>).traytioPurchaseToken
+  if (typeof token !== 'string') return null
+  const trimmed = token.trim()
+  return trimmed.length > 0 && trimmed.length <= 512 ? trimmed : null
 }
 
 export async function POST(req: Request) {
@@ -99,6 +117,41 @@ export async function POST(req: Request) {
       return new Response('Failed to link purchase claim', { status: 500 })
     }
 
+    // Phase 3 — purchase-claim email mismatch guard (Gap C).
+    // linkPendingClaimToClerkUser returned 'none': either this signup has
+    // nothing to do with a purchase, or it carries purchase evidence but the
+    // claim did not link (Clerk email ≠ claim email, or the claim lapsed
+    // mid-flow). Default-provisioning in that second case would create a
+    // stray free tenant — refuse it. Nothing is written, the PurchaseClaim
+    // stays untouched (still reusable until its normal expiry/consumption),
+    // and the event is acknowledged with 200 so Svix never retries and no
+    // duplicate processing occurs. Email comparison is case-insensitive and
+    // normalized exactly like the consumption logic in
+    // linkPendingClaimToClerkUser (trim + lowercase).
+    const evidence = purchaseTokenEvidence(evt.data)
+    if (evidence) {
+      let reason = 'lookup-error'
+      try {
+        const claim = await getPurchaseClaimByToken(evidence)
+        if (claim.valid) {
+          reason =
+            claim.claim.email.trim().toLowerCase() === email.trim().toLowerCase()
+              ? 'unlinked-match'
+              : 'email-mismatch'
+        } else {
+          reason = claim.reason
+        }
+      } catch {
+        reason = 'lookup-error'
+      }
+      console.warn(
+        `[clerk-webhook] user.created: purchase-token evidence present (${reason}); refusing default provisioning clerkId=${id ?? 'unknown'}`,
+      )
+      return new Response('OK', { status: 200 })
+    }
+
+    // No purchase evidence (e.g. team-invitation signups): default
+    // provisioning runs exactly as before — transactional User + Org + OWNER.
     try {
       await prisma.$transaction(async (tx) => {
         const user = await tx.user.create({

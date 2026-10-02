@@ -67,6 +67,7 @@ export default async function SignUpPage({
       <AuthLayout>
         <SignUp
           appearance={authAppearance}
+          unsafeMetadata={{ traytioPurchaseToken: token }}
           fallbackRedirectUrl={`/activate?token=${encodeURIComponent(token)}`}
         />
       </AuthLayout>
